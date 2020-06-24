@@ -186,6 +186,7 @@ class MurlocTidehunter(MonsterCard):
 
 
 class MurlocScout(MonsterCard):
+    token = True
     tier = 1
     monster_type = MURLOC
     base_attack = 1
@@ -231,7 +232,7 @@ class RedWhelp(MonsterCard):
         if event.event == events.COMBAT_START:
             num_friendly_dragons = len(
                 [card for card in context.friendly_war_party.board if
-                 not card.dead and card.monster_type == DRAGON])  # TODO: Does red whelp count for itself?
+                 not card.dead and card.monster_type == DRAGON])  # Red Whelp counts all dragons including itself
             targets = [card for card in context.enemy_war_party.board if not card.dead]
             if not targets:
                 return
@@ -353,6 +354,7 @@ class Imprisoner(MonsterCard):
 
 
 class Imp(MonsterCard):
+    token = True
     tier = 1
     monster_type = DEMON
     base_attack = 1
