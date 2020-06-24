@@ -1,0 +1,11 @@
+/hearthstone/venv
+*.egg-info/
+/build
+/dist
+/.idea
+/.tox
+hearthstone/__pycache__/
+*.html
+*.css
+index.txt
+venv/*
