@@ -13,7 +13,8 @@ class PrintingPress:
     def make_cards(cls) -> 'CardList':
         cardlist = []
         for card in cls.cards:
-            cardlist.extend([card() for _ in range(cls.cards_per_tier[card.tier])])
+            if not card.token:
+                cardlist.extend([card() for _ in range(cls.cards_per_tier[card.tier])])
         return CardList(cardlist)
 
 
@@ -36,6 +37,7 @@ class Card(metaclass=CardType):
     card_name: str
     coin_cost = 3
     tier: int
+    token = False
 
     def __init__(self):
         self.state = None
@@ -57,6 +59,7 @@ class MonsterCard(Card):
     base_deathrattle = None
     base_battlecry = None
     base_reborn = False
+    token = False
 
     def __init__(self):
         super().__init__()
