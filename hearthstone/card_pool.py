@@ -389,3 +389,14 @@ class MurlocWarleader(MonsterCard):
                    card != self and card.monster_type == MURLOC]
         for murloc in murlocs:
             murloc.attack -= bonus
+
+class DeckSwabbie(MonsterCard):
+    tier = 1
+    monster_type = PIRATE
+    base_attack = 2
+    base_health = 2
+
+    def base_battlecry(self, context: 'BuyPhaseContext'):
+        discount = 2 if self.golden else 1
+            pass
+            # do soething
