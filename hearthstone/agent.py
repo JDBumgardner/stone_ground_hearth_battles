@@ -44,7 +44,6 @@ class SellAction(Action):
         assert self.card in player.hand or self.card in player.in_play
         player.sell_minion(self.card)
 
-
 class EndPhaseAction(Action):
 
     def __init__(self, freeze: bool):

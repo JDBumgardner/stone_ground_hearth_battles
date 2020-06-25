@@ -1,8 +1,7 @@
 from typing import Set, List, Optional, NamedTuple, Callable, Type, Union
 
 from hearthstone import events
-from hearthstone.events import BuyPhaseContext, CombatPhaseContext
-
+from hearthstone.events import BuyPhaseContext, CombatPhaseContext, SELL
 
 
 class PrintingPress:
@@ -42,6 +41,10 @@ class Card(metaclass=CardType):
     def __init__(self):
         self.state = None
         self.tavern = None
+
+
+class MonsterCard(object):
+    pass
 
 
 class MonsterCard(Card):
@@ -121,11 +124,11 @@ class MonsterCard(Card):
             elif event.event == events.SUMMON_BUY:
                 if self.battlecry:
                     self.battlecry(context)
-            elif not self.dead:
-                self.handle_event_powers(event, context)
-                #  TODO: this is jeremy's fault
-        elif not self.dead:
+        if not self.dead:
             self.handle_event_powers(event, context)
+
+    def handle_event_in_hand(self, event: CardEvent, context: BuyPhaseContext):
+        return
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         return
@@ -148,14 +151,13 @@ class MonsterCard(Card):
     def overkill(self):
         return
 
-    def cleanup_round(self):
-        return
-
-    def mutate_environment(self):
-        return
-
-    def unmutate_environment(self):
-        return
+    def dissolve(self) -> List['MonsterCard']:
+        if self.token:
+            return []
+        elif self.golden:
+            return [type(self)()]*3
+        else:
+            return [type(self)()]
 
 
 class CardList:

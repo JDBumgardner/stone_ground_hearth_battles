@@ -1,7 +1,8 @@
 from typing import Optional, List, Callable
+import itertools
 
 from hearthstone.cards import MonsterCard, CardEvent, CardType, Card
-from hearthstone.events import SUMMON_BUY, BuyPhaseContext
+from hearthstone.events import SUMMON_BUY, BuyPhaseContext, SELL
 from hearthstone.hero import Hero, EmptyHero
 from hearthstone.triple_reward_card import TripleRewardCard
 
@@ -88,7 +89,7 @@ class Player:
         assert (isinstance(card, MonsterCard))  # TODO: discover other card types
         self.discovered_cards.remove(card)
         self.hand.append(card)
-        self.tavern.deck.cards += self.discovered_cards
+        self.tavern.deck.cards += itertools.chain.from_iterable([card.dissolve() for card in self.discovered_cards])
         self.check_golden(type(card))
 
     def summon_from_void(self, monster: MonsterCard):
@@ -141,7 +142,7 @@ class Player:
         self.draw()
 
     def return_cards(self):
-        self.tavern.deck.cards += [type(card)() for card in self.store]
+        self.tavern.deck.cards += itertools.chain.from_iterable([card.dissolve() for card in self.store])
         self.store = []
 
     def freeze(self):
@@ -149,7 +150,7 @@ class Player:
 
     def sell_minion(self, card: MonsterCard):
         assert card in self.in_play + self.hand
-        self.in_play.remove(card)
+        self.broadcast_buy_phase_event(CardEvent(card, SELL))
         if card in self.hand:
             self.hand.remove(card)
         elif card in self.in_play:
@@ -163,3 +164,5 @@ class Player:
     def broadcast_buy_phase_event(self, event: CardEvent, randomizer: Optional['Randomizer'] = None):
         for card in self.in_play:
             card.handle_event(event, BuyPhaseContext(self, randomizer or self.tavern.randomizer))
+        for card in self.hand:
+            card.handle_event_in_hand(event, BuyPhaseContext(self, randomizer or self.tavern.randomizer))

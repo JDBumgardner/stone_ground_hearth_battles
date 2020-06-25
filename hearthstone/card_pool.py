@@ -1,8 +1,9 @@
 from typing import Union
 
-from hearthstone import events
+from hearthstone import events, combat
 from hearthstone.cards import MonsterCard, CardEvent
-from hearthstone.events import SUMMON_BUY, BuyPhaseContext, CombatPhaseContext, SUMMON_COMBAT, ON_ATTACK, COMBAT_START
+from hearthstone.events import SUMMON_BUY, BuyPhaseContext, CombatPhaseContext, SUMMON_COMBAT, ON_ATTACK, COMBAT_START, \
+    SELL
 from hearthstone.monster_types import BEAST, DEMON, MECH, PIRATE, DRAGON, MURLOC
 
 
@@ -131,7 +132,8 @@ class MechaRoo(MonsterCard):
         joebot = JoEBot()
         if self.golden:
             joebot.golden_transformation([])
-        context.friendly_war_party.summon_in_combat(joebot, context)
+        summon_index = context.friendly_war_party.get_index(self)
+        context.friendly_war_party.summon_in_combat(joebot, context, summon_index + 1)
 
 
 class JoEBot(MonsterCard):
@@ -163,13 +165,11 @@ class MurlocTidecaller(MonsterCard):
     base_health = 2
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
+        bonus = 2 if self.golden else 1
         friendly_summon = event.event == SUMMON_BUY or (
                 event.event == SUMMON_COMBAT and event.card in context.friendly_war_party.board)
-        if friendly_summon and event.card.monster_type == MURLOC:
-            if self.golden:
-                self.attack += 2
-            else:
-                self.attack += 1
+        if friendly_summon and event.card.monster_type == MURLOC and event.card != self:
+            self.attack += bonus
 
 
 class MurlocTidehunter(MonsterCard):
@@ -253,7 +253,8 @@ class HarvestGolem(MonsterCard):
         damaged_golem = DamagedGolem()
         if self.golden:
             damaged_golem.golden_transformation([])
-        context.friendly_war_party.summon_in_combat(damaged_golem, context)
+        summon_index = context.friendly_war_party.get_index(self)
+        context.friendly_war_party.summon_in_combat(damaged_golem, context, summon_index + 1)
 
 
 class DamagedGolem(MonsterCard):
@@ -389,3 +390,53 @@ class MurlocWarleader(MonsterCard):
                    card != self and card.monster_type == MURLOC]
         for murloc in murlocs:
             murloc.attack -= bonus
+
+
+class StewardOfTime(MonsterCard):
+    tier = 2
+    monster_type = DRAGON
+    base_attack = 3
+    base_health = 4
+
+    def handle_event_in_hand(self, event: CardEvent, context: BuyPhaseContext):
+        bonus = 2 if self.golden else 1
+        if event.event == SELL and event.card == self:
+            for card in context.owner.store:
+                card.attack += bonus
+                card.health += bonus
+
+    def handle_event(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
+        self.handle_event_in_hand(event, context)
+
+
+class Scallywag(MonsterCard):
+    tier = 1
+    monster_type = PIRATE
+    base_attack = 2
+    base_health = 1
+
+    def base_deathrattle(self, context: CombatPhaseContext):
+        pirate_summon = SkyPirate()
+        if self.golden:
+            pirate_summon.golden_transformation()
+        scallywag_index = context.friendly_war_party.get_index(self)
+        context.friendly_war_party.summon_in_combat(pirate_summon, context, scallywag_index + 1)
+
+
+class SkyPirate(MonsterCard):
+    tier = 1
+    token = True
+    monster_type = PIRATE
+    base_attack = 1
+    base_health = 1
+
+    def handle_event_powers(self, event: CardEvent, context: CombatPhaseContext):
+        if event.event == SUMMON_COMBAT and event.card == self:
+            attacking_war_party = context.friendly_war_party
+            defending_war_party = context.enemy_war_party
+            attacker = self
+            defender = defending_war_party.get_random_monster(context.randomizer)
+            if not defender:
+                return
+            print(f'{attacking_war_party.owner.name} is attacking {defending_war_party.owner.name}')
+            combat.start_attack(attacker, defender, attacking_war_party, defending_war_party, context.randomizer)

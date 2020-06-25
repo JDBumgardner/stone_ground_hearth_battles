@@ -7,8 +7,6 @@ from hearthstone.events import CombatPhaseContext, SUMMON_COMBAT
 from hearthstone.player import Player
 from hearthstone.randomizer import Randomizer
 
-BASE_DAMAGE = 3
-
 
 class WarParty:
     #  (HalfBoard)
@@ -45,9 +43,16 @@ class WarParty:
     def num_cards(self):
         return len(self.board)
 
-    def summon_in_combat(self, monster: MonsterCard, context: CombatPhaseContext):
-        context.friendly_war_party.board.append(monster)
+    def summon_in_combat(self, monster: MonsterCard, context: CombatPhaseContext, index: Optional[int] = None):
+        if not index:
+            index = len(context.friendly_war_party.board)
+        context.friendly_war_party.board.insert(index, monster)
+        if index < context.friendly_war_party.next_attacker_idx:
+            context.friendly_war_party.next_attacker_idx += 1
         context.broadcast_combat_event(CardEvent(monster, SUMMON_COMBAT))
+
+    def get_index(self, card):
+        return self.board.index(card)
 
 
 def fight_boards(war_party_1: WarParty, war_party_2: WarParty, randomizer: Randomizer):
@@ -75,14 +80,14 @@ def fight_boards(war_party_1: WarParty, war_party_2: WarParty, randomizer: Rando
 
 
 def damage(half_board_1: WarParty, half_board_2: WarParty):
-    damage_1 = sum([card.tier for card in half_board_1.board if not card.dead])
-    damage_2 = sum([card.tier for card in half_board_2.board if not card.dead])
-    if damage_1 > 0:
+    monster_damage_1 = sum([card.tier for card in half_board_1.board if not card.dead])
+    monster_damage_2 = sum([card.tier for card in half_board_2.board if not card.dead])
+    if monster_damage_1 > 0:
         print(f'{half_board_1.owner.name} has won the fight')
-        half_board_2.owner.health -= damage_1 + BASE_DAMAGE
-    elif damage_2 > 0:
+        half_board_2.owner.health -= monster_damage_1 + half_board_1.owner.tavern_tier
+    elif monster_damage_2 > 0:
         print(f'{half_board_2.owner.name} has won the fight')
-        half_board_1.owner.health -= damage_2 + BASE_DAMAGE
+        half_board_1.owner.health -= monster_damage_2 + half_board_2.owner.tavern_tier
     else:
         print('neither player won')
 

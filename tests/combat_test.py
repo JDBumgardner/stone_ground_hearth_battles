@@ -28,6 +28,17 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(diana.health, 40)
         self.assertEqual(jeremy.health, 40)
 
+    def test_deathrattle_summon(self):
+        diana = Player(None, "Diana")
+        jeremy = Player(None, "Jeremy")
+        dianas_war_party = WarParty(diana)
+        jeremys_war_party = WarParty(jeremy)
+        dianas_war_party.board = [MechaRoo(), DragonspawnLieutenant()]
+        jeremys_war_party.board = [DragonspawnLieutenant(), ScavengingHyena()]
+        fight_boards(dianas_war_party, jeremys_war_party, DefaultRandomizer())
+        self.assertEqual(diana.health, 40)
+        self.assertEqual(jeremy.health, 40)
+
     def test_scavenging_hyena(self):
         diana = Player(None, "Diana")
         jeremy = Player(None, "Jeremy")
@@ -52,7 +63,7 @@ class CombatTests(unittest.TestCase):
         jeremys_war_party.board = [FiendishServant(), FiendishServant()]
         fight_boards(jeremys_war_party, dianas_war_party, DefaultRandomizer())
         self.assertEqual(diana.health, 40)
-        self.assertEqual(jeremy.health, 36)
+        self.assertEqual(jeremy.health, 38)
 
     def test_mech_roo(self):
         diana = Player(None, "Diana")
@@ -63,7 +74,7 @@ class CombatTests(unittest.TestCase):
         jeremys_war_party.board = [TabbyCat()]
         fight_boards(jeremys_war_party, dianas_war_party, DefaultRandomizer())
         self.assertEqual(diana.health, 40)
-        self.assertEqual(jeremy.health, 36)
+        self.assertEqual(jeremy.health, 38)
 
     def test_selfless_hero(self):
         diana = Player(None, "Diana")
@@ -74,7 +85,7 @@ class CombatTests(unittest.TestCase):
         jeremys_war_party.board = [RighteousProtector()]
         fight_boards(jeremys_war_party, dianas_war_party, DefaultRandomizer())
         self.assertEqual(diana.health, 40)
-        self.assertEqual(jeremy.health, 36)
+        self.assertEqual(jeremy.health, 38)
 
     def test_red_whelp(self):
         diana = Player(None, "Diana")
@@ -85,7 +96,7 @@ class CombatTests(unittest.TestCase):
         jeremys_war_party.board = [RighteousProtector()]
         fight_boards(jeremys_war_party, dianas_war_party, DefaultRandomizer())
         self.assertEqual(diana.health, 40)
-        self.assertEqual(jeremy.health, 36)
+        self.assertEqual(jeremy.health, 38)
 
     def test_harvest_golem(self):
         diana = Player(None, "Diana")
@@ -118,7 +129,7 @@ class CombatTests(unittest.TestCase):
         jeremys_war_party.board = [MechaRoo()]
         fight_boards(jeremys_war_party, dianas_war_party, DefaultRandomizer())
         self.assertEqual(diana.health, 40)
-        self.assertEqual(jeremy.health, 36)
+        self.assertEqual(jeremy.health, 38)
 
     def test_glyph_guardian(self):
         adam = Player(None, "Adam")
@@ -127,10 +138,10 @@ class CombatTests(unittest.TestCase):
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [AlleyCat(), TabbyCat(), AlleyCat(), TabbyCat()]
         ethans_war_party.board = [GlyphGuardian()]
-        fight_boards(ethans_war_party, adams_war_party, DefaultRandomizer())
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(ethans_war_party.board[0].attack, 8)
-        self.assertEqual(ethan.health, 40)
         self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
 
     def test_imprisoner(self):
         adam = Player(None, "Adam")
@@ -139,9 +150,9 @@ class CombatTests(unittest.TestCase):
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [MetaltoothLeaper()]
         ethans_war_party.board = [Imprisoner()]
-        fight_boards(ethans_war_party, adams_war_party, DefaultRandomizer())
+        fight_boards( adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 38)
         self.assertEqual(ethan.health, 40)
-        self.assertEqual(adam.health, 36)
 
     def test_murloc_warleader(self):
         adam = Player(None, "Adam")
@@ -150,8 +161,19 @@ class CombatTests(unittest.TestCase):
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [MurlocScout(), MurlocWarleader()]
         ethans_war_party.board = [MamaBear()]
-        fight_boards(ethans_war_party, adams_war_party, DefaultRandomizer())
+        fight_boards(adams_war_party, ethans_war_party,DefaultRandomizer())
         self.assertEqual(adams_war_party.board[0].attack, 1)
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+
+    def test_scallywag(self):
+        adam = Player(None, "Adam")
+        ethan = Player(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [Scallywag(), DragonspawnLieutenant()]
+        ethans_war_party.board = [VulgarHomunculus(), DamagedGolem()]
+        fight_boards(adams_war_party, ethans_war_party,  DefaultRandomizer())
         self.assertEqual(ethan.health, 40)
         self.assertEqual(adam.health, 40)
 
