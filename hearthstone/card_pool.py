@@ -440,3 +440,16 @@ class SkyPirate(MonsterCard):
                 return
             print(f'{attacking_war_party.owner.name} is attacking {defending_war_party.owner.name}')
             combat.start_attack(attacker, defender, attacking_war_party, defending_war_party, context.randomizer)
+
+
+class DeckSwabbie(MonsterCard):
+    tier = 1
+    monster_type = PIRATE
+    base_attack = 2
+    base_health = 2
+
+    def base_battlecry(self, context: 'BuyPhaseContext'):
+        discount = 2 if self.golden else 1
+            pass
+            # do soething
+
