@@ -542,7 +542,18 @@ class CardTests(unittest.TestCase):
         self.assertEqual(player_2.store[0].attack, 5)
         self.assertEqual(player_2.store[0].health, 6)
 
-
+    def test_deck_swabbie(self):
+        tavern = Tavern()
+        player_1 = tavern.add_player("Dante_Kong")
+        player_2 = tavern.add_player("lucy")
+        tavern.randomizer = CardForcer([DeckSwabbie] * 12)
+        tavern.buying_step()
+        player_1.purchase(0)
+        player_1.summon_from_hand(player_1.hand[0])
+        tavern.combat_step()
+        tavern.buying_step()
+        player_1.upgrade_tavern()
+        self.assertEqual(player_1.tavern_tier, 2)
 
 if __name__ == '__main__':
     unittest.main()

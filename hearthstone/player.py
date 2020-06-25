@@ -25,6 +25,7 @@ class Player:
         self.refresh_store_cost = 1
         self.redeem_minion_rate = 1
         self._tavern_upgrade_costs = (0, 5, 7, 8, 9, 10)
+        self.tavern_upgrade_cost = 5
         self.hand: List[MonsterCard] = []
         self.in_play: List[MonsterCard] = []
         self.store: List[MonsterCard] = []
@@ -45,10 +46,6 @@ class Player:
         #  sell monsters
         #  set fight ready
 
-    @property
-    def tavern_upgrade_cost(self):
-        return self._tavern_upgrade_costs[self.tavern_tier]
-
     def apply_turn_start_income(self):
         self.coins = self.coin_income_rate
 
@@ -58,6 +55,7 @@ class Player:
             return
         self.coins -= self.tavern_upgrade_cost
         self.tavern_tier += 1
+        self.tavern_upgrade_cost = self._tavern_upgrade_costs[self.tavern_tier]
 
     def summon_from_hand(self, monster: MonsterCard, event_target: Optional[MonsterCard] = None,
                          secondary_target: Optional[MonsterCard] = None):

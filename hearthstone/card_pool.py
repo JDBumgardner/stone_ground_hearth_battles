@@ -450,6 +450,4 @@ class DeckSwabbie(MonsterCard):
 
     def base_battlecry(self, context: 'BuyPhaseContext'):
         discount = 2 if self.golden else 1
-            pass
-            # do soething
-
+        context.owner.tavern_upgrade_cost = max(context.owner.tavern_upgrade_cost - discount, 0)
