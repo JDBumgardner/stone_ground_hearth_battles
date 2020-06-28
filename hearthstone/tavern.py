@@ -27,6 +27,7 @@ class Tavern:
         for player_name, player in self.players.items():
             player.apply_turn_start_income()
             player.draw()
+            player.hero.on_buy_step()
             player.broadcast_buy_phase_event(CardEvent(None, events.BUY_START))
 
     def combat_step(self):

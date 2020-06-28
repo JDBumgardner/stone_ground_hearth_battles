@@ -17,9 +17,15 @@ class PrintingPress:
         return CardList(cardlist)
 
 
-class CardEvent(NamedTuple):
+class CardEvent:
     card: Optional['MonsterCard']
     event: int
+    targets: Optional[List['MonsterCard']]
+
+    def __init__(self, card: Optional['MonsterCard'], event: int, targets: Optional[List['MonsterCard']] = None):
+        self.card = card
+        self.event = event
+        self.targets = targets
 
 
 class CardType(type):
@@ -61,6 +67,7 @@ class MonsterCard(Card):
     base_cleave = False
     base_deathrattle = None
     base_battlecry = None
+    num_battlecry_targets = 0
     base_reborn = False
     token = False
 
@@ -76,7 +83,7 @@ class MonsterCard(Card):
         self.cleave = self.base_cleave
         self.deathrattles: List[Callable[[CombatPhaseContext], None]] = []
         if self.base_deathrattle is not None:
-            self.deathrattles.append(self.base_deathrattle)
+            self.deathrattles.append(self.base_deathrattle.__func__)
         self.reborn = self.base_reborn
         self.dead = False
         self.golden = False
@@ -120,10 +127,10 @@ class MonsterCard(Card):
         if self == event.card:
             if event.event == events.DIES:
                 for deathrattle in self.deathrattles:
-                    deathrattle(context)
+                    deathrattle(self, context)
             elif event.event == events.SUMMON_BUY:
                 if self.battlecry:
-                    self.battlecry(context)
+                    self.battlecry(event.targets, context)
         if not self.dead:
             self.handle_event_powers(event, context)
 
@@ -132,6 +139,9 @@ class MonsterCard(Card):
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         return
+
+    def validate_battlecry_target(self, card: MonsterCard) -> bool:
+        return True
 
     def golden_transformation(self, base_cards: List['MonsterCard']):
         self.attack += self.base_attack
