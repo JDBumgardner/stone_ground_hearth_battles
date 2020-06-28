@@ -250,6 +250,16 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
 
+    def test_board_size_ignores_dead(self):
+        adam = Player(None, "Adam")
+        ethan = Player(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [RighteousProtector(), RighteousProtector(), RighteousProtector(), RighteousProtector(), RighteousProtector(), RighteousProtector(), RighteousProtector()]
+        ethans_war_party.board = [RighteousProtector(), RighteousProtector(), RighteousProtector(), RighteousProtector(), RighteousProtector(), RighteousProtector(), RatPack()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 37)
+        self.assertEqual(ethan.health, 40)
 
 if __name__ == '__main__':
     unittest.main()

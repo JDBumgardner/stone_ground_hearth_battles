@@ -23,12 +23,13 @@ class CombatPhaseContext:
         self.randomizer = randomizer
 
     def broadcast_combat_event(self, event: 'CardEvent'):
+        #  boards are copied to prevent reindexing lists while iterating over them
         self.friendly_war_party.owner.hero.handle_event(event, self)
-        for card in self.friendly_war_party.board:
+        for card in self.friendly_war_party.board.copy():
             # it's ok for the card to be dead
             card.handle_event(event, self)
         self.enemy_war_party.owner.hero.handle_event(event, self.enemy_context())
-        for card in self.enemy_war_party.board:
+        for card in self.enemy_war_party.board.copy():
             card.handle_event(event, self.enemy_context())
 
     def enemy_context(self):

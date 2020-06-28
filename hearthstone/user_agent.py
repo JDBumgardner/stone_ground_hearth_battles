@@ -1,9 +1,10 @@
 from typing import List, Optional
 
 from hearthstone.agent import Agent, Action, BuyAction, SummonAction, SellAction, EndPhaseAction, RerollAction, \
-    TavernUpgradeAction, HeroPowerAction
+    TavernUpgradeAction, HeroPowerAction, TripleRewardsAction
 from hearthstone.cards import Card
 from hearthstone.tavern import Player
+
 
 
 class UserAgent(Agent):
@@ -35,6 +36,7 @@ class UserAgent(Agent):
         self.print_player_card_list("store", player.store)
         self.print_player_card_list("board", player.in_play)
         self.print_player_card_list("hand", player.hand)
+        print(f"Your current triple rewards are {player.triple_rewards}")
         print(f"you have {player.coins} coins and {player.health} health and your tavern is level {player.tavern_tier}")
         print("available actions are: ")
         print('purchase: "p 0" purchases the 0th indexed monster from the store')
@@ -45,13 +47,14 @@ class UserAgent(Agent):
         print('reroll store: "R" will reroll the store')
         print('upgrade tavern: "u" will upgrade the tavern')
         print('hero power: "h" will activate your hero power')
+        print('triple rewards: "t" will use your highest tavern tier triple rewards')
         print('end turn: "e f" ends the turn and freezes the shop, "e" ends the turn without freezing the shop')
         user_input = input("input action here: ")
         while True:
             buy_action = self.parse_buy_input(user_input, player)
-            if buy_action:
+            if buy_action and buy_action.valid(player):
                 return buy_action
-            user_input = input("ugh, try again: ")
+            user_input = input("sorry, my dude. Action invalid: ")
 
     @staticmethod
     def parse_buy_input(user_input: str, player: Player) -> Optional[Action]:
@@ -67,19 +70,19 @@ class UserAgent(Agent):
                 return None
             return BuyAction(player.store[store_index])
         elif split_list[0] == "s":
-            if not len(split_list) == 4:
+            if not 1 < len(split_list) <= 4:
                 return None
             try:
-                targets = [int(split_list[i]) for i in range(1, 4)]
+                targets = [int(target) for target in split_list[1:]]
             except ValueError:
                 return None
             if not 0 <= targets[0] < len(player.hand):
                 return None
-            for i in range(2):
-                if not 0 <= targets[i + 1] < len(player.in_play) + 1:
+            for target in targets[1:]:
+                if not 0 <= target < len(player.in_play) + 1:
                     return None
             in_play = player.in_play + [player.hand[targets[0]]]
-            return SummonAction(in_play[-1], in_play[targets[1]], in_play[targets[2]])
+            return SummonAction(in_play[-1], [in_play[target] for target in targets[1:]])
         elif split_list[0] == "r":
             if not len(split_list) == 3:
                 return None
@@ -107,6 +110,8 @@ class UserAgent(Agent):
             return TavernUpgradeAction()
         elif split_list[0] == "h":
             return HeroPowerAction()
+        elif split_list[0] == "t":
+            return TripleRewardsAction()
         else:
             return None
 

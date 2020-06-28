@@ -482,8 +482,9 @@ class RockpoolHunter(MonsterCard):
 
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
         bonus = 2 if self.golden else 1
-        targets[0].attack += bonus
-        targets[0].health += bonus
+        if targets:
+            targets[0].attack += bonus
+            targets[0].health += bonus
 
     def validate_battlecry_target(self, card: MonsterCard) -> bool:
         return card.monster_type == MURLOC and card != self

@@ -18,17 +18,10 @@ class BuyAction(Action):
         self.card: MonsterCard = card
 
     def apply(self, player: Player):
-        assert self.card in player.store
-        player.purchase(player.store.index(self.card))
+        player.purchase(self.card)
 
     def valid(self, player: Player):
-        if self.card not in player.store:
-            return False
-        if self.card.coin_cost > player.coins:
-            return False
-        if player.hand_size() >= player.maximum_hand_size:
-            return False
-        return True
+        return player.validate_purchase(self.card)
 
 
 class SummonAction(Action):
@@ -40,18 +33,10 @@ class SummonAction(Action):
         self.targets = targets
 
     def apply(self, player: Player):
-        assert self.card in player.hand
         player.summon_from_hand(self.card, self.targets)
 
     def valid(self, player: Player) -> bool:
-        if self.card not in player.hand:
-            return False
-        if not player.room_on_board():
-            return False
-        if not self.card.validate_battlecry_target():
-            return False
-        # TODO: US do the targets thing
-        print("you have to fix the summon targets thing!")
+        return player.validate_summon_from_hand(self.card, self.targets)
 
 
 class SellAction(Action):
@@ -60,11 +45,10 @@ class SellAction(Action):
         self.card: MonsterCard = card
 
     def apply(self, player: Player):
-        assert self.card in player.hand or self.card in player.in_play
         player.sell_minion(self.card)
 
     def valid(self, player: Player) -> bool:
-        return self.card in player.hand + player.in_play
+        return player.validate_sell_minion(self.card)
 
 
 class EndPhaseAction(Action):
@@ -83,10 +67,10 @@ class EndPhaseAction(Action):
 class RerollAction(Action):
 
     def apply(self, player: Player):
-        player.refresh_store()
+        player.reroll_store()
 
     def valid(self, player: Player) -> bool:
-        return player.coins >= player.refresh_store_cost
+        return player.validate_reroll()
 
 
 class TavernUpgradeAction(Action):
@@ -95,11 +79,7 @@ class TavernUpgradeAction(Action):
         player.upgrade_tavern()
 
     def valid(self, player: Player) -> bool:
-        if player.tavern_tier >= player.max_tier():
-            return False
-        if player.coins < player.tavern_upgrade_cost():
-            return False
-        return True
+        return player.validate_upgrade_tavern()
 
 
 class HeroPowerAction(Action):
@@ -107,15 +87,15 @@ class HeroPowerAction(Action):
         player.hero_power()
 
     def valid(self, player: Player) -> bool:
-        return player.hero_power_valid()
+        return player.validate_hero_power()
 
 
-class TripleRewardAction(Action):
+class TripleRewardsAction(Action):
     def apply(self, player: Player):
         player.play_triple_rewards()
 
     def valid(self, player: Player) -> bool:
-        return bool(player.triple_rewards)
+        return player.validate_triple_rewards()
 
 
 class Agent:

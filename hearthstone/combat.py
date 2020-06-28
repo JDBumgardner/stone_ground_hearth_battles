@@ -44,12 +44,12 @@ class WarParty:
         return len(self.board)
 
     def summon_in_combat(self, monster: MonsterCard, context: CombatPhaseContext, index: Optional[int] = None):
-        size = len(context.friendly_war_party.board)
-        max = context.friendly_war_party.owner.maximum_board_size
-        if size >= max:
+        live_monsters_num = len([card for card in context.friendly_war_party.board if not card.dead])
+        max_board_size = context.friendly_war_party.owner.maximum_board_size
+        if live_monsters_num >= max_board_size:
             return
         if not index:
-            index = size
+            index = len(context.friendly_war_party.board)
         context.friendly_war_party.board.insert(index, monster)
         if index < context.friendly_war_party.next_attacker_idx:
             context.friendly_war_party.next_attacker_idx += 1

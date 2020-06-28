@@ -12,7 +12,6 @@ class Tavern:
     def __init__(self):
         self.players: Dict[str, Player] = {}
         self.deck: CardList = PrintingPress.make_cards()
-        self.base_damage = 3
         self.turn_count = 0
         self.current_player_pairings = []
         self.randomizer = DefaultRandomizer()
