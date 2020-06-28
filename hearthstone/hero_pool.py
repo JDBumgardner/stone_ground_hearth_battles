@@ -3,7 +3,7 @@ from typing import Union
 from hearthstone.cards import CardEvent
 from hearthstone.events import BuyPhaseContext, CombatPhaseContext, COMBAT_START, SUMMON_COMBAT, BUY
 from hearthstone.hero import Hero
-from hearthstone.monster_types import DEMON, MECH
+from hearthstone.monster_types import DEMON, MECH, PIRATE
 
 
 class Pyramad(Hero):
@@ -35,6 +35,7 @@ class PatchWerk(Hero):
 
 class Nefarian(Hero):
     power_cost = 1
+
     # hero power is called nefarious fire
 
     def handle_event(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
@@ -88,3 +89,23 @@ class YoggSaron(Hero):
             return False
 
         return True
+
+
+class PatchesThePirate(Hero):
+    power_cost = 4
+
+    def handle_event(self, event: CardEvent, context: BuyPhaseContext):
+        if event.event == BUY and event.card.monster_type == PIRATE:
+            self.power_cost = max(0, self.power_cost - 1)
+
+    def hero_power_impl(self, context: BuyPhaseContext):
+        pirates = [card for card in context.owner.tavern.deck.cards if
+                   card.monster_type == PIRATE and card.tier <= context.owner.tavern_tier]
+
+        card = context.randomizer.select_gain_card(pirates)
+        context.owner.tavern.deck.cards.remove(card)
+        context.owner.hand.append(card)
+        self.power_cost = 4
+
+    def hero_power_valid_impl(self, context: BuyPhaseContext):
+        return context.owner.room_in_hand()

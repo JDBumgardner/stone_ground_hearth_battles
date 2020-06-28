@@ -614,6 +614,20 @@ class CardTests(unittest.TestCase):
         self.assertEqual(player_1.hand[0].attack, player_1.hand[0].base_attack + 1)
         self.assertEqual(player_1.hand[0].health, player_1.hand[0].base_health + 1)
 
+    def test_patches_the_pirate(self):
+        tavern = Tavern()
+        player_1 = tavern.add_player("Yogg", PatchesThePirate())
+        player_2 = tavern.add_player("Saron")
+        tavern.randomizer = CardForcer([Scallywag] * 12)
+        tavern.buying_step()
+        player_1.purchase(0)
+        tavern.combat_step()
+        tavern.buying_step()
+        player_1.hero_power()
+        self.assertEqual(len(player_1.hand), 2)
+        self.assertEqual(player_1.coins, 1)
+        self.assertEqual(player_1.hand[1].monster_type, PIRATE)
+        self.assertEqual(player_1.hand[1].tier, 1)
 
 
 if __name__ == '__main__':

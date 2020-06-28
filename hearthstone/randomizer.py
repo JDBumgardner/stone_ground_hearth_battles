@@ -27,6 +27,9 @@ class Randomizer:
     def select_from_store(self, store: List[Card]) -> Card:
         pass
 
+    def select_gain_card(self, cards: List[Card]) -> Card:
+        pass
+
 
 class DefaultRandomizer(Randomizer):
     def select_draw_card(self, cards: List[Card], player_name: str, round_number: int) -> Card:
@@ -51,3 +54,6 @@ class DefaultRandomizer(Randomizer):
 
     def select_from_store(self, store: List[Card]) -> Card:
         return random.choice(store)
+
+    def select_gain_card(self, cards: List[Card]) -> Card:
+        return random.choice(cards)
