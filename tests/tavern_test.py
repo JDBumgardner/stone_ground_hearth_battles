@@ -602,6 +602,19 @@ class CardTests(unittest.TestCase):
         self.assertEqual(player_1.hand[0].attack, player_1.hand[0].base_attack + 1)
         self.assertEqual(player_1.hand[0].health, player_1.hand[0].base_health + 1)
 
+    def test_yogg_saron(self):
+        tavern = Tavern()
+        player_1 = tavern.add_player("Yogg", YoggSaron())
+        player_2 = tavern.add_player("Saron")
+        tavern.buying_step()
+        player_1.hero_power()
+        self.assertEqual(len(player_1.hand), 1)
+        self.assertEqual(len(player_1.store), 2)
+        self.assertEqual(player_1.coins, 1)
+        self.assertEqual(player_1.hand[0].attack, player_1.hand[0].base_attack + 1)
+        self.assertEqual(player_1.hand[0].health, player_1.hand[0].base_health + 1)
+
+
 
 if __name__ == '__main__':
     unittest.main()

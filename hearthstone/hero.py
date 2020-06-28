@@ -15,7 +15,7 @@ class Hero:
         pass
 
     def hero_power(self, context: BuyPhaseContext):
-        assert self.hero_power_valid()
+        assert self.hero_power_valid(context)
         context.owner.coins -= self.power_cost
         self.hero_power_used = True
         self.hero_power_impl(context)

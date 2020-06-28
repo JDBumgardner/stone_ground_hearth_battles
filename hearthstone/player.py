@@ -201,5 +201,8 @@ class Player:
     def hand_size(self):
         return len(self.hand) + len(self.triple_rewards)
 
+    def room_in_hand(self):
+        return self.hand_size() < self.maximum_hand_size
+
     def max_tier(self):
         return len(self._tavern_upgrade_costs)

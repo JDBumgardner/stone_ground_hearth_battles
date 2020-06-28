@@ -68,3 +68,23 @@ class MillificentManastorm(Hero):
             if event.card.monster_type == MECH:
                 event.card.attack += 1
                 event.card.health += 1
+
+
+class YoggSaron(Hero):
+    power_cost = 2
+
+    def hero_power_impl(self, context: BuyPhaseContext):
+        card = context.randomizer.select_from_store(context.owner.store)
+        card.attack += 1
+        card.health += 1
+        context.owner.store.remove(card)
+        context.owner.hand.append(card)
+
+    def hero_power_valid_impl(self, context: BuyPhaseContext):
+        if not context.owner.room_in_hand():
+            return False
+
+        if not context.owner.store:
+            return False
+
+        return True
