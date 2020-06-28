@@ -1,7 +1,7 @@
 from typing import Union
 
 from hearthstone.cards import CardEvent
-from hearthstone.events import BuyPhaseContext, CombatPhaseContext, COMBAT_START
+from hearthstone.events import BuyPhaseContext, CombatPhaseContext, COMBAT_START, SUMMON_COMBAT
 from hearthstone.hero import Hero
 from hearthstone.monster_types import DEMON
 
@@ -43,3 +43,17 @@ class Nefarian(Hero):
                 for card in context.enemy_war_party.board:
                     card.take_damage(1)
                     card.resolve_death(context)
+
+
+class Deathwing(Hero):
+    def hero_power_valid_impl(self, context: BuyPhaseContext):
+        return False
+
+    def handle_event(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
+        if event.event == COMBAT_START:
+            all_minions = context.friendly_war_party.board + context.enemy_war_party.board
+            for minion in all_minions:
+                minion.attack += 2
+
+        if event.event == SUMMON_COMBAT:
+            event.card.attack += 2

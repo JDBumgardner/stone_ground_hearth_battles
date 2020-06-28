@@ -487,3 +487,26 @@ class RockpoolHunter(MonsterCard):
 
     def validate_battlecry_target(self, card: MonsterCard) -> bool:
         return card.monster_type == MURLOC and card != self
+
+
+class RatPack(MonsterCard):
+    tier = 2
+    monster_type = BEAST
+    base_attack = 2
+    base_health = 2
+
+    def base_deathrattle(self, context: CombatPhaseContext):
+        for _ in range(self.attack):
+            rat = Rat()
+            if self.golden:
+                rat.golden_transformation([])
+            summon_index = context.friendly_war_party.get_index(self)
+            context.friendly_war_party.summon_in_combat(rat, context, summon_index + 1)
+
+
+class Rat(MonsterCard):
+    tier = 1
+    monster_type = BEAST
+    base_attack = 1
+    base_health = 1
+    token = True
