@@ -592,6 +592,16 @@ class CardTests(unittest.TestCase):
         self.assertEqual(player_1.in_play[2].attack, 2)
         self.assertEqual(player_1.in_play[2].health, 3)
 
+    def test_millificent_manastorm(self):
+        tavern = Tavern()
+        player_1 = tavern.add_player("Millificent", MillificentManastorm())
+        player_2 = tavern.add_player("Ethan")
+        tavern.randomizer = CardForcer([MechaRoo] * 6)
+        tavern.buying_step()
+        player_1.purchase(0)
+        self.assertEqual(player_1.hand[0].attack, player_1.hand[0].base_attack + 1)
+        self.assertEqual(player_1.hand[0].health, player_1.hand[0].base_health + 1)
+
 
 if __name__ == '__main__':
     unittest.main()

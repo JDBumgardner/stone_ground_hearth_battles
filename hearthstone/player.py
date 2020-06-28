@@ -2,7 +2,7 @@ from typing import Optional, List, Callable
 import itertools
 
 from hearthstone.cards import MonsterCard, CardEvent, CardType, Card
-from hearthstone.events import SUMMON_BUY, BuyPhaseContext, SELL
+from hearthstone.events import SUMMON_BUY, BuyPhaseContext, SELL, BUY
 from hearthstone.hero import Hero, EmptyHero
 from hearthstone.triple_reward_card import TripleRewardCard
 
@@ -142,6 +142,8 @@ class Player:
         card = self.store.pop(index)
         self.coins -= card.coin_cost
         self.hand.append(card)
+        event = CardEvent(card, BUY)
+        self.broadcast_buy_phase_event(event)
         self.check_golden(type(card))
 
     def check_golden(self, check_card: CardType):
@@ -190,6 +192,7 @@ class Player:
         return self.hero.hero_power_valid(BuyPhaseContext(self, self.tavern.randomizer))
 
     def broadcast_buy_phase_event(self, event: CardEvent, randomizer: Optional['Randomizer'] = None):
+        self.hero.handle_event(event, BuyPhaseContext(self, randomizer or self.tavern.randomizer))
         for card in self.in_play:
             card.handle_event(event, BuyPhaseContext(self, randomizer or self.tavern.randomizer))
         for card in self.hand:

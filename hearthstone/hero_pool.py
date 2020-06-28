@@ -1,9 +1,9 @@
 from typing import Union
 
 from hearthstone.cards import CardEvent
-from hearthstone.events import BuyPhaseContext, CombatPhaseContext, COMBAT_START, SUMMON_COMBAT
+from hearthstone.events import BuyPhaseContext, CombatPhaseContext, COMBAT_START, SUMMON_COMBAT, BUY
 from hearthstone.hero import Hero
-from hearthstone.monster_types import DEMON
+from hearthstone.monster_types import DEMON, MECH
 
 
 class Pyramad(Hero):
@@ -57,3 +57,14 @@ class Deathwing(Hero):
 
         if event.event == SUMMON_COMBAT:
             event.card.attack += 2
+
+
+class MillificentManastorm(Hero):
+    def hero_power_valid_impl(self, context: BuyPhaseContext):
+        return False
+
+    def handle_event(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
+        if event.event == BUY:
+            if event.card.monster_type == MECH:
+                event.card.attack += 1
+                event.card.health += 1

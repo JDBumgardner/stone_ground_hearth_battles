@@ -8,6 +8,7 @@ COMBAT_START = 5
 BUY_START = 6
 ON_ATTACK = 7
 SELL = 8
+BUY = 9
 
 class BuyPhaseContext:
     def __init__(self, owner: 'Player', randomizer: 'Randomizer'):
