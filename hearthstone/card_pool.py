@@ -451,3 +451,23 @@ class DeckSwabbie(MonsterCard):
     def base_battlecry(self, context: 'BuyPhaseContext'):
         discount = 2 if self.golden else 1
         context.owner.tavern_upgrade_cost = max(context.owner.tavern_upgrade_cost - discount, 0)
+
+
+class UnstableGhoul(MonsterCard):
+    tier = 2
+    monster_type = None
+    base_attack = 1
+    base_health = 3
+    base_taunt = True
+
+    def base_deathrattle(self, context: CombatPhaseContext):
+        all_minions = [card for card in context.friendly_war_party.board + context.enemy_war_party.board if
+                       not card.dead]
+
+        count = 2 if self.golden else 1
+        for _ in range(count):
+            for minion in all_minions:
+                if minion.dead:
+                    continue
+                minion.take_damage(1)
+                minion.resolve_death(context)  # TODO: Order of death resolution?

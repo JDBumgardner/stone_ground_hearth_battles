@@ -177,5 +177,28 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
         self.assertEqual(adam.health, 40)
 
+    def test_unstable_ghoul(self):
+        adam = Player(None, "Adam")
+        ethan = Player(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [UnstableGhoul()]
+        ethans_war_party.board = [RabidSaurolisk(), WrathWeaver()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(ethan.health, 40)
+        self.assertEqual(adam.health, 40)
+
+    def test_unstable_ghoul_friendly_fire(self):
+        adam = Player(None, "Adam")
+        ethan = Player(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [UnstableGhoul(), WrathWeaver(), WrathWeaver(), WrathWeaver(), WrathWeaver()]
+        ethans_war_party.board = [RabidSaurolisk()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(ethan.health, 40)
+        self.assertEqual(adam.health, 40)
+
+
 if __name__ == '__main__':
     unittest.main()
