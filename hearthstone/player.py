@@ -22,6 +22,7 @@ class Player:
         self.triple_rewards = []
         self.discovered_cards = []
         self.maximum_board_size = 7
+        self.maximum_hand_size = 10
         self.refresh_store_cost = 1
         self.redeem_minion_rate = 1
         self._tavern_upgrade_costs = (0, 5, 7, 8, 9, 10)
@@ -57,17 +58,43 @@ class Player:
         self.tavern_tier += 1
         self.tavern_upgrade_cost = self._tavern_upgrade_costs[self.tavern_tier]
 
-    def summon_from_hand(self, monster: MonsterCard, event_target: Optional[MonsterCard] = None,
-                         secondary_target: Optional[MonsterCard] = None):
-        #  TODO: Validity check for board size
+    def summon_from_hand(self, card: MonsterCard, targets: Optional[List[MonsterCard]] = None):
         #  TODO: make sure that the ordering of monster in hand and monster.battlecry are correct
+        #  TODO: Jarett can monster be event target
+        #  TODO: Jack num_battlesry_targets should only accept 0,1,2
+        if targets is None:
+            targets = []
         assert self.room_on_board()
-        assert monster in self.hand
-        self.hand.remove(monster)
-        self.in_play.append(monster)
-        if monster.golden:
+        assert card in self.hand
+        valid_targets = [card for card in self.in_play if card.validate_battlecry_target(card)]
+        num_possible_targets = min(len(valid_targets), card.num_battlecry_targets)
+        assert len(targets) == num_possible_targets
+        assert len(set(targets)) == len(targets)
+        for target in targets:
+            assert target in valid_targets
+        self.hand.remove(card)
+        self.in_play.append(card)
+        if card.golden:
             self.triple_rewards.append(TripleRewardCard(min(self.tavern_tier + 1, 6)))
-        self.broadcast_buy_phase_event(CardEvent(monster, SUMMON_BUY))
+        self.broadcast_buy_phase_event(CardEvent(card, SUMMON_BUY, targets))
+
+    def validate_summon_from_hand(self, card: MonsterCard, targets: Optional[List[MonsterCard]] = None):
+        if card not in self.hand:
+            return False
+        if not self.room_on_board():
+            return False
+        if not card.validate_battlecry_target():
+            return False
+        if targets is None:
+            targets = []
+        assert self.room_on_board()
+        assert card in self.hand
+        valid_targets = [card for card in self.in_play if card.validate_battlecry_target(card)]
+        num_possible_targets = min(len(valid_targets), card.num_battlecry_targets)
+        assert len(targets) == num_possible_targets
+        assert len(set(targets)) == len(targets)
+        for target in targets:
+            assert target in valid_targets
 
     def play_triple_rewards(self):
         if not self.triple_rewards:
@@ -156,11 +183,20 @@ class Player:
         self.coins += self.redeem_minion_rate
         self.tavern.deck.cards.append(type(card)())
 
-    def hero_power(self, randomizer: Optional['Randomizer'] = None):
-        self.hero.hero_power(BuyPhaseContext(self, randomizer or self.tavern.randomizer))
+    def hero_power(self):
+        self.hero.hero_power(BuyPhaseContext(self, self.tavern.randomizer))
+
+    def hero_power_valid(self) -> bool:
+        return self.hero.hero_power_valid(BuyPhaseContext(self, self.tavern.randomizer))
 
     def broadcast_buy_phase_event(self, event: CardEvent, randomizer: Optional['Randomizer'] = None):
         for card in self.in_play:
             card.handle_event(event, BuyPhaseContext(self, randomizer or self.tavern.randomizer))
         for card in self.hand:
             card.handle_event_in_hand(event, BuyPhaseContext(self, randomizer or self.tavern.randomizer))
+
+    def hand_size(self):
+        return len(self.hand) + len(self.triple_rewards)
+
+    def max_tier(self):
+        return len(self._tavern_upgrade_costs)

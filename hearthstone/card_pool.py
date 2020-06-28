@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, List
 
 from hearthstone import events, combat
 from hearthstone.cards import MonsterCard, CardEvent
@@ -69,7 +69,7 @@ class AlleyCat(MonsterCard):
     base_attack = 1
     base_health = 1
 
-    def base_battlecry(self, context: 'BuyPhaseContext'):
+    def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
         tabby_cat = TabbyCat()
         if self.golden:
             tabby_cat.golden_transformation([])
@@ -178,7 +178,7 @@ class MurlocTidehunter(MonsterCard):
     base_attack = 2
     base_health = 1
 
-    def base_battlecry(self, context: BuyPhaseContext):
+    def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
         murloc_scout = MurlocScout()
         if self.golden:
             murloc_scout.golden_transformation([])
@@ -218,7 +218,7 @@ class VulgarHomunculus(MonsterCard):
     base_health = 4
     base_taunt = True
 
-    def base_battlecry(self, context: BuyPhaseContext):
+    def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
         context.owner.health -= 2
 
 
@@ -309,7 +309,7 @@ class MetaltoothLeaper(MonsterCard):
     base_attack = 3
     base_health = 3
 
-    def base_battlecry(self, context: BuyPhaseContext):
+    def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
         for card in context.owner.in_play:
             if card != self and card.monster_type == MECH:
                 card.attack += 2
@@ -448,7 +448,7 @@ class DeckSwabbie(MonsterCard):
     base_attack = 2
     base_health = 2
 
-    def base_battlecry(self, context: 'BuyPhaseContext'):
+    def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
         discount = 2 if self.golden else 1
         context.owner.tavern_upgrade_cost = max(context.owner.tavern_upgrade_cost - discount, 0)
 
@@ -471,3 +471,19 @@ class UnstableGhoul(MonsterCard):
                     continue
                 minion.take_damage(1)
                 minion.resolve_death(context)  # TODO: Order of death resolution?
+
+
+class RockpoolHunter(MonsterCard):
+    tier = 1
+    monster_type = MURLOC
+    base_attack = 2
+    base_health = 3
+    num_battlecry_targets = 1
+
+    def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
+        bonus = 2 if self.golden else 1
+        targets[0].attack += bonus
+        targets[0].health += bonus
+
+    def validate_battlecry_target(self, card: MonsterCard) -> bool:
+        return card.monster_type == MURLOC and card != self
