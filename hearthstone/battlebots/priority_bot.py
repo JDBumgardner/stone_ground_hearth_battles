@@ -96,3 +96,22 @@ def priority_saurolisk_bot(seed: int):
         return score
 
     return PriorityBot(["Jake Bumgardner"], priority, seed)
+
+
+def priority_adaptive_tripler_bot(seed: int):
+    def priority(player: Player, card: MonsterCard):
+        score = card.health + card.attack + card.tier
+        num_existing = len([existing for existing in player.hand + player.in_play if type(existing) == type(card) and not existing.golden])
+        if num_existing == 2:
+            score += 50
+        elif num_existing == 1:
+            score += 3
+
+        counts = {}
+        for existing in player.hand + player.in_play:
+            counts[existing.monster_type] = counts.setdefault(existing.monster_type, 0) + 1
+        score += counts.setdefault(card.monster_type, 0)
+
+        return score
+
+    return PriorityBot(["Jake Bumgardner"], priority, seed)
