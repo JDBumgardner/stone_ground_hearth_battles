@@ -8,6 +8,7 @@ from hearthstone.player import Player
 
 
 class SupremacyBot(Agent):
+    authors = ["Jeremy Salwen"]
     def __init__(self, monster_type:str, upgrade: bool, seed: int):
         self.local_random = random.Random(seed)
         self.monster_type = monster_type

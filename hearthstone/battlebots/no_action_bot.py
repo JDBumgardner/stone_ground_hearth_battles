@@ -6,6 +6,7 @@ from hearthstone.player import Player
 
 
 class NoActionBot(Agent):
+    authors = ["Brian Kelly"]
     def rearrange_cards(self, player: Player) -> List[Card]:
         return []
 

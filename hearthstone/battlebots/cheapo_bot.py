@@ -7,6 +7,8 @@ from hearthstone.player import Player
 
 
 class CheapoBot(Agent):
+    authors = ["Brian Kelly"]
+
     def __init__(self, seed: int):
         self.local_random = random.Random(seed)
 

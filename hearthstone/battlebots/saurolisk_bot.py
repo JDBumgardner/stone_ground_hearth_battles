@@ -9,6 +9,7 @@ from hearthstone.player import Player
 
 
 class SauroliskBot(Agent):
+    authors = ["Jake Bumgardner"]
     def __init__(self, seed: int):
         self.local_random = random.Random(seed)
 

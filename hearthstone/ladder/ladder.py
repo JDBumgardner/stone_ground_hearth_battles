@@ -85,7 +85,10 @@ def load_ratings(contestants: List[Contestant]):
 def save_ratings(contestants: List[Contestant]):
     ranked_contestants = sorted(contestants, key=lambda c: c.elo, reverse=True)
     standings = [
-        (c.name, {"elo": c.elo, "games_played": c.games_played, "last_time_updated": datetime.now().isoformat()}) for c
+        (c.name, {"elo": c.elo,
+                  "games_played": c.games_played,
+                  "last_time_updated": datetime.now().isoformat(),
+                  "authors": c.agent.authors}) for c
         in ranked_contestants]
     with open("../../data/standings.json", "w") as f:
         json.dump(standings, f, indent=4)
@@ -94,7 +97,7 @@ def save_ratings(contestants: List[Contestant]):
 def main():
     contestants = all_contestants()
     load_ratings(contestants)
-    run_tournament(contestants, 100)
+    run_tournament(contestants, 10)
     save_ratings(contestants)
 
 
