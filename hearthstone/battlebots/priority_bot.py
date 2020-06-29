@@ -3,14 +3,16 @@ from typing import List, Callable
 
 from hearthstone.agent import Agent, Action, generate_valid_actions, BuyAction, EndPhaseAction, SummonAction, \
     SellAction, TavernUpgradeAction, RerollAction
+from hearthstone.card_pool import RabidSaurolisk
 from hearthstone.cards import Card, MonsterCard
 from hearthstone.player import Player
 
 
 class PriorityBot(Agent):
-    authors = ["Jake Bumgardner", "Jeremy Salwen", "Diana Valverde-Paniagua"]
-
-    def __init__(self, priority: Callable[[MonsterCard], float], seed: int):
+    def __init__(self, authors: List[str], priority: Callable[[MonsterCard], float], seed: int):
+        if not authors:
+            authors = ["Jake Bumgardner", "Jeremy Salwen", "Diana Valverde-Paniagua"]
+        self.authors = authors
         self.priority = priority
         self.local_random = random.Random(seed)
 
@@ -56,7 +58,7 @@ class PriorityBot(Agent):
 
 
 def attack_health_priority_bot(seed: int):
-    return PriorityBot(lambda card: card.health + card.attack + card.tier, seed)
+    return PriorityBot(None, lambda card: card.health + card.attack + card.tier, seed)
 
 
 def racist_priority_bot(monster_type: str, seed: int):
@@ -66,4 +68,17 @@ def racist_priority_bot(monster_type: str, seed: int):
             score += 2
         return score
 
-    return PriorityBot(priority, seed)
+    return PriorityBot(None, priority, seed)
+
+
+def priority_saurolisk_bot(seed: int):
+    def priority(card: MonsterCard):
+        if type(card) is RabidSaurolisk:
+            return 100
+
+        score = card.health + card.attack + card.tier
+        if card.deathrattles:
+            score += 5
+        return score
+
+    return PriorityBot(["Jake Bumgardner"], priority, seed)
