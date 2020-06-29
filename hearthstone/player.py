@@ -20,7 +20,7 @@ class Player:
         self.tavern_tier = 1
         self.coins = 0
         self.triple_rewards = []
-        self.discovered_cards = []
+        self.discovered_cards :List[MonsterCard] = []
         self.maximum_board_size = 7
         self.maximum_hand_size = 10
         self.refresh_store_cost = 1
@@ -54,7 +54,8 @@ class Player:
         assert self.validate_upgrade_tavern()
         self.coins -= self.tavern_upgrade_cost
         self.tavern_tier += 1
-        self.tavern_upgrade_cost = self._tavern_upgrade_costs[self.tavern_tier]
+        if self.tavern_tier < self.max_tier():
+            self.tavern_upgrade_cost = self._tavern_upgrade_costs[self.tavern_tier]
 
     def validate_upgrade_tavern(self) -> bool:
         if self.tavern_tier >= self.max_tier():

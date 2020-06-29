@@ -1,4 +1,5 @@
 import copy
+import logging
 from typing import Optional
 
 from hearthstone import events
@@ -77,7 +78,7 @@ def fight_boards(war_party_1: WarParty, war_party_2: WarParty, randomizer: Rando
         defender = defending_war_party.get_random_monster(randomizer)
         if not attacker or not defender:
             break
-        print(f'{attacking_war_party.owner.name} is attacking {defending_war_party.owner.name}')
+        logging.debug(f'{attacking_war_party.owner.name} is attacking {defending_war_party.owner.name}')
         start_attack(attacker, defender, attacking_war_party, defending_war_party, randomizer)
         attacking_war_party, defending_war_party = defending_war_party, attacking_war_party
     damage(war_party_1, war_party_2)
@@ -87,18 +88,18 @@ def damage(half_board_1: WarParty, half_board_2: WarParty):
     monster_damage_1 = sum([card.tier for card in half_board_1.board if not card.dead])
     monster_damage_2 = sum([card.tier for card in half_board_2.board if not card.dead])
     if monster_damage_1 > 0:
-        print(f'{half_board_1.owner.name} has won the fight')
+        logging.debug(f'{half_board_1.owner.name} has won the fight')
         half_board_2.owner.health -= monster_damage_1 + half_board_1.owner.tavern_tier
     elif monster_damage_2 > 0:
-        print(f'{half_board_2.owner.name} has won the fight')
+        logging.debug(f'{half_board_2.owner.name} has won the fight')
         half_board_1.owner.health -= monster_damage_2 + half_board_2.owner.tavern_tier
     else:
-        print('neither player won')
+        logging.debug('neither player won')
 
 
 def start_attack(attacker: Card, defender: Card, attacking_war_party: WarParty, defending_war_party: WarParty,
                  randomizer: Randomizer):
-    print(f'{attacker} is attacking {defender}')
+    logging.debug(f'{attacker} is attacking {defender}')
     on_attack_event = CardEvent(attacker, events.ON_ATTACK)
     CombatPhaseContext(attacking_war_party, defending_war_party, randomizer).broadcast_combat_event(on_attack_event)
     attacker.take_damage(defender.attack)
@@ -108,4 +109,4 @@ def start_attack(attacker: Card, defender: Card, attacking_war_party: WarParty, 
 
     attacker.resolve_death(CombatPhaseContext(attacking_war_party, defending_war_party, randomizer))
     defender.resolve_death(CombatPhaseContext(defending_war_party, attacking_war_party, randomizer))
-    print(f'{attacker} has just attacked {defender}')
+    logging.debug(f'{attacker} has just attacked {defender}')

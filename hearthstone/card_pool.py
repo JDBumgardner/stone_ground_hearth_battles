@@ -1,3 +1,4 @@
+import logging
 from typing import Union, List
 
 from hearthstone import events, combat
@@ -24,6 +25,11 @@ class ShifterZerus(MonsterCard):
     tier = 3
     base_attack = 1
     base_health = 1
+
+class BullshitFourthTierDude(MonsterCard):
+    tier = 4
+    base_attack = 5
+    base_health = 5
 
 
 class SneedsOldShredder(MonsterCard):
@@ -418,7 +424,7 @@ class Scallywag(MonsterCard):
     def base_deathrattle(self, context: CombatPhaseContext):
         pirate_summon = SkyPirate()
         if self.golden:
-            pirate_summon.golden_transformation()
+            pirate_summon.golden_transformation([])
         scallywag_index = context.friendly_war_party.get_index(self)
         context.friendly_war_party.summon_in_combat(pirate_summon, context, scallywag_index + 1)
 
@@ -438,7 +444,7 @@ class SkyPirate(MonsterCard):
             defender = defending_war_party.get_random_monster(context.randomizer)
             if not defender:
                 return
-            print(f'{attacking_war_party.owner.name} is attacking {defending_war_party.owner.name}')
+            logging.debug(f'{attacking_war_party.owner.name} is attacking {defending_war_party.owner.name}')
             combat.start_attack(attacker, defender, attacking_war_party, defending_war_party, context.randomizer)
 
 

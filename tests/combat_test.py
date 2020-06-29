@@ -261,5 +261,6 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(adam.health, 37)
         self.assertEqual(ethan.health, 40)
 
+
 if __name__ == '__main__':
     unittest.main()

@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Generator
 
 from hearthstone.cards import Card, MonsterCard
 from hearthstone.tavern import Player
@@ -138,3 +138,33 @@ class Agent:
 
         """
         pass
+
+
+def generate_valid_actions(player: Player) -> Generator[Action, None, None]:
+    return (action for action in generate_all_actions(player) if action.valid(player))
+
+
+def generate_all_actions(player: Player) -> Generator[Action, None, None]:
+    yield TripleRewardsAction()
+    yield HeroPowerAction()
+    yield TavernUpgradeAction()
+    yield RerollAction()
+    yield EndPhaseAction(True)
+    yield EndPhaseAction(False)
+    for card in player.hand + player.in_play:
+        yield SellAction(card)
+    for card in player.store:
+        yield BuyAction(card)
+    for card in player.hand:
+        valid_targets = [target for target in player.in_play if card.validate_battlecry_target(target)]
+        num_battlecry_targets = min(card.num_battlecry_targets, len(valid_targets))
+        if num_battlecry_targets == 0:
+            yield SummonAction(card, [])
+        for target in valid_targets:
+            if num_battlecry_targets == 1:
+                yield SummonAction(card, [target])
+            else:
+                # TODO: Jarett Does order of targets ever matter?
+                for other_target in valid_targets:
+                    if other_target != target:
+                        yield SummonAction(card, [target, other_target])

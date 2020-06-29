@@ -21,7 +21,7 @@ class RoundRobinHost:
                 if player.health <= 0:
                     continue
                 agent = self.agents[player_name]
-                for _ in range(50):
+                for _ in range(20):
                     action = agent.buy_phase_action(player)
                     action.apply(player)
                     if player.discovered_cards:

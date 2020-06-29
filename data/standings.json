@@ -1,0 +1,130 @@
+[
+    [
+        "SauroliskBot",
+        {
+            "elo": 1853.8099821311966,
+            "games_played": 56,
+            "last_time_updated": "2020-06-28T22:27:54.995086"
+        }
+    ],
+    [
+        "SupremacyUpgradeBot beast",
+        {
+            "elo": 1419.630857944853,
+            "games_played": 44,
+            "last_time_updated": "2020-06-28T22:27:54.995102"
+        }
+    ],
+    [
+        "CheapoBot",
+        {
+            "elo": 1345.4814246562607,
+            "games_played": 51,
+            "last_time_updated": "2020-06-28T22:27:54.995105"
+        }
+    ],
+    [
+        "SupremacyUpgradeBot mech",
+        {
+            "elo": 1323.832527592995,
+            "games_played": 51,
+            "last_time_updated": "2020-06-28T22:27:54.995108"
+        }
+    ],
+    [
+        "SupremacyBot murloc",
+        {
+            "elo": 1305.7274679718932,
+            "games_played": 52,
+            "last_time_updated": "2020-06-28T22:27:54.995110"
+        }
+    ],
+    [
+        "SupremacyUpgradeBot murloc",
+        {
+            "elo": 1297.7881672464534,
+            "games_played": 49,
+            "last_time_updated": "2020-06-28T22:27:54.995113"
+        }
+    ],
+    [
+        "SupremacyUpgradeBot dragon",
+        {
+            "elo": 1272.1921760532496,
+            "games_played": 63,
+            "last_time_updated": "2020-06-28T22:27:54.995116"
+        }
+    ],
+    [
+        "SupremacyBot beast",
+        {
+            "elo": 1260.790515033445,
+            "games_played": 54,
+            "last_time_updated": "2020-06-28T22:27:54.995118"
+        }
+    ],
+    [
+        "SupremacyBot mech",
+        {
+            "elo": 1230.4158138398357,
+            "games_played": 42,
+            "last_time_updated": "2020-06-28T22:27:54.995120"
+        }
+    ],
+    [
+        "SupremacyBot dragon",
+        {
+            "elo": 1194.128930685299,
+            "games_played": 47,
+            "last_time_updated": "2020-06-28T22:27:54.995123"
+        }
+    ],
+    [
+        "SupremacyUpgradeBot demon",
+        {
+            "elo": 1123.2539338272472,
+            "games_played": 51,
+            "last_time_updated": "2020-06-28T22:27:54.995127"
+        }
+    ],
+    [
+        "SupremacyBot pirate",
+        {
+            "elo": 1058.2848345712682,
+            "games_played": 41,
+            "last_time_updated": "2020-06-28T22:27:54.995130"
+        }
+    ],
+    [
+        "SupremacyUpgradeBot pirate",
+        {
+            "elo": 1052.8549571653018,
+            "games_played": 46,
+            "last_time_updated": "2020-06-28T22:27:54.995134"
+        }
+    ],
+    [
+        "SupremacyBot demon",
+        {
+            "elo": 971.3661267658633,
+            "games_played": 61,
+            "last_time_updated": "2020-06-28T22:27:54.995137"
+        }
+    ],
+    [
+        "RandomBot",
+        {
+            "elo": 785.0230399489499,
+            "games_played": 44,
+            "last_time_updated": "2020-06-28T22:27:54.995140"
+        }
+    ],
+    [
+        "NoActionBot ",
+        {
+            "elo": 705.4192445658898,
+            "games_played": 48,
+            "last_time_updated": "2020-06-28T22:27:54.995143"
+        }
+    ]
+]

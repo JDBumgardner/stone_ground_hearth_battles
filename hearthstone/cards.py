@@ -1,3 +1,4 @@
+import logging
 from typing import Set, List, Optional, NamedTuple, Callable, Type, Union
 
 from hearthstone import events
@@ -176,12 +177,10 @@ class CardList:
 
     def draw(self, player):
         valid_cards = [card for card in self.cards if player.tavern_tier >= card.tier]
-        if valid_cards:
-            random_card = player.tavern.randomizer.select_draw_card(valid_cards, player.name, player.tavern.turn_count)
-            self.cards.remove(random_card)
-            return random_card
-        else:
-            print("error, fnord")
+        assert valid_cards, "fnord"
+        random_card = player.tavern.randomizer.select_draw_card(valid_cards, player.name, player.tavern.turn_count)
+        self.cards.remove(random_card)
+        return random_card
 
     def __len__(self) -> int:
         return len(self.cards)

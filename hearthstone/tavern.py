@@ -15,6 +15,7 @@ class Tavern:
         self.turn_count = 0
         self.current_player_pairings = []
         self.randomizer = DefaultRandomizer()
+        self.losers = []
 
     def add_player(self, name: str, hero: Hero = None) -> Player:
         player = Player(self, name, hero)
@@ -37,6 +38,15 @@ class Tavern:
     def generate_pairings(self):
         self.current_player_pairings = self.randomizer.select_player_pairings(list(self.players.values()))
 
+    def update_losers(self):
+        for name, player in self.players.items():
+            if (name, player) not in self.losers and player.health <= 0:
+                self.losers.append((name, player))
+        if len(self.losers) == 7:
+            for name, player in self.players.items():
+                if (name, player) not in self.losers:
+                    self.losers.append((name, player))
+
     def game_over(self):
-        live_players = [player for player in self.players.values() if player.health > 0]
-        return len(live_players) <= 1
+        self.update_losers()
+        return len(self.losers) >= len(self.players)
