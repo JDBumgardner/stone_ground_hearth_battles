@@ -36,7 +36,12 @@ class Tavern:
         self.turn_count += 1
 
     def generate_pairings(self):
-        self.current_player_pairings = self.randomizer.select_player_pairings(list(self.players.values()))
+        fighting_players = [player for player in self.players.values() if player.health > 0]
+        if len(fighting_players) % 2 != 0:
+            last_dead_player = self.losers[-1][1]
+            fighting_players.append(last_dead_player)
+
+        self.current_player_pairings = self.randomizer.select_player_pairings(fighting_players)
 
     def update_losers(self):
         for name, player in self.players.items():
