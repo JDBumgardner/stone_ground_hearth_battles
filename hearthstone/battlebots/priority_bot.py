@@ -72,7 +72,7 @@ def attack_health_tripler_priority_bot(seed: int):
 
         return score
 
-    return PriorityBot(None, priority, seed)
+    return PriorityBot(["Jake Bumgardner"], priority, seed)
 
 
 def racist_priority_bot(monster_type: str, seed: int):
@@ -114,4 +114,32 @@ def priority_adaptive_tripler_bot(seed: int):
 
         return score
 
-    return PriorityBot(["Jake Bumgardner"], priority, seed)
+    return PriorityBot(["Jeremy Salwen"], priority, seed)
+
+
+def priority_health_tripler_bot(seed: int):
+    def priority(player: Player, card: MonsterCard):
+        score = card.health*2 + card.attack + card.tier
+        num_existing = len([existing for existing in player.hand + player.in_play if type(existing) == type(card) and not existing.golden])
+        if num_existing == 2:
+            score += 50
+        elif num_existing == 1:
+            score += 3
+
+        return score
+
+    return PriorityBot(["Jeremy Salwen"], priority, seed)
+
+
+def priority_attack_tripler_bot(seed: int):
+    def priority(player: Player, card: MonsterCard):
+        score = card.health + card.attack*2 + card.tier
+        num_existing = len([existing for existing in player.hand + player.in_play if type(existing) == type(card) and not existing.golden])
+        if num_existing == 2:
+            score += 50
+        elif num_existing == 1:
+            score += 3
+
+        return score
+
+    return PriorityBot(["Jeremy Salwen"], priority, seed)
