@@ -80,6 +80,7 @@ def load_ratings(contestants: List[Contestant]):
     for contestant in contestants:
         if contestant.name in standings_dict:
             contestant.elo = standings_dict[contestant.name]["elo"]
+            contestant.games_played = standings_dict[contestant.name]["games_played"]
 
 
 def save_ratings(contestants: List[Contestant]):
@@ -97,7 +98,7 @@ def save_ratings(contestants: List[Contestant]):
 def main():
     contestants = all_contestants()
     load_ratings(contestants)
-    run_tournament(contestants, 10)
+    run_tournament(contestants, 100)
     save_ratings(contestants)
 
 
