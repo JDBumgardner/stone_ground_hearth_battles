@@ -7,7 +7,7 @@ from hearthstone.battlebots.cheapo_bot import CheapoBot
 from hearthstone.battlebots.no_action_bot import NoActionBot
 from hearthstone.battlebots.priority_bot import attack_health_priority_bot, racist_priority_bot, priority_saurolisk_bot, \
     attack_health_tripler_priority_bot, priority_adaptive_tripler_bot, priority_health_tripler_bot, \
-    priority_attack_tripler_bot
+    priority_attack_tripler_bot, battlerattler_priority_bot
 from hearthstone.battlebots.random_bot import RandomBot
 from hearthstone.battlebots.saurolisk_bot import SauroliskBot
 from hearthstone.battlebots.supremacy_bot import SupremacyBot
@@ -79,6 +79,7 @@ def all_contestants():
     all_bots += [Contestant("PriorityAdaptiveTriplerBot", priority_adaptive_tripler_bot(10))]
     all_bots += [Contestant("PriorityHeathTriplerBot", priority_health_tripler_bot(11))]
     all_bots += [Contestant("PriorityAttackTriplerBot", priority_attack_tripler_bot(12))]
+    all_bots += [Contestant("BattleRattlerPriorityBot", battlerattler_priority_bot(13))]
     return all_bots
 
 

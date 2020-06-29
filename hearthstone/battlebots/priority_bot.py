@@ -143,3 +143,25 @@ def priority_attack_tripler_bot(seed: int):
         return score
 
     return PriorityBot(["Jeremy Salwen"], priority, seed)
+
+
+def battlerattler_priority_bot(seed: int):
+    def priority(player: Player, card: MonsterCard):
+        score = card.health + card.attack + card.tier
+        num_existing = len([existing for existing in player.hand + player.in_play if type(existing) == type(card) and not existing.golden])
+        if num_existing == 2:
+            score += 50
+        elif num_existing == 1:
+            score += 3
+
+        counts = {}
+        for existing in player.hand + player.in_play:
+            counts[existing.monster_type] = counts.setdefault(existing.monster_type, 0) + 1
+        score += counts.setdefault(card.monster_type, 0)
+
+        if card.deathrattles:
+            score += 2
+        if card.battlecry:
+            score += 2
+        return score
+    return PriorityBot(["Jake Bumgardner"], priority, seed)

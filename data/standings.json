@@ -2,33 +2,9 @@
     [
         "PrioritySauroliskBot",
         {
-            "elo": 2121.3248751749315,
-            "games_played": 429,
-            "last_time_updated": "2020-06-29T00:27:09.790085",
-            "authors": [
-                "Jake Bumgardner"
-            ]
-        }
-    ],
-    [
-        "PriorityRacistBot murloc",
-        {
-            "elo": 1916.510829123743,
-            "games_played": 486,
-            "last_time_updated": "2020-06-29T00:27:09.790100",
-            "authors": [
-                "Jake Bumgardner",
-                "Jeremy Salwen",
-                "Diana Valverde-Paniagua"
-            ]
-        }
-    ],
-    [
-        "PriorityHealthAttackTriplerBot",
-        {
-            "elo": 1830.2012679685981,
-            "games_played": 289,
-            "last_time_updated": "2020-06-29T00:27:09.790104",
+            "elo": 1901.4323181264697,
+            "games_played": 479,
+            "last_time_updated": "2020-06-29T00:32:24.984001",
             "authors": [
                 "Jake Bumgardner"
             ]
@@ -37,31 +13,79 @@
     [
         "PriorityAdaptiveTriplerBot",
         {
-            "elo": 1748.120442684587,
-            "games_played": 170,
-            "last_time_updated": "2020-06-29T00:27:09.790107",
+            "elo": 1849.4067699345367,
+            "games_played": 217,
+            "last_time_updated": "2020-06-29T00:32:24.984016",
             "authors": [
                 "Jeremy Salwen"
+            ]
+        }
+    ],
+    [
+        "PriorityHealthAttackTriplerBot",
+        {
+            "elo": 1822.3884443361815,
+            "games_played": 360,
+            "last_time_updated": "2020-06-29T00:32:24.984020",
+            "authors": [
+                "Jake Bumgardner"
+            ]
+        }
+    ],
+    [
+        "BattleRattlerPriorityBot",
+        {
+            "elo": 1807.484192850646,
+            "games_played": 55,
+            "last_time_updated": "2020-06-29T00:32:24.984023",
+            "authors": [
+                "Jake Bumgardner"
+            ]
+        }
+    ],
+    [
+        "PriorityRacistBot murloc",
+        {
+            "elo": 1796.6405406346103,
+            "games_played": 536,
+            "last_time_updated": "2020-06-29T00:32:24.984026",
+            "authors": [
+                "Jake Bumgardner",
+                "Jeremy Salwen",
+                "Diana Valverde-Paniagua"
             ]
         }
     ],
     [
         "PriorityAttackTriplerBot",
         {
-            "elo": 1740.670975204046,
-            "games_played": 58,
-            "last_time_updated": "2020-06-29T00:27:09.790110",
+            "elo": 1778.2161709507645,
+            "games_played": 109,
+            "last_time_updated": "2020-06-29T00:32:24.984029",
             "authors": [
                 "Jeremy Salwen"
             ]
         }
     ],
     [
+        "PriorityRacistBot demon",
+        {
+            "elo": 1656.9000488026325,
+            "games_played": 543,
+            "last_time_updated": "2020-06-29T00:32:24.984032",
+            "authors": [
+                "Jake Bumgardner",
+                "Jeremy Salwen",
+                "Diana Valverde-Paniagua"
+            ]
+        }
+    ],
+    [
         "PriorityRacistBot mech",
         {
-            "elo": 1716.2448605745872,
-            "games_played": 477,
-            "last_time_updated": "2020-06-29T00:27:09.790113",
+            "elo": 1611.7229687732474,
+            "games_played": 532,
+            "last_time_updated": "2020-06-29T00:32:24.984035",
             "authors": [
                 "Jake Bumgardner",
                 "Jeremy Salwen",
@@ -72,59 +96,20 @@
     [
         "PriorityHeathTriplerBot",
         {
-            "elo": 1687.063515749838,
-            "games_played": 65,
-            "last_time_updated": "2020-06-29T00:27:09.790116",
+            "elo": 1591.156632259369,
+            "games_played": 109,
+            "last_time_updated": "2020-06-29T00:32:24.984038",
             "authors": [
                 "Jeremy Salwen"
             ]
         }
     ],
     [
-        "PriorityRacistBot dragon",
-        {
-            "elo": 1645.2143115658307,
-            "games_played": 456,
-            "last_time_updated": "2020-06-29T00:27:09.790118",
-            "authors": [
-                "Jake Bumgardner",
-                "Jeremy Salwen",
-                "Diana Valverde-Paniagua"
-            ]
-        }
-    ],
-    [
         "PriorityRacistBot beast",
         {
-            "elo": 1636.7275364821137,
-            "games_played": 468,
-            "last_time_updated": "2020-06-29T00:27:09.790121",
-            "authors": [
-                "Jake Bumgardner",
-                "Jeremy Salwen",
-                "Diana Valverde-Paniagua"
-            ]
-        }
-    ],
-    [
-        "PriorityRacistBot demon",
-        {
-            "elo": 1544.5954048765902,
-            "games_played": 489,
-            "last_time_updated": "2020-06-29T00:27:09.790124",
-            "authors": [
-                "Jake Bumgardner",
-                "Jeremy Salwen",
-                "Diana Valverde-Paniagua"
-            ]
-        }
-    ],
-    [
-        "PriorityHealthAttackBot",
-        {
-            "elo": 1473.3995169688515,
-            "games_played": 559,
-            "last_time_updated": "2020-06-29T00:27:09.790127",
+            "elo": 1531.1140821421882,
+            "games_played": 525,
+            "last_time_updated": "2020-06-29T00:32:24.984041",
             "authors": [
                 "Jake Bumgardner",
                 "Jeremy Salwen",
@@ -135,9 +120,9 @@
     [
         "PriorityRacistBot pirate",
         {
-            "elo": 1473.0850159181307,
-            "games_played": 477,
-            "last_time_updated": "2020-06-29T00:27:09.790130",
+            "elo": 1508.5643424891489,
+            "games_played": 541,
+            "last_time_updated": "2020-06-29T00:32:24.984043",
             "authors": [
                 "Jake Bumgardner",
                 "Jeremy Salwen",
@@ -146,44 +131,70 @@
         }
     ],
     [
-        "SauroliskBot",
+        "PriorityRacistBot dragon",
         {
-            "elo": 1100.504685463996,
-            "games_played": 640,
-            "last_time_updated": "2020-06-29T00:27:09.790133",
+            "elo": 1502.625130030805,
+            "games_played": 502,
+            "last_time_updated": "2020-06-29T00:32:24.984046",
             "authors": [
-                "Jake Bumgardner"
+                "Jake Bumgardner",
+                "Jeremy Salwen",
+                "Diana Valverde-Paniagua"
             ]
         }
     ],
     [
-        "CheapoBot",
+        "PriorityHealthAttackBot",
         {
-            "elo": 1085.1159294073768,
-            "games_played": 648,
-            "last_time_updated": "2020-06-29T00:27:09.790137",
+            "elo": 1317.584713812588,
+            "games_played": 617,
+            "last_time_updated": "2020-06-29T00:32:24.984049",
             "authors": [
-                "Brian Kelly"
+                "Jake Bumgardner",
+                "Jeremy Salwen",
+                "Diana Valverde-Paniagua"
             ]
         }
     ],
     [
         "SupremacyUpgradeBot beast",
         {
-            "elo": 877.4821503619049,
-            "games_played": 646,
-            "last_time_updated": "2020-06-29T00:27:09.790140",
+            "elo": 1046.234033296275,
+            "games_played": 702,
+            "last_time_updated": "2020-06-29T00:32:24.984052",
             "authors": [
                 "Jeremy Salwen"
             ]
         }
     ],
     [
+        "CheapoBot",
+        {
+            "elo": 1032.744541888377,
+            "games_played": 709,
+            "last_time_updated": "2020-06-29T00:32:24.984055",
+            "authors": [
+                "Brian Kelly"
+            ]
+        }
+    ],
+    [
+        "SauroliskBot",
+        {
+            "elo": 980.6109577423448,
+            "games_played": 690,
+            "last_time_updated": "2020-06-29T00:32:24.984066",
+            "authors": [
+                "Jake Bumgardner"
+            ]
+        }
+    ],
+    [
         "SupremacyBot murloc",
         {
-            "elo": 873.2159357329745,
-            "games_played": 685,
-            "last_time_updated": "2020-06-29T00:27:09.790143",
+            "elo": 897.4107628138048,
+            "games_played": 732,
+            "last_time_updated": "2020-06-29T00:32:24.984070",
             "authors": [
                 "Jeremy Salwen"
             ]
@@ -192,9 +203,9 @@
     [
         "SupremacyBot beast",
         {
-            "elo": 869.9736286034291,
-            "games_played": 654,
-            "last_time_updated": "2020-06-29T00:27:09.790146",
+            "elo": 888.3445150015197,
+            "games_played": 717,
+            "last_time_updated": "2020-06-29T00:32:24.984073",
             "authors": [
                 "Jeremy Salwen"
             ]
@@ -203,53 +214,9 @@
     [
         "SupremacyBot demon",
         {
-            "elo": 863.5210031049329,
-            "games_played": 618,
-            "last_time_updated": "2020-06-29T00:27:09.790149",
-            "authors": [
-                "Jeremy Salwen"
-            ]
-        }
-    ],
-    [
-        "SupremacyUpgradeBot pirate",
-        {
-            "elo": 845.7525725823006,
-            "games_played": 631,
-            "last_time_updated": "2020-06-29T00:27:09.790152",
-            "authors": [
-                "Jeremy Salwen"
-            ]
-        }
-    ],
-    [
-        "SupremacyUpgradeBot mech",
-        {
-            "elo": 831.992455721318,
-            "games_played": 648,
-            "last_time_updated": "2020-06-29T00:27:09.790154",
-            "authors": [
-                "Jeremy Salwen"
-            ]
-        }
-    ],
-    [
-        "SupremacyBot dragon",
-        {
-            "elo": 815.5844607837723,
-            "games_played": 650,
-            "last_time_updated": "2020-06-29T00:27:09.790157",
-            "authors": [
-                "Jeremy Salwen"
-            ]
-        }
-    ],
-    [
-        "SupremacyUpgradeBot demon",
-        {
-            "elo": 798.868767879999,
-            "games_played": 645,
-            "last_time_updated": "2020-06-29T00:27:09.790160",
+            "elo": 849.3759680542373,
+            "games_played": 669,
+            "last_time_updated": "2020-06-29T00:32:24.984076",
             "authors": [
                 "Jeremy Salwen"
             ]
@@ -258,20 +225,31 @@
     [
         "SupremacyUpgradeBot dragon",
         {
-            "elo": 776.9953206829164,
-            "games_played": 633,
-            "last_time_updated": "2020-06-29T00:27:09.790162",
+            "elo": 841.1153320015542,
+            "games_played": 693,
+            "last_time_updated": "2020-06-29T00:32:24.984079",
             "authors": [
                 "Jeremy Salwen"
             ]
         }
     ],
     [
-        "SupremacyBot pirate",
+        "SupremacyUpgradeBot mech",
         {
-            "elo": 766.5205503319734,
-            "games_played": 637,
-            "last_time_updated": "2020-06-29T00:27:09.790165",
+            "elo": 841.021493630442,
+            "games_played": 688,
+            "last_time_updated": "2020-06-29T00:32:24.984082",
+            "authors": [
+                "Jeremy Salwen"
+            ]
+        }
+    ],
+    [
+        "SupremacyBot dragon",
+        {
+            "elo": 795.8854704594396,
+            "games_played": 699,
+            "last_time_updated": "2020-06-29T00:32:24.984085",
             "authors": [
                 "Jeremy Salwen"
             ]
@@ -280,9 +258,31 @@
     [
         "SupremacyBot mech",
         {
-            "elo": 706.6127416988286,
-            "games_played": 654,
-            "last_time_updated": "2020-06-29T00:27:09.790168",
+            "elo": 794.4172361501137,
+            "games_played": 716,
+            "last_time_updated": "2020-06-29T00:32:24.984088",
+            "authors": [
+                "Jeremy Salwen"
+            ]
+        }
+    ],
+    [
+        "SupremacyUpgradeBot demon",
+        {
+            "elo": 747.8682881442104,
+            "games_played": 710,
+            "last_time_updated": "2020-06-29T00:32:24.984091",
+            "authors": [
+                "Jeremy Salwen"
+            ]
+        }
+    ],
+    [
+        "SupremacyBot pirate",
+        {
+            "elo": 722.4146816114396,
+            "games_played": 694,
+            "last_time_updated": "2020-06-29T00:32:24.984093",
             "authors": [
                 "Jeremy Salwen"
             ]
@@ -291,9 +291,20 @@
     [
         "SupremacyUpgradeBot murloc",
         {
-            "elo": 665.5031120668305,
-            "games_played": 636,
-            "last_time_updated": "2020-06-29T00:27:09.790170",
+            "elo": 719.3608083404516,
+            "games_played": 693,
+            "last_time_updated": "2020-06-29T00:32:24.984096",
+            "authors": [
+                "Jeremy Salwen"
+            ]
+        }
+    ],
+    [
+        "SupremacyUpgradeBot pirate",
+        {
+            "elo": 705.3955168574429,
+            "games_played": 697,
+            "last_time_updated": "2020-06-29T00:32:24.984099",
             "authors": [
                 "Jeremy Salwen"
             ]
@@ -302,9 +313,9 @@
     [
         "RandomBot",
         {
-            "elo": 615.5102782205804,
-            "games_played": 624,
-            "last_time_updated": "2020-06-29T00:27:09.790173",
+            "elo": 690.1696703466766,
+            "games_played": 677,
+            "last_time_updated": "2020-06-29T00:32:24.984102",
             "authors": [
                 "Jeremy Salwen"
             ]
@@ -313,9 +324,9 @@
     [
         "NoActionBot ",
         {
-            "elo": 573.6878550650206,
-            "games_played": 648,
-            "last_time_updated": "2020-06-29T00:27:09.790177",
+            "elo": 572.3943685184855,
+            "games_played": 709,
+            "last_time_updated": "2020-06-29T00:32:24.984105",
             "authors": [
                 "Brian Kelly"
             ]
