@@ -650,6 +650,14 @@ class CardTests(unittest.TestCase):
         player_1.sell_minion(player_1.hand[0])
         self.assertEqual(player_1.coins, coins + 3)
 
+    def test_income_limit(self):
+        tavern = Tavern()
+        player_1 = tavern.add_player("Joe")
+        player_2 = tavern.add_player("Donald")
+        self.upgrade_to_tier(tavern, 6)
+        tavern.buying_step()
+        self.assertEqual(player_1.coins, 10)
+
 
 if __name__ == '__main__':
     unittest.main()

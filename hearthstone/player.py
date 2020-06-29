@@ -33,7 +33,7 @@ class Player:
 
     @property
     def coin_income_rate(self):
-        return self.tavern.turn_count + 3
+        return min(self.tavern.turn_count + 3, 10)
 
     def player_main_step(self):
         self.draw()
@@ -157,6 +157,7 @@ class Player:
 
     def check_golden(self, check_card: CardType):
         cards = [card for card in self.in_play + self.hand if isinstance(card, check_card) and not card.golden]
+        assert len(cards) <= 3, "fnord"
         if len(cards) == 3:
             for card in cards:
                 if card in self.in_play:
@@ -166,8 +167,6 @@ class Player:
             golden_card = check_card()
             golden_card.golden_transformation(cards)
             self.hand.append(golden_card)
-        elif len(cards) > 3:
-            raise ZeroDivisionError("fnord")
 
     def reroll_store(self):
         assert self.validate_reroll()
