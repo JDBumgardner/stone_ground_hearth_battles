@@ -637,6 +637,19 @@ class CardTests(unittest.TestCase):
         self.assertEqual(player_1.hand[1].monster_type, PIRATE)
         self.assertEqual(player_1.hand[1].tier, 1)
 
+    def test_freedealing_gambler(self):
+        tavern = Tavern()
+        player_1 = tavern.add_player("Joe")
+        player_2 = tavern.add_player("Donald")
+        tavern.randomizer = CardForcer([Scallywag] * 18 +[FreedealingGambler]*8)
+        self.upgrade_to_tier(tavern, 2)
+        tavern.buying_step()
+        player_1.purchase(player_1.store[0])
+        self.assertCardListEquals(player_1.hand, [FreedealingGambler])
+        coins = player_1.coins
+        player_1.sell_minion(player_1.hand[0])
+        self.assertEqual(player_1.coins, coins + 3)
+
 
 if __name__ == '__main__':
     unittest.main()

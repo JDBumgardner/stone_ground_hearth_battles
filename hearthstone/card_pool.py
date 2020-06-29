@@ -47,9 +47,11 @@ class FreedealingGambler(MonsterCard):
     monster_type = PIRATE
     base_attack = 3
     base_health = 3
+    redeem_rate = 3
 
-    def base_deathrattle(self, context):
-        pass
+    def golden_transformation(self, base_cards: List['MonsterCard']):
+        super().golden_transformation(base_cards)
+        self.redeem_rate *= 2
 
 
 class DragonspawnLieutenant(MonsterCard):

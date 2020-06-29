@@ -42,6 +42,7 @@ class Card(metaclass=CardType):
     mana_cost: int
     card_name: str
     coin_cost = 3
+    redeem_rate = 1
     tier: int
     token = False
 

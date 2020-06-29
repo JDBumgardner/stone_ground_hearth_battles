@@ -24,7 +24,6 @@ class Player:
         self.maximum_board_size = 7
         self.maximum_hand_size = 10
         self.refresh_store_cost = 1
-        self.redeem_minion_rate = 1
         self._tavern_upgrade_costs = (0, 5, 7, 8, 9, 10)
         self.tavern_upgrade_cost = 5
         self.hand: List[MonsterCard] = []
@@ -193,7 +192,7 @@ class Player:
             self.hand.remove(card)
         elif card in self.in_play:
             self.in_play.remove(card)
-        self.coins += self.redeem_minion_rate
+        self.coins += card.redeem_rate
         self.tavern.deck.cards.append(type(card)())
 
     def validate_sell_minion(self, card: MonsterCard) -> bool:
