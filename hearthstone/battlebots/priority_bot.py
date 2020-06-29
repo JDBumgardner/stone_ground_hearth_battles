@@ -3,7 +3,6 @@ from typing import List, Callable
 
 from hearthstone.agent import Agent, Action, generate_valid_actions, BuyAction, EndPhaseAction, SummonAction, \
     SellAction, TavernUpgradeAction, RerollAction
-from hearthstone.card_pool import RabidSaurolisk
 from hearthstone.cards import Card, MonsterCard
 from hearthstone.player import Player
 
@@ -58,3 +57,13 @@ class PriorityBot(Agent):
 
 def attack_health_priority_bot(seed: int):
     return PriorityBot(lambda card: card.health + card.attack + card.tier, seed)
+
+
+def racist_priority_bot(monster_type: str, seed: int):
+    def priority(card: MonsterCard):
+        score = card.health + card.attack + card.tier
+        if card.monster_type == monster_type:
+            score += 2
+        return score
+
+    return PriorityBot(priority, seed)

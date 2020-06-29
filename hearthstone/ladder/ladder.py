@@ -5,7 +5,7 @@ from typing import List
 
 from hearthstone.battlebots.cheapo_bot import CheapoBot
 from hearthstone.battlebots.no_action_bot import NoActionBot
-from hearthstone.battlebots.priority_bot import attack_health_priority_bot
+from hearthstone.battlebots.priority_bot import attack_health_priority_bot, racist_priority_bot
 from hearthstone.battlebots.random_bot import RandomBot
 from hearthstone.battlebots.saurolisk_bot import SauroliskBot
 from hearthstone.battlebots.supremacy_bot import SupremacyBot
@@ -71,6 +71,8 @@ def all_contestants():
                  enumerate([MURLOC, BEAST, MECH, DRAGON, DEMON, PIRATE])]
     all_bots += [Contestant("SauroliskBot", SauroliskBot(5))]
     all_bots += [Contestant("PriorityHealthAttackBot", attack_health_priority_bot(6))]
+    all_bots += [Contestant(f"PriorityRacistBot {t}", racist_priority_bot(t, i)) for i, t in
+                 enumerate([MURLOC, BEAST, MECH, DRAGON, DEMON, PIRATE])]
     return all_bots
 
 
