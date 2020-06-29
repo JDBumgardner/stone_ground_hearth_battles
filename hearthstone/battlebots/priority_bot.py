@@ -9,7 +9,7 @@ from hearthstone.player import Player
 
 
 class PriorityBot(Agent):
-    def __init__(self, authors: List[str], priority: Callable[[MonsterCard], float], seed: int):
+    def __init__(self, authors: List[str], priority: Callable[[Player, MonsterCard], float], seed: int):
         if not authors:
             authors = ["Jake Bumgardner", "Jeremy Salwen", "Diana Valverde-Paniagua"]
         self.authors = authors
@@ -29,19 +29,19 @@ class PriorityBot(Agent):
             if upgrade_action.valid(player):
                 return upgrade_action
 
-        top_hand_priority = max([self.priority(card) for card in player.hand], default=None)
-        top_store_priority = max([self.priority(card) for card in player.store], default=None)
-        bottom_board_priority = min([self.priority(card) for card in player.in_play], default=None)
+        top_hand_priority = max([self.priority(player, card) for card in player.hand], default=None)
+        top_store_priority = max([self.priority(player, card) for card in player.store], default=None)
+        bottom_board_priority = min([self.priority(player, card) for card in player.in_play], default=None)
         if top_hand_priority:
             if player.room_on_board():
-                return [action for action in all_actions if type(action) is SummonAction and self.priority(action.card) == top_hand_priority][0]
+                return [action for action in all_actions if type(action) is SummonAction and self.priority(player, action.card) == top_hand_priority][0]
             else:
                 if top_hand_priority > bottom_board_priority:
-                    return [action for action in all_actions if type(action) is SellAction and self.priority(action.card) == bottom_board_priority][0]
+                    return [action for action in all_actions if type(action) is SellAction and self.priority(player, action.card) == bottom_board_priority][0]
 
         if top_store_priority:
             if player.room_on_board() or bottom_board_priority < top_store_priority:
-                buy_action = BuyAction([card for card in player.store if self.priority(card) == top_store_priority][0])
+                buy_action = BuyAction([card for card in player.store if self.priority(player, card) == top_store_priority][0])
                 if buy_action.valid(player):
                     return buy_action
 
@@ -58,11 +58,25 @@ class PriorityBot(Agent):
 
 
 def attack_health_priority_bot(seed: int):
-    return PriorityBot(None, lambda card: card.health + card.attack + card.tier, seed)
+    return PriorityBot(None, lambda player, card: card.health + card.attack + card.tier, seed)
+
+
+def attack_health_tripler_priority_bot(seed: int):
+    def priority(player: Player, card: MonsterCard):
+        score = card.health + card.attack + card.tier
+        num_existing = len([existing for existing in player.hand + player.in_play if type(existing) == type(card) and not existing.golden])
+        if num_existing == 2:
+            score += 50
+        elif num_existing == 1:
+            score += 3
+
+        return score
+
+    return PriorityBot(None, priority, seed)
 
 
 def racist_priority_bot(monster_type: str, seed: int):
-    def priority(card: MonsterCard):
+    def priority(player: Player, card: MonsterCard):
         score = card.health + card.attack + card.tier
         if card.monster_type == monster_type:
             score += 2
@@ -72,7 +86,7 @@ def racist_priority_bot(monster_type: str, seed: int):
 
 
 def priority_saurolisk_bot(seed: int):
-    def priority(card: MonsterCard):
+    def priority(player: Player, card: MonsterCard):
         if type(card) is RabidSaurolisk:
             return 100
 
