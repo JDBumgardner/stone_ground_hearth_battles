@@ -22,6 +22,8 @@ class UserAgent(Agent):
     @staticmethod
     def parse_rearrange_input(user_text: str, player: Player) -> Optional[List[int]]:
         split_list = user_text.split(',')
+        if split_list == ["a"]:
+           return list(range(len(player.in_play)))
         try:
             check_list = [int(i) for i in split_list]
         except ValueError:
