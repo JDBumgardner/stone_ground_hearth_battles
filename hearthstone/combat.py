@@ -1,6 +1,6 @@
 import copy
 import logging
-from typing import Optional
+from typing import Optional, List
 
 from hearthstone import events
 from hearthstone.cards import Card, CardEvent, MonsterCard
@@ -27,7 +27,7 @@ class WarParty:
         num_cards = len(self.board)
         for offset in range(0, num_cards):
             index = (self.next_attacker_idx + offset) % num_cards
-            if not self.board[index].dead:
+            if not self.board[index].dead and not self.board[index].cant_attack:
                 self.next_attacker_idx = index + 1
                 return self.board[index]
         return None
@@ -59,6 +59,9 @@ class WarParty:
     def get_index(self, card):
         return self.board.index(card)
 
+    def attackers(self) -> List[Card]:
+        return [board_member for board_member in self.board if not board_member.dead and not board_member.cant_attack]
+
 
 def fight_boards(war_party_1: WarParty, war_party_2: WarParty, randomizer: Randomizer):
     #  Currently we are not randomizing the first to fight here
@@ -73,13 +76,16 @@ def fight_boards(war_party_1: WarParty, war_party_2: WarParty, randomizer: Rando
     # Friendly vs enemy warparty does not matter for broadcast_combat_event
     CombatPhaseContext(war_party_1, war_party_2, randomizer).broadcast_combat_event(start_combat_event)
 
-    while True:
+    while True: #  TODO: Jarett, what happens if there are two arcane cannons left over?
         attacker = attacking_war_party.find_next()
         defender = defending_war_party.get_random_monster(randomizer)
-        if not attacker or not defender:
-            break
         logging.debug(f'{attacking_war_party.owner.name} is attacking {defending_war_party.owner.name}')
-        start_attack(attacker, defender, attacking_war_party, defending_war_party, randomizer)
+        if not defender:
+            break
+        if attacker:
+            start_attack(attacker, defender, attacking_war_party, defending_war_party, randomizer)
+        elif not defending_war_party.attackers():
+            break
         attacking_war_party, defending_war_party = defending_war_party, attacking_war_party
     damage(war_party_1, war_party_2)
 
@@ -104,9 +110,7 @@ def start_attack(attacker: Card, defender: Card, attacking_war_party: WarParty, 
     CombatPhaseContext(attacking_war_party, defending_war_party, randomizer).broadcast_combat_event(on_attack_event)
     attacker.take_damage(defender.attack)
     defender.take_damage(attacker.attack)
-
     # handle "after combat" events here
-
     attacker.resolve_death(CombatPhaseContext(attacking_war_party, defending_war_party, randomizer))
     defender.resolve_death(CombatPhaseContext(defending_war_party, attacking_war_party, randomizer))
     logging.debug(f'{attacker} has just attacked {defender}')

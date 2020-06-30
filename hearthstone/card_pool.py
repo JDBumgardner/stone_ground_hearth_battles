@@ -1,10 +1,11 @@
 import logging
+from random import random
 from typing import Union, List
 
 from hearthstone import events, combat
 from hearthstone.cards import MonsterCard, CardEvent
 from hearthstone.events import SUMMON_BUY, BuyPhaseContext, CombatPhaseContext, SUMMON_COMBAT, ON_ATTACK, COMBAT_START, \
-    SELL
+    SELL, DIES
 from hearthstone.monster_types import BEAST, DEMON, MECH, PIRATE, DRAGON, MURLOC
 
 
@@ -519,3 +520,38 @@ class Rat(MonsterCard):
     base_attack = 1
     base_health = 1
     token = True
+
+
+class ArcaneCannon(MonsterCard):
+    tier = 2
+    monster_type = None
+    base_attack = 2
+    base_health = 2
+    cant_attack = True
+
+    def handle_event(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
+        damage = 4 if self.golden else 2
+        friendly_live_war_party = [friend for friend in context.friendly_war_party if not friend.dead]
+        if event.event == ON_ATTACK:
+            if event.card in friendly_live_war_party:
+                if abs(friendly_live_war_party.index(self) - friendly_live_war_party.index(event.card)) == 1:
+                    target = context.randomizer.select_enemy_minion([card for card in context.enemy_war_party if card])
+                    target.take_damage(damage)
+                    target.resolve_death(CombatPhaseContext(context.enemy_war_party, context.friendly_war_party, context.randomizer))
+
+
+class MonstrousMacaw(MonsterCard):
+    tier = 2
+    monster_type = BEAST
+    base_attack = 3
+    base_health = 2
+
+    def handle_event(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
+        if event.event == ON_ATTACK and event.card == self:
+            deathrattle_triggers = 2 if self.golden else 1
+            friends_with_deathrattles = [friend for friend in
+                                         context.friendly_war_party.board if not friend.dead and friend.deathrattles]
+            friend_with_deathrattle = context.randomizer.select_friendly_minion(friends_with_deathrattles)
+            for _ in range(deathrattle_triggers):
+                friend_with_deathrattle.handle_event(CardEvent(friend_with_deathrattle, DIES), context)
+

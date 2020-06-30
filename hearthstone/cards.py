@@ -72,6 +72,7 @@ class MonsterCard(Card):
     num_battlecry_targets = 0
     base_reborn = False
     token = False
+    cant_attack = False
 
     def __init__(self):
         super().__init__()
