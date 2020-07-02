@@ -137,7 +137,7 @@ class MonsterCard(Card):
                 if self.battlecry:
                     self.battlecry(event.targets, context)
                 if event.card.tracked:
-                    context.friendly_war_party.counted_cards[type(event.card)] += 1
+                    context.owner.counted_cards[type(event.card)] += 1
         if not self.dead:
             self.handle_event_powers(event, context)
 

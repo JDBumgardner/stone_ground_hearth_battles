@@ -529,13 +529,13 @@ class ArcaneCannon(MonsterCard):
     base_health = 2
     cant_attack = True
 
-    def handle_event(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
+    def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         damage = 4 if self.golden else 2
-        friendly_live_war_party = [friend for friend in context.friendly_war_party if not friend.dead]
         if event.event == ON_ATTACK:
+            friendly_live_war_party = [friend for friend in context.friendly_war_party.board if not friend.dead]
             if event.card in friendly_live_war_party:
                 if abs(friendly_live_war_party.index(self) - friendly_live_war_party.index(event.card)) == 1:
-                    target = context.randomizer.select_enemy_minion([card for card in context.enemy_war_party if card])
+                    target = context.randomizer.select_enemy_minion([card for card in context.enemy_war_party.board if card])
                     target.take_damage(damage)
                     target.resolve_death(CombatPhaseContext(context.enemy_war_party, context.friendly_war_party, context.randomizer))
 
@@ -551,9 +551,10 @@ class MonstrousMacaw(MonsterCard):
             deathrattle_triggers = 2 if self.golden else 1
             friends_with_deathrattles = [friend for friend in
                                          context.friendly_war_party.board if not friend.dead and friend.deathrattles]
-            friend_with_deathrattle = context.randomizer.select_friendly_minion(friends_with_deathrattles)
-            for _ in range(deathrattle_triggers):
-                friend_with_deathrattle.handle_event(CardEvent(friend_with_deathrattle, DIES), context)
+            if friends_with_deathrattles:
+                friend_with_deathrattle = context.randomizer.select_friendly_minion(friends_with_deathrattles)
+                for _ in range(deathrattle_triggers):
+                    friend_with_deathrattle.handle_event(CardEvent(friend_with_deathrattle, DIES), context)
 
 
 class NathrezimOverseer(MonsterCard):
@@ -578,7 +579,7 @@ class OldMurkeye(MonsterCard):
     base_attack = 2
     base_health = 4
 
-    def handle_event(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
+    def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         bonus = 2 if self.golden else 1
         if event.event is COMBAT_START:
             self.attack += bonus * sum(1 for murloc in context.friendly_war_party.board if murloc.monster_type is MURLOC)
@@ -630,7 +631,7 @@ class PogoHoppers(MonsterCard):
     base_health = 1
     tracked = True
 
-    def handle_event(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
+    def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         bonus = 4 if self.golden else 2
         if event.event is SUMMON_BUY and event.card is self:
             self.attack += context.owner.counted_cards[type(self)] * bonus
