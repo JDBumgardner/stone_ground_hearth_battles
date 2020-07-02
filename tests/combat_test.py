@@ -1,5 +1,4 @@
 import unittest
-from typing import List
 
 from hearthstone.card_pool import *
 from hearthstone.cards import Card
@@ -283,6 +282,17 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 32)
 
+    def test_mechano_egg(self):
+        adam = Player(None, "Adam")
+        ethan = Player(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [MechanoEgg()]
+        ethans_war_party.board = [RighteousProtector(), RighteousProtector(), RighteousProtector(),
+                                  RighteousProtector()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
 
 
 if __name__ == '__main__':

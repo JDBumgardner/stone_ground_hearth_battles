@@ -588,3 +588,35 @@ class OldMurkeye(MonsterCard):
             self.attack += bonus
 
 
+class CrystalWeaver(MonsterCard):
+    tier = 3
+    base_attack = 5
+    base_health = 4
+
+    def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
+        bonus = 2 if self.golden else 1
+        for card in context.owner.in_play:
+            if card.monster_type == DEMON:
+                card.attack += bonus
+                card.health += bonus
+
+
+class MechanoEgg(MonsterCard):
+    tier = 4
+    base_attack = 0
+    base_health = 5
+
+    def base_deathrattle(self, context: CombatPhaseContext):
+        robosaur = Robosaur()
+        if self.golden:
+            robosaur.golden_transformation([])
+        summon_index = context.friendly_war_party.get_index(self)
+        context.friendly_war_party.summon_in_combat(robosaur, context, summon_index + 1)
+
+
+class Robosaur(MonsterCard):
+    token = True
+    tier = 1
+    base_attack = 8
+    base_health = 8
+
