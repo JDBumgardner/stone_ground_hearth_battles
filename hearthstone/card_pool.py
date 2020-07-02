@@ -27,7 +27,7 @@ class ShifterZerus(MonsterCard):
     base_attack = 1
     base_health = 1
 
-class BullshitFourthTierDude(MonsterCard):
+class BullshitFourthTierDude(MonsterCard): #  TODO: Jarett is this a real card?
     tier = 4
     base_attack = 5
     base_health = 5
@@ -391,7 +391,7 @@ class MurlocWarleader(MonsterCard):
             event.card.attack += bonus
 
     def base_deathrattle(self, context: CombatPhaseContext):
-        # TODO: IS THIS NEEDED?  Cause we have no idea...
+        # TODO: IS THIS NEEDED?  Cause we have no idea... Jarett
         bonus = 2
         if self.golden:
             bonus = 4
@@ -554,4 +554,40 @@ class MonstrousMacaw(MonsterCard):
             friend_with_deathrattle = context.randomizer.select_friendly_minion(friends_with_deathrattles)
             for _ in range(deathrattle_triggers):
                 friend_with_deathrattle.handle_event(CardEvent(friend_with_deathrattle, DIES), context)
+
+
+class NathrezimOverseer(MonsterCard):
+    tier = 2
+    monster_type = DEMON
+    base_attack = 2
+    base_health = 3
+
+    def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
+        bonus = 2 if self.golden else 1
+        if targets:
+            targets[0].attack += bonus
+            targets[0].health += bonus
+
+    def validate_battlecry_target(self, card: MonsterCard) -> bool:
+        return card.monster_type == DEMON and card != self
+
+
+class OldMurkeye(MonsterCard):
+    tier = 2
+    monster_type = MURLOC
+    base_attack = 2
+    base_health = 4
+
+    def handle_event(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
+        bonus = 2 if self.golden else 1
+        if event.event is COMBAT_START:
+            self.attack += bonus * len([murloc for murloc in context.friendly_war_party.board if murloc.monster_type is MURLOC])
+        if event.event is DIES and event.card in context.friendly_war_party.board and event.card.monster_type is MURLOC:
+            self.attack -= bonus
+        if event.event is SUMMON_COMBAT and event.card in context.friendly_war_party.board and event.card.monster_type is MURLOC
+            self.attack += bonus
+
+class
+
+
 
