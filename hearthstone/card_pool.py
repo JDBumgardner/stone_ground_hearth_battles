@@ -5,7 +5,7 @@ from typing import Union, List
 from hearthstone import events, combat
 from hearthstone.cards import MonsterCard, CardEvent
 from hearthstone.events import SUMMON_BUY, BuyPhaseContext, CombatPhaseContext, SUMMON_COMBAT, ON_ATTACK, COMBAT_START, \
-    SELL, DIES
+    SELL, DIES, BUY_END
 from hearthstone.monster_types import BEAST, DEMON, MECH, PIRATE, DRAGON, MURLOC
 
 
@@ -636,4 +636,18 @@ class PogoHoppers(MonsterCard):
             self.attack += context.owner.counted_cards[type(self)] * bonus
             self.health += context.owner.counted_cards[type(self)] * bonus
 
+
+class Goldgrubber(MonsterCard):
+    tier = 4
+    monster_type = PIRATE
+    base_attack = 2
+    base_health = 2
+
+    def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
+        if event.event == BUY_END:
+            bonus = 4 if self.golden else 2
+            for card in context.owner.in_play:
+                if card.golden:
+                    self.attack += bonus
+                    self.health += bonus
 

@@ -675,10 +675,42 @@ class CardTests(unittest.TestCase):
         self.assertEqual(player_1.in_play[0].attack, player_1.in_play[0].base_attack + 1)
         self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health + 1)
 
+
     def test_nathrezim_overseer(self):
         tavern = Tavern()
         player_1 = tavern.add_player("Josh")
         player_2 = tavern.add_player("Diana")
+
+    class TestGoldGrubberRandomizer(DefaultRandomizer):
+        def select_draw_card(self, cards: List[Card], player_name: str, round_number: int) -> Card:
+            if round_number < 6:
+                return force_card(cards, FiendishServant)
+            else:
+                return force_card(cards, Goldgrubber)
+
+    def test_gold_grubber(self):
+        tavern = Tavern()
+        player_1 = tavern.add_player("Joe")
+        player_2 = tavern.add_player("Donald")
+        tavern.randomizer = self.TestGoldGrubberRandomizer()
+        tavern.buying_step()
+        player_1.purchase(player_1.store[0])
+        tavern.combat_step()
+        tavern.buying_step()
+        player_1.purchase(player_1.store[0])
+        tavern.combat_step()
+        tavern.buying_step()
+        player_1.purchase(player_1.store[0])
+        player_1.summon_from_hand(player_1.hand[0])
+        tavern.combat_step()
+        self.upgrade_to_tier(tavern, 4)
+        tavern.buying_step()
+        player_1.purchase(player_1.store[0])
+        player_1.summon_from_hand(player_1.hand[0])
+        self.assertCardListEquals(player_1.in_play, [FiendishServant, Goldgrubber])
+        tavern.combat_step()
+        self.assertEqual(player_1.in_play[1].attack, player_1.in_play[1].base_attack + 2)
+        self.assertEqual(player_1.in_play[1].health, player_1.in_play[1].base_health + 2)
 
 
 if __name__ == '__main__':

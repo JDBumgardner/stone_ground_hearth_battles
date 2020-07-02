@@ -31,6 +31,8 @@ class Tavern:
             player.broadcast_buy_phase_event(CardEvent(None, events.BUY_START))
 
     def combat_step(self):
+        for player_name, player in self.players.items():
+            player.broadcast_buy_phase_event(CardEvent(None, events.BUY_END))
         for player_1, player_2 in self.current_player_pairings:
             combat.fight_boards(WarParty(player_1), WarParty(player_2), self.randomizer)
         self.turn_count += 1
