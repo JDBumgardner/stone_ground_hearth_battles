@@ -658,6 +658,23 @@ class CardTests(unittest.TestCase):
         tavern.buying_step()
         self.assertEqual(player_1.coins, 10)
 
+    def test_crystal_weaver(self):
+        tavern = Tavern()
+        player_1 = tavern.add_player("Joe")
+        player_2 = tavern.add_player("Donald")
+        tavern.randomizer = CardForcer([FiendishServant] * (18+16) +[CrystalWeaver]*10)
+        tavern.buying_step()
+        player_1.purchase(player_1.store[0])
+        player_1.summon_from_hand(player_1.hand[0])
+        tavern.combat_step()
+        self.upgrade_to_tier(tavern, 3)
+        tavern.buying_step()
+        player_1.purchase(player_1.store[0])
+        player_1.summon_from_hand(player_1.hand[0])
+        self.assertCardListEquals(player_1.in_play, [FiendishServant, CrystalWeaver])
+        self.assertEqual(player_1.in_play[0].attack, player_1.in_play[0].base_attack + 1)
+        self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health + 1)
+
 
 if __name__ == '__main__':
     unittest.main()
