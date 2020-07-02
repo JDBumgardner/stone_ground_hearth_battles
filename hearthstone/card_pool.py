@@ -603,6 +603,7 @@ class CrystalWeaver(MonsterCard):
 
 class MechanoEgg(MonsterCard):
     tier = 4
+    monster_type = MECH
     base_attack = 0
     base_health = 5
 
@@ -617,6 +618,22 @@ class MechanoEgg(MonsterCard):
 class Robosaur(MonsterCard):
     token = True
     tier = 1
+    monster_type = MECH
     base_attack = 8
     base_health = 8
+
+
+class PogoHoppers(MonsterCard):
+    tier = 2
+    monster_type = MECH
+    base_attack = 1
+    base_health = 1
+    tracked = True
+
+    def handle_event(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
+        bonus = 4 if self.golden else 2
+        if event.event is SUMMON_BUY and event.card is self:
+            self.attack += context.owner.counted_cards[type(self)] * bonus
+            self.health += context.owner.counted_cards[type(self)] * bonus
+
 

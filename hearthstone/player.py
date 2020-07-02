@@ -5,6 +5,7 @@ from hearthstone.cards import MonsterCard, CardEvent, CardType, Card
 from hearthstone.events import SUMMON_BUY, BuyPhaseContext, SELL, BUY
 from hearthstone.hero import Hero, EmptyHero
 from hearthstone.triple_reward_card import TripleRewardCard
+from collections import defaultdict
 
 
 class BuyPhaseEvent:
@@ -30,6 +31,7 @@ class Player:
         self.in_play: List[MonsterCard] = []
         self.store: List[MonsterCard] = []
         self.frozen = False
+        self.counted_cards = defaultdict(lambda: 0)
 
     @property
     def coin_income_rate(self):

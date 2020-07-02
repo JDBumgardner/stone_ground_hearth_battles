@@ -3,6 +3,7 @@ from typing import Set, List, Optional, NamedTuple, Callable, Type, Union
 
 from hearthstone import events
 from hearthstone.events import BuyPhaseContext, CombatPhaseContext, SELL
+from collections import defaultdict
 
 
 class PrintingPress:
@@ -45,6 +46,7 @@ class Card(metaclass=CardType):
     redeem_rate = 1
     tier: int
     token = False
+    tracked = False
 
     def __init__(self):
         self.state = None
@@ -134,6 +136,8 @@ class MonsterCard(Card):
             elif event.event == events.SUMMON_BUY:
                 if self.battlecry:
                     self.battlecry(event.targets, context)
+                if event.card.tracked:
+                    context.friendly_war_party.counted_cards[type(event.card)] += 1
         if not self.dead:
             self.handle_event_powers(event, context)
 

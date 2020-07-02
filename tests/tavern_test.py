@@ -675,6 +675,11 @@ class CardTests(unittest.TestCase):
         self.assertEqual(player_1.in_play[0].attack, player_1.in_play[0].base_attack + 1)
         self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health + 1)
 
+    def test_nathrezim_overseer(self):
+        tavern = Tavern()
+        player_1 = tavern.add_player("Josh")
+        player_2 = tavern.add_player("Diana")
+
 
 if __name__ == '__main__':
     unittest.main()
