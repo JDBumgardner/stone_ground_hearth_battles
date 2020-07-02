@@ -587,6 +587,4 @@ class OldMurkeye(MonsterCard):
         if event.event is SUMMON_COMBAT and event.card in context.friendly_war_party.board and event.card.monster_type is MURLOC:
             self.attack += bonus
 
-class
-
 
