@@ -581,13 +581,12 @@ class OldMurkeye(MonsterCard):
     def handle_event(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         bonus = 2 if self.golden else 1
         if event.event is COMBAT_START:
-            self.attack += bonus * len([murloc for murloc in context.friendly_war_party.board if murloc.monster_type is MURLOC])
+            self.attack += bonus * sum(1 for murloc in context.friendly_war_party.board if murloc.monster_type is MURLOC)
         if event.event is DIES and event.card in context.friendly_war_party.board and event.card.monster_type is MURLOC:
             self.attack -= bonus
-        if event.event is SUMMON_COMBAT and event.card in context.friendly_war_party.board and event.card.monster_type is MURLOC
+        if event.event is SUMMON_COMBAT and event.card in context.friendly_war_party.board and event.card.monster_type is MURLOC:
             self.attack += bonus
 
 class
-
 
 
