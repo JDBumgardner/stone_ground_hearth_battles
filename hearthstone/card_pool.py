@@ -624,18 +624,17 @@ class Robosaur(MonsterCard):
     base_health = 8
 
 
-class PogoHoppers(MonsterCard):
+class PogoHopper(MonsterCard):
     tier = 2
     monster_type = MECH
     base_attack = 1
     base_health = 1
     tracked = True
 
-    def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
+    def base_battlecry(self, event: CardEvent, context: BuyPhaseContext):
         bonus = 4 if self.golden else 2
-        if event.event is SUMMON_BUY and event.card is self:
-            self.attack += context.owner.counted_cards[type(self)] * bonus
-            self.health += context.owner.counted_cards[type(self)] * bonus
+        self.attack += context.owner.counted_cards[type(self)] * bonus
+        self.health += context.owner.counted_cards[type(self)] * bonus
 
 
 class Goldgrubber(MonsterCard):

@@ -712,6 +712,26 @@ class CardTests(unittest.TestCase):
         self.assertEqual(player_1.in_play[1].attack, player_1.in_play[1].base_attack + 2)
         self.assertEqual(player_1.in_play[1].health, player_1.in_play[1].base_health + 2)
 
+    def test_pogo_hopper(self):
+        tavern = Tavern()
+        player_1 = tavern.add_player("Joe")
+        player_2 = tavern.add_player("Donald")
+        tavern.randomizer = CardForcer([AlleyCat] * 18 + [PogoHopper] * 8)
+        self.upgrade_to_tier(tavern, 2)
+        tavern.buying_step()
+        player_1.purchase(player_1.store[0])
+        player_1.purchase(player_1.store[0])
+        player_1.summon_from_hand(player_1.hand[0])
+        player_1.summon_from_hand(player_1.hand[0])
+        self.assertEqual(player_1.counted_cards[PogoHopper], 2)
+        self.assertEqual(player_1.in_play[0].attack, player_1.in_play[0].base_attack)
+        self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health)
+        self.assertEqual(player_1.in_play[1].attack, player_1.in_play[1].base_attack + 2)
+        self.assertEqual(player_1.in_play[1].health, player_1.in_play[1].base_health + 2)
+
+
+
+
 
 if __name__ == '__main__':
     unittest.main()
