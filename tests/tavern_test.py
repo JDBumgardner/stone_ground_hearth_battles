@@ -21,6 +21,17 @@ class CardForcer(DefaultRandomizer):
         return force_card(cards, next_card_type)
 
 
+class RepeatedCardForcer(DefaultRandomizer):
+    def __init__(self, repeatedly_forced_cards: List[CardType]):
+        self.repeatedly_forced_cards = repeatedly_forced_cards
+        self.pointer = 0
+
+    def select_draw_card(self, cards: List[Card], player_name: str, round_number: int) -> Card:
+        next_card_type = self.repeatedly_forced_cards[self.pointer]
+        self.pointer = (self.pointer + 1)%len(self.repeatedly_forced_cards)
+        return force_card(cards, next_card_type)
+
+
 class CardTests(unittest.TestCase):
     def assertCardListEquals(self, cards, expected, msg=None):
         self.assertListEqual([type(card) for card in cards], expected, msg=msg)
@@ -58,7 +69,6 @@ class CardTests(unittest.TestCase):
                 for player in players:
                     player.upgrade_tavern()
             tavern.combat_step()
-
 
     def test_game(self):
         tavern = Tavern()
@@ -792,16 +802,18 @@ class CardTests(unittest.TestCase):
         tavern = Tavern()
         player_1 = tavern.add_player_with_hero("Joe")
         player_2 = tavern.add_player_with_hero("Donald")
-        tavern.randomizer = CardForcer([Scallywag] * 6 + [MechaRoo] * 28 + [BloodsailCannoneer] * 10)
+        tavern.randomizer = RepeatedCardForcer([Scallywag])
         tavern.buying_step()
         player_1.purchase(player_1.store[0])
         player_1.summon_from_hand(player_1.hand[0])
         tavern.combat_step()
+        tavern.randomizer = RepeatedCardForcer([MechaRoo])
         tavern.buying_step()
         player_1.purchase(player_1.store[0])
         player_1.summon_from_hand(player_1.hand[0])
         tavern.combat_step()
         self.upgrade_to_tier(tavern, 3)
+        tavern.randomizer = RepeatedCardForcer([BloodsailCannoneer])
         tavern.buying_step()
         player_1.purchase(player_1.store[0])
         player_1.summon_from_hand(player_1.hand[0])
@@ -812,7 +824,6 @@ class CardTests(unittest.TestCase):
         self.assertEqual(player_1.in_play[1].health, player_1.in_play[1].base_health)
         self.assertEqual(player_1.in_play[2].attack, player_1.in_play[2].base_attack)
         self.assertEqual(player_1.in_play[2].health, player_1.in_play[2].base_health)
-
 
 
 if __name__ == '__main__':
