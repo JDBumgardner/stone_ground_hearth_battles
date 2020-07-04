@@ -18,8 +18,8 @@ class CombatTests(unittest.TestCase):
                 return defenders[0]
 
     def test_taunt(self):
-        diana = Player(None, "Diana")
-        jeremy = Player(None, "Jeremy")
+        diana = Player.new_player_with_hero(None, "Diana")
+        jeremy = Player.new_player_with_hero(None, "Jeremy")
         dianas_war_party = WarParty(diana)
         jeremys_war_party = WarParty(jeremy)
         dianas_war_party.board = [DragonspawnLieutenant()]
@@ -29,8 +29,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(jeremy.health, 40)
 
     def test_deathrattle_summon(self):
-        diana = Player(None, "Diana")
-        jeremy = Player(None, "Jeremy")
+        diana = Player.new_player_with_hero(None, "Diana")
+        jeremy = Player.new_player_with_hero(None, "Jeremy")
         dianas_war_party = WarParty(diana)
         jeremys_war_party = WarParty(jeremy)
         dianas_war_party.board = [MechaRoo(), DragonspawnLieutenant()]
@@ -40,8 +40,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(jeremy.health, 40)
 
     def test_scavenging_hyena(self):
-        diana = Player(None, "Diana")
-        jeremy = Player(None, "Jeremy")
+        diana = Player.new_player_with_hero(None, "Diana")
+        jeremy = Player.new_player_with_hero(None, "Jeremy")
         dianas_war_party = WarParty(diana)
         jeremys_war_party = WarParty(jeremy)
         dianas_war_party.board = [DragonspawnLieutenant(), DragonspawnLieutenant()]
@@ -55,8 +55,8 @@ class CombatTests(unittest.TestCase):
             return defenders[-1]
 
     def test_fiendish_servant(self):
-        diana = Player(None, "Diana")
-        jeremy = Player(None, "Jeremy")
+        diana = Player.new_player_with_hero(None, "Diana")
+        jeremy = Player.new_player_with_hero(None, "Jeremy")
         dianas_war_party = WarParty(diana)
         jeremys_war_party = WarParty(jeremy)
         dianas_war_party.board = [DragonspawnLieutenant(), DragonspawnLieutenant()]
@@ -66,8 +66,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(jeremy.health, 38)
 
     def test_mech_roo(self):
-        diana = Player(None, "Diana")
-        jeremy = Player(None, "Jeremy")
+        diana = Player.new_player_with_hero(None, "Diana")
+        jeremy = Player.new_player_with_hero(None, "Jeremy")
         dianas_war_party = WarParty(diana)
         jeremys_war_party = WarParty(jeremy)
         dianas_war_party.board = [MechaRoo()]
@@ -77,8 +77,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(jeremy.health, 38)
 
     def test_selfless_hero(self):
-        diana = Player(None, "Diana")
-        jeremy = Player(None, "Jeremy")
+        diana = Player.new_player_with_hero(None, "Diana")
+        jeremy = Player.new_player_with_hero(None, "Jeremy")
         dianas_war_party = WarParty(diana)
         jeremys_war_party = WarParty(jeremy)
         dianas_war_party.board = [SelflessHero(), TabbyCat()]
@@ -88,8 +88,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(jeremy.health, 38)
 
     def test_red_whelp(self):
-        diana = Player(None, "Diana")
-        jeremy = Player(None, "Jeremy")
+        diana = Player.new_player_with_hero(None, "Diana")
+        jeremy = Player.new_player_with_hero(None, "Jeremy")
         dianas_war_party = WarParty(diana)
         jeremys_war_party = WarParty(jeremy)
         dianas_war_party.board = [RedWhelp()]
@@ -99,8 +99,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(jeremy.health, 38)
 
     def test_harvest_golem(self):
-        diana = Player(None, "Diana")
-        jeremy = Player(None, "Jeremy")
+        diana = Player.new_player_with_hero(None, "Diana")
+        jeremy = Player.new_player_with_hero(None, "Jeremy")
         dianas_war_party = WarParty(diana)
         jeremys_war_party = WarParty(jeremy)
         dianas_war_party.board = [HarvestGolem()]
@@ -110,8 +110,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(jeremy.health, 40)
 
     def test_kaboom_bot(self):
-        diana = Player(None, "Diana")
-        jeremy = Player(None, "Jeremy")
+        diana = Player.new_player_with_hero(None, "Diana")
+        jeremy = Player.new_player_with_hero(None, "Jeremy")
         dianas_war_party = WarParty(diana)
         jeremys_war_party = WarParty(jeremy)
         dianas_war_party.board = [KaboomBot()]
@@ -121,8 +121,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(jeremy.health, 40)
 
     def test_kindly_grandmother(self):
-        diana = Player(None, "Diana")
-        jeremy = Player(None, "Jeremy")
+        diana = Player.new_player_with_hero(None, "Diana")
+        jeremy = Player.new_player_with_hero(None, "Jeremy")
         dianas_war_party = WarParty(diana)
         jeremys_war_party = WarParty(jeremy)
         dianas_war_party.board = [KindlyGrandmother()]
@@ -132,8 +132,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(jeremy.health, 38)
 
     def test_glyph_guardian(self):
-        adam = Player(None, "Adam")
-        ethan = Player(None, "Ethan")
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [AlleyCat(), TabbyCat(), AlleyCat(), TabbyCat()]
@@ -144,8 +144,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_imprisoner(self):
-        adam = Player(None, "Adam")
-        ethan = Player(None, "Ethan")
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [MetaltoothLeaper()]
@@ -155,8 +155,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_murloc_warleader(self):
-        adam = Player(None, "Adam")
-        ethan = Player(None, "Ethan")
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [MurlocScout(), MurlocWarleader()]
@@ -167,8 +167,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_scallywag(self):
-        adam = Player(None, "Adam")
-        ethan = Player(None, "Ethan")
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [Scallywag(), DragonspawnLieutenant()]
@@ -178,8 +178,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_unstable_ghoul(self):
-        adam = Player(None, "Adam")
-        ethan = Player(None, "Ethan")
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [UnstableGhoul()]
@@ -189,8 +189,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_unstable_ghoul_friendly_fire(self):
-        adam = Player(None, "Adam")
-        ethan = Player(None, "Ethan")
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [UnstableGhoul(), WrathWeaver(), WrathWeaver(), WrathWeaver(), WrathWeaver()]
@@ -200,8 +200,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_rat_pack(self):
-        adam = Player(None, "Adam")
-        ethan = Player(None, "Ethan")
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [RatPack()]
@@ -211,8 +211,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 38)
 
     def test_buffed_rat_pack(self):
-        adam = Player(None, "Adam")
-        ethan = Player(None, "Ethan")
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         rat_pack = RatPack()
@@ -224,8 +224,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_rat_pack_vs_unstable_ghoul(self):
-        adam = Player(None, "Adam")
-        ethan = Player(None, "Ethan")
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         rat_pack = RatPack()
@@ -238,8 +238,8 @@ class CombatTests(unittest.TestCase):
         # TODO Jarett: outcome of fight depends on who is attacker and who is defender. What is supposed to happen?
 
     def test_deathwing(self):
-        adam = Player(None, "Adam", Deathwing())
-        ethan = Player(None, "Ethan")
+        adam = Player.new_player_with_hero(None, "Adam", Deathwing())
+        ethan = Player.new_player_with_hero(None, "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [RatPack()]
@@ -250,8 +250,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_board_size_ignores_dead(self):
-        adam = Player(None, "Adam")
-        ethan = Player(None, "Ethan")
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [RighteousProtector(), RighteousProtector(), RighteousProtector(), RighteousProtector(), RighteousProtector(), RighteousProtector(), RighteousProtector()]
@@ -262,8 +262,8 @@ class CombatTests(unittest.TestCase):
 
     def test_arcane_cannon(self): # TODO Jarett, does the arcane canon
         # TODO Jacob Finish this test once Jarett helps us figure out the order of operations
-        adam = Player(None, "Adam")
-        ethan = Player(None, "Ethan")
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [RatPack()]
@@ -272,8 +272,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_monstrous_macaw(self):
-        adam = Player(None, "Adam")
-        ethan = Player(None, "Ethan")
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [MonstrousMacaw(), RighteousProtector(), RatPack()]
@@ -283,13 +283,24 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 32)
 
     def test_mechano_egg(self):
-        adam = Player(None, "Adam")
-        ethan = Player(None, "Ethan")
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [MechanoEgg()]
         ethans_war_party.board = [RighteousProtector(), RighteousProtector(), RighteousProtector(),
                                   RighteousProtector()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+
+    def test_spawn_of_nzoth(self):
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [SpawnOfNzoth(), PogoHopper()]
+        ethans_war_party.board = [VulgarHomunculus()]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)

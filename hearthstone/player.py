@@ -13,15 +13,16 @@ class BuyPhaseEvent:
 
 
 class Player:
-    def __init__(self, tavern: 'Tavern', name: str, hero: Hero = None):
+    def __init__(self, tavern: 'Tavern', name: str, hero_options: List[Hero]):
         self.name = name
         self.tavern = tavern
-        self.hero = hero or EmptyHero()
-        self.health = self.hero.starting_health()
+        self.hero = None
+        self.hero_options = hero_options
+        self.health = None
         self.tavern_tier = 1
         self.coins = 0
         self.triple_rewards = []
-        self.discovered_cards :List[MonsterCard] = []
+        self.discovered_cards: List[MonsterCard] = []
         self.maximum_board_size = 7
         self.maximum_hand_size = 10
         self.refresh_store_cost = 1
@@ -32,6 +33,14 @@ class Player:
         self.store: List[MonsterCard] = []
         self.frozen = False
         self.counted_cards = defaultdict(lambda: 0)
+
+    @staticmethod
+    def new_player_with_hero(tavern: 'Tavern', name: str, hero: Hero=None) -> 'Player':
+        if hero is None:
+            hero = EmptyHero()
+        player = Player(tavern, name, [hero])
+        player.choose_hero(hero)
+        return player
 
     @property
     def coin_income_rate(self):
@@ -220,3 +229,12 @@ class Player:
 
     def max_tier(self):
         return len(self._tavern_upgrade_costs)
+
+    def choose_hero(self, hero: Hero):
+        assert(self.validate_choose_hero(hero))
+        self.hero = hero
+        self.hero_options = []
+        self.health = self.hero.starting_health()
+
+    def validate_choose_hero(self, hero: Hero):
+        return self.hero is None and hero in self.hero_options

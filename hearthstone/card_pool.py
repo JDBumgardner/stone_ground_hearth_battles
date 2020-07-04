@@ -1,5 +1,4 @@
 import logging
-from random import random
 from typing import Union, List
 
 from hearthstone import events, combat
@@ -631,7 +630,7 @@ class PogoHopper(MonsterCard):
     base_health = 1
     tracked = True
 
-    def base_battlecry(self, event: CardEvent, context: BuyPhaseContext):
+    def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
         bonus = 4 if self.golden else 2
         self.attack += context.owner.counted_cards[type(self)] * bonus
         self.health += context.owner.counted_cards[type(self)] * bonus
@@ -650,4 +649,46 @@ class Goldgrubber(MonsterCard):
                 if card.golden:
                     self.attack += bonus
                     self.health += bonus
+
+
+class SpawnOfNzoth(MonsterCard):
+    tier = 2
+    base_attack = 2
+    base_health = 2
+
+    def base_deathrattle(self, context: CombatPhaseContext):
+        bonus = 2 if self.golden else 1
+        for card in context.friendly_war_party.board:
+            card.attack += bonus
+            card.health += bonus
+
+
+class Zoobot(MonsterCard):
+    tier = 2
+    monster_type = MECH
+    base_attack = 3
+    base_health = 3
+
+    def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
+        bonus = 2 if self.golden else 1
+        for monster_type in [MURLOC, BEAST, DRAGON]:
+            friendly_cards = [card for card in context.owner.in_play if card.monster_type == monster_type]
+            if friendly_cards:
+                card = context.randomizer.select_friendly_minion(friendly_cards)
+                card.attack += bonus
+                card.health += bonus
+
+
+class BloodsailCannoneer(MonsterCard):
+    tier = 3
+    monster_type = PIRATE
+    base_attack = 4
+    base_health = 2
+
+    def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
+        bonus = 6 if self.golden else 3
+        for card in context.owner.in_play:
+            if card.monster_type == PIRATE and card != self:
+                card.attack += bonus
+
 

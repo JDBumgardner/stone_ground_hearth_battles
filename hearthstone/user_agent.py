@@ -3,11 +3,31 @@ from typing import List, Optional
 from hearthstone.agent import Agent, Action, BuyAction, SummonAction, SellAction, EndPhaseAction, RerollAction, \
     TavernUpgradeAction, HeroPowerAction, TripleRewardsAction
 from hearthstone.cards import Card
+from hearthstone.hero import Hero
 from hearthstone.tavern import Player
 
 
 
 class UserAgent(Agent):
+    def hero_choice_action(self, player: Player) -> Hero:
+        print(f"player {player.name}, it is your turn to choose a hero.")
+        self.print_hero_list(player.hero_options)
+        user_text = input("please choose a hero: ")
+        while True:
+            hero = self.convert_to_hero(user_text, player)
+            if hero is not None:
+                return hero
+            user_text = input("you fucked up, try again: ")
+
+    def convert_to_hero(self, text: str, player: Player) -> Optional[Hero]:
+        try:
+            index = int(text)
+        except ValueError:
+            return None
+        if index in range(len(player.hero_options)):
+            return player.hero_options[index]
+        return None
+
     def rearrange_cards(self, player: Player):
         print(f"player {player.name}, it is your combat prephase.")
         self.print_player_card_list("board", player.in_play)
@@ -140,3 +160,8 @@ class UserAgent(Agent):
         print(f"your current {card_location}: ")
         for index, card in enumerate(card_list):
             print(index, "  ", card)
+
+    @staticmethod
+    def print_hero_list(hero_list: List[Hero]):
+        for index, hero in enumerate(hero_list):
+            print(index, "  ", hero)

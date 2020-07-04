@@ -15,6 +15,8 @@ class RoundRobinHost:
             self.tavern.add_player(player_name)
 
     def play_game(self):
+        for player_name, player in self.tavern.players.items():
+            player.choose_hero(self.agents[player_name].hero_choice_action(player))
         while not self.tavern.game_over():
             self.tavern.buying_step()
             for player_name, player in self.tavern.players.items():

@@ -3,10 +3,21 @@ from typing import Union
 from hearthstone.cards import CardEvent
 from hearthstone.events import BuyPhaseContext, CombatPhaseContext
 
+VALHALLA = []
 
-class Hero:
+class HeroType(type):
+    def __new__(mcs, name, bases, kwargs):
+        klass = super().__new__(mcs, name, bases, kwargs)
+        if name not in ("Hero", "EmptyHero"):
+            VALHALLA.append(klass)
+        return klass
+
+class Hero(metaclass = HeroType):
     power_cost = 2
     hero_power_used = False
+
+    def __repr__(self):
+        return str(type(self).__name__)
 
     def starting_health(self) -> int:
         return 40
@@ -40,3 +51,4 @@ class Hero:
 
 class EmptyHero(Hero):
     pass
+

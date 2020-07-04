@@ -1,6 +1,7 @@
 from typing import List, Optional, Generator
 
 from hearthstone.cards import Card, MonsterCard
+from hearthstone.hero import Hero
 from hearthstone.tavern import Player
 
 
@@ -99,6 +100,9 @@ class TripleRewardsAction(Action):
 
 
 class Agent:
+    def hero_choice_action(self, player: Player) -> Hero:
+        return player.hero_options[0]
+
     def rearrange_cards(self, player: Player) -> List[Card]:
         """
         here the player selects a card arangement one time per combat directly preceeding combat

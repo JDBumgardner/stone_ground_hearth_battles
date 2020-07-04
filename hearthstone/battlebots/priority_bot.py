@@ -3,7 +3,7 @@ from typing import List, Callable
 
 from hearthstone.agent import Agent, Action, generate_valid_actions, BuyAction, EndPhaseAction, SummonAction, \
     SellAction, TavernUpgradeAction, RerollAction
-from hearthstone.card_pool import RabidSaurolisk
+from hearthstone.card_pool import *
 from hearthstone.cards import Card, MonsterCard
 from hearthstone.player import Player
 
@@ -165,3 +165,15 @@ def battlerattler_priority_bot(seed: int):
             score += 2
         return score
     return PriorityBot(["Jake Bumgardner"], priority, seed)
+
+
+def priority_pogo_hopper_bot(seed: int):
+    def priority(player: Player, card: MonsterCard):
+        if type(card) is PogoHopper:
+            return 100
+
+        score = card.health + card.attack + card.tier
+
+        return score
+
+    return PriorityBot(["Ethan Saxenian"], priority, seed)

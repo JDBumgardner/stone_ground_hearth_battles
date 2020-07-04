@@ -1,9 +1,9 @@
 from typing import Dict
 
-from hearthstone import combat, events
+from hearthstone import combat, events, hero, hero_pool
 from hearthstone.cards import CardList, CardEvent, PrintingPress
 from hearthstone.combat import WarParty
-from hearthstone.hero import Hero
+from hearthstone.hero import Hero, EmptyHero
 from hearthstone.player import Player
 from hearthstone.randomizer import DefaultRandomizer
 
@@ -12,13 +12,28 @@ class Tavern:
     def __init__(self):
         self.players: Dict[str, Player] = {}
         self.deck: CardList = PrintingPress.make_cards()
+        self.hero_pool = [hero_type() for hero_type in hero.VALHALLA * 3]
         self.turn_count = 0
         self.current_player_pairings = []
         self.randomizer = DefaultRandomizer()
         self.losers = []
 
-    def add_player(self, name: str, hero: Hero = None) -> Player:
-        player = Player(self, name, hero)
+    def select_three_heroes(self):
+        hero_choices = []
+        for _ in range(3):
+            hero = self.randomizer.select_hero(self.hero_pool)
+            hero_choices.append(hero)
+            self.hero_pool.remove(hero)
+        return hero_choices
+
+    def add_player(self, name: str) -> Player:
+        hero_choices = self.select_three_heroes()
+        player = Player(self, name, hero_choices)
+        self.players[name] = player
+        return player
+
+    def add_player_with_hero(self, name: str, hero: Hero=None) -> Player:
+        player = Player.new_player_with_hero(self, name, hero)
         self.players[name] = player
         return player
 

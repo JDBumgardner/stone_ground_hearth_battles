@@ -3,9 +3,11 @@ from hearthstone.battlebots.priority_bot import priority_saurolisk_bot, racist_p
 from hearthstone.host import RoundRobinHost
 from hearthstone.user_agent import UserAgent
 from hearthstone.card_pool import *
+import logging
 
 
 def main():
+    logging.getLogger().setLevel(logging.DEBUG)
     host = RoundRobinHost({"dante_kong": UserAgent(),
                            "hacker_on_steroids": UserAgent(),
                            "PrioritySauroliskBot": priority_saurolisk_bot(1),

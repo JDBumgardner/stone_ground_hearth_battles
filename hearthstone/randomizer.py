@@ -2,6 +2,7 @@ import random
 from typing import List, Tuple
 
 from hearthstone.cards import Card
+from hearthstone.hero import Hero
 from hearthstone.player import Player
 
 
@@ -28,6 +29,9 @@ class Randomizer:
         pass
 
     def select_gain_card(self, cards: List[Card]) -> Card:
+        pass
+
+    def select_hero(self, hero_pool: List[Hero]) -> Hero:
         pass
 
 
@@ -57,3 +61,6 @@ class DefaultRandomizer(Randomizer):
 
     def select_gain_card(self, cards: List[Card]) -> Card:
         return random.choice(cards)
+
+    def select_hero(self, hero_pool: List[Hero]) -> Hero:
+        return random.choice(hero_pool)
