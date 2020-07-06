@@ -96,7 +96,7 @@ def damage(half_board_1: WarParty, half_board_2: WarParty):
     # Handle case where both players have cards left on board.
     if monster_damage_1 > 0 and monster_damage_2 > 0:
         logging.debug('neither player won (both players have minions left)')
-    if monster_damage_1 > 0:
+    elif monster_damage_1 > 0:
         logging.debug(f'{half_board_1.owner.name} has won the fight')
         half_board_2.owner.health -= monster_damage_1 + half_board_1.owner.tavern_tier
     elif monster_damage_2 > 0:
