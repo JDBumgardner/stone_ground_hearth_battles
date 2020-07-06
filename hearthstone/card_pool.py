@@ -26,12 +26,6 @@ class ShifterZerus(MonsterCard):
     base_attack = 1
     base_health = 1
 
-class BullshitFourthTierDude(MonsterCard): #  TODO: Jarett is this a real card?
-    tier = 4
-    base_attack = 5
-    base_health = 5
-
-
 class SneedsOldShredder(MonsterCard):
     tier = 5
     monster_type = MECH

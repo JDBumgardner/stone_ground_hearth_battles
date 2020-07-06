@@ -87,7 +87,7 @@ class Player:
         self.broadcast_buy_phase_event(CardEvent(card, SUMMON_BUY, targets))
 
     def validate_summon_from_hand(self, card: MonsterCard, targets: Optional[List[MonsterCard]] = None) -> bool:
-        #  TODO: Jack num_battlesry_targets should only accept 0,1,2
+        #  TODO: Jack num_battlecry_targets should only accept 0,1,2
         if card not in self.hand:
             return False
         if not self.room_on_board():
