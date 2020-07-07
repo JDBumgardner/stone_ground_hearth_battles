@@ -203,7 +203,8 @@ class Player:
         elif card in self.in_play:
             self.in_play.remove(card)
         self.coins += card.redeem_rate
-        self.tavern.deck.cards.append(type(card)())
+
+        self.tavern.deck.cards += card.dissolve()
 
     def validate_sell_minion(self, card: MonsterCard) -> bool:
         return card in self.in_play + self.hand
