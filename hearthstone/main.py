@@ -7,7 +7,7 @@ import logging
 
 
 def main():
-    logging.getLogger().setLevel(logging.DEBUG)
+    logging.basicConfig(level = logging.DEBUG)
     host = RoundRobinHost({"dante_kong": UserAgent(),
                            "hacker_on_steroids": UserAgent(),
                            "PrioritySauroliskBot": priority_saurolisk_bot(1),

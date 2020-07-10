@@ -28,7 +28,7 @@ class RepeatedCardForcer(DefaultRandomizer):
 
     def select_draw_card(self, cards: List[Card], player_name: str, round_number: int) -> Card:
         next_card_type = self.repeatedly_forced_cards[self.pointer]
-        self.pointer = (self.pointer + 1)%len(self.repeatedly_forced_cards)
+        self.pointer = (self.pointer + 1) % len(self.repeatedly_forced_cards)
         return force_card(cards, next_card_type)
 
 

@@ -32,6 +32,7 @@ class PriorityBot(Agent):
         top_hand_priority = max([self.priority(player, card) for card in player.hand], default=None)
         top_store_priority = max([self.priority(player, card) for card in player.store], default=None)
         bottom_board_priority = min([self.priority(player, card) for card in player.in_play], default=None)
+
         if top_hand_priority:
             if player.room_on_board():
                 return [action for action in all_actions if type(action) is SummonAction and self.priority(player, action.card) == top_hand_priority][0]

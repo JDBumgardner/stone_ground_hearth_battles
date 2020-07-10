@@ -8,6 +8,7 @@ from hearthstone.events import CombatPhaseContext, SUMMON_COMBAT
 from hearthstone.player import Player
 from hearthstone.randomizer import Randomizer
 
+logger = logging.getLogger(__name__)
 
 class WarParty:
     #  (HalfBoard)
@@ -67,6 +68,8 @@ def fight_boards(war_party_1: WarParty, war_party_2: WarParty, randomizer: Rando
     #  Currently we are not randomizing the first to fight here
     #  Expect to pass half boards into fight_boards in random order i.e. by shuffling players in combat step
     #  Half boards are copies, the originals state cannot be changed in the combat step
+    logger.debug(f"{war_party_1.owner.name}'s board is {war_party_1.board}")
+    logger.debug(f"{war_party_2.owner.name}'s board is {war_party_2.board}")
     attacking_war_party = war_party_1
     defending_war_party = war_party_2
     if war_party_2.num_cards() > war_party_1.num_cards():
@@ -79,7 +82,7 @@ def fight_boards(war_party_1: WarParty, war_party_2: WarParty, randomizer: Rando
     while True: #  TODO: Jarett, what happens if there are two arcane cannons left over?
         attacker = attacking_war_party.find_next()
         defender = defending_war_party.get_random_monster(randomizer)
-        logging.debug(f'{attacking_war_party.owner.name} is attacking {defending_war_party.owner.name}')
+        logger.debug(f'{attacking_war_party.owner.name} is attacking {defending_war_party.owner.name}')
         if not defender:
             break
         if attacker:
@@ -94,18 +97,18 @@ def damage(half_board_1: WarParty, half_board_2: WarParty):
     monster_damage_1 = sum([card.tier for card in half_board_1.board if not card.dead])
     monster_damage_2 = sum([card.tier for card in half_board_2.board if not card.dead])
     if monster_damage_1 > 0:
-        logging.debug(f'{half_board_1.owner.name} has won the fight')
+        logger.debug(f'{half_board_1.owner.name} has won the fight')
         half_board_2.owner.health -= monster_damage_1 + half_board_1.owner.tavern_tier
     elif monster_damage_2 > 0:
-        logging.debug(f'{half_board_2.owner.name} has won the fight')
+        logger.debug(f'{half_board_2.owner.name} has won the fight')
         half_board_1.owner.health -= monster_damage_2 + half_board_2.owner.tavern_tier
     else:
-        logging.debug('neither player won')
+        logger.debug('neither player won')
 
 
 def start_attack(attacker: Card, defender: Card, attacking_war_party: WarParty, defending_war_party: WarParty,
                  randomizer: Randomizer):
-    logging.debug(f'{attacker} is attacking {defender}')
+    logger.debug(f'{attacker} is attacking {defender}')
     on_attack_event = CardEvent(attacker, events.ON_ATTACK)
     CombatPhaseContext(attacking_war_party, defending_war_party, randomizer).broadcast_combat_event(on_attack_event)
     attacker.take_damage(defender.attack)
@@ -113,4 +116,4 @@ def start_attack(attacker: Card, defender: Card, attacking_war_party: WarParty, 
     # handle "after combat" events here
     attacker.resolve_death(CombatPhaseContext(attacking_war_party, defending_war_party, randomizer))
     defender.resolve_death(CombatPhaseContext(defending_war_party, attacking_war_party, randomizer))
-    logging.debug(f'{attacker} has just attacked {defender}')
+    logger.debug(f'{attacker} has just attacked {defender}')
