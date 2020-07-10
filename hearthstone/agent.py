@@ -168,7 +168,7 @@ def generate_all_actions(player: Player) -> Generator[Action, None, None]:
             if num_battlecry_targets == 1:
                 yield SummonAction(card, [target])
             else:
-                # TODO: Jarett Does order of targets ever matter?
+                # Order of targets doesn't matter
                 for other_target in valid_targets:
                     if other_target != target:
                         yield SummonAction(card, [target, other_target])

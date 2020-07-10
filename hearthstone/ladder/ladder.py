@@ -11,6 +11,7 @@ from hearthstone.battlebots.priority_bot import attack_health_priority_bot, raci
 from hearthstone.battlebots.priority_storage_bot import priority_st_ad_tr_bot
 from hearthstone.battlebots.random_bot import RandomBot
 from hearthstone.battlebots.saurolisk_bot import SauroliskBot
+from hearthstone.battlebots.stochastic_priority_bot import LearnedPriorityBot
 from hearthstone.battlebots.supremacy_bot import SupremacyBot
 from hearthstone.host import RoundRobinHost
 from hearthstone.monster_types import *
@@ -82,13 +83,16 @@ def all_contestants():
     all_bots += [Contestant("PriorityAttackTriplerBot", priority_attack_tripler_bot(12))]
     all_bots += [Contestant("BattleRattlerPriorityBot", battlerattler_priority_bot(13))]
     all_bots += [Contestant("PogoHopperPriorityBot", priority_pogo_hopper_bot(14))]
-    all_bots += [Contestant("priority_st_ad_tr_bot", priority_st_ad_tr_bot(15))]
+    learned_bot_1 = LearnedPriorityBot(None, 0, 15)
+    learned_bot_1.read_from_file("../../data/learning/priority_bot.1.json")
+    all_bots += [Contestant("LearnedPriorityBot1", learned_bot_1)]
+    all_bots += [Contestant("priority_st_ad_tr_bot", priority_st_ad_tr_bot(16))]
     return all_bots
 
 
-def load_ratings(contestants: List[Contestant]):
+def load_ratings(contestants: List[Contestant], path):
     # TODO: This is a hack for saving to a specific file.
-    with open("../../data/standings.json") as f:
+    with open(path) as f:
         standings = json.load(f)
     standings_dict = dict(standings)
     for contestant in contestants:
@@ -97,7 +101,7 @@ def load_ratings(contestants: List[Contestant]):
             contestant.games_played = standings_dict[contestant.name]["games_played"]
 
 
-def save_ratings(contestants: List[Contestant]):
+def save_ratings(contestants: List[Contestant], path):
     ranked_contestants = sorted(contestants, key=lambda c: c.elo, reverse=True)
     standings = [
         (c.name, {"elo": c.elo,
@@ -105,15 +109,16 @@ def save_ratings(contestants: List[Contestant]):
                   "last_time_updated": datetime.now().isoformat(),
                   "authors": c.agent.authors}) for c
         in ranked_contestants]
-    with open("../../data/standings.json", "w") as f:
+    with open(path, "w") as f:
         json.dump(standings, f, indent=4)
 
 
 def main():
     contestants = all_contestants()
-    load_ratings(contestants)
+    standings_path = "../../data/standings.json"
+    load_ratings(contestants,standings_path)
     run_tournament(contestants, 100)
-    save_ratings(contestants)
+    save_ratings(contestants,standings_path)
 
 
 if __name__ == "__main__":

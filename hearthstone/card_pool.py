@@ -26,12 +26,6 @@ class ShifterZerus(MonsterCard):
     base_attack = 1
     base_health = 1
 
-class BullshitFourthTierDude(MonsterCard): #  TODO: Jarett is this a real card?
-    tier = 4
-    base_attack = 5
-    base_health = 5
-
-
 class SneedsOldShredder(MonsterCard):
     tier = 5
     monster_type = MECH
@@ -692,3 +686,53 @@ class BloodsailCannoneer(MonsterCard):
                 card.attack += bonus
 
 
+class ColdlightSeer(MonsterCard):
+    tier = 3
+    monster_type = MURLOC
+    base_attack = 2
+    base_health = 3
+
+    def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
+        bonus = 4 if self.golden else 2
+        for card in context.owner.in_play:
+            if card.monster_type == MURLOC and card != self:
+                card.health += bonus
+
+
+class CrowdFavorite(MonsterCard):
+    tier = 3
+    base_attack = 4
+    base_health = 4
+
+    def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
+        bonus = 2 if self.golden else 1
+        if event.event == SUMMON_BUY and event.card.battlecry:
+            self.attack += bonus
+            self.health += bonus
+
+
+class CrystalWeaver(MonsterCard):
+    tier = 3
+    base_attack = 5
+    base_health = 4
+
+    def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
+        bonus = 2 if self.golden else 1
+        for card in context.owner.in_play:
+            if card.monster_type == DEMON:
+                card.health += bonus
+                card.attack += bonus
+
+
+class DeflectOBot(MonsterCard):
+    tier = 3
+    monster_type = MECH
+    base_attack = 3
+    base_health = 2
+    base_divine_shield = True
+
+    def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
+        bonus = 2 if self.golden else 1
+        if event.event == SUMMON_COMBAT and event.card.monster_type == MECH and event.card in context.friendly_war_party.board:
+            self.attack += bonus
+            self.divine_shield = True

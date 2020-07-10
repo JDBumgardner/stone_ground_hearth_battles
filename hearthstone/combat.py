@@ -79,7 +79,7 @@ def fight_boards(war_party_1: WarParty, war_party_2: WarParty, randomizer: Rando
     # Friendly vs enemy warparty does not matter for broadcast_combat_event
     CombatPhaseContext(war_party_1, war_party_2, randomizer).broadcast_combat_event(start_combat_event)
 
-    while True: #  TODO: Jarett, what happens if there are two arcane cannons left over?
+    while True:
         attacker = attacking_war_party.find_next()
         defender = defending_war_party.get_random_monster(randomizer)
         logger.debug(f'{attacking_war_party.owner.name} is attacking {defending_war_party.owner.name}')
@@ -96,14 +96,17 @@ def fight_boards(war_party_1: WarParty, war_party_2: WarParty, randomizer: Rando
 def damage(half_board_1: WarParty, half_board_2: WarParty):
     monster_damage_1 = sum([card.tier for card in half_board_1.board if not card.dead])
     monster_damage_2 = sum([card.tier for card in half_board_2.board if not card.dead])
-    if monster_damage_1 > 0:
+    # Handle case where both players have cards left on board.
+    if monster_damage_1 > 0 and monster_damage_2 > 0:
+        logger.debug('neither player won (both players have minions left)')
+    elif monster_damage_1 > 0:
         logger.debug(f'{half_board_1.owner.name} has won the fight')
         half_board_2.owner.health -= monster_damage_1 + half_board_1.owner.tavern_tier
     elif monster_damage_2 > 0:
         logger.debug(f'{half_board_2.owner.name} has won the fight')
         half_board_1.owner.health -= monster_damage_2 + half_board_2.owner.tavern_tier
     else:
-        logger.debug('neither player won')
+        logger.debug('neither player won (no minions left)')
 
 
 def start_attack(attacker: Card, defender: Card, attacking_war_party: WarParty, defending_war_party: WarParty,

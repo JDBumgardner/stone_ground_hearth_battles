@@ -305,6 +305,26 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
 
+    class DeflectOBotRandomizer(DefaultRandomizer):
+        def select_enemy_minion(self, enemy_minions: List[Card]) -> Card:
+            harvest_golem = [card for card in enemy_minions if type(card) is HarvestGolem]
+            return harvest_golem[0]
+
+    def test_deflect_o_bot(self):
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [DeflectOBot(), HarvestGolem()]
+        ethans_war_party.board = [KaboomBot()]
+        fight_boards(adams_war_party, ethans_war_party, self.DeflectOBotRandomizer())
+        self.assertEqual(adams_war_party.board[0].divine_shield, True)
+        self.assertEqual(adams_war_party.board[0].attack, 4)
+        self.assertEqual(adams_war_party.board[1].dead, True)
+        self.assertEqual(adams_war_party.board[2].attack, 2)
+
+
+
 
 if __name__ == '__main__':
     unittest.main()
