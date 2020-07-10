@@ -48,6 +48,7 @@ class PriorityStorageBot(Agent):
                 if buy_action.valid(player):
                     return buy_action
             elif bottom_board_priority < top_store_priority and player.coins >= 2:
+                pass
 
 
         bottom_hand_storage_priority = min([self.storage_priority(player, card) for card in player.hand], default=None)

@@ -711,19 +711,6 @@ class CrowdFavorite(MonsterCard):
             self.health += bonus
 
 
-class CrystalWeaver(MonsterCard):
-    tier = 3
-    base_attack = 5
-    base_health = 4
-
-    def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
-        bonus = 2 if self.golden else 1
-        for card in context.owner.in_play:
-            if card.monster_type == DEMON:
-                card.health += bonus
-                card.attack += bonus
-
-
 class DeflectOBot(MonsterCard):
     tier = 3
     monster_type = MECH

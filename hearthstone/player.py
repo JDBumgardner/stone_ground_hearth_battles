@@ -168,7 +168,7 @@ class Player:
 
     def check_golden(self, check_card: CardType):
         cards = [card for card in self.in_play + self.hand if isinstance(card, check_card) and not card.golden]
-        assert len(cards) <= 3, "fnord"
+        assert len(cards) <= 3, f"fnord{cards}"
         if len(cards) == 3:
             for card in cards:
                 if card in self.in_play:
