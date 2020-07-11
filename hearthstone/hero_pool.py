@@ -106,6 +106,7 @@ class PatchesThePirate(Hero):
         card = context.randomizer.select_gain_card(pirates)
         context.owner.tavern.deck.cards.remove(card)
         context.owner.hand.append(card)
+        context.owner.check_golden(type(card))
         self.power_cost = 4
 
     def hero_power_valid_impl(self, context: BuyPhaseContext):
