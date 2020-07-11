@@ -1,54 +1,56 @@
+import typing
 from typing import List, Optional, Generator
 
-from hearthstone.cards import Card, MonsterCard
-from hearthstone.hero import Hero
-from hearthstone.tavern import Player
+if typing.TYPE_CHECKING:
+    from hearthstone.cards import Card, MonsterCard
+    from hearthstone.hero import Hero
+    from hearthstone.tavern import Player
 
 
 class Action:
-    def apply(self, player: Player):
+    def apply(self, player: 'Player'):
         pass
 
-    def valid(self, player: Player) -> bool:
+    def valid(self, player: 'Player') -> bool:
         return False
 
 
 class BuyAction(Action):
 
     def __init__(self, card):
-        self.card: MonsterCard = card
+        self.card: 'MonsterCard' = card
 
-    def apply(self, player: Player):
+    def apply(self, player: 'Player'):
         player.purchase(self.card)
 
-    def valid(self, player: Player):
+    def valid(self, player: 'Player'):
         return player.validate_purchase(self.card)
 
 
 class SummonAction(Action):
 
-    def __init__(self, card: MonsterCard, targets: Optional[List[MonsterCard]] = None):
+    def __init__(self, card: 'MonsterCard', targets: Optional[List['MonsterCard']] = None):
         if targets is None:
             targets = []
-        self.card: MonsterCard = card
+        self.card: 'MonsterCard' = card
         self.targets = targets
 
-    def apply(self, player: Player):
+    def apply(self, player: 'Player'):
         player.summon_from_hand(self.card, self.targets)
 
-    def valid(self, player: Player) -> bool:
+    def valid(self, player: 'Player') -> bool:
         return player.validate_summon_from_hand(self.card, self.targets)
 
 
 class SellAction(Action):
 
     def __init__(self, card: MonsterCard):
-        self.card: MonsterCard = card
+        self.card: 'MonsterCard' = card
 
-    def apply(self, player: Player):
+    def apply(self, player: 'Player'):
         player.sell_minion(self.card)
 
-    def valid(self, player: Player) -> bool:
+    def valid(self, player: 'Player') -> bool:
         return player.validate_sell_minion(self.card)
 
 
@@ -57,53 +59,53 @@ class EndPhaseAction(Action):
     def __init__(self, freeze: bool):
         self.freeze: bool = freeze
 
-    def apply(self, player: Player):
+    def apply(self, player: 'Player'):
         if self.freeze:
             player.freeze()
 
-    def valid(self, player: Player) -> bool:
+    def valid(self, player: 'Player') -> bool:
         return True
 
 
 class RerollAction(Action):
 
-    def apply(self, player: Player):
+    def apply(self, player: 'Player'):
         player.reroll_store()
 
-    def valid(self, player: Player) -> bool:
+    def valid(self, player: 'Player') -> bool:
         return player.validate_reroll()
 
 
 class TavernUpgradeAction(Action):
 
-    def apply(self, player: Player):
+    def apply(self, player: 'Player'):
         player.upgrade_tavern()
 
-    def valid(self, player: Player) -> bool:
+    def valid(self, player: 'Player') -> bool:
         return player.validate_upgrade_tavern()
 
 
 class HeroPowerAction(Action):
-    def apply(self, player: Player):
+    def apply(self, player: 'Player'):
         player.hero_power()
 
-    def valid(self, player: Player) -> bool:
+    def valid(self, player: 'Player') -> bool:
         return player.validate_hero_power()
 
 
 class TripleRewardsAction(Action):
-    def apply(self, player: Player):
+    def apply(self, player: 'Player'):
         player.play_triple_rewards()
 
-    def valid(self, player: Player) -> bool:
+    def valid(self, player: 'Player') -> bool:
         return player.validate_triple_rewards()
 
 
 class Agent:
-    def hero_choice_action(self, player: Player) -> Hero:
+    def hero_choice_action(self, player: 'Player') -> 'Hero':
         return player.hero_options[0]
 
-    def rearrange_cards(self, player: Player) -> List[Card]:
+    def rearrange_cards(self, player: 'Player') -> List[Card]:
         """
         here the player selects a card arangement one time per combat directly preceeding combat
 
@@ -115,7 +117,7 @@ class Agent:
         """
         pass
 
-    def buy_phase_action(self, player: Player) -> Action:
+    def buy_phase_action(self, player: 'Player') -> Action:
         """
         here the player chooses a buy phase action including:
         purchasing a card from the store
@@ -132,7 +134,7 @@ class Agent:
         """
         pass
 
-    def discover_choice_action(self, player: Player) -> Card:
+    def discover_choice_action(self, player: 'Player') -> Card:
         """
 
         Args:
@@ -144,11 +146,11 @@ class Agent:
         pass
 
 
-def generate_valid_actions(player: Player) -> Generator[Action, None, None]:
+def generate_valid_actions(player: 'Player') -> Generator[Action, None, None]:
     return (action for action in generate_all_actions(player) if action.valid(player))
 
 
-def generate_all_actions(player: Player) -> Generator[Action, None, None]:
+def generate_all_actions(player: 'Player') -> Generator[Action, None, None]:
     yield TripleRewardsAction()
     yield HeroPowerAction()
     yield TavernUpgradeAction()

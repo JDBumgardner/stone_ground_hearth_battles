@@ -1,4 +1,4 @@
-from typing import Callable, Any, Optional, Tuple, Type
+from typing import Callable, Optional, Tuple, Type
 
 
 def make_metaclass(metaclass_callback: Callable[[Type], None], exclude: Optional[Tuple[str, ...]] = None) -> Type:

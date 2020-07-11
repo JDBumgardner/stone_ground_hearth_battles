@@ -6,18 +6,11 @@ from typing import List
 from hearthstone.battlebots.cheapo_bot import CheapoBot
 from hearthstone.battlebots.get_bot_contestants import get_priority_bot_contestant_tuples
 from hearthstone.battlebots.no_action_bot import NoActionBot
-from hearthstone.battlebots.priority_bot import PriorityBot
-from hearthstone.battlebots.priority_functions import attack_health_priority_bot, racist_priority_bot, \
-    priority_saurolisk_bot, attack_health_tripler_priority_bot, priority_adaptive_tripler_bot, \
-    priority_health_tripler_bot, priority_attack_tripler_bot, battlerattler_priority_bot, priority_pogo_hopper_bot, \
-    priority_saurolisk_buff_bot
-from hearthstone.battlebots.priority_storage_bot import priority_st_ad_tr_bot
 from hearthstone.battlebots.random_bot import RandomBot
 from hearthstone.battlebots.saurolisk_bot import SauroliskBot
-from hearthstone.battlebots.stochastic_priority_bot import LearnedPriorityBot
 from hearthstone.battlebots.supremacy_bot import SupremacyBot
 from hearthstone.host import RoundRobinHost
-from hearthstone.monster_types import *
+from hearthstone.monster_types import MURLOC, BEAST, MECH, DRAGON, DEMON, PIRATE
 
 
 class Contestant:

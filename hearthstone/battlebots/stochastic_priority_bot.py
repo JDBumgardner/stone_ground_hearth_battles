@@ -1,12 +1,14 @@
 import json
 import random
+import typing
 from collections import defaultdict
-from typing import List, Callable
+from typing import List
 
 from hearthstone.agent import Agent, generate_valid_actions, TavernUpgradeAction, RerollAction, EndPhaseAction, \
     SellAction, Action, BuyAction, SummonAction
-from hearthstone.cards import MonsterCard, Card
-from hearthstone.player import Player
+if typing.TYPE_CHECKING:
+    from hearthstone.cards import Card
+    from hearthstone.player import Player
 
 
 class LearnedPriorityBot(Agent):
@@ -40,8 +42,7 @@ class LearnedPriorityBot(Agent):
             self.priority_dict.update(json.load(f))
         self.set_priority_function()
 
-
-    def rearrange_cards(self, player: Player) -> List[Card]:
+    def rearrange_cards(self, player: 'Player') -> List['Card']:
         card_list = player.in_play.copy()
         self.local_random.shuffle(card_list)
         return card_list
@@ -56,7 +57,7 @@ class LearnedPriorityBot(Agent):
         score += 100 * (card.health + card.attack + card.tier)
         return score
 
-    def buy_phase_action(self, player: Player) -> Action:
+    def buy_phase_action(self, player: 'Player') -> Action:
         all_actions = list(generate_valid_actions(player))
 
         if player.tavern_tier < 2:
@@ -87,14 +88,13 @@ class LearnedPriorityBot(Agent):
                         self.current_game_cards[type(card).__name__] -= 1
                     return buy_action
 
-
         reroll_action = RerollAction()
         if reroll_action.valid(player):
             return reroll_action
 
         return EndPhaseAction(False)
 
-    def discover_choice_action(self, player: Player) -> Card:
+    def discover_choice_action(self, player: 'Player') -> 'Card':
         discover_cards = player.discovered_cards
         discover_cards = sorted(discover_cards, key=lambda card: self.adjusted_priority(card), reverse=True)
         return discover_cards[0]
