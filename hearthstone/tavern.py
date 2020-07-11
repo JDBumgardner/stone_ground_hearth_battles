@@ -1,6 +1,7 @@
 from typing import Dict
 
-from hearthstone import combat, events, hero, hero_pool
+from hearthstone import combat, hero, hero_pool
+from hearthstone.events import EVENTS
 from hearthstone.cards import CardList, CardEvent, PrintingPress
 from hearthstone.combat import WarParty
 from hearthstone.hero import Hero, EmptyHero
@@ -43,11 +44,11 @@ class Tavern:
             player.apply_turn_start_income()
             player.draw()
             player.hero.on_buy_step()
-            player.broadcast_buy_phase_event(CardEvent(None, events.BUY_START))
+            player.broadcast_buy_phase_event(CardEvent(None, EVENTS.BUY_START.value))
 
     def combat_step(self):
         for player_name, player in self.players.items():
-            player.broadcast_buy_phase_event(CardEvent(None, events.BUY_END))
+            player.broadcast_buy_phase_event(CardEvent(None, EVENTS.BUY_END.value))
         for player_1, player_2 in self.current_player_pairings:
             combat.fight_boards(WarParty(player_1), WarParty(player_2), self.randomizer)
         self.turn_count += 1

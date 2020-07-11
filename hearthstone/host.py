@@ -1,14 +1,16 @@
+import typing
 from typing import Dict
-
-from hearthstone.agent import Agent, EndPhaseAction
 from hearthstone.tavern import Tavern
+from hearthstone.agent import EndPhaseAction
+if typing.TYPE_CHECKING:
+    from hearthstone.agent import Agent
 
 
 class RoundRobinHost:
     tavern: Tavern
-    agents: Dict[str, Agent]
+    agents: Dict[str, 'Agent']
 
-    def __init__(self, agents: Dict[str, Agent]):
+    def __init__(self, agents: Dict[str, 'Agent']):
         self.tavern = Tavern()
         self.agents = agents
         for player_name in agents.keys():

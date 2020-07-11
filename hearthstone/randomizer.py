@@ -8,31 +8,31 @@ from hearthstone.player import Player
 
 class Randomizer:
     def select_draw_card(self, cards: List[Card], player_name: str, round_number: int) -> Card:
-        pass
+        raise NotImplementedError()
 
     def select_player_pairings(self, players: List[Player]) -> List[Tuple[Player, Player]]:
-        pass
+        raise NotImplementedError()
 
     def select_attack_target(self, defenders: List[Card]) -> Card:
-        pass
+        raise NotImplementedError()
 
     def select_friendly_minion(self, friendly_minions: List[Card]) -> Card:
-        pass
+        raise NotImplementedError()
 
     def select_enemy_minion(self, enemy_minions: List[Card]) -> Card:
-        pass
+        raise NotImplementedError()
 
     def select_discover_card(self, discoverables: List[Card]) -> Card:
-        pass
+        raise NotImplementedError()
 
     def select_from_store(self, store: List[Card]) -> Card:
-        pass
+        raise NotImplementedError()
 
     def select_gain_card(self, cards: List[Card]) -> Card:
-        pass
+        raise NotImplementedError()
 
     def select_hero(self, hero_pool: List[Hero]) -> Hero:
-        pass
+        raise NotImplementedError()
 
 
 class DefaultRandomizer(Randomizer):

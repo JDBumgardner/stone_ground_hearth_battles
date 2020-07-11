@@ -1,15 +1,23 @@
-from typing import Optional
+import typing
+import enum
+if typing.TYPE_CHECKING:
+    from hearthstone.player import Player
+    from hearthstone.randomizer import Randomizer
+    from hearthstone.tavern import WarParty
+    from hearthstone.cards import CardEvent
 
-SUMMON_BUY = 1
-SUMMON_COMBAT = 2
-KILL = 3
-DIES = 4
-COMBAT_START = 5
-BUY_START = 6
-ON_ATTACK = 7
-SELL = 8
-BUY = 9
-BUY_END = 10
+
+class EVENTS(enum.Enum):
+    SUMMON_BUY = 1
+    SUMMON_COMBAT = 2
+    KILL = 3
+    DIES = 4
+    COMBAT_START = 5
+    BUY_START = 6
+    ON_ATTACK = 7
+    SELL = 8
+    BUY = 9
+    BUY_END = 10
 
 
 class BuyPhaseContext:

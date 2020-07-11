@@ -1,15 +1,15 @@
+import typing
 from typing import List, Optional
-
-from hearthstone.agent import Agent, Action, BuyAction, SummonAction, SellAction, EndPhaseAction, RerollAction, \
-    TavernUpgradeAction, HeroPowerAction, TripleRewardsAction
-from hearthstone.cards import Card
-from hearthstone.hero import Hero
-from hearthstone.tavern import Player
-
+from hearthstone.agent import Agent, Action, BuyAction, SummonAction, SellAction, EndPhaseAction, RerollAction
+from hearthstone.agent import TavernUpgradeAction, HeroPowerAction, TripleRewardsAction
+if typing.TYPE_CHECKING:
+    from hearthstone.cards import Card
+    from hearthstone.hero import Hero
+    from hearthstone.tavern import Player
 
 
 class UserAgent(Agent):
-    def hero_choice_action(self, player: Player) -> Hero:
+    def hero_choice_action(self, player: 'Player') -> 'Hero':
         print(f"player {player.name}, it is your turn to choose a hero.")
         self.print_hero_list(player.hero_options)
         user_text = input("please choose a hero: ")
@@ -19,7 +19,7 @@ class UserAgent(Agent):
                 return hero
             user_text = input("you fucked up, try again: ")
 
-    def convert_to_hero(self, text: str, player: Player) -> Optional[Hero]:
+    def convert_to_hero(self, text: str, player: 'Player') -> Optional['Hero']:
         try:
             index = int(text)
         except ValueError:
@@ -28,7 +28,7 @@ class UserAgent(Agent):
             return player.hero_options[index]
         return None
 
-    def rearrange_cards(self, player: Player):
+    def rearrange_cards(self, player: 'Player'):
         print(f"player {player.name}, it is your combat prephase.")
         self.print_player_card_list("board", player.in_play)
         print("please rearrange your cards by specifying the ordering")
@@ -40,7 +40,7 @@ class UserAgent(Agent):
             user_text = input("you fucked up, try again: ")
 
     @staticmethod
-    def parse_rearrange_input(user_text: str, player: Player) -> Optional[List[int]]:
+    def parse_rearrange_input(user_text: str, player: 'Player') -> Optional[List[int]]:
         split_list = user_text.split(',')
         if split_list == ["a"]:
            return list(range(len(player.in_play)))
@@ -53,7 +53,7 @@ class UserAgent(Agent):
             return None
         return check_list
 
-    def buy_phase_action(self, player: Player) -> Action:
+    def buy_phase_action(self, player: 'Player') -> Action:
         print(f"player {player.name}, it is your buy phase.")
         self.print_player_card_list("store", player.store)
         self.print_player_card_list("board", player.in_play)
@@ -79,7 +79,7 @@ class UserAgent(Agent):
             user_input = input("sorry, my dude. Action invalid: ")
 
     @staticmethod
-    def parse_buy_input(user_input: str, player: Player) -> Optional[Action]:
+    def parse_buy_input(user_input: str, player: 'Player') -> Optional[Action]:
         split_list = user_input.split(" ")
         if split_list[0] == "p":
             if not len(split_list) == 2:
@@ -137,7 +137,7 @@ class UserAgent(Agent):
         else:
             return None
 
-    def discover_choice_action(self, player: Player) -> Card:
+    def discover_choice_action(self, player: 'Player') -> 'Card':
         print(f"player {player.name}, you must choose a card to discover.")
         self.print_player_card_list("discovery choices", player.discovered_cards)
         user_input = input("input card number to discover here: ")
@@ -148,7 +148,7 @@ class UserAgent(Agent):
             user_input = input("oops, try again: ")
 
     @staticmethod
-    def parse_discover_input(user_input: str, player: Player) -> Optional[Card]:
+    def parse_discover_input(user_input: str, player: 'Player') -> Optional['Card']:
         try:
             card_index = int(user_input)
             return player.discovered_cards[card_index]
@@ -156,12 +156,12 @@ class UserAgent(Agent):
             return None
 
     @staticmethod
-    def print_player_card_list(card_location: str, card_list: List[Card]):
+    def print_player_card_list(card_location: str, card_list: List['Card']):
         print(f"your current {card_location}: ")
         for index, card in enumerate(card_list):
             print(index, "  ", card)
 
     @staticmethod
-    def print_hero_list(hero_list: List[Hero]):
+    def print_hero_list(hero_list: List['Hero']):
         for index, hero in enumerate(hero_list):
             print(index, "  ", hero)

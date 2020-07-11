@@ -12,6 +12,7 @@ class HeroType(type):
             VALHALLA.append(klass)
         return klass
 
+
 class Hero(metaclass = HeroType):
     power_cost = 2
     hero_power_used = False
@@ -49,6 +50,6 @@ class Hero(metaclass = HeroType):
     def on_buy_step(self):
         self.hero_power_used = False
 
+
 class EmptyHero(Hero):
     pass
-
