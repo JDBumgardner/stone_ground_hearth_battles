@@ -1,6 +1,6 @@
 from typing import Dict
 
-from hearthstone import combat, hero, hero_pool
+from hearthstone import combat, hero
 from hearthstone.events import EVENTS
 from hearthstone.cards import CardList, CardEvent, PrintingPress
 from hearthstone.combat import WarParty

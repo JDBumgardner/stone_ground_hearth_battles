@@ -1,10 +1,8 @@
+import typing
 from typing import Callable
-
-from hearthstone.battlebots.hero_bot import HeroBot
-from hearthstone.battlebots.priority_bot import PriorityBot
-from hearthstone.card_pool import *
-from hearthstone.cards import Card, MonsterCard
-from hearthstone.player import Player
+if typing.TYPE_CHECKING:
+    from hearthstone.cards import MonsterCard
+    from hearthstone.player import Player
 
 
 def attack_health_priority_bot(seed: int, priority_function_bot: Callable, monster_type: str = None):

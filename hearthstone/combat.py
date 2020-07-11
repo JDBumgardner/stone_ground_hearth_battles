@@ -20,7 +20,7 @@ class WarParty:
         self.board = [copy.copy(card) for card in player.in_play]
         self.next_attacker_idx = 0
 
-    def find_next(self) -> Optional['Card']:
+    def find_next(self) -> Optional['MonsterCard']:
         #  Sets the index for the next monster who will fight from your side.
         #  Must be called after active player monster fights
         #  Also after a monster dies from combat if it was the active monster
@@ -36,7 +36,7 @@ class WarParty:
                 return self.board[index]
         return None
 
-    def get_random_monster(self, randomizer: 'Randomizer') -> Optional['Card']:
+    def get_random_monster(self, randomizer: 'Randomizer') -> Optional['MonsterCard']:
         taunt_monsters = [card for card in self.board if not card.dead and card.taunt]
         if taunt_monsters:
             return randomizer.select_attack_target(taunt_monsters)
@@ -112,7 +112,7 @@ def damage(half_board_1: 'WarParty', half_board_2: 'WarParty'):
         logger.debug('neither player won (no minions left)')
 
 
-def start_attack(attacker: 'Card', defender: 'Card', attacking_war_party: 'WarParty', defending_war_party: 'WarParty',
+def start_attack(attacker: 'MonsterCard', defender: 'MonsterCard', attacking_war_party: 'WarParty', defending_war_party: 'WarParty',
                  randomizer: 'Randomizer'):
     logger.debug(f'{attacker} is attacking {defender}')
     on_attack_event = CardEvent(attacker, EVENTS.ON_ATTACK.value)

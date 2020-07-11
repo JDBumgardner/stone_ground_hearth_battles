@@ -1,5 +1,6 @@
 from typing import Set, List, Optional, Callable, Type, Union
 from hearthstone.events import BuyPhaseContext, CombatPhaseContext, EVENTS
+from hearthstone.card_factory import make_metaclass
 
 
 class PrintingPress:
@@ -14,6 +15,10 @@ class PrintingPress:
                 cardlist.extend([card() for _ in range(cls.cards_per_tier[card.tier])])
         return CardList(cardlist)
 
+    @classmethod
+    def add_card(cls, card_class):
+        cls.cards.add(card_class)
+
 
 class CardEvent:
     def __init__(self, card: Optional['MonsterCard'], event: int, targets: Optional[List['MonsterCard']] = None):
@@ -22,12 +27,7 @@ class CardEvent:
         self.targets = targets
 
 
-class CardType(type):
-    def __new__(mcs, name, bases, kwargs):
-        klass = super().__new__(mcs, name, bases, kwargs)
-        if name not in ("Card", "MonsterCard"):
-            PrintingPress.cards.add(klass)
-        return klass
+CardType = make_metaclass(PrintingPress.add_card, ("Card", "MonsterCard"))
 
 
 class Card(metaclass=CardType):

@@ -1,16 +1,13 @@
 import logging
 import random
-from typing import List
 
 from hearthstone.battlebots.cheapo_bot import CheapoBot
-from hearthstone.battlebots.no_action_bot import NoActionBot
+from hearthstone.battlebots.priority_functions import racist_priority_bot
 from hearthstone.battlebots.random_bot import RandomBot
 from hearthstone.battlebots.simple_policy_bot import SimplePolicyBot
-from hearthstone.battlebots.stochastic_priority_bot import LearnedPriorityBot
 from hearthstone.battlebots.supremacy_bot import SupremacyBot
 from hearthstone.host import RoundRobinHost
-from hearthstone.ladder.ladder import Contestant, update_ratings, print_standings, load_ratings, save_ratings, \
-    all_contestants
+from hearthstone.ladder.ladder import Contestant, update_ratings, print_standings, save_ratings
 from hearthstone.monster_types import DRAGON, MECH, BEAST, MURLOC, DEMON, PIRATE
 
 learning_rate = .1
@@ -21,7 +18,8 @@ def learning_bot_opponents():
     all_bots += [Contestant(f"CheapoBot", CheapoBot(3))]
     all_bots += [Contestant(f"SupremacyBot {t}", SupremacyBot(t, False, i)) for i, t in
                  enumerate([MURLOC, BEAST, MECH, DRAGON, DEMON, PIRATE])]
-
+    all_bots += [Contestant(f"PriorityRacistBot {t}", racist_priority_bot(t, i)) for i, t in
+                 enumerate([MURLOC, BEAST, MECH, DRAGON, DEMON, PIRATE])]
     return all_bots
 
 
@@ -55,6 +53,7 @@ def main():
             # learning_bot.save_to_file(bot_file)
 
     save_ratings(contestants, standings_path)
+
 
 if __name__ == '__main__':
     main()
