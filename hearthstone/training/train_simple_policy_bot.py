@@ -4,7 +4,6 @@ from typing import List
 
 from hearthstone.battlebots.cheapo_bot import CheapoBot
 from hearthstone.battlebots.no_action_bot import NoActionBot
-from hearthstone.battlebots.priority_bot import attack_health_priority_bot, racist_priority_bot
 from hearthstone.battlebots.random_bot import RandomBot
 from hearthstone.battlebots.simple_policy_bot import SimplePolicyBot
 from hearthstone.battlebots.stochastic_priority_bot import LearnedPriorityBot
@@ -22,8 +21,7 @@ def learning_bot_opponents():
     all_bots += [Contestant(f"CheapoBot", CheapoBot(3))]
     all_bots += [Contestant(f"SupremacyBot {t}", SupremacyBot(t, False, i)) for i, t in
                  enumerate([MURLOC, BEAST, MECH, DRAGON, DEMON, PIRATE])]
-    all_bots += [Contestant(f"PriorityRacistBot {t}", racist_priority_bot(t, i)) for i, t in
-                 enumerate([MURLOC, BEAST, MECH, DRAGON, DEMON, PIRATE])]
+
     return all_bots
 
 
