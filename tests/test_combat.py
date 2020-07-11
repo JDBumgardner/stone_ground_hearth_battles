@@ -324,7 +324,5 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(adams_war_party.board[2].attack, 2)
 
 
-
-
 if __name__ == '__main__':
     unittest.main()
