@@ -80,6 +80,7 @@ class YoggSaron(Hero):
         card.health += 1
         context.owner.store.remove(card)
         context.owner.hand.append(card)
+        context.owner.check_golden(type(card))
 
     def hero_power_valid_impl(self, context: BuyPhaseContext):
         if not context.owner.room_in_hand():
