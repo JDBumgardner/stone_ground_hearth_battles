@@ -1,11 +1,17 @@
-from typing import Optional, List, Callable
 import itertools
-
-from hearthstone.cards import MonsterCard, CardEvent, CardType, Card
-from hearthstone.events import SUMMON_BUY, BuyPhaseContext, SELL, BUY
-from hearthstone.hero import Hero, EmptyHero
-from hearthstone.triple_reward_card import TripleRewardCard
+import typing
 from collections import defaultdict
+from typing import Optional, List, Callable, Type
+
+from hearthstone.cards import MonsterCard, CardEvent, Card
+from hearthstone.events import BuyPhaseContext, EVENTS
+from hearthstone.hero import EmptyHero
+from hearthstone.triple_reward_card import TripleRewardCard
+
+if typing.TYPE_CHECKING:
+    from hearthstone.tavern import Tavern
+    from hearthstone.hero import Hero
+    from hearthstone.randomizer import Randomizer
 
 
 class BuyPhaseEvent:
@@ -13,7 +19,7 @@ class BuyPhaseEvent:
 
 
 class Player:
-    def __init__(self, tavern: 'Tavern', name: str, hero_options: List[Hero]):
+    def __init__(self, tavern: 'Tavern', name: str, hero_options: List['Hero']):
         self.name = name
         self.tavern = tavern
         self.hero = None
@@ -35,7 +41,7 @@ class Player:
         self.counted_cards = defaultdict(lambda: 0)
 
     @staticmethod
-    def new_player_with_hero(tavern: 'Tavern', name: str, hero: Hero=None) -> 'Player':
+    def new_player_with_hero(tavern: 'Tavern', name: str, hero: Optional['Hero'] = None) -> 'Player':
         if hero is None:
             hero = EmptyHero()
         player = Player(tavern, name, [hero])
@@ -84,7 +90,7 @@ class Player:
         self.in_play.append(card)
         if card.golden:
             self.triple_rewards.append(TripleRewardCard(min(self.tavern_tier + 1, 6)))
-        self.broadcast_buy_phase_event(CardEvent(card, SUMMON_BUY, targets))
+        self.broadcast_buy_phase_event(CardEvent(card, EVENTS.SUMMON_BUY.value, targets))
 
     def validate_summon_from_hand(self, card: MonsterCard, targets: Optional[List[MonsterCard]] = None) -> bool:
         #  TODO: Jack num_battlecry_targets should only accept 0,1,2
@@ -134,7 +140,7 @@ class Player:
         if self.room_on_board():
             self.in_play.append(monster)
             self.check_golden(type(monster))
-        self.broadcast_buy_phase_event(CardEvent(monster, SUMMON_BUY))
+        self.broadcast_buy_phase_event(CardEvent(monster, EVENTS.SUMMON_BUY.value))
 
     def room_on_board(self):
         return len(self.in_play) < self.maximum_board_size
@@ -153,7 +159,7 @@ class Player:
         self.store.remove(card)
         self.coins -= card.coin_cost
         self.hand.append(card)
-        event = CardEvent(card, BUY)
+        event = CardEvent(card, EVENTS.BUY.value)
         self.broadcast_buy_phase_event(event)
         self.check_golden(type(card))
 
@@ -166,7 +172,7 @@ class Player:
             return False
         return True
 
-    def check_golden(self, check_card: CardType):
+    def check_golden(self, check_card: Type[MonsterCard]):
         cards = [card for card in self.in_play + self.hand if isinstance(card, check_card) and not card.golden]
         assert len(cards) <= 3, f"fnord{cards}"
         if len(cards) == 3:
@@ -197,7 +203,7 @@ class Player:
 
     def sell_minion(self, card: MonsterCard):
         assert self.validate_sell_minion(card)
-        self.broadcast_buy_phase_event(CardEvent(card, SELL))
+        self.broadcast_buy_phase_event(CardEvent(card, EVENTS.SELL.value))
         if card in self.hand:
             self.hand.remove(card)
         elif card in self.in_play:
@@ -231,11 +237,11 @@ class Player:
     def max_tier(self):
         return len(self._tavern_upgrade_costs)
 
-    def choose_hero(self, hero: Hero):
+    def choose_hero(self, hero: 'Hero'):
         assert(self.validate_choose_hero(hero))
         self.hero = hero
         self.hero_options = []
         self.health = self.hero.starting_health()
 
-    def validate_choose_hero(self, hero: Hero):
+    def validate_choose_hero(self, hero: 'Hero'):
         return self.hero is None and hero in self.hero_options

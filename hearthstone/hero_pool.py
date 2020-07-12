@@ -1,7 +1,7 @@
 from typing import Union
 
 from hearthstone.cards import CardEvent
-from hearthstone.events import BuyPhaseContext, CombatPhaseContext, COMBAT_START, SUMMON_COMBAT, BUY
+from hearthstone.events import BuyPhaseContext, CombatPhaseContext, EVENTS
 from hearthstone.hero import Hero
 from hearthstone.monster_types import DEMON, MECH, PIRATE
 
@@ -39,7 +39,7 @@ class Nefarian(Hero):
     # hero power is called nefarious fire
 
     def handle_event(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
-        if event.event == COMBAT_START:
+        if event.event == EVENTS.COMBAT_START:
             if self.hero_power_used:
                 for card in context.enemy_war_party.board:
                     card.take_damage(1)
@@ -51,12 +51,12 @@ class Deathwing(Hero):
         return False
 
     def handle_event(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
-        if event.event == COMBAT_START:
+        if event.event is EVENTS.COMBAT_START:
             all_minions = context.friendly_war_party.board + context.enemy_war_party.board
             for minion in all_minions:
                 minion.attack += 2
 
-        if event.event == SUMMON_COMBAT:
+        if event.event is EVENTS.SUMMON_COMBAT:
             event.card.attack += 2
 
 
@@ -65,7 +65,7 @@ class MillificentManastorm(Hero):
         return False
 
     def handle_event(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
-        if event.event == BUY:
+        if event.event is EVENTS.BUY:
             if event.card.monster_type == MECH:
                 event.card.attack += 1
                 event.card.health += 1
@@ -96,7 +96,7 @@ class PatchesThePirate(Hero):
     power_cost = 4
 
     def handle_event(self, event: CardEvent, context: BuyPhaseContext):
-        if event.event == BUY and event.card.monster_type == PIRATE:
+        if event.event is EVENTS.BUY and event.card.monster_type == PIRATE:
             self.power_cost = max(0, self.power_cost - 1)
 
     def hero_power_impl(self, context: BuyPhaseContext):

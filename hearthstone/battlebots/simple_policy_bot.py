@@ -1,13 +1,15 @@
 import json
 import math
 import random
+import typing
 from collections import defaultdict
-from typing import List, Callable, Optional
+from typing import List, Optional
 
 from hearthstone.agent import Agent, generate_valid_actions, TavernUpgradeAction, RerollAction, EndPhaseAction, \
     SellAction, Action, BuyAction, SummonAction
-from hearthstone.cards import MonsterCard, Card
-from hearthstone.player import Player
+if typing.TYPE_CHECKING:
+    from hearthstone.cards import Card
+    from hearthstone.player import Player
 
 
 class SimplePolicyBot(Agent):
@@ -50,12 +52,12 @@ class SimplePolicyBot(Agent):
         with open(path) as f:
             self.priority_dict.update(json.load(f))
 
-    def rearrange_cards(self, player: Player) -> List[Card]:
+    def rearrange_cards(self, player: 'Player') -> List['Card']:
         card_list = player.in_play.copy()
         self.local_random.shuffle(card_list)
         return card_list
 
-    def buy_phase_action(self, player: Player) -> Action:
+    def buy_phase_action(self, player: 'Player') -> Action:
         all_actions = list(generate_valid_actions(player))
 
         if player.tavern_tier < 2:
@@ -69,7 +71,7 @@ class SimplePolicyBot(Agent):
         self.update_gradient(choice[0], ranked_actions)
         return choice[0][1]
 
-    def discover_choice_action(self, player: Player) -> Card:
+    def discover_choice_action(self, player: 'Player') -> 'Card':
         discover_cards = player.discovered_cards
         discover_cards = sorted(discover_cards, key=lambda card: self.priority_buy_dict[type(card).__name__], reverse=True)
         return discover_cards[0]

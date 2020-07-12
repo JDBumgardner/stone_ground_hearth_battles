@@ -1,9 +1,6 @@
-import logging
-from typing import Set, List, Optional, NamedTuple, Callable, Type, Union
-
-from hearthstone import events
-from hearthstone.events import BuyPhaseContext, CombatPhaseContext, SELL
-from collections import defaultdict
+from typing import Set, List, Optional, Callable, Type, Union
+from hearthstone.events import BuyPhaseContext, CombatPhaseContext, EVENTS
+from hearthstone.card_factory import make_metaclass
 
 
 class PrintingPress:
@@ -18,24 +15,19 @@ class PrintingPress:
                 cardlist.extend([card() for _ in range(cls.cards_per_tier[card.tier])])
         return CardList(cardlist)
 
+    @classmethod
+    def add_card(cls, card_class):
+        cls.cards.add(card_class)
+
 
 class CardEvent:
-    card: Optional['MonsterCard']
-    event: int
-    targets: Optional[List['MonsterCard']]
-
     def __init__(self, card: Optional['MonsterCard'], event: int, targets: Optional[List['MonsterCard']] = None):
         self.card = card
-        self.event = event
+        self.event = EVENTS(event)
         self.targets = targets
 
 
-class CardType(type):
-    def __new__(mcs, name, bases, kwargs):
-        klass = super().__new__(mcs, name, bases, kwargs)
-        if name not in ("Card", "MonsterCard"):
-            PrintingPress.cards.add(klass)
-        return klass
+CardType = make_metaclass(PrintingPress.add_card, ("Card", "MonsterCard"))
 
 
 class Card(metaclass=CardType):
@@ -51,10 +43,6 @@ class Card(metaclass=CardType):
     def __init__(self):
         self.state = None
         self.tavern = None
-
-
-class MonsterCard(object):
-    pass
 
 
 class MonsterCard(Card):
@@ -122,7 +110,7 @@ class MonsterCard(Card):
     def resolve_death(self, context: CombatPhaseContext):
         if self.health <= 0:
             self.dead = True
-            card_death_event = CardEvent(self, events.DIES)
+            card_death_event = CardEvent(self, EVENTS.DIES.value)
             context.broadcast_combat_event(card_death_event)
 
     def change_state(self, new_state):
@@ -131,10 +119,10 @@ class MonsterCard(Card):
 
     def handle_event(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         if self == event.card:
-            if event.event == events.DIES:
+            if event.event is EVENTS.DIES:
                 for deathrattle in self.deathrattles:
                     deathrattle(self, context)
-            elif event.event == events.SUMMON_BUY:
+            elif event.event is EVENTS.SUMMON_BUY:
                 if self.battlecry:
                     self.battlecry(event.targets, context)
                 if event.card.tracked:
@@ -148,7 +136,7 @@ class MonsterCard(Card):
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         return
 
-    def validate_battlecry_target(self, card: MonsterCard) -> bool:
+    def validate_battlecry_target(self, card: 'MonsterCard') -> bool:
         return True
 
     def golden_transformation(self, base_cards: List['MonsterCard']):

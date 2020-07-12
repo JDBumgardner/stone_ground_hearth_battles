@@ -1,21 +1,21 @@
-import random
-from typing import List, Callable
-
-from hearthstone.agent import Action, generate_valid_actions, BuyAction, EndPhaseAction, SummonAction, \
-    SellAction, TavernUpgradeAction, RerollAction
+import typing
+from typing import List
+from hearthstone.agent import generate_valid_actions, BuyAction, EndPhaseAction, SummonAction
+from hearthstone.agent import SellAction, TavernUpgradeAction, RerollAction
 from hearthstone.battlebots.bot_types import PriorityFunctionBot
-from hearthstone.card_pool import *
-from hearthstone.cards import Card, MonsterCard
-from hearthstone.player import Player
+if typing.TYPE_CHECKING:
+    from hearthstone.agent import Action
+    from hearthstone.cards import Card
+    from hearthstone.player import Player
 
 
 class PriorityBot(PriorityFunctionBot):
-    def rearrange_cards(self, player: Player) -> List[Card]:
+    def rearrange_cards(self, player: 'Player') -> List['Card']:
         card_list = player.in_play.copy()
         self.local_random.shuffle(card_list)
         return card_list
 
-    def buy_phase_action(self, player: Player) -> Action:
+    def buy_phase_action(self, player: 'Player') -> 'Action':
         all_actions = list(generate_valid_actions(player))
 
         if player.tavern_tier < 2:
@@ -46,7 +46,7 @@ class PriorityBot(PriorityFunctionBot):
 
         return EndPhaseAction(False)
 
-    def discover_choice_action(self, player: Player) -> Card:
+    def discover_choice_action(self, player: 'Player') -> 'Card':
         discover_cards = player.discovered_cards
         discover_cards = sorted(discover_cards, key=lambda card: self.priority(card), reverse=True)
         return discover_cards[0]

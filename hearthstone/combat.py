@@ -1,23 +1,26 @@
 import copy
 import logging
+import typing
 from typing import Optional, List
+from hearthstone.events import CombatPhaseContext, EVENTS
+from hearthstone.cards import CardEvent
+if typing.TYPE_CHECKING:
+    from hearthstone.player import Player
+    from hearthstone.randomizer import Randomizer
+    from hearthstone.cards import Card, MonsterCard
 
-from hearthstone import events
-from hearthstone.cards import Card, CardEvent, MonsterCard
-from hearthstone.events import CombatPhaseContext, SUMMON_COMBAT
-from hearthstone.player import Player
-from hearthstone.randomizer import Randomizer
 
 logger = logging.getLogger(__name__)
 
+
 class WarParty:
     #  (HalfBoard)
-    def __init__(self, player: Player):
+    def __init__(self, player: 'Player'):
         self.owner = player
         self.board = [copy.copy(card) for card in player.in_play]
         self.next_attacker_idx = 0
 
-    def find_next(self) -> Optional[Card]:
+    def find_next(self) -> Optional['MonsterCard']:
         #  Sets the index for the next monster who will fight from your side.
         #  Must be called after active player monster fights
         #  Also after a monster dies from combat if it was the active monster
@@ -33,7 +36,7 @@ class WarParty:
                 return self.board[index]
         return None
 
-    def get_random_monster(self, randomizer: Randomizer) -> Optional[Card]:
+    def get_random_monster(self, randomizer: 'Randomizer') -> Optional['MonsterCard']:
         taunt_monsters = [card for card in self.board if not card.dead and card.taunt]
         if taunt_monsters:
             return randomizer.select_attack_target(taunt_monsters)
@@ -45,7 +48,7 @@ class WarParty:
     def num_cards(self):
         return len(self.board)
 
-    def summon_in_combat(self, monster: MonsterCard, context: CombatPhaseContext, index: Optional[int] = None):
+    def summon_in_combat(self, monster: 'MonsterCard', context: CombatPhaseContext, index: Optional[int] = None):
         live_monsters_num = len([card for card in context.friendly_war_party.board if not card.dead])
         max_board_size = context.friendly_war_party.owner.maximum_board_size
         if live_monsters_num >= max_board_size:
@@ -55,16 +58,16 @@ class WarParty:
         context.friendly_war_party.board.insert(index, monster)
         if index < context.friendly_war_party.next_attacker_idx:
             context.friendly_war_party.next_attacker_idx += 1
-        context.broadcast_combat_event(CardEvent(monster, SUMMON_COMBAT))
+        context.broadcast_combat_event(CardEvent(monster, EVENTS.SUMMON_COMBAT.value))
 
     def get_index(self, card):
         return self.board.index(card)
 
-    def attackers(self) -> List[Card]:
+    def attackers(self) -> List['Card']:
         return [board_member for board_member in self.board if not board_member.dead and not board_member.cant_attack]
 
 
-def fight_boards(war_party_1: WarParty, war_party_2: WarParty, randomizer: Randomizer):
+def fight_boards(war_party_1: 'WarParty', war_party_2: 'WarParty', randomizer: 'Randomizer'):
     #  Currently we are not randomizing the first to fight here
     #  Expect to pass half boards into fight_boards in random order i.e. by shuffling players in combat step
     #  Half boards are copies, the originals state cannot be changed in the combat step
@@ -75,7 +78,7 @@ def fight_boards(war_party_1: WarParty, war_party_2: WarParty, randomizer: Rando
     if war_party_2.num_cards() > war_party_1.num_cards():
         attacking_war_party, defending_war_party = defending_war_party, attacking_war_party
 
-    start_combat_event = CardEvent(None, events.COMBAT_START)
+    start_combat_event = CardEvent(None, EVENTS.COMBAT_START.value)
     # Friendly vs enemy warparty does not matter for broadcast_combat_event
     CombatPhaseContext(war_party_1, war_party_2, randomizer).broadcast_combat_event(start_combat_event)
 
@@ -93,7 +96,7 @@ def fight_boards(war_party_1: WarParty, war_party_2: WarParty, randomizer: Rando
     damage(war_party_1, war_party_2)
 
 
-def damage(half_board_1: WarParty, half_board_2: WarParty):
+def damage(half_board_1: 'WarParty', half_board_2: 'WarParty'):
     monster_damage_1 = sum([card.tier for card in half_board_1.board if not card.dead])
     monster_damage_2 = sum([card.tier for card in half_board_2.board if not card.dead])
     # Handle case where both players have cards left on board.
@@ -109,11 +112,12 @@ def damage(half_board_1: WarParty, half_board_2: WarParty):
         logger.debug('neither player won (no minions left)')
 
 
-def start_attack(attacker: MonsterCard, defender: MonsterCard, attacking_war_party: WarParty, defending_war_party: WarParty,
-                 randomizer: Randomizer):
+def start_attack(attacker: 'MonsterCard', defender: 'MonsterCard', attacking_war_party: 'WarParty', defending_war_party: 'WarParty',
+                 randomizer: 'Randomizer'):
     logger.debug(f'{attacker} is attacking {defender}')
+    on_attack_event = CardEvent(attacker, EVENTS.ON_ATTACK.value)
     combat_phase_context = CombatPhaseContext(attacking_war_party, defending_war_party, randomizer)
-    combat_phase_context.broadcast_combat_event(CardEvent(attacker, events.ON_ATTACK))
+    combat_phase_context.broadcast_combat_event(on_attack_event)
     attacker.take_damage(defender.attack, combat_phase_context)
     defender.take_damage(attacker.attack, combat_phase_context)
     # handle "after combat" events here

@@ -197,7 +197,7 @@ class CardTests(unittest.TestCase):
         player_1.summon_from_hand(player_1.hand[0])
         self.assertListEqual([AlleyCat, TabbyCat], self.type_of_cards(player_1.in_play))
 
-    class TestWrathRandomizer(DefaultRandomizer):
+    class TestRaftWeaverRandomizer(DefaultRandomizer):
         def select_draw_card(self, cards: List[Card], player_name: str, round_number: int) -> Card:
             if round_number == 0:
                 return [card for card in cards if type(card) is WrathWeaver][0]
@@ -206,7 +206,7 @@ class CardTests(unittest.TestCase):
 
     def test_raft_weaver(self):  # TODO: rename
         tavern = Tavern()
-        tavern.randomizer = self.TestWrathRandomizer()
+        tavern.randomizer = self.TestRaftWeaverRandomizer()
         player_1 = tavern.add_player_with_hero("Dante_Kong")
         player_2 = tavern.add_player_with_hero("lucy")
         tavern.buying_step()
@@ -862,7 +862,7 @@ class CardTests(unittest.TestCase):
         self.assertEqual(player_1.in_play[1].attack, player_1.in_play[1].base_attack)
         self.assertEqual(player_1.in_play[1].health, player_1.in_play[1].base_health)
 
-    def test_crystal_weaver(self):
+    def test_crystal_weaver2(self):
         tavern = Tavern()
         player_1 = tavern.add_player_with_hero("Josh")
         player_2 = tavern.add_player_with_hero("Jacob")
@@ -926,6 +926,7 @@ class CardTests(unittest.TestCase):
         self.assertEqual(player_1.in_play[1].health, 1)
         self.assertEqual(player_1.in_play[2].attack, 4)
         self.assertEqual(player_1.in_play[2].health, 3)
+
 
 if __name__ == '__main__':
     unittest.main()

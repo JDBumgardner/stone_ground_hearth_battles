@@ -337,6 +337,5 @@ class CombatTests(unittest.TestCase):
         self.assertTrue(isinstance(adams_war_party.board[1], Imp))
         self.assertTrue(isinstance(adams_war_party.board[2], Imp))
 
-
 if __name__ == '__main__':
     unittest.main()

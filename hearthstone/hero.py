@@ -1,18 +1,15 @@
 from typing import Union
 
 from hearthstone.cards import CardEvent
+from hearthstone.card_factory import make_metaclass
 from hearthstone.events import BuyPhaseContext, CombatPhaseContext
 
 VALHALLA = []
 
-class HeroType(type):
-    def __new__(mcs, name, bases, kwargs):
-        klass = super().__new__(mcs, name, bases, kwargs)
-        if name not in ("Hero", "EmptyHero"):
-            VALHALLA.append(klass)
-        return klass
+HeroType = make_metaclass(VALHALLA.append, ("Hero", "EmptyHero"))
 
-class Hero(metaclass = HeroType):
+
+class Hero(metaclass=HeroType):
     power_cost = 2
     hero_power_used = False
 
@@ -49,6 +46,6 @@ class Hero(metaclass = HeroType):
     def on_buy_step(self):
         self.hero_power_used = False
 
+
 class EmptyHero(Hero):
     pass
-
