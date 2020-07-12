@@ -4,7 +4,7 @@ from typing import Union, List
 from hearthstone import events, combat
 from hearthstone.cards import MonsterCard, CardEvent
 from hearthstone.events import SUMMON_BUY, BuyPhaseContext, CombatPhaseContext, SUMMON_COMBAT, ON_ATTACK, COMBAT_START, \
-    SELL, DIES, BUY_END
+    SELL, DIES, BUY_END, CARD_DAMAGED
 from hearthstone.monster_types import BEAST, DEMON, MECH, PIRATE, DRAGON, MURLOC
 
 
@@ -723,3 +723,47 @@ class DeflectOBot(MonsterCard):
         if event.event == SUMMON_COMBAT and event.card.monster_type == MECH and event.card in context.friendly_war_party.board:
             self.attack += bonus
             self.divine_shield = True
+
+class FelfinNavigator(MonsterCard):
+    tier = 3
+    monster_type = MURLOC
+    base_attack = 4
+    base_health = 4
+
+    def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
+        bonus = 2 if self.golden else 1
+        for card in context.owner.in_play:
+            if card.monster_type == MURLOC and card != self:
+                card.health += bonus
+                card.attack += bonus
+
+class Houndmaster(MonsterCard):
+    tier = 3
+    base_attack = 4
+    base_health = 3
+    num_battlecry_targets = 1
+
+    def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
+        bonus = 4 if self.golden else 2
+        if targets:
+            targets[0].attack += bonus
+            targets[0].health += bonus
+            targets[0].taunt = True
+
+    def validate_battlecry_target(self, card: MonsterCard) -> bool:
+        return card.monster_type == BEAST
+
+class ImpGangBoss(MonsterCard):
+    tier = 3
+    monster_type = DEMON
+    base_attack = 2
+    base_health = 4
+
+    def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
+        if event.event == CARD_DAMAGED and self == event.card:
+            imp = Imp()
+            if self.golden:
+                imp.golden_transformation([])
+            summon_index = context.friendly_war_party.get_index(self)
+            context.friendly_war_party.summon_in_combat(imp, context, summon_index + 1)
+

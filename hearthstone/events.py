@@ -10,6 +10,7 @@ ON_ATTACK = 7
 SELL = 8
 BUY = 9
 BUY_END = 10
+CARD_DAMAGED = 11
 
 
 class BuyPhaseContext:

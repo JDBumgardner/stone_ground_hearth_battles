@@ -323,7 +323,19 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(adams_war_party.board[1].dead, True)
         self.assertEqual(adams_war_party.board[2].attack, 2)
 
-
+    def test_imp_gang_boss(self):
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [ImpGangBoss()]
+        ethans_war_party.board = [ArcaneCannon(), ArcaneCannon()]
+        fight_boards(adams_war_party, ethans_war_party, self.DeflectOBotRandomizer())
+        self.assertTrue(adams_war_party.board[0].dead)
+        self.assertTrue(adams_war_party.board[2].dead)
+        self.assertFalse(adams_war_party.board[1].dead)
+        self.assertTrue(isinstance(adams_war_party.board[1], Imp))
+        self.assertTrue(isinstance(adams_war_party.board[2], Imp))
 
 
 if __name__ == '__main__':

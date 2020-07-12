@@ -112,11 +112,12 @@ class MonsterCard(Card):
 
         return "{" + rep + "}"
 
-    def take_damage(self, damage: int):
+    def take_damage(self, damage: int, combat_phase_context: CombatPhaseContext):
         if self.divine_shield and not damage <= 0:
             self.divine_shield = False
         else:
             self.health -= damage
+            combat_phase_context.broadcast_combat_event(CardEvent(self, events.CARD_DAMAGED))
 
     def resolve_death(self, context: CombatPhaseContext):
         if self.health <= 0:
