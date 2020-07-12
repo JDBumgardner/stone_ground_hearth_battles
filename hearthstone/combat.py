@@ -116,9 +116,10 @@ def start_attack(attacker: 'MonsterCard', defender: 'MonsterCard', attacking_war
                  randomizer: 'Randomizer'):
     logger.debug(f'{attacker} is attacking {defender}')
     on_attack_event = CardEvent(attacker, EVENTS.ON_ATTACK.value)
-    CombatPhaseContext(attacking_war_party, defending_war_party, randomizer).broadcast_combat_event(on_attack_event)
-    attacker.take_damage(defender.attack)
-    defender.take_damage(attacker.attack)
+    combat_phase_context = CombatPhaseContext(attacking_war_party, defending_war_party, randomizer)
+    combat_phase_context.broadcast_combat_event(on_attack_event)
+    attacker.take_damage(defender.attack, combat_phase_context)
+    defender.take_damage(attacker.attack, combat_phase_context)
     # handle "after combat" events here
     attacker.resolve_death(CombatPhaseContext(attacking_war_party, defending_war_party, randomizer))
     defender.resolve_death(CombatPhaseContext(defending_war_party, attacking_war_party, randomizer))

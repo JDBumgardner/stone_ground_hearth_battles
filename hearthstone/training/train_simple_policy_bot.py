@@ -8,7 +8,7 @@ from hearthstone.battlebots.simple_policy_bot import SimplePolicyBot
 from hearthstone.battlebots.supremacy_bot import SupremacyBot
 from hearthstone.host import RoundRobinHost
 from hearthstone.ladder.ladder import Contestant, update_ratings, print_standings, save_ratings
-from hearthstone.monster_types import DRAGON, MECH, BEAST, MURLOC, DEMON, PIRATE
+from hearthstone.monster_types import MONSTER_TYPES.DRAGON, MONSTER_TYPES.MECH, MONSTER_TYPES.BEAST, MONSTER_TYPES.MURLOC, MONSTER_TYPES.DEMON, MONSTER_TYPES.PIRATE
 
 learning_rate = .1
 
@@ -17,9 +17,9 @@ def learning_bot_opponents():
     all_bots = [Contestant(f"RandomBot_{i}", RandomBot(1)) for i in range(20)]
     all_bots += [Contestant(f"CheapoBot", CheapoBot(3))]
     all_bots += [Contestant(f"SupremacyBot {t}", SupremacyBot(t, False, i)) for i, t in
-                 enumerate([MURLOC, BEAST, MECH, DRAGON, DEMON, PIRATE])]
+                 enumerate([MONSTER_TYPES.MURLOC, MONSTER_TYPES.BEAST, MONSTER_TYPES.MECH, MONSTER_TYPES.DRAGON, MONSTER_TYPES.DEMON, MONSTER_TYPES.PIRATE])]
     all_bots += [Contestant(f"PriorityRacistBot {t}", racist_priority_bot(t, i)) for i, t in
-                 enumerate([MURLOC, BEAST, MECH, DRAGON, DEMON, PIRATE])]
+                 enumerate([MONSTER_TYPES.MURLOC, MONSTER_TYPES.BEAST, MONSTER_TYPES.MECH, MONSTER_TYPES.DRAGON, MONSTER_TYPES.DEMON, MONSTER_TYPES.PIRATE])]
     return all_bots
 
 

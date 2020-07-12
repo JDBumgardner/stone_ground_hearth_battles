@@ -44,7 +44,7 @@ class SummonAction(Action):
 
 class SellAction(Action):
 
-    def __init__(self, card: MonsterCard):
+    def __init__(self, card: 'MonsterCard'):
         self.card: 'MonsterCard' = card
 
     def apply(self, player: 'Player'):
@@ -105,7 +105,7 @@ class Agent:
     def hero_choice_action(self, player: 'Player') -> 'Hero':
         return player.hero_options[0]
 
-    def rearrange_cards(self, player: 'Player') -> List[Card]:
+    def rearrange_cards(self, player: 'Player') -> List['Card']:
         """
         here the player selects a card arangement one time per combat directly preceeding combat
 
@@ -134,7 +134,7 @@ class Agent:
         """
         pass
 
-    def discover_choice_action(self, player: 'Player') -> Card:
+    def discover_choice_action(self, player: 'Player') -> 'Card':
         """
 
         Args:

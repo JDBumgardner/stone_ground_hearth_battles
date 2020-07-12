@@ -21,7 +21,7 @@ class Randomizer:
     def select_friendly_minion(self, friendly_minions: List['Card']) -> 'Card':
         raise NotImplementedError()
 
-    def select_enemy_minion(self, enemy_minions: List['Card']) -> 'Card':
+    def select_enemy_minion(self, enemy_minions: List['Card']) -> 'MonsterCard':
         raise NotImplementedError()
 
     def select_discover_card(self, discoverables: List['Card']) -> 'Card':
