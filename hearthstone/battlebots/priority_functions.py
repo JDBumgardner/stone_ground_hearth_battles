@@ -1,5 +1,8 @@
 import typing
 from typing import Callable
+
+from hearthstone.card_pool import *
+
 if typing.TYPE_CHECKING:
     from hearthstone.cards import MonsterCard
     from hearthstone.player import Player
@@ -10,7 +13,7 @@ def attack_health_priority_bot(seed: int, priority_function_bot: Callable, monst
 
 
 def attack_health_tripler_priority_bot(seed: int, priority_function_bot: Callable, monster_type: str = None):
-    def priority(player: Player, card: MonsterCard):
+    def priority(player: 'Player', card: 'MonsterCard'):
         score = card.health + card.attack + card.tier
         num_existing = len([existing for existing in player.hand + player.in_play if
                             type(existing) == type(card) and not existing.golden])
@@ -25,7 +28,7 @@ def attack_health_tripler_priority_bot(seed: int, priority_function_bot: Callabl
 
 
 def racist_priority_bot(seed: int, priority_function_bot: Callable, monster_type: str = None):
-    def priority(player: Player, card: MonsterCard):
+    def priority(player: 'Player', card: 'MonsterCard'):
         score = card.health + card.attack + card.tier
         if card.monster_type == monster_type:
             score += 2
@@ -35,7 +38,7 @@ def racist_priority_bot(seed: int, priority_function_bot: Callable, monster_type
 
 
 def priority_saurolisk_bot(seed: int, priority_function_bot: Callable, monster_type: str = None):
-    def priority(player: Player, card: MonsterCard):
+    def priority(player: 'Player', card: 'MonsterCard'):
         if type(card) is RabidSaurolisk:
             return 100
 
@@ -48,7 +51,7 @@ def priority_saurolisk_bot(seed: int, priority_function_bot: Callable, monster_t
 
 
 def priority_saurolisk_buff_bot(seed: int, priority_function_bot: Callable, monster_type: str = None):
-    def priority(player: Player, card: MonsterCard):
+    def priority(player: 'Player', card: 'MonsterCard'):
         if type(card) is RabidSaurolisk:
             return 100
 
@@ -65,7 +68,7 @@ def priority_saurolisk_buff_bot(seed: int, priority_function_bot: Callable, mons
 
 
 def priority_adaptive_tripler_bot(seed: int, priority_function_bot: Callable, monster_type: str = None):
-    def priority(player: Player, card: MonsterCard):
+    def priority(player: 'Player', card: 'MonsterCard'):
         score = card.health + card.attack + card.tier
         num_existing = len([existing for existing in player.hand + player.in_play if
                             type(existing) == type(card) and not existing.golden])
@@ -85,7 +88,7 @@ def priority_adaptive_tripler_bot(seed: int, priority_function_bot: Callable, mo
 
 
 def priority_health_tripler_bot(seed: int, priority_function_bot: Callable, monster_type: str = None):
-    def priority(player: Player, card: MonsterCard):
+    def priority(player: 'Player', card: 'MonsterCard'):
         score = card.health * 2 + card.attack + card.tier
         num_existing = len([existing for existing in player.hand + player.in_play if
                             type(existing) == type(card) and not existing.golden])
@@ -100,7 +103,7 @@ def priority_health_tripler_bot(seed: int, priority_function_bot: Callable, mons
 
 
 def priority_attack_tripler_bot(seed: int, priority_function_bot: Callable, monster_type: str = None):
-    def priority(player: Player, card: MonsterCard):
+    def priority(player: 'Player', card: 'MonsterCard'):
         score = card.health + card.attack * 2 + card.tier
         num_existing = len([existing for existing in player.hand + player.in_play if
                             type(existing) == type(card) and not existing.golden])
@@ -115,7 +118,7 @@ def priority_attack_tripler_bot(seed: int, priority_function_bot: Callable, mons
 
 
 def battlerattler_priority_bot(seed: int, priority_function_bot: Callable, monster_type: str = None):
-    def priority(player: Player, card: MonsterCard):
+    def priority(player: 'Player', card: 'MonsterCard'):
         score = card.health + card.attack + card.tier
         num_existing = len([existing for existing in player.hand + player.in_play if
                             type(existing) == type(card) and not existing.golden])
@@ -139,7 +142,7 @@ def battlerattler_priority_bot(seed: int, priority_function_bot: Callable, monst
 
 
 def priority_pogo_hopper_bot(seed: int, priority_function_bot: Callable, monster_type: str = None):
-    def priority(player: Player, card: MonsterCard):
+    def priority(player: 'Player', card: 'MonsterCard'):
         if type(card) is PogoHopper:
             return 100
 

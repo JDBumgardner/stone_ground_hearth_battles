@@ -4,7 +4,7 @@ from hearthstone.battlebots.priority_functions import racist_priority_bot
 from hearthstone.battlebots.hero_bot import HeroBot
 from hearthstone.battlebots.priority_bot import PriorityBot
 from hearthstone.battlebots import priority_functions
-from hearthstone.monster_types import MONSTER_TYPES.MURLOC, MONSTER_TYPES.BEAST, MONSTER_TYPES.DRAGON, MONSTER_TYPES.DEMON, MONSTER_TYPES.PIRATE, MONSTER_TYPES.MECH, MONSTER_TYPES
+from hearthstone.monster_types import MONSTER_TYPES
 
 
 def get_priority_bot_contestant_tuples():

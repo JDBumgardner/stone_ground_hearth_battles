@@ -2,7 +2,7 @@ from hearthstone.battlebots.priority_functions import priority_saurolisk_bot, ra
     priority_adaptive_tripler_bot, battlerattler_priority_bot
 from hearthstone.host import RoundRobinHost
 from hearthstone.user_agent import UserAgent
-from hearthstone.monster_types import MONSTER_TYPES.MURLOC, MONSTER_TYPES.DEMON, MONSTER_TYPES.MECH
+from hearthstone.monster_types import MONSTER_TYPES
 import logging
 
 
