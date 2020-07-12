@@ -644,7 +644,7 @@ class CardTests(unittest.TestCase):
         player_1.hero_power()
         self.assertEqual(len(player_1.hand), 2)
         self.assertEqual(player_1.coins, 1)
-        self.assertEqual(player_1.hand[1].monster_type, PIRATE)
+        self.assertEqual(player_1.hand[1].monster_type, MONSTER_TYPES.PIRATE)
         self.assertEqual(player_1.hand[1].tier, 1)
 
     def test_freedealing_gambler(self):

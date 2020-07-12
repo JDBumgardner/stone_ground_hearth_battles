@@ -4,18 +4,18 @@ from typing import Union, List
 from hearthstone import combat
 from hearthstone.cards import MonsterCard, CardEvent
 from hearthstone.events import BuyPhaseContext, CombatPhaseContext, EVENTS
-from hearthstone.monster_types import BEAST, DEMON, MECH, PIRATE, DRAGON, MURLOC
+from hearthstone.monster_types import MONSTER_TYPES
 
 
 class MamaBear(MonsterCard):
     #  wrong tier for testing actual tier is 6
     tier = 6
-    monster_type = BEAST
+    monster_type = MONSTER_TYPES.BEAST
     base_attack = 5
     base_health = 5
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
-        if event.event is EVENTS.SUMMON_BUY and event.card.monster_type == BEAST:
+        if event.event is EVENTS.SUMMON_BUY and event.card.monster_type == MONSTER_TYPES.BEAST:
             event.card.attack += 5
             event.card.health += 5
 
@@ -28,7 +28,7 @@ class ShifterZerus(MonsterCard):
 
 class SneedsOldShredder(MonsterCard):
     tier = 5
-    monster_type = MECH
+    monster_type = MONSTER_TYPES.MECH
     base_attack = 5
     base_health = 7
 
@@ -38,7 +38,7 @@ class SneedsOldShredder(MonsterCard):
 
 class FreedealingGambler(MonsterCard):
     tier = 2
-    monster_type = PIRATE
+    monster_type = MONSTER_TYPES.PIRATE
     base_attack = 3
     base_health = 3
     redeem_rate = 3
@@ -50,7 +50,7 @@ class FreedealingGambler(MonsterCard):
 
 class DragonspawnLieutenant(MonsterCard):
     tier = 1
-    monster_type = DRAGON
+    monster_type = MONSTER_TYPES.DRAGON
     base_attack = 2
     base_health = 3
     base_taunt = True
@@ -67,7 +67,7 @@ class RighteousProtector(MonsterCard):
 
 class AlleyCat(MonsterCard):
     tier = 1
-    monster_type = BEAST
+    monster_type = MONSTER_TYPES.BEAST
     base_attack = 1
     base_health = 1
 
@@ -81,26 +81,26 @@ class AlleyCat(MonsterCard):
 class TabbyCat(MonsterCard):
     token = True
     tier = 1
-    monster_type = BEAST
+    monster_type = MONSTER_TYPES.BEAST
     base_attack = 1
     base_health = 1
 
 
 class ScavengingHyena(MonsterCard):
     tier = 1
-    monster_type = BEAST
+    monster_type = MONSTER_TYPES.BEAST
     base_attack = 2
     base_health = 2
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
-        if event.event is EVENTS.DIES and event.card.monster_type == BEAST and event.card in context.friendly_war_party.board:
+        if event.event is EVENTS.DIES and event.card.monster_type == MONSTER_TYPES.BEAST and event.card in context.friendly_war_party.board:
             self.attack += 2
             self.health += 1
 
 
 class FiendishServant(MonsterCard):
     tier = 1
-    monster_type = DEMON
+    monster_type = MONSTER_TYPES.DEMON
     base_attack = 2
     base_health = 1
 
@@ -118,7 +118,7 @@ class WrathWeaver(MonsterCard):
     base_health = 1
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
-        if event.event is EVENTS.SUMMON_BUY and event.card.monster_type == DEMON:
+        if event.event is EVENTS.SUMMON_BUY and event.card.monster_type == MONSTER_TYPES.DEMON:
             context.owner.health -= 1
             self.attack += 2
             self.health += 2
@@ -126,7 +126,7 @@ class WrathWeaver(MonsterCard):
 
 class MechaRoo(MonsterCard):
     tier = 1
-    monster_type = MECH
+    monster_type = MONSTER_TYPES.MECH
     base_attack = 1
     base_health = 1
 
@@ -141,14 +141,14 @@ class MechaRoo(MonsterCard):
 class JoEBot(MonsterCard):
     token = True
     tier = 1
-    monster_type = MECH
+    monster_type = MONSTER_TYPES.MECH
     base_attack = 1
     base_health = 1
 
 
 class MicroMachine(MonsterCard):
     tier = 1
-    monster_type = MECH
+    monster_type = MONSTER_TYPES.MECH
     base_attack = 1
     base_health = 2
 
@@ -162,7 +162,7 @@ class MicroMachine(MonsterCard):
 
 class MurlocTidecaller(MonsterCard):
     tier = 1
-    monster_type = MURLOC
+    monster_type = MONSTER_TYPES.MURLOC
     base_attack = 1
     base_health = 2
 
@@ -170,13 +170,13 @@ class MurlocTidecaller(MonsterCard):
         bonus = 2 if self.golden else 1
         friendly_summon = event.event is EVENTS.SUMMON_BUY or (
                 event.event is EVENTS.SUMMON_COMBAT and event.card in context.friendly_war_party.board)
-        if friendly_summon and event.card.monster_type == MURLOC and event.card != self:
+        if friendly_summon and event.card.monster_type == MONSTER_TYPES.MURLOC and event.card != self:
             self.attack += bonus
 
 
 class MurlocTidehunter(MonsterCard):
     tier = 1
-    monster_type = MURLOC
+    monster_type = MONSTER_TYPES.MURLOC
     base_attack = 2
     base_health = 1
 
@@ -190,7 +190,7 @@ class MurlocTidehunter(MonsterCard):
 class MurlocScout(MonsterCard):
     token = True
     tier = 1
-    monster_type = MURLOC
+    monster_type = MONSTER_TYPES.MURLOC
     base_attack = 1
     base_health = 1
 
@@ -215,7 +215,7 @@ class SelflessHero(MonsterCard):
 
 class VulgarHomunculus(MonsterCard):
     tier = 1
-    monster_type = DEMON
+    monster_type = MONSTER_TYPES.DEMON
     base_attack = 2
     base_health = 4
     base_taunt = True
@@ -226,7 +226,7 @@ class VulgarHomunculus(MonsterCard):
 
 class RedWhelp(MonsterCard):
     tier = 1
-    monster_type = DRAGON
+    monster_type = MONSTER_TYPES.DRAGON
     base_attack = 1
     base_health = 2
 
@@ -234,7 +234,7 @@ class RedWhelp(MonsterCard):
         if event.event is EVENTS.COMBAT_START:
             num_friendly_dragons = len(
                 [card for card in context.friendly_war_party.board if
-                 not card.dead and card.monster_type == DRAGON])  # Red Whelp counts all dragons including itself
+                 not card.dead and card.monster_type == MONSTER_TYPES.DRAGON])  # Red Whelp counts all dragons including itself
             targets = [card for card in context.enemy_war_party.board if not card.dead]
             if not targets:
                 return
@@ -247,7 +247,7 @@ class RedWhelp(MonsterCard):
 
 class HarvestGolem(MonsterCard):
     tier = 2
-    monster_type = MECH
+    monster_type = MONSTER_TYPES.MECH
     base_attack = 2
     base_health = 3
 
@@ -262,14 +262,14 @@ class HarvestGolem(MonsterCard):
 class DamagedGolem(MonsterCard):
     token = True
     tier = 1
-    monster_type = MECH
+    monster_type = MONSTER_TYPES.MECH
     base_attack = 2
     base_health = 1
 
 
 class KaboomBot(MonsterCard):
     tier = 2
-    monster_type = MECH
+    monster_type = MONSTER_TYPES.MECH
     base_attack = 2
     base_health = 2
 
@@ -286,7 +286,7 @@ class KaboomBot(MonsterCard):
 
 class KindlyGrandmother(MonsterCard):
     tier = 2
-    monster_type = BEAST
+    monster_type = MONSTER_TYPES.BEAST
     base_attack = 1
     base_health = 1
 
@@ -300,26 +300,26 @@ class KindlyGrandmother(MonsterCard):
 class BigBadWolf(MonsterCard):
     token = True
     tier = 1
-    monster_type = BEAST
+    monster_type = MONSTER_TYPES.BEAST
     base_attack = 3
     base_health = 2
 
 
 class MetaltoothLeaper(MonsterCard):
     tier = 2
-    monster_type = BEAST
+    monster_type = MONSTER_TYPES.BEAST
     base_attack = 3
     base_health = 3
 
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
         for card in context.owner.in_play:
-            if card != self and card.monster_type == MECH:
+            if card != self and card.monster_type == MONSTER_TYPES.MECH:
                 card.attack += 2
 
 
 class RabidSaurolisk(MonsterCard):
     tier = 2
-    monster_type = BEAST
+    monster_type = MONSTER_TYPES.BEAST
     base_attack = 3
     base_health = 2
 
@@ -331,7 +331,7 @@ class RabidSaurolisk(MonsterCard):
 
 class GlyphGuardian(MonsterCard):
     tier = 2
-    monster_type = DRAGON
+    monster_type = MONSTER_TYPES.DRAGON
     base_attack = 2
     base_health = 4
 
@@ -345,7 +345,7 @@ class GlyphGuardian(MonsterCard):
 
 class Imprisoner(MonsterCard):
     tier = 2
-    monster_type = DEMON
+    monster_type = MONSTER_TYPES.DEMON
     base_attack = 3
     base_health = 3
 
@@ -359,14 +359,14 @@ class Imprisoner(MonsterCard):
 class Imp(MonsterCard):
     token = True
     tier = 1
-    monster_type = DEMON
+    monster_type = MONSTER_TYPES.DEMON
     base_attack = 1
     base_health = 1
 
 
 class MurlocWarleader(MonsterCard):
     tier = 2
-    monster_type = MURLOC
+    monster_type = MONSTER_TYPES.MURLOC
     base_attack = 3
     base_health = 3
 
@@ -376,11 +376,11 @@ class MurlocWarleader(MonsterCard):
             bonus = 4
         if event.event is EVENTS.COMBAT_START or (event.event is EVENTS.SUMMON_COMBAT and event.card == self):
             murlocs = [card for card in context.friendly_war_party.board if
-                       card != self and card.monster_type == MURLOC]
+                       card != self and card.monster_type == MONSTER_TYPES.MURLOC]
             for murloc in murlocs:
                 murloc.attack += bonus
         elif event.event is EVENTS.SUMMON_COMBAT and event.card in context.friendly_war_party.board \
-                and event.card != self and event.card.monster_type == MURLOC:
+                and event.card != self and event.card.monster_type == MONSTER_TYPES.MURLOC:
             event.card.attack += bonus
 
     def base_deathrattle(self, context: CombatPhaseContext):
@@ -389,14 +389,14 @@ class MurlocWarleader(MonsterCard):
         if self.golden:
             bonus = 4
         murlocs = [card for card in context.friendly_war_party.board if
-                   card != self and card.monster_type == MURLOC]
+                   card != self and card.monster_type == MONSTER_TYPES.MURLOC]
         for murloc in murlocs:
             murloc.attack -= bonus
 
 
 class StewardOfTime(MonsterCard):
     tier = 2
-    monster_type = DRAGON
+    monster_type = MONSTER_TYPES.DRAGON
     base_attack = 3
     base_health = 4
 
@@ -413,7 +413,7 @@ class StewardOfTime(MonsterCard):
 
 class Scallywag(MonsterCard):
     tier = 1
-    monster_type = PIRATE
+    monster_type = MONSTER_TYPES.PIRATE
     base_attack = 2
     base_health = 1
 
@@ -428,7 +428,7 @@ class Scallywag(MonsterCard):
 class SkyPirate(MonsterCard):
     tier = 1
     token = True
-    monster_type = PIRATE
+    monster_type = MONSTER_TYPES.PIRATE
     base_attack = 1
     base_health = 1
 
@@ -446,7 +446,7 @@ class SkyPirate(MonsterCard):
 
 class DeckSwabbie(MonsterCard):
     tier = 1
-    monster_type = PIRATE
+    monster_type = MONSTER_TYPES.PIRATE
     base_attack = 2
     base_health = 2
 
@@ -477,7 +477,7 @@ class UnstableGhoul(MonsterCard):
 
 class RockpoolHunter(MonsterCard):
     tier = 1
-    monster_type = MURLOC
+    monster_type = MONSTER_TYPES.MURLOC
     base_attack = 2
     base_health = 3
     num_battlecry_targets = 1
@@ -489,12 +489,12 @@ class RockpoolHunter(MonsterCard):
             targets[0].health += bonus
 
     def validate_battlecry_target(self, card: MonsterCard) -> bool:
-        return card.monster_type == MURLOC and card != self
+        return card.monster_type == MONSTER_TYPES.MURLOC and card != self
 
 
 class RatPack(MonsterCard):
     tier = 2
-    monster_type = BEAST
+    monster_type = MONSTER_TYPES.BEAST
     base_attack = 2
     base_health = 2
 
@@ -509,7 +509,7 @@ class RatPack(MonsterCard):
 
 class Rat(MonsterCard):
     tier = 1
-    monster_type = BEAST
+    monster_type = MONSTER_TYPES.BEAST
     base_attack = 1
     base_health = 1
     token = True
@@ -535,7 +535,7 @@ class ArcaneCannon(MonsterCard):
 
 class MonstrousMacaw(MonsterCard):
     tier = 2
-    monster_type = BEAST
+    monster_type = MONSTER_TYPES.BEAST
     base_attack = 3
     base_health = 2
 
@@ -552,7 +552,7 @@ class MonstrousMacaw(MonsterCard):
 
 class NathrezimOverseer(MonsterCard):
     tier = 2
-    monster_type = DEMON
+    monster_type = MONSTER_TYPES.DEMON
     base_attack = 2
     base_health = 3
 
@@ -563,22 +563,22 @@ class NathrezimOverseer(MonsterCard):
             targets[0].health += bonus
 
     def validate_battlecry_target(self, card: MonsterCard) -> bool:
-        return card.monster_type == DEMON and card != self
+        return card.monster_type == MONSTER_TYPES.DEMON and card != self
 
 
 class OldMurkeye(MonsterCard):
     tier = 2
-    monster_type = MURLOC
+    monster_type = MONSTER_TYPES.MURLOC
     base_attack = 2
     base_health = 4
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         bonus = 2 if self.golden else 1
         if event.event is EVENTS.COMBAT_START:
-            self.attack += bonus * sum(1 for murloc in context.friendly_war_party.board if murloc.monster_type is MURLOC)
-        if event.event is EVENTS.DIES and event.card in context.friendly_war_party.board and event.card.monster_type is MURLOC:
+            self.attack += bonus * sum(1 for murloc in context.friendly_war_party.board if murloc.monster_type is MONSTER_TYPES.MURLOC)
+        if event.event is EVENTS.DIES and event.card in context.friendly_war_party.board and event.card.monster_type is MONSTER_TYPES.MURLOC:
             self.attack -= bonus
-        if event.event is EVENTS.SUMMON_COMBAT and event.card in context.friendly_war_party.board and event.card.monster_type is MURLOC:
+        if event.event is EVENTS.SUMMON_COMBAT and event.card in context.friendly_war_party.board and event.card.monster_type is MONSTER_TYPES.MURLOC:
             self.attack += bonus
 
 
@@ -590,14 +590,14 @@ class CrystalWeaver(MonsterCard):
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
         bonus = 2 if self.golden else 1
         for card in context.owner.in_play:
-            if card.monster_type == DEMON:
+            if card.monster_type == MONSTER_TYPES.DEMON:
                 card.attack += bonus
                 card.health += bonus
 
 
 class MechanoEgg(MonsterCard):
     tier = 4
-    monster_type = MECH
+    monster_type = MONSTER_TYPES.MECH
     base_attack = 0
     base_health = 5
 
@@ -612,14 +612,14 @@ class MechanoEgg(MonsterCard):
 class Robosaur(MonsterCard):
     token = True
     tier = 1
-    monster_type = MECH
+    monster_type = MONSTER_TYPES.MECH
     base_attack = 8
     base_health = 8
 
 
 class PogoHopper(MonsterCard):
     tier = 2
-    monster_type = MECH
+    monster_type = MONSTER_TYPES.MECH
     base_attack = 1
     base_health = 1
     tracked = True
@@ -632,7 +632,7 @@ class PogoHopper(MonsterCard):
 
 class Goldgrubber(MonsterCard):
     tier = 4
-    monster_type = PIRATE
+    monster_type = MONSTER_TYPES.PIRATE
     base_attack = 2
     base_health = 2
 
@@ -659,13 +659,13 @@ class SpawnOfNzoth(MonsterCard):
 
 class Zoobot(MonsterCard):
     tier = 2
-    monster_type = MECH
+    monster_type = MONSTER_TYPES.MECH
     base_attack = 3
     base_health = 3
 
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
         bonus = 2 if self.golden else 1
-        for monster_type in [MURLOC, BEAST, DRAGON]:
+        for monster_type in [MONSTER_TYPES.MURLOC, MONSTER_TYPES.BEAST, MONSTER_TYPES.DRAGON]:
             friendly_cards = [card for card in context.owner.in_play if card.monster_type == monster_type]
             if friendly_cards:
                 card = context.randomizer.select_friendly_minion(friendly_cards)
@@ -675,27 +675,27 @@ class Zoobot(MonsterCard):
 
 class BloodsailCannoneer(MonsterCard):
     tier = 3
-    monster_type = PIRATE
+    monster_type = MONSTER_TYPES.PIRATE
     base_attack = 4
     base_health = 2
 
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
         bonus = 6 if self.golden else 3
         for card in context.owner.in_play:
-            if card.monster_type == PIRATE and card != self:
+            if card.monster_type == MONSTER_TYPES.PIRATE and card != self:
                 card.attack += bonus
 
 
 class ColdlightSeer(MonsterCard):
     tier = 3
-    monster_type = MURLOC
+    monster_type = MONSTER_TYPES.MURLOC
     base_attack = 2
     base_health = 3
 
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
         bonus = 4 if self.golden else 2
         for card in context.owner.in_play:
-            if card.monster_type == MURLOC and card != self:
+            if card.monster_type == MONSTER_TYPES.MURLOC and card != self:
                 card.health += bonus
 
 
@@ -713,28 +713,28 @@ class CrowdFavorite(MonsterCard):
 
 class DeflectOBot(MonsterCard):
     tier = 3
-    monster_type = MECH
+    monster_type = MONSTER_TYPES.MECH
     base_attack = 3
     base_health = 2
     base_divine_shield = True
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         bonus = 2 if self.golden else 1
-        if event.event is EVENTS.SUMMON_COMBAT and event.card.monster_type == MECH and event.card in context.friendly_war_party.board:
+        if event.event is EVENTS.SUMMON_COMBAT and event.card.monster_type == MONSTER_TYPES.MECH and event.card in context.friendly_war_party.board:
             self.attack += bonus
             self.divine_shield = True
 
 
 class FelfinNavigator(MonsterCard):
     tier = 3
-    monster_type = MURLOC
+    monster_type = MONSTER_TYPES.MURLOC
     base_attack = 4
     base_health = 4
 
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
         bonus = 2 if self.golden else 1
         for card in context.owner.in_play:
-            if card.monster_type == MURLOC and card != self:
+            if card.monster_type == MONSTER_TYPES.MURLOC and card != self:
                 card.health += bonus
                 card.attack += bonus
 
@@ -753,12 +753,12 @@ class Houndmaster(MonsterCard):
             targets[0].taunt = True
 
     def validate_battlecry_target(self, card: MonsterCard) -> bool:
-        return card.monster_type == BEAST
+        return card.monster_type == MONSTER_TYPES.BEAST
 
 
 class ImpGangBoss(MonsterCard):
     tier = 3
-    monster_type = DEMON
+    monster_type = MONSTER_TYPES.DEMON
     base_attack = 2
     base_health = 4
 

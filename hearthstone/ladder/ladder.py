@@ -10,7 +10,7 @@ from hearthstone.battlebots.random_bot import RandomBot
 from hearthstone.battlebots.saurolisk_bot import SauroliskBot
 from hearthstone.battlebots.supremacy_bot import SupremacyBot
 from hearthstone.host import RoundRobinHost
-from hearthstone.monster_types import MURLOC, BEAST, MECH, DRAGON, DEMON, PIRATE
+from hearthstone.monster_types import MONSTER_TYPES.MURLOC, MONSTER_TYPES.BEAST, MONSTER_TYPES.MECH, MONSTER_TYPES.DRAGON, MONSTER_TYPES.DEMON, MONSTER_TYPES.PIRATE
 
 
 class Contestant:
@@ -65,13 +65,13 @@ def all_contestants():
     all_bots += [Contestant(f"NoActionBot ", NoActionBot())]
     all_bots += [Contestant(f"CheapoBot", CheapoBot(3))]
     all_bots += [Contestant(f"SupremacyBot {t}", SupremacyBot(t, False, i)) for i, t in
-                 enumerate([MURLOC, BEAST, MECH, DRAGON, DEMON, PIRATE])]
+                 enumerate([MONSTER_TYPES.MURLOC, MONSTER_TYPES.BEAST, MONSTER_TYPES.MECH, MONSTER_TYPES.DRAGON, MONSTER_TYPES.DEMON, MONSTER_TYPES.PIRATE])]
     all_bots += [Contestant(f"SupremacyUpgradeBot {t}", SupremacyBot(t, True, i)) for i, t in
-                 enumerate([MURLOC, BEAST, MECH, DRAGON, DEMON, PIRATE])]
+                 enumerate([MONSTER_TYPES.MURLOC, MONSTER_TYPES.BEAST, MONSTER_TYPES.MECH, MONSTER_TYPES.DRAGON, MONSTER_TYPES.DEMON, MONSTER_TYPES.PIRATE])]
     all_bots += [Contestant("SauroliskBot", SauroliskBot(5))]
     # all_bots += [Contestant("PriorityHealthAttackBot", attack_health_priority_bot(6))]
     # all_bots += [Contestant(f"PriorityRacistBot {t}", racist_priority_bot(t, i)) for i, t in
-    #              enumerate([MURLOC, BEAST, MECH, DRAGON, DEMON, PIRATE])]
+    #              enumerate([MONSTER_TYPES.MURLOC, MONSTER_TYPES.BEAST, MONSTER_TYPES.MECH, MONSTER_TYPES.DRAGON, MONSTER_TYPES.DEMON, MONSTER_TYPES.PIRATE])]
     # all_bots += [Contestant("PrioritySauroliskBot", priority_saurolisk_bot(8))]
     # # all_bots += [Contestant("PriorityHealthAttackTriplerBot", attack_health_tripler_priority_bot(9))]
     # all_bots += [Contestant("PriorityAdaptiveTriplerBot", priority_adaptive_tripler_bot(10))]
