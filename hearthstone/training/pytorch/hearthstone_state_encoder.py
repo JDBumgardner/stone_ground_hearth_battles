@@ -55,17 +55,6 @@ class Feature:
         return num
 
 
-class ActionFeature(Feature):
-    def __init__(self, action: Action):
-        self.action = action
-
-    def encode(self, player: Player) -> torch.Tensor:
-        return torch.tensor([self.action.valid(player)])
-
-    def size(self) -> torch.Size:
-        return torch.Size([1])
-
-
 class ScalarFeature(Feature):
     def __init__(self, feat: Callable[[Any], float]):
         self.feat = feat
