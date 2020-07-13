@@ -1,4 +1,8 @@
+import operator
 import unittest
+from functools import reduce
+
+import torch
 
 from hearthstone.tavern import Tavern
 from hearthstone.training.pytorch.hearthstone_state_encoder import encode_player, encode_valid_actions
@@ -20,6 +24,14 @@ class PytorchTests(unittest.TestCase):
         tavern.buying_step()
         player_1_valid_actions = encode_valid_actions(player_1)
         print(player_1_valid_actions)
+
+    def test_get_stacked(self):
+        tensor1 = torch.tensor([1,2,5,6])
+        tensor2 = torch.tensor([5,6,83,7])
+        print(tensor1.size())
+        print(tensor1.size() + tensor2.size())
+        torch.Size()
+
 
 if __name__ == '__main__':
     unittest.main()

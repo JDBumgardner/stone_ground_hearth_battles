@@ -1,13 +1,13 @@
 import copy
 import enum
 from collections import namedtuple
-from typing import Optional
+from typing import Callable, List, Any, Optional
 
 import torch
 
-from hearthstone.agent import TripleRewardsAction, HeroPowerAction, TavernUpgradeAction, RerollAction, \
-    EndPhaseAction, SummonAction
-from hearthstone.cards import MonsterCard
+from hearthstone.agent import TripleRewardsAction, TavernUpgradeAction, RerollAction, \
+    EndPhaseAction, SummonAction, BuyAction, SellAction
+from hearthstone.cards import Card
 from hearthstone.monster_types import MONSTER_TYPES
 from hearthstone.player import Player
 
@@ -23,14 +23,10 @@ def frozen_player(player: Player) -> Player:
     player = copy.deepcopy(player)
     return player
 
+
 MAX_ENCODED_STORE = 7
 MAX_ENCODED_HAND = 10
 MAX_ENCODED_BOARD = 7
-
-
-def encode_monster_type(monster_type: Optional[MONSTER_TYPES]) -> torch.Tensor:
-    value = 0 if monster_type is None else monster_type.value
-    return torch.nn.functional.one_hot(torch.as_tensor(value), num_classes=len(MONSTER_TYPES)+1)
 
 
 class CardLocation(enum.Enum):
@@ -39,59 +35,207 @@ class CardLocation(enum.Enum):
     BOARD = 3
 
 
-def state_encoding_size():
-    return 2 + card_encoding_size() * (7+10+7)
+class LocatedCard:
+    def __init__(self, card: Card, location: CardLocation):
+        self.card = card
+        self.location = location
 
 
-def card_encoding_size():
-    return 5 + len(CardLocation)+1 + len(MONSTER_TYPES)+1
+class Feature:
+    def encode(self, obj: Any) -> torch.Tensor:
+        pass
+
+    def size(self) -> torch.Size:
+        pass
+
+    def flattened_size(self) -> int:
+        num = 1
+        for dim in self.size():
+            num *= dim
+        return num
 
 
-def encode_card(location: CardLocation, card: MonsterCard) -> torch.Tensor:
-    location_tensor = torch.nn.functional.one_hot(torch.as_tensor(location.value), num_classes=len(CardLocation)+1)
-    monster_type_tensor = encode_monster_type(card.monster_type)
-    return torch.cat([torch.tensor([card.tier, card.attack, card.health, card.taunt, card.divine_shield]),
-                      location_tensor,
-                      monster_type_tensor
-                      ], dim=0).float()
+class ActionFeature(Feature):
+    def __init__(self, action: Action):
+        self.action = action
+
+    def encode(self, player: Player) -> torch.Tensor:
+        return torch.tensor([self.action.valid(player)])
+
+    def size(self) -> torch.Size:
+        return torch.Size([1])
+
+
+class ScalarFeature(Feature):
+    def __init__(self, feat: Callable[[Any], float]):
+        self.feat = feat
+
+    def encode(self, obj: Any) -> torch.Tensor:
+        return torch.tensor([self.feat(obj)])
+
+    def size(self) -> torch.Size:
+        return torch.Size([1])
+
+
+class OnehotFeature(Feature):
+    def __init__(self, extractor: Callable[[Any], float], num_classes: int):
+        self.extractor = extractor
+        self.num_classes = num_classes
+
+    def encode(self, card: Any) -> torch.Tensor:
+        return torch.nn.functional.one_hot(torch.as_tensor(self.extractor(card)), num_classes=self.num_classes).float()
+
+    def size(self) -> torch.Size:
+        return torch.Size([self.num_classes])
+
+
+class CombinedFeature(Feature):
+    def __init__(self, features: List[Feature]):
+        self.features = features
+
+    def encode(self, card: Any) -> torch.Tensor:
+        return torch.cat([feature.encode(card) for feature in self.features])
+
+    def size(self) -> torch.Size:
+        sizes = [feature.size() for feature in self.features]
+        dimension_sum = 0
+        for size in sizes:
+            assert size[1:] == sizes[0][1:]
+            dimension_sum += size[0]
+
+        return (dimension_sum,) + sizes[0][1:]
+
+
+class ListOfFeatures(Feature):
+    def __init__(self, extractor: Callable[[Any], List[Any]], feature: Feature, width: int, dtype=None):
+        self.extractor = extractor
+        self.feature = feature
+        self.width = width
+        self.dtype = dtype or torch.float
+
+    def encode(self, obj: Any) -> torch.Tensor:
+        values_to_encode = self.extractor(obj)
+        assert(len(values_to_encode) <= self.width)
+        padding = [torch.zeros(self.feature.size(), dtype=self.dtype)] * (self.width - len(values_to_encode))
+        return torch.stack([self.feature.encode(card) for card in values_to_encode] + padding)
+
+    def size(self):
+        return torch.Size((self.width,) + self.feature.size())
+
+
+def enum_to_int(value: Optional[enum.Enum]) -> int:
+    if value is not None:
+        return value.value
+    else:
+        return 0
+
+
+def default_card_encoding() -> Feature:
+    """
+    Default encoder for type `LocatedCard`.
+    """
+    return CombinedFeature([
+        ScalarFeature(lambda card: 1.0), # Present
+        ScalarFeature(lambda card: float(card.card.tier)),
+        ScalarFeature(lambda card: float(card.card.attack)),
+        ScalarFeature(lambda card: float(card.card.health)),
+        ScalarFeature(lambda card: float(card.card.taunt)),
+        ScalarFeature(lambda card: float(card.card.divine_shield)),
+        OnehotFeature(lambda card: enum_to_int(card.card.monster_type), len(MONSTER_TYPES) + 1),
+        OnehotFeature(lambda card: enum_to_int(card.location), len(CardLocation) + 1),
+    ])
+
+
+def default_player_encoding() -> Feature:
+    """
+    Default encoder for the player level features (non-card features).
+
+    Encodes a `Player`.
+    """
+    return CombinedFeature([ScalarFeature(lambda player: float(player.health)),
+                            ScalarFeature(lambda player: float(player.coins)),
+                            ])
+
+
+def default_cards_encoding() -> Feature:
+    """
+    Default encoder for the card-level features.
+
+    Encodes a `Player`.
+    """
+    return CombinedFeature([
+        ListOfFeatures(
+            lambda player: [LocatedCard(card, CardLocation.STORE) for card in player.store],
+            default_card_encoding(), MAX_ENCODED_STORE),
+        ListOfFeatures(
+            lambda player: [LocatedCard(card, CardLocation.HAND) for card in player.hand],
+            default_card_encoding(), MAX_ENCODED_HAND),
+        ListOfFeatures(
+            lambda player: [LocatedCard(card, CardLocation.BOARD) for card in player.in_play],
+            default_card_encoding(), MAX_ENCODED_BOARD)
+    ])
 
 
 def encode_player(player: Player) -> State:
-    player_tensor = torch.tensor([player.health, player.coins])
-    store_padding = [torch.zeros(card_encoding_size())] * (MAX_ENCODED_STORE - len(player.store))
-    store_tensors = [encode_card(CardLocation.STORE, card) for card in player.store] + store_padding
-    hand_padding = [torch.zeros(card_encoding_size())] * (MAX_ENCODED_HAND - len(player.hand))
-    hand_tensors = [encode_card(CardLocation.HAND, card) for card in player.hand] + hand_padding
-    board_padding = [torch.zeros(card_encoding_size())] * (MAX_ENCODED_BOARD - len(player.in_play))
-    board_tensors = [encode_card(CardLocation.BOARD, card) for card in player.in_play] + board_padding
-    cards_tensor = torch.stack(store_tensors + hand_tensors + board_tensors)
+    player_tensor = default_player_encoding().encode(player)
+    cards_tensor = default_cards_encoding().encode(player)
     return State(player_tensor, cards_tensor)
 
 
 EncodedActionSet = namedtuple('EncodedActionSet', ('player_action_tensor', 'card_action_tensor'))
 
 
-def action_tensor(buy: bool, summon:bool, sell: bool) -> torch.Tensor:
-    return torch.as_tensor([buy, summon, sell])
+PlayerCard = namedtuple('PlayerCard', ['player', 'card'])
 
 
-def action_encoding_size():
-    return 6 + 3 * (7+10+7)
+def default_card_action_encoding() -> Feature:
+    """
+    Default encoder for valid action mask on a specific card.
+
+    Encodes a `PlayerCard` tuple (`Player`, `MonsterCard`).
+    """
+    return CombinedFeature([
+        ScalarFeature(lambda player_card: BuyAction(player_card.card).valid(player_card.player)),
+        ScalarFeature(lambda player_card: SummonAction(player_card.card).valid(player_card.player)),
+        ScalarFeature(lambda player_card: SellAction(player_card.card).valid(player_card.player)),
+    ])
+
+
+def default_cards_action_encoding() -> Feature:
+    """
+    Default encoder for valid action mask for all cards on a player.
+
+    Encodes a `Player`.
+    """
+    return CombinedFeature([
+        ListOfFeatures(lambda player: [PlayerCard(player, card) for card in player.store],
+                       default_card_action_encoding(),
+                       MAX_ENCODED_STORE, torch.bool),
+        ListOfFeatures(lambda player: [PlayerCard(player, card) for card in player.hand],
+                       default_card_action_encoding(),
+                       MAX_ENCODED_HAND, torch.bool),
+        ListOfFeatures(lambda player: [PlayerCard(player, card) for card in player.in_play],
+                       default_card_action_encoding(),
+                       MAX_ENCODED_BOARD, torch.bool),
+    ])
+
+
+def default_player_action_encoding() -> Feature:
+    """
+    Default encoder for valid action mask.
+
+    Encodes a `Player`.
+    """
+    return CombinedFeature([
+        ScalarFeature(lambda player: TripleRewardsAction().valid(player)),
+        ScalarFeature(lambda player: TavernUpgradeAction().valid(player)),
+        ScalarFeature(lambda player: RerollAction().valid(player)),
+        ScalarFeature(lambda player: EndPhaseAction(True).valid(player)),
+        ScalarFeature(lambda player: EndPhaseAction(False).valid(player)),
+    ])
 
 
 def encode_valid_actions(player: Player) -> EncodedActionSet:
-    player_action_tensor = torch.as_tensor([TripleRewardsAction().valid(player),
-                                            HeroPowerAction().valid(player),
-                                            TavernUpgradeAction().valid(player),
-                                            RerollAction().valid(player),
-                                            EndPhaseAction(True).valid(player),
-                                            EndPhaseAction(False).valid(player),
-                                            ])
-    store_actions = [action_tensor(True, False, False) for card in player.store] + \
-                    [action_tensor(False, False, False) for _ in range(MAX_ENCODED_STORE - len(player.store))]
-    hand_actions = [action_tensor(False, SummonAction(card, []).valid(player), True) for card in player.store] \
-                   + [action_tensor(False, False, False) for _ in range(MAX_ENCODED_HAND - len(player.hand))]
-    board_actions = [action_tensor(False, False, True) for card in player.in_play] \
-                    + [action_tensor(False, False, False) for _ in range(MAX_ENCODED_BOARD - len(player.in_play))]
-    card_actions_tensor = torch.stack(store_actions + hand_actions + board_actions)
-    return EncodedActionSet(player_action_tensor, card_actions_tensor)
+    player_action_tensor = default_player_action_encoding().encode(player)
+    cards_action_tensor = default_cards_action_encoding().encode(player)
+    return EncodedActionSet(player_action_tensor, cards_action_tensor)

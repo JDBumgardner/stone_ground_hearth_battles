@@ -65,7 +65,7 @@ class Tavern:
         for name, player in self.players.items():
             if (name, player) not in self.losers and player.health <= 0:
                 self.losers.append((name, player))
-        if len(self.losers) == 7:
+        if len(self.losers) == len(self.players) - 1:
             for name, player in self.players.items():
                 if (name, player) not in self.losers:
                     self.losers.append((name, player))

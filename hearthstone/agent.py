@@ -145,6 +145,13 @@ class Agent:
         """
         pass
 
+    def game_over(self, player: 'Player', ranking: int):
+        """
+        Notifies the agent that the game is over and the agent has achieved a given rank
+        :param ranking: Integer index 0 to 7 of where the agent placed
+        :return:
+        """
+        pass
 
 def generate_valid_actions(player: 'Player') -> Generator[Action, None, None]:
     return (action for action in generate_all_actions(player) if action.valid(player))
