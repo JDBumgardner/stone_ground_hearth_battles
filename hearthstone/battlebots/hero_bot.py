@@ -67,7 +67,7 @@ class HeroBot(Agent):
 
         return EndPhaseAction(False)
 
-    def discover_choice_action(self, player: Player) -> Card:
+    def discover_choice_action(self, player: 'Player') -> 'Card':
         discover_cards = player.discovered_cards
         discover_cards = sorted(discover_cards, key=lambda card: self.priority(player, card), reverse=True)
         return discover_cards[0]
