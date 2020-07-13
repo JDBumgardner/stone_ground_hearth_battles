@@ -9,13 +9,7 @@ import logging
 def main():
     logging.basicConfig(level = logging.DEBUG)
     host = RoundRobinHost({"dante_kong": UserAgent(),
-                           "hacker_on_steroids": UserAgent(),
-                           "PrioritySauroliskBot": priority_saurolisk_bot(1),
-                           "PriorityMurlocBot": racist_priority_bot(MONSTER_TYPES.MURLOC, 1),
-                           "PriorityDemonBot": racist_priority_bot(MONSTER_TYPES.DEMON, 1),
-                           "PriorityMechBot": racist_priority_bot(MONSTER_TYPES.MECH, 1),
-                           "PriorityAdaptiveTriplerBot": priority_adaptive_tripler_bot(1),
-                           "BattleRattlerBot": battlerattler_priority_bot(1),
+                           "david_stolfo": UserAgent(),
                            })
     host.play_game()
 
