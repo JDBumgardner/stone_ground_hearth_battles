@@ -6,7 +6,7 @@ from collections import defaultdict
 from typing import List, Optional
 
 from hearthstone.agent import Agent, generate_valid_actions, TavernUpgradeAction, RerollAction, EndPhaseAction, \
-    SellAction, Action, BuyAction, SummonAction
+    SellFromHandAction, SellFromBoardAction, Action, BuyAction, SummonAction
 if typing.TYPE_CHECKING:
     from hearthstone.cards import Card
     from hearthstone.player import Player
@@ -65,10 +65,10 @@ class SimplePolicyBot(Agent):
             if upgrade_action.valid(player):
                 return upgrade_action
 
-        ranked_actions = [(self.score_action(action), action) for action in all_actions]
+        ranked_actions = [(self.score_action(player, action), action) for action in all_actions]
         ranked_actions = [(score, action) for score, action in ranked_actions if score is not None]
         choice = self.local_random.choices(ranked_actions, weights=[math.exp(score) for score, _ in ranked_actions])
-        self.update_gradient(choice[0], ranked_actions)
+        self.update_gradient(player, choice[0], ranked_actions)
         return choice[0][1]
 
     def discover_choice_action(self, player: 'Player') -> 'Card':
@@ -76,11 +76,13 @@ class SimplePolicyBot(Agent):
         discover_cards = sorted(discover_cards, key=lambda card: self.priority_buy_dict[type(card).__name__], reverse=True)
         return discover_cards[0]
 
-    def score_action(self, action: Action) -> Optional[float]:
+    def score_action(self, player: Player, action: Action) -> Optional[float]:
         if type(action) is BuyAction:
-            return self.priority_buy_dict[type(action.card).__name__]
-        if type(action) is SellAction:
-            return self.priority_sell_dict[type(action.card).__name__]
+            return self.priority_buy_dict[type(player.store[action.index]).__name__]
+        if type(action) is SellFromBoardAction:
+            return self.priority_sell_dict[type(player.in_play[action.index]).__name__]
+        if type(action) is SellFromHandAction:
+            return self.priority_sell_dict[type(player.hand[action.index]).__name__]
         if type(action) is SummonAction:
             return self.priority_summon_dict[type(action.card).__name__]
         if type(action) is EndPhaseAction:
@@ -89,7 +91,7 @@ class SimplePolicyBot(Agent):
             return self.reroll_priority
         return None
 
-    def update_gradient(self, choice, ranked_actions):
+    def update_gradient(self, player, choice, ranked_actions):
         exponentials = [math.exp(score) for score, _ in ranked_actions]
         softmax = [score / sum(exponentials) for score in exponentials]
         chosen_index = ranked_actions.index(choice)
@@ -97,10 +99,12 @@ class SimplePolicyBot(Agent):
         gradients[chosen_index] = softmax[chosen_index]*(1 - softmax[chosen_index])
         for (score, action), gradient in zip(ranked_actions, gradients):
             if type(action) is BuyAction:
-                self.current_game_buy[type(action.card).__name__] += gradient
+                self.current_game_buy[type(player.store[action.index]).__name__] += gradient
             if type(action) is SummonAction:
                 self.current_game_summon[type(action.card).__name__] += gradient
-            if type(action) is SellAction:
-                self.current_game_sell[type(action.card).__name__] += gradient
+            if type(action) is SellFromBoardAction:
+                return self.current_game_sell[type(player.in_play[action.index]).__name__] += gradient
+            if type(action) is SellFromHandAction:
+                return self.current_game_sell[type(player.hand[action.index]).__name__] += gradient
             if type(action) is RerollAction:
                 self.current_game_reroll += gradient

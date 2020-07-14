@@ -18,6 +18,10 @@ class BuyPhaseEvent:
     pass
 
 
+StoreIndex = typing.NewType("StoreIndex", int)
+HandIndex = typing.NewType("HandIndex", int)
+BoardIndex = typing.NewType("BoardIndex", int)
+
 class Player:
     def __init__(self, tavern: 'Tavern', name: str, hero_options: List['Hero']):
         self.name = name
@@ -90,7 +94,7 @@ class Player:
         self.in_play.append(card)
         if card.golden:
             self.triple_rewards.append(TripleRewardCard(min(self.tavern_tier + 1, 6)))
-        self.broadcast_buy_phase_event(CardEvent(card, EVENTS.SUMMON_BUY.value, targets))
+        self.broadcast_buy_phase_event(CardEvent(card, EVENTS.SUMMON_BUY, targets))
 
     def validate_summon_from_hand(self, card: MonsterCard, targets: Optional[List[MonsterCard]] = None) -> bool:
         #  TODO: Jack num_battlecry_targets should only accept 0,1,2
@@ -140,7 +144,7 @@ class Player:
         if self.room_on_board():
             self.in_play.append(monster)
             self.check_golden(type(monster))
-        self.broadcast_buy_phase_event(CardEvent(monster, EVENTS.SUMMON_BUY.value))
+        self.broadcast_buy_phase_event(CardEvent(monster, EVENTS.SUMMON_BUY))
 
     def room_on_board(self):
         return len(self.in_play) < self.maximum_board_size
@@ -153,22 +157,22 @@ class Player:
         number_of_cards = 3 + self.tavern_tier // 2
         self.store.extend([self.tavern.deck.draw(self) for _ in range(number_of_cards)])
 
-    def purchase(self, card: MonsterCard):
+    def purchase(self, index: StoreIndex):
         # check if the index is valid
-        assert self.validate_purchase(card)
-        self.store.remove(card)
+        assert self.validate_purchase(index)
+        card = self.store.pop(index)
         self.coins -= card.coin_cost
         self.hand.append(card)
-        event = CardEvent(card, EVENTS.BUY.value)
+        event = CardEvent(card, EVENTS.BUY)
         self.broadcast_buy_phase_event(event)
         self.check_golden(type(card))
 
-    def validate_purchase(self, card: MonsterCard) -> bool:
-        if self.coins < card.coin_cost:
+    def validate_purchase(self, index: StoreIndex) -> bool:
+        if index not in range(len(self.store)):
+            return False
+        if self.coins < self.store[index].coin_cost:
             return False
         if not self.room_in_hand():
-            return False
-        if card not in self.store:
             return False
         return True
 
@@ -201,19 +205,28 @@ class Player:
     def freeze(self):
         self.frozen = True
 
-    def sell_minion(self, card: MonsterCard):
-        assert self.validate_sell_minion(card)
-        self.broadcast_buy_phase_event(CardEvent(card, EVENTS.SELL.value))
-        if card in self.hand:
-            self.hand.remove(card)
-        elif card in self.in_play:
-            self.in_play.remove(card)
+    def _sell_minion(self, location: List[MonsterCard], index: int):
+        assert self._validate_sell_minion(location, index)
+        self.broadcast_buy_phase_event(CardEvent(location[index], EVENTS.SELL))
+        card = location.pop(index)
         self.coins += card.redeem_rate
-
         self.tavern.deck.cards += card.dissolve()
 
-    def validate_sell_minion(self, card: MonsterCard) -> bool:
-        return card in self.in_play + self.hand
+    def sell_hand_minion(self, index: HandIndex):
+        return self._sell_minion(self.hand, index)
+
+    def sell_board_minion(self, index: BoardIndex):
+        return self._sell_minion(self.in_play, index)
+
+    @staticmethod
+    def _validate_sell_minion(location: List[MonsterCard], index: int) -> bool:
+        return index in range(len(location))
+
+    def validate_sell_hand_minion(self, index: HandIndex) -> bool:
+        return self._validate_sell_minion(self.hand, index)
+
+    def validate_sell_board_minion(self, index: BoardIndex) -> bool:
+        return self._validate_sell_minion(self.in_play, index)
 
     def hero_power(self):
         self.hero.hero_power(BuyPhaseContext(self, self.tavern.randomizer))

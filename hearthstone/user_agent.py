@@ -1,7 +1,10 @@
 import typing
 from typing import List, Optional
-from hearthstone.agent import Agent, Action, BuyAction, SummonAction, SellAction, EndPhaseAction, RerollAction
+from hearthstone.agent import Agent, Action, BuyAction, SummonAction,  EndPhaseAction, RerollAction, \
+    SellFromBoardAction, SellFromHandAction
 from hearthstone.agent import TavernUpgradeAction, HeroPowerAction, TripleRewardsAction
+from hearthstone.player import HandIndex
+
 if typing.TYPE_CHECKING:
     from hearthstone.cards import Card
     from hearthstone.hero import Hero
@@ -90,7 +93,7 @@ class UserAgent(Agent):
                 return None
             if not 0 <= store_index < len(player.store) or player.coins < 3:
                 return None
-            return BuyAction(player.store[store_index])
+            return BuyAction(store_index)
         elif split_list[0] == "s":
             if not 1 < len(split_list) <= 4:
                 return None
@@ -117,11 +120,11 @@ class UserAgent(Agent):
             if split_list[1] == "h":
                 if not 0 <= sell_index < len(player.hand):
                     return None
-                return SellAction(player.hand[sell_index])
+                return SellFromHandAction(HandIndex(sell_index))
             elif split_list[1] == "b":
                 if not 0 <= sell_index < len(player.in_play):
                     return None
-                return SellAction(player.in_play[sell_index])
+                return SellFromBoardAction(BoardIndex(sell_index))
         elif split_list == ["e"]:
             return EndPhaseAction(False)
         elif split_list == ["e", "f"]:

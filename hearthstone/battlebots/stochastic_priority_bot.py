@@ -5,10 +5,10 @@ from collections import defaultdict
 from typing import List
 
 from hearthstone.agent import Agent, generate_valid_actions, TavernUpgradeAction, RerollAction, EndPhaseAction, \
-    SellAction, Action, BuyAction, SummonAction
+    SellFromHandAction, SellFromBoardAction, Action, BuyAction, SummonAction
 if typing.TYPE_CHECKING:
     from hearthstone.cards import Card
-    from hearthstone.player import Player
+    from hearthstone.player import Player, StoreIndex
 
 
 class LearnedPriorityBot(Agent):
@@ -73,7 +73,7 @@ class LearnedPriorityBot(Agent):
             if player.room_on_board():
                 return [action for action in all_actions if type(action) is SummonAction and self.adjusted_priority(player, action.card) == top_hand_priority][0]
             else:
-                return [action for action in all_actions if type(action) is SellAction and self.adjusted_priority(player, action.card) == bottom_board_priority][0]
+                return [action for action in all_actions if type(action) is SellFromBoardAction and self.adjusted_priority(player, player.in_play[action.index]) == bottom_board_priority][0]
 
         if top_store_priority is not None:
             force_buy = False
@@ -81,7 +81,8 @@ class LearnedPriorityBot(Agent):
                 top_store_priority = self.adjusted_priority(player, self.local_random.choice(player.store))
                 force_buy = True
             if player.room_on_board() or bottom_board_priority < top_store_priority or force_buy:
-                buy_action = BuyAction([card for card in player.store if self.adjusted_priority(player, card) == top_store_priority][0])
+                buy_action = BuyAction([StoreIndex(i) for i, card in enumerate(player.store) if
+                                        self.priority(player, card) == top_store_priority][0])
                 if buy_action.valid(player):
                     self.current_game_cards[type(buy_action.card).__name__] += 3
                     for card in player.store:

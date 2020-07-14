@@ -34,7 +34,7 @@ class SupremacyBot(Agent):
         if summon_actions:
             return summon_actions[0]
 
-        buy_actions = [action for action in all_actions if type(action) is BuyAction and action.card.monster_type == self.monster_type]
+        buy_actions = [action for action in all_actions if type(action) is BuyAction and player.store[action.index].monster_type == self.monster_type]
         buy_actions = sorted(buy_actions, key=lambda buy_action: buy_action.card.tier, reverse=True)
         if buy_actions:
             return buy_actions[0]

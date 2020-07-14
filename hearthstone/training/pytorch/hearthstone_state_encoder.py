@@ -6,7 +6,7 @@ from typing import Callable, List, Any, Optional
 import torch
 
 from hearthstone.agent import TripleRewardsAction, TavernUpgradeAction, RerollAction, \
-    EndPhaseAction, SummonAction, BuyAction, SellAction
+    EndPhaseAction, SummonAction, BuyAction, SellFromBoardAction, SellFromHandAction
 from hearthstone.cards import Card
 from hearthstone.monster_types import MONSTER_TYPES
 from hearthstone.player import Player
@@ -183,6 +183,7 @@ def default_card_action_encoding() -> Feature:
 
     Encodes a `PlayerCard` tuple (`Player`, `MonsterCard`).
     """
+    # TODO handle index encoding once summon action uses indices
     return CombinedFeature([
         ScalarFeature(lambda player_card: BuyAction(player_card.card).valid(player_card.player)),
         ScalarFeature(lambda player_card: SummonAction(player_card.card).valid(player_card.player)),

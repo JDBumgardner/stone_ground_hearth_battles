@@ -3,10 +3,11 @@ import typing
 from typing import List, Callable
 
 from hearthstone.agent import Agent, Action, generate_valid_actions, BuyAction, EndPhaseAction, SummonAction, \
-    SellAction, TavernUpgradeAction, RerollAction
+    TavernUpgradeAction, RerollAction, SellFromHandAction
+
 if typing.TYPE_CHECKING:
     from hearthstone.cards import Card, MonsterCard
-    from hearthstone.player import Player
+    from hearthstone.player import Player, StoreIndex
 
 
 class PriorityStorageBot(Agent):
@@ -41,11 +42,11 @@ class PriorityStorageBot(Agent):
                 return [action for action in all_actions if type(action) is SummonAction and self.priority(player, action.card) == top_hand_priority][0]
             else:
                 if top_hand_priority > bottom_board_priority and player.coins >= 2:
-                    return [action for action in all_actions if type(action) is SellAction and self.priority(player, action.card) == bottom_board_priority][0]
+                    return [action for action in all_actions if type(action) is SellFromBoardAction and self.priority(player, player.in_play[action.index]) == bottom_board_priority][0]
 
         if top_store_priority:
             if player.room_in_hand():
-                buy_action = BuyAction([card for card in player.store if self.priority(player, card) == top_store_priority][0])
+                buy_action = BuyAction([StoreIndex(i) for i, card in enumerate(player.store) if self.priority(player, card) == top_store_priority][0])
                 if buy_action.valid(player):
                     return buy_action
             elif bottom_board_priority < top_store_priority and player.coins >= 2:
@@ -57,14 +58,14 @@ class PriorityStorageBot(Agent):
 
         if top_store_storage_priority:
             if player.room_in_hand():
-                buy_action = BuyAction([card for card in player.store if self.storage_priority(player, card) == top_store_storage_priority][0])
+                buy_action = BuyAction([StoreIndex(i) for i, card in enumerate(player.store) if self.storage_priority(player, card) == top_store_storage_priority][0])
                 if buy_action.valid(player):
                     return buy_action
 
         if bottom_hand_storage_priority and top_store_storage_priority:
             if bottom_hand_storage_priority < top_store_storage_priority and player.coins >= 2:
                 return [action for action in all_actions if
-                        type(action) is SellAction and self.storage_priority(player, action.card) == bottom_hand_storage_priority][0]
+                        type(action) is SellFromHandAction and self.storage_priority(player, player.hand[action.index]) == bottom_hand_storage_priority][0]
 
         reroll_action = RerollAction()
         if reroll_action.valid(player):

@@ -58,7 +58,7 @@ class WarParty:
         context.friendly_war_party.board.insert(index, monster)
         if index < context.friendly_war_party.next_attacker_idx:
             context.friendly_war_party.next_attacker_idx += 1
-        context.broadcast_combat_event(CardEvent(monster, EVENTS.SUMMON_COMBAT.value))
+        context.broadcast_combat_event(CardEvent(monster, EVENTS.SUMMON_COMBAT))
 
     def get_index(self, card):
         return self.board.index(card)
@@ -78,7 +78,7 @@ def fight_boards(war_party_1: 'WarParty', war_party_2: 'WarParty', randomizer: '
     if war_party_2.num_cards() > war_party_1.num_cards():
         attacking_war_party, defending_war_party = defending_war_party, attacking_war_party
 
-    start_combat_event = CardEvent(None, EVENTS.COMBAT_START.value)
+    start_combat_event = CardEvent(None, EVENTS.COMBAT_START)
     # Friendly vs enemy warparty does not matter for broadcast_combat_event
     CombatPhaseContext(war_party_1, war_party_2, randomizer).broadcast_combat_event(start_combat_event)
 
@@ -115,7 +115,7 @@ def damage(half_board_1: 'WarParty', half_board_2: 'WarParty'):
 def start_attack(attacker: 'MonsterCard', defender: 'MonsterCard', attacking_war_party: 'WarParty', defending_war_party: 'WarParty',
                  randomizer: 'Randomizer'):
     logger.debug(f'{attacker} is attacking {defender}')
-    on_attack_event = CardEvent(attacker, EVENTS.ON_ATTACK.value)
+    on_attack_event = CardEvent(attacker, EVENTS.ON_ATTACK)
     combat_phase_context = CombatPhaseContext(attacking_war_party, defending_war_party, randomizer)
     combat_phase_context.broadcast_combat_event(on_attack_event)
     attacker.take_damage(defender.attack, combat_phase_context)

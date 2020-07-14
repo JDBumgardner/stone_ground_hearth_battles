@@ -1,6 +1,8 @@
 import typing
 from typing import List, Optional, Generator
 
+from hearthstone.player import StoreIndex, HandIndex, BoardIndex
+
 if typing.TYPE_CHECKING:
     from hearthstone.cards import Card, MonsterCard
     from hearthstone.hero import Hero
@@ -17,14 +19,14 @@ class Action:
 
 class BuyAction(Action):
 
-    def __init__(self, card):
-        self.card: 'MonsterCard' = card
+    def __init__(self, index: StoreIndex):
+        self.index = index
 
     def apply(self, player: 'Player'):
-        player.purchase(self.card)
+        player.purchase(self.index)
 
     def valid(self, player: 'Player'):
-        return player.validate_purchase(self.card)
+        return player.validate_purchase(self.index)
 
 
 class SummonAction(Action):
@@ -42,16 +44,28 @@ class SummonAction(Action):
         return player.validate_summon_from_hand(self.card, self.targets)
 
 
-class SellAction(Action):
+class SellFromHandAction(Action):
 
-    def __init__(self, card: 'MonsterCard'):
-        self.card: 'MonsterCard' = card
+    def __init__(self, index: HandIndex):
+        self.index: HandIndex = index
 
     def apply(self, player: 'Player'):
-        player.sell_minion(self.card)
+        player.sell_hand_minion(self.index)
 
     def valid(self, player: 'Player') -> bool:
-        return player.validate_sell_minion(self.card)
+        return player.validate_sell_hand_minion(self.index)
+
+
+class SellFromBoardAction(Action):
+
+    def __init__(self, index: BoardIndex):
+        self.index: BoardIndex = index
+
+    def apply(self, player: 'Player'):
+        player.sell_board_minion(self.index)
+
+    def valid(self, player: 'Player') -> bool:
+        return player.validate_sell_board_minion(self.index)
 
 
 class EndPhaseAction(Action):
@@ -164,10 +178,12 @@ def generate_all_actions(player: 'Player') -> Generator[Action, None, None]:
     yield RerollAction()
     yield EndPhaseAction(True)
     yield EndPhaseAction(False)
-    for card in player.hand + player.in_play:
-        yield SellAction(card)
-    for card in player.store:
-        yield BuyAction(card)
+    for index in range(len(player.hand)):
+        yield SellFromHandAction(HandIndex(index))
+    for index in range(len(player.in_play)):
+        yield SellFromBoardction(BoardIndex(index))
+    for index in range(len(player.store)):
+        yield BuyAction(StoreIndex(index))
     for card in player.hand:
         valid_targets = [target for target in player.in_play if card.validate_battlecry_target(target)]
         num_battlecry_targets = min(card.num_battlecry_targets, len(valid_targets))
