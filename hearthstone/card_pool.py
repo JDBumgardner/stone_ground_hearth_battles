@@ -533,23 +533,6 @@ class ArcaneCannon(MonsterCard):
                     target.resolve_death(CombatPhaseContext(context.enemy_war_party, context.friendly_war_party, context.randomizer))
 
 
-class MonstrousMacaw(MonsterCard):
-    tier = 2
-    monster_type = MONSTER_TYPES.BEAST
-    base_attack = 3
-    base_health = 2
-
-    def handle_event(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
-        if event.event is EVENTS.ON_ATTACK and event.card == self:
-            deathrattle_triggers = 2 if self.golden else 1
-            friends_with_deathrattles = [friend for friend in
-                                         context.friendly_war_party.board if not friend.dead and friend.deathrattles]
-            if friends_with_deathrattles:
-                friend_with_deathrattle = context.randomizer.select_friendly_minion(friends_with_deathrattles)
-                for _ in range(deathrattle_triggers):
-                    friend_with_deathrattle.handle_event(CardEvent(friend_with_deathrattle, EVENTS.DIES.value), context)
-
-
 class NathrezimOverseer(MonsterCard):
     tier = 2
     monster_type = MONSTER_TYPES.DEMON
@@ -804,8 +787,10 @@ class MonstrousMacaw(MonsterCard):
             friendly_deathrattlers = [card for card in context.friendly_war_party.board if card != self and not card.dead
                                       and card.deathrattles]
             if friendly_deathrattlers:
-                deathrattler = context.randomizer.select_friendly_minion(friendly_deathrattlers)
-                deathrattler.base_deathrattle(context)
+                deathrattle_triggers = 2 if self.golden else 1
+                for _ in range(deathrattle_triggers):
+                    deathrattler = context.randomizer.select_friendly_minion(friendly_deathrattlers)
+                    deathrattler.base_deathrattle(context)
 
 
 class ScrewjankClunker(MonsterCard):
