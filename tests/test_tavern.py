@@ -690,6 +690,7 @@ class CardTests(unittest.TestCase):
         tavern = Tavern()
         player_1 = tavern.add_player_with_hero("Josh")
         player_2 = tavern.add_player_with_hero("Diana")
+    #     TODO: IS THIS A TEST??
 
     class TestGoldGrubberRandomizer(DefaultRandomizer):
         def select_draw_card(self, cards: List[Card], player_name: str, round_number: int) -> Card:
@@ -926,6 +927,37 @@ class CardTests(unittest.TestCase):
         self.assertEqual(player_1.in_play[1].health, 1)
         self.assertEqual(player_1.in_play[2].attack, 4)
         self.assertEqual(player_1.in_play[2].health, 3)
+
+    def test_screwjank_clunker(self):
+        tavern = Tavern()
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        self.upgrade_to_tier(tavern, 3)
+        tavern.randomizer = CardForcer([MechaRoo]*16)
+        tavern.buying_step()
+        player_1.purchase(player_1.store[0])
+        player_1.summon_from_hand(player_1.hand[0])
+        tavern.combat_step()
+        tavern.buying_step()
+        player_1.purchase(player_1.store[0])
+        player_1.summon_from_hand(player_1.hand[0])
+        tavern.combat_step()
+        tavern.randomizer = CardForcer([ScrewjankClunker] * 8)
+        tavern.buying_step()
+        player_1.purchase(player_1.store[1])
+        self.assertEqual(player_1.in_play[0].attack, 1)
+        self.assertEqual(player_1.in_play[0].health, 1)
+        self.assertEqual(player_1.in_play[1].attack, 1)
+        self.assertEqual(player_1.in_play[1].health, 1)
+        self.assertCardListEquals(player_1.in_play, [MechaRoo, MechaRoo])
+        player_1.summon_from_hand(player_1.hand[0], [player_1.in_play[0]])
+        self.assertCardListEquals(player_1.in_play, [MechaRoo, MechaRoo, ScrewjankClunker])
+        self.assertEqual(player_1.in_play[0].attack, 3)
+        self.assertEqual(player_1.in_play[0].health, 3)
+        self.assertEqual(player_1.in_play[1].attack, 1)
+        self.assertEqual(player_1.in_play[1].health, 1)
+        self.assertEqual(player_1.in_play[2].attack, 2)
+        self.assertEqual(player_1.in_play[2].health, 5)
 
 
 if __name__ == '__main__':

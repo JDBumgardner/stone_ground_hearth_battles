@@ -770,3 +770,56 @@ class ImpGangBoss(MonsterCard):
             summon_index = context.friendly_war_party.get_index(self)
             context.friendly_war_party.summon_in_combat(imp, context, summon_index + 1)
 
+
+class InfestedWolf(MonsterCard):
+    tier = 3
+    base_attack = 3
+    base_health = 3
+    monster_type = MONSTER_TYPES.BEAST
+
+    def base_deathrattle(self, context: CombatPhaseContext):
+        spiders = [Spider(), Spider()]
+        for spider in spiders:
+            if self.golden:
+                spider.golden_transformation([])
+            context.friendly_war_party.summon_in_combat(spider, context)
+
+
+class Spider(MonsterCard):
+    tier = 1
+    base_attack = 1
+    base_health = 1
+    token = True
+    monster_type = MONSTER_TYPES.BEAST
+
+
+class MonstrousMacaw(MonsterCard):
+    tier = 3
+    monster_type = MONSTER_TYPES.BEAST
+    base_attack = 3
+    base_health = 2
+
+    def handle_event(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
+        if event.event is EVENTS.AFTER_ATTACK and self == event.card:
+            friendly_deathrattlers = [card for card in context.friendly_war_party.board if card != self and not card.dead
+                                      and card.deathrattles]
+            if friendly_deathrattlers:
+                deathrattler = context.randomizer.select_friendly_minion(friendly_deathrattlers)
+                deathrattler.base_deathrattle(context)
+
+
+class ScrewjankClunker(MonsterCard):
+    tier = 3
+    base_attack = 2
+    base_health = 5
+    monster_type = MONSTER_TYPES.MECH
+    num_battlecry_targets = 1
+
+    def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
+        bonus = 4 if self.golden else 2
+        if targets:
+            targets[0].attack += bonus
+            targets[0].health += bonus
+
+    def validate_battlecry_target(self, card: MonsterCard) -> bool:
+        return card.monster_type == MONSTER_TYPES.MECH

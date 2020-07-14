@@ -121,6 +121,7 @@ def start_attack(attacker: 'MonsterCard', defender: 'MonsterCard', attacking_war
     attacker.take_damage(defender.attack, combat_phase_context)
     defender.take_damage(attacker.attack, combat_phase_context)
     # handle "after combat" events here
+    combat_phase_context.broadcast_combat_event(CardEvent(attacker, EVENTS.AFTER_ATTACK))
     attacker.resolve_death(CombatPhaseContext(attacking_war_party, defending_war_party, randomizer))
     defender.resolve_death(CombatPhaseContext(defending_war_party, attacking_war_party, randomizer))
     logger.debug(f'{attacker} has just attacked {defender}')

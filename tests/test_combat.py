@@ -330,12 +330,37 @@ class CombatTests(unittest.TestCase):
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [ImpGangBoss()]
         ethans_war_party.board = [ArcaneCannon(), ArcaneCannon()]
-        fight_boards(adams_war_party, ethans_war_party, self.DeflectOBotRandomizer())
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertTrue(adams_war_party.board[0].dead)
         self.assertTrue(adams_war_party.board[2].dead)
         self.assertFalse(adams_war_party.board[1].dead)
         self.assertTrue(isinstance(adams_war_party.board[1], Imp))
         self.assertTrue(isinstance(adams_war_party.board[2], Imp))
+
+    def test_infested_wolf(self):
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [InfestedWolf()]
+        ethans_war_party.board = [FreedealingGambler(), RighteousProtector()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+
+    def test_monstrous_macaw(self):
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [MonstrousMacaw(), MechaRoo(), AlleyCat()]
+        ethans_war_party.board = [VulgarHomunculus(), ColdlightSeer()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+        self.assertEqual(len(adams_war_party.board), 5)
+
+
 
 if __name__ == '__main__':
     unittest.main()

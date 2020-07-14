@@ -15,6 +15,7 @@ class EVENTS(enum.Enum):
     COMBAT_START = 5
     BUY_START = 6
     ON_ATTACK = 7
+    AFTER_ATTACK = 12
     SELL = 8
     BUY = 9
     BUY_END = 10
