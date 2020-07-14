@@ -21,7 +21,7 @@ class PrintingPress:
 
 
 class CardEvent:
-    def __init__(self, card: Optional['MonsterCard'], event: int, targets: Optional[List['MonsterCard']] = None):
+    def __init__(self, card: Optional['MonsterCard'], event: EVENTS, targets: Optional[List['MonsterCard']] = None):
         self.card = card
         self.event = EVENTS(event)
         self.targets = targets
