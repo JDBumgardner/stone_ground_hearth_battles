@@ -84,27 +84,30 @@ class Player:
             return False
         return True
 
-    def summon_from_hand(self, card: MonsterCard, targets: Optional[List[MonsterCard]] = None):
+    def summon_from_hand(self, index: HandIndex, targets: Optional[List[BoardIndex]] = None):
         #  TODO: make sure that the ordering of monster in hand and monster.battlecry are correct
         #  TODO: Jarett can monster be event target
         if targets is None:
             targets = []
-        assert self.validate_summon_from_hand(card, targets)
-        self.hand.remove(card)
+        assert self.validate_summon_from_hand(index, targets)
+        card = self.hand.pop(index)
         self.in_play.append(card)
         if card.golden:
             self.triple_rewards.append(TripleRewardCard(min(self.tavern_tier + 1, 6)))
-        self.broadcast_buy_phase_event(CardEvent(card, EVENTS.SUMMON_BUY, targets))
+        target_cards = [self.in_play[target] for target in targets]
+        self.broadcast_buy_phase_event(CardEvent(card, EVENTS.SUMMON_BUY, target_cards))
 
-    def validate_summon_from_hand(self, card: MonsterCard, targets: Optional[List[MonsterCard]] = None) -> bool:
-        #  TODO: Jack num_battlecry_targets should only accept 0,1,2
-        if card not in self.hand:
-            return False
-        if not self.room_on_board():
-            return False
+    def validate_summon_from_hand(self, index: HandIndex, targets: Optional[List[BoardIndex]] = None) -> bool:
         if targets is None:
             targets = []
-        valid_targets = [target for target in self.in_play if card.validate_battlecry_target(target)]
+        #  TODO: Jack num_battlecry_targets should only accept 0,1,2
+        if index not in range(len(self.hand)):
+            return False
+        card = self.hand[index]
+        if not self.room_on_board():
+            return False
+        valid_targets = [target_index for target_index, target_card in enumerate(self.in_play) if
+                         card.validate_battlecry_target(target_card)]
         num_possible_targets = min(len(valid_targets), card.num_battlecry_targets)
         if len(targets) != num_possible_targets:
             return False

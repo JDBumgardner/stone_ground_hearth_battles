@@ -32,12 +32,12 @@ class PytorchTests(unittest.TestCase):
         print(tensor1.size() + tensor2.size())
         torch.Size()
 
-    def test_gpu(self):
-        tensor1 = torch.tensor([1,2,5,6])
-        if torch.cuda.is_available():
-            for i in range(1000):
-                i_am_on_the_gpu = tensor1.cuda()
-                print("put some stuff on the GPU")
+    # def test_gpu(self):
+    #     tensor1 = torch.tensor([1,2,5,6])
+    #     if torch.cuda.is_available():
+    #         for i in range(1000):
+    #             i_am_on_the_gpu = tensor1.cuda()
+    #             print("put some stuff on the GPU")
 
 
 if __name__ == '__main__':

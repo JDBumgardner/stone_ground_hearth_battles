@@ -31,17 +31,17 @@ class BuyAction(Action):
 
 class SummonAction(Action):
 
-    def __init__(self, card: 'MonsterCard', targets: Optional[List['MonsterCard']] = None):
+    def __init__(self, index: HandIndex, targets: Optional[List[BoardIndex]] = None):
         if targets is None:
             targets = []
-        self.card: 'MonsterCard' = card
+        self.index = index
         self.targets = targets
 
     def apply(self, player: 'Player'):
-        player.summon_from_hand(self.card, self.targets)
+        player.summon_from_hand(self.index, self.targets)
 
     def valid(self, player: 'Player') -> bool:
-        return player.validate_summon_from_hand(self.card, self.targets)
+        return player.validate_summon_from_hand(self.index, self.targets)
 
 
 class SellFromHandAction(Action):
