@@ -6,6 +6,26 @@ from hearthstone.training.pytorch.hearthstone_state_encoder import action_encodi
 import torch.nn.functional as F
 
 
+class HearthstoneLinearNet(nn.Module):
+    def __init__(self, player_encoding: Feature, card_encoding: Feature):
+        super(HearthstoneLinearNet, self).__init__()
+        self.hidden_size = 64
+        # Shared hidden layer
+        self.fc_policy = nn.Linear(player_encoding.flattened_size() + card_encoding.flattened_size(), action_encoding_size())
+        self.fc_value = nn.Linear(player_encoding.flattened_size() + card_encoding.flattened_size(), 1)
+
+    def forward(self, state: State, valid_actions: EncodedActionSet):
+        x = torch.cat((state.player_tensor.flatten(1), state.cards_tensor.flatten(1)), dim=1)
+        policy = self.fc_policy(x)
+        # Disable invalid actions with a "masked" softmax
+        valid_action_tensor = torch.cat((valid_actions.player_action_tensor.flatten(1),
+                                         valid_actions.card_action_tensor.flatten(1)), dim=1)
+        policy = policy.masked_fill(valid_action_tensor.logical_not(), -1e30)
+        policy = F.log_softmax(policy, dim=1)
+        value = self.fc_value(x)
+        return policy, value
+
+
 class HearthstoneFFNet(nn.Module):
     def __init__(self, player_encoding: Feature, card_encoding: Feature):
         super(HearthstoneFFNet, self).__init__()

@@ -141,9 +141,11 @@ def default_player_encoding() -> Feature:
 
     Encodes a `Player`.
     """
-    return CombinedFeature([ScalarFeature(lambda player: float(player.health)),
-                            ScalarFeature(lambda player: float(player.coins)),
-                            ])
+    return CombinedFeature([
+        ScalarFeature(lambda player: float(player.tavern.turn_count)),
+        ScalarFeature(lambda player: float(player.health)),
+        ScalarFeature(lambda player: float(player.coins)),
+    ])
 
 
 def default_cards_encoding() -> Feature:

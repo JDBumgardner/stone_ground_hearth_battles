@@ -14,7 +14,7 @@ from hearthstone.battlebots.supremacy_bot import SupremacyBot
 from hearthstone.host import RoundRobinHost
 from hearthstone.ladder.ladder import Contestant, update_ratings, print_standings, save_ratings
 from hearthstone.monster_types import MONSTER_TYPES
-from hearthstone.training.pytorch.feedforward_net import HearthstoneFFNet
+from hearthstone.training.pytorch.feedforward_net import HearthstoneFFNet, HearthstoneLinearNet
 from hearthstone.training.pytorch.hearthstone_state_encoder import Transition, default_player_encoding, \
     default_cards_encoding, EncodedActionSet, get_indexed_action
 from hearthstone.training.pytorch.pytorch_bot import PytorchBot
@@ -80,7 +80,6 @@ def learn(optimizer: optim.Adam, learning_net: nn.Module, replay_buffer: ReplayB
     advantage = transition_batch.reward.unsqueeze(-1) + next_value.masked_fill(
         transition_batch.is_terminal.unsqueeze(-1), 0.0) - value
 
-
     # print("reward", transition_batch.reward)
     # print("value", value)
     #print("next_value", next_value)
@@ -102,7 +101,8 @@ def learn(optimizer: optim.Adam, learning_net: nn.Module, replay_buffer: ReplayB
     print("value_loss", value_loss)
     valid_action_tensor = torch.cat(
         (transition_batch.valid_actions.player_action_tensor.flatten(1), transition_batch.valid_actions.card_action_tensor.flatten(1)), dim=1)
-    print("policy", torch.exp(policy.masked_select(valid_action_tensor)).max())
+    #print("policy", torch.exp(policy.masked_select(valid_action_tensor)).max())
+    print("net", learning_net.fc_value.weight[0][0])
     entropy_loss = torch.sum(policy * torch.exp(policy))
     loss = policy_loss * policy_weight + (1-policy_weight)*value_loss #- 0.000001*entropy_loss
     #loss = value_loss
@@ -116,7 +116,7 @@ def main():
     logging.getLogger().setLevel(logging.INFO)
     other_contestants = easier_contestants()
     learning_net = HearthstoneFFNet(default_player_encoding(), default_cards_encoding())
-    optimizer = optim.Adam(learning_net.parameters(), lr=0.001)
+    optimizer = optim.Adam(learning_net.parameters(), lr=0.0001)
     learning_bot = PytorchBot(learning_net)
     replay_buffer = ReplayBuffer(100000)
     big_brother = BigBrotherAgent(learning_bot, replay_buffer)
