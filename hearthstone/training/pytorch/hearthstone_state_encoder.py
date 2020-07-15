@@ -6,10 +6,10 @@ from typing import Callable, List, Any, Optional
 import torch
 
 from hearthstone.agent import TripleRewardsAction, TavernUpgradeAction, RerollAction, \
-    EndPhaseAction, SummonAction, BuyAction, SellFromBoardAction, SellFromHandAction
+    EndPhaseAction, SummonAction, BuyAction, SellFromBoardAction, SellFromHandAction, Action
 from hearthstone.cards import Card
 from hearthstone.monster_types import MONSTER_TYPES
-from hearthstone.player import Player
+from hearthstone.player import Player, StoreIndex, HandIndex, BoardIndex
 
 State = namedtuple('State', ('player_tensor', 'cards_tensor'))
 
@@ -124,7 +124,7 @@ def default_card_encoding() -> Feature:
     Default encoder for type `LocatedCard`.
     """
     return CombinedFeature([
-        ScalarFeature(lambda card: 1.0), # Present
+        ScalarFeature(lambda card: 1.0),  # Present
         ScalarFeature(lambda card: float(card.card.tier)),
         ScalarFeature(lambda card: float(card.card.attack)),
         ScalarFeature(lambda card: float(card.card.health)),
@@ -173,59 +173,43 @@ def encode_player(player: Player) -> State:
 
 EncodedActionSet = namedtuple('EncodedActionSet', ('player_action_tensor', 'card_action_tensor'))
 
-
-PlayerCard = namedtuple('PlayerCard', ['player', 'card'])
-
-
-def default_card_action_encoding() -> Feature:
-    """
-    Default encoder for valid action mask on a specific card.
-
-    Encodes a `PlayerCard` tuple (`Player`, `MonsterCard`).
-    """
-    # TODO handle index encoding once summon action uses indices
-    return CombinedFeature([
-        ScalarFeature(lambda player_card: BuyAction(player_card.card).valid(player_card.player)),
-        ScalarFeature(lambda player_card: SummonAction(player_card.card).valid(player_card.player)),
-        ScalarFeature(lambda player_card: SellAction(player_card.card).valid(player_card.player)),
-    ])
+ActionSet = namedtuple('ActionSet', ('player_action_set', 'card_action_set'))
 
 
-def default_cards_action_encoding() -> Feature:
-    """
-    Default encoder for valid action mask for all cards on a player.
+class InvalidAction(Action):
+    def apply(self, player: 'Player'):
+        assert False
 
-    Encodes a `Player`.
-    """
-    return CombinedFeature([
-        ListOfFeatures(lambda player: [PlayerCard(player, card) for card in player.store],
-                       default_card_action_encoding(),
-                       MAX_ENCODED_STORE, torch.bool),
-        ListOfFeatures(lambda player: [PlayerCard(player, card) for card in player.hand],
-                       default_card_action_encoding(),
-                       MAX_ENCODED_HAND, torch.bool),
-        ListOfFeatures(lambda player: [PlayerCard(player, card) for card in player.in_play],
-                       default_card_action_encoding(),
-                       MAX_ENCODED_BOARD, torch.bool),
-    ])
+    def valid(self, player: 'Player') -> bool:
+        return False
 
 
-def default_player_action_encoding() -> Feature:
-    """
-    Default encoder for valid action mask.
+def store_indices() -> List[StoreIndex]:
+    return [StoreIndex(i) for i in range(MAX_ENCODED_STORE)]
 
-    Encodes a `Player`.
-    """
-    return CombinedFeature([
-        ScalarFeature(lambda player: TripleRewardsAction().valid(player)),
-        ScalarFeature(lambda player: TavernUpgradeAction().valid(player)),
-        ScalarFeature(lambda player: RerollAction().valid(player)),
-        ScalarFeature(lambda player: EndPhaseAction(True).valid(player)),
-        ScalarFeature(lambda player: EndPhaseAction(False).valid(player)),
-    ])
+
+def hand_indices() -> List[HandIndex]:
+    return [HandIndex(i) for i in range(MAX_ENCODED_HAND)]
+
+
+def board_indices() -> List[BoardIndex]:
+    return [BoardIndex(i) for i in range(MAX_ENCODED_BOARD)]
+
+
+def all_actions() -> ActionSet:
+    player_action_set = [TripleRewardsAction(), TavernUpgradeAction(), RerollAction(), EndPhaseAction(False),
+                         EndPhaseAction(True)]
+    store_action_set = [[BuyAction(index), InvalidAction(), InvalidAction()] for index in store_indices()]
+    hand_action_set = [[InvalidAction(), SummonAction(index), SellFromHandAction(index)] for index in
+                       hand_indices()]
+    board_action_set = [[InvalidAction(), InvalidAction(), SellFromBoardAction(index)] for index in
+                        board_indices()]
+    return ActionSet(player_action_set, store_action_set + hand_action_set + board_action_set)
 
 
 def encode_valid_actions(player: Player) -> EncodedActionSet:
-    player_action_tensor = default_player_action_encoding().encode(player)
-    cards_action_tensor = default_cards_action_encoding().encode(player)
+    actions = all_actions()
+    player_action_tensor = torch.tensor([action.valid(player) for action in actions.player_action_set])
+    cards_action_tensor = torch.tensor(
+        [[action.valid(player) for action in card_actions] for card_actions in actions.card_action_set])
     return EncodedActionSet(player_action_tensor, cards_action_tensor)
