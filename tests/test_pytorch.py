@@ -3,6 +3,7 @@ import unittest
 from functools import reduce
 
 import torch
+from torch.distributions import Categorical
 
 from hearthstone.tavern import Tavern
 from hearthstone.training.pytorch.hearthstone_state_encoder import encode_player, encode_valid_actions
@@ -39,6 +40,17 @@ class PytorchTests(unittest.TestCase):
     #             i_am_on_the_gpu = tensor1.cuda()
     #             print("put some stuff on the GPU")
 
+    def test_sample_distribution(self):
+        tensor1 = torch.tensor([[1.5, 2.3, 3.8, 4.1],
+                               [0.1, 0.2, 0.3, 0.4]])
+        m = Categorical(tensor1)
+        samp = m.sample()
+        print(samp)
+        prob = tensor1.gather(1, torch.tensor([[1, 3], [2, 3]]))
+        print(prob)
+
+        other = tensor1.gather(0,torch.tensor([[0,1,0,0],[1,0,1,1]]))
+        print(other)
 
 if __name__ == '__main__':
     unittest.main()

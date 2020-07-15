@@ -5,9 +5,11 @@ from typing import List
 from hearthstone.agent import Agent, Action, generate_valid_actions, BuyAction, EndPhaseAction, SummonAction, \
     SellFromBoardAction, SellFromHandAction, TavernUpgradeAction, RerollAction
 from hearthstone.card_pool import RabidSaurolisk
+
+from hearthstone.player import Player, BoardIndex
+
 if typing.TYPE_CHECKING:
     from hearthstone.cards import Card
-    from hearthstone.player import Player, BoardIndex
 
 
 class SauroliskBot(Agent):
@@ -35,7 +37,7 @@ class SauroliskBot(Agent):
         if summon_actions:
             return summon_actions[0]
 
-        buy_actions = [action for action in all_actions if type(action) is BuyAction and self.desired_card(action.card)]
+        buy_actions = [action for action in all_actions if type(action) is BuyAction and self.desired_card(player.store[action.index])]
         if buy_actions:
             return buy_actions[0]
 

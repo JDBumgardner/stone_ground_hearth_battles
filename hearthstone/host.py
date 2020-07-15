@@ -39,6 +39,6 @@ class RoundRobinHost:
                     assert set(arrangement) == set(player.in_play)
                     player.in_play = arrangement
             self.tavern.combat_step()
-        for position, name, player in enumerate(reversed(self.tavern.losers)):
+        for position, (name, player) in enumerate(reversed(self.tavern.losers)):
             self.agents[name].game_over(player, position)
 

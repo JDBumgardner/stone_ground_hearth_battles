@@ -5,9 +5,10 @@ from typing import List, Callable
 from hearthstone.agent import Agent, Action, generate_valid_actions, BuyAction, EndPhaseAction, SummonAction, \
     SellFromHandAction, SellFromBoardAction, TavernUpgradeAction, RerollAction, HeroPowerAction
 
+from hearthstone.player import Player, StoreIndex
+
 if typing.TYPE_CHECKING:
     from hearthstone.cards import Card, MonsterCard
-    from hearthstone.player import Player
 
 
 class HeroBot(Agent):
@@ -44,7 +45,7 @@ class HeroBot(Agent):
             if player.room_on_board():
                 return [
                     action for action in all_actions
-                    if type(action) is SummonAction and self.priority(player, action.card) == top_hand_priority
+                    if type(action) is SummonAction and self.priority(player, player.hand[action.index]) == top_hand_priority
                 ][0]
             else:
                 if top_hand_priority > bottom_board_priority:

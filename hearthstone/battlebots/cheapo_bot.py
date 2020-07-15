@@ -27,7 +27,7 @@ class CheapoBot(Agent):
             return summon_actions[0]
 
         buy_actions = [action for action in all_actions if type(action) is BuyAction]
-        buy_actions = sorted(buy_actions, key=lambda buy_action: buy_action.card.tier)
+        buy_actions = sorted(buy_actions, key=lambda buy_action: player.store[buy_action.index].tier)
         if buy_actions:
             return buy_actions[0]
 

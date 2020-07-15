@@ -1,7 +1,7 @@
 import copy
 import enum
 from collections import namedtuple
-from typing import Callable, List, Any, Optional
+from typing import Callable, List, Any, Optional, Dict
 
 import torch
 
@@ -14,7 +14,7 @@ from hearthstone.player import Player, StoreIndex, HandIndex, BoardIndex
 State = namedtuple('State', ('player_tensor', 'cards_tensor'))
 
 Transition = namedtuple('Transition',
-                        ('state', 'valid_actions', 'action', 'next_state', 'reward'))
+                        ('state', 'valid_actions', 'action', 'next_state', 'reward', 'is_terminal'))
 
 
 def frozen_player(player: Player) -> Player:
@@ -177,6 +177,9 @@ ActionSet = namedtuple('ActionSet', ('player_action_set', 'card_action_set'))
 
 
 class InvalidAction(Action):
+    def __repr__(self):
+        return f"InvalidAction()"
+
     def apply(self, player: 'Player'):
         assert False
 
@@ -196,7 +199,7 @@ def board_indices() -> List[BoardIndex]:
     return [BoardIndex(i) for i in range(MAX_ENCODED_BOARD)]
 
 
-def all_actions() -> ActionSet:
+def _all_actions() -> ActionSet:
     player_action_set = [TripleRewardsAction(), TavernUpgradeAction(), RerollAction(), EndPhaseAction(False),
                          EndPhaseAction(True)]
     store_action_set = [[BuyAction(index), InvalidAction(), InvalidAction()] for index in store_indices()]
@@ -207,9 +210,49 @@ def all_actions() -> ActionSet:
     return ActionSet(player_action_set, store_action_set + hand_action_set + board_action_set)
 
 
+ALL_ACTIONS = _all_actions()
+
+
+def _all_actions_dict():
+    result = {}
+    index = 0
+    for player_action in ALL_ACTIONS.player_action_set:
+        result[str(player_action)] = index
+        index += 1
+    for card_actions in ALL_ACTIONS.card_action_set:
+        for card_action in card_actions:
+            result[str(card_action)] = index
+            index += 1
+    return result
+
+
+ALL_ACTIONS_DICT: Dict[str, int] = _all_actions_dict()
+
+
 def encode_valid_actions(player: Player) -> EncodedActionSet:
-    actions = all_actions()
+    actions = ALL_ACTIONS
     player_action_tensor = torch.tensor([action.valid(player) for action in actions.player_action_set])
     cards_action_tensor = torch.tensor(
         [[action.valid(player) for action in card_actions] for card_actions in actions.card_action_set])
     return EncodedActionSet(player_action_tensor, cards_action_tensor)
+
+
+def action_encoding_size() -> int:
+    player_action_size = len(ALL_ACTIONS.player_action_set)
+    card_action_size = len(ALL_ACTIONS.card_action_set) * len(ALL_ACTIONS.card_action_set[0])
+    return player_action_size + card_action_size
+
+
+def get_action_index(action: Action) -> int:
+    return ALL_ACTIONS_DICT[str(action)]
+
+
+def get_indexed_action(index: int) -> Action:
+
+    if index < len(ALL_ACTIONS.player_action_set):
+        return ALL_ACTIONS.player_action_set[index]
+    else:
+        card_action_index = index - len(ALL_ACTIONS.player_action_set)
+        card_index = card_action_index // len(ALL_ACTIONS.card_action_set[0])
+        within_card_index = card_action_index % len(ALL_ACTIONS.card_action_set[0])
+        return ALL_ACTIONS.card_action_set[card_index][within_card_index]

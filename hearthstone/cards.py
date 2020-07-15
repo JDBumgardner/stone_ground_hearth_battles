@@ -50,7 +50,7 @@ class MonsterCard(Card):
     mana_cost = 0
     base_health: int
     base_attack: int
-    monster_type = ""
+    monster_type = None
     base_divine_shield = False
     base_magnetic = False
     base_poisonous = False
