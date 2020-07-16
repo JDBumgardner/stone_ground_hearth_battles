@@ -14,6 +14,7 @@ import torch.nn.functional as F
 
 class PytorchBot(Agent):
     def __init__(self, net: nn.Module):
+        self.authors = []
         self.net = net
 
     def buy_phase_action(self, player: 'Player') -> Action:

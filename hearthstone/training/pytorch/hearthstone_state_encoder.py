@@ -141,11 +141,15 @@ def default_player_encoding() -> Feature:
 
     Encodes a `Player`.
     """
+    sorted_player_health_features = [ScalarFeature(
+        lambda player: float(sorted([p.health for n, p in player.tavern.players.items()])[i]))
+        for i in range(8)]
     return CombinedFeature([
-        ScalarFeature(lambda player: float(player.tavern.turn_count)),
-        ScalarFeature(lambda player: float(player.health)),
-        ScalarFeature(lambda player: float(player.coins)),
-    ])
+                               ScalarFeature(lambda player: float(player.tavern.turn_count)),
+                               ScalarFeature(lambda player: float(player.health)),
+                               ScalarFeature(lambda player: float(player.coins)),
+                           ] + sorted_player_health_features
+                           )
 
 
 def default_cards_encoding() -> Feature:
@@ -204,10 +208,10 @@ def board_indices() -> List[BoardIndex]:
 def _all_actions() -> ActionSet:
     player_action_set = [TripleRewardsAction(), TavernUpgradeAction(), RerollAction(), EndPhaseAction(False),
                          EndPhaseAction(True)]
-    store_action_set = [[BuyAction(index), InvalidAction(), InvalidAction()] for index in store_indices()]
-    hand_action_set = [[InvalidAction(), SummonAction(index), SellFromHandAction(index)] for index in
+    store_action_set = [[BuyAction(index), InvalidAction(), InvalidAction(), InvalidAction()] for index in store_indices()]
+    hand_action_set = [[InvalidAction(), SummonAction(index), SummonAction(index, [BoardIndex(0)]), SellFromHandAction(index)] for index in
                        hand_indices()]
-    board_action_set = [[InvalidAction(), InvalidAction(), SellFromBoardAction(index)] for index in
+    board_action_set = [[InvalidAction(), InvalidAction(), InvalidAction(), SellFromBoardAction(index)] for index in
                         board_indices()]
     return ActionSet(player_action_set, store_action_set + hand_action_set + board_action_set)
 

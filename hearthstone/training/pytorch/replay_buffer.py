@@ -39,6 +39,7 @@ class BigBrotherAgent(Agent):
         self.last_state: Optional[State] = None
         self.last_action: Optional[Action] = None
         self.last_valid_actions: Optional[EncodedActionSet] = None
+        self.authors = citizen.authors
 
     def buy_phase_action(self, player: 'Player') -> Action:
         action = self.citizen.buy_phase_action(player)

@@ -9,3 +9,4 @@
 *.css
 index.txt
 venv/*
+/data/learning/pytorch/tensorboard/*
