@@ -14,7 +14,7 @@ from hearthstone.player import Player, StoreIndex, HandIndex, BoardIndex
 State = namedtuple('State', ('player_tensor', 'cards_tensor'))
 
 Transition = namedtuple('Transition',
-                        ('state', 'valid_actions', 'action', 'next_state', 'reward', 'is_terminal'))
+                        ('state', 'valid_actions', 'action', 'action_prob', 'next_state', 'reward', 'is_terminal'))
 
 
 def frozen_player(player: Player) -> Player:
@@ -42,11 +42,20 @@ class LocatedCard:
 
 
 class Feature:
-    def encode(self, obj: Any) -> torch.Tensor:
+
+    def fill_tensor(self, obj: Any, view: torch.Tensor):
         pass
 
     def size(self) -> torch.Size:
         pass
+
+    def dtype(self) -> torch.dtype:
+        pass
+
+    def encode(self, obj: Any) -> torch.Tensor:
+        tensor = torch.zeros(self.size(), dtype=self.dtype())
+        self.fill_tensor(obj, tensor)
+        return tensor
 
     def flattened_size(self) -> int:
         num = 1
@@ -56,34 +65,47 @@ class Feature:
 
 
 class ScalarFeature(Feature):
-    def __init__(self, feat: Callable[[Any], float]):
+    def __init__(self, feat: Callable[[Any], Any], dtype=None):
+        self._dtype = dtype or torch.float
         self.feat = feat
 
-    def encode(self, obj: Any) -> torch.Tensor:
-        return torch.tensor([self.feat(obj)])
+    def fill_tensor(self, obj: Any, view: torch.Tensor):
+        view.data[0] = self.feat(obj)
 
     def size(self) -> torch.Size:
         return torch.Size([1])
 
+    def dtype(self) -> torch.dtype:
+        return self._dtype
+
 
 class OnehotFeature(Feature):
-    def __init__(self, extractor: Callable[[Any], float], num_classes: int):
+    def __init__(self, extractor: Callable[[Any], Any], num_classes: int, dtype=None):
+        self._dtype = dtype or torch.float
         self.extractor = extractor
         self.num_classes = num_classes
 
-    def encode(self, card: Any) -> torch.Tensor:
-        return torch.nn.functional.one_hot(torch.as_tensor(self.extractor(card)), num_classes=self.num_classes).float()
+    def fill_tensor(self, obj: Any, view: torch.Tensor):
+        view[self.extractor(obj)] = 1.0
 
     def size(self) -> torch.Size:
         return torch.Size([self.num_classes])
 
+    def dtype(self) -> torch.dtype:
+        return self._dtype
+
 
 class CombinedFeature(Feature):
-    def __init__(self, features: List[Feature]):
+    def __init__(self, features: List[Feature], dtype=None):
         self.features = features
+        self._dtype = dtype or torch.float
 
-    def encode(self, card: Any) -> torch.Tensor:
-        return torch.cat([feature.encode(card) for feature in self.features])
+    def fill_tensor(self, obj: Any, view: torch.Tensor):
+        start = 0
+        for feature in self.features:
+            size = feature.size()
+            feature.fill_tensor(obj, view.narrow(0, start, size[0]))
+            start += size[0]
 
     def size(self) -> torch.Size:
         sizes = [feature.size() for feature in self.features]
@@ -91,8 +113,10 @@ class CombinedFeature(Feature):
         for size in sizes:
             assert size[1:] == sizes[0][1:]
             dimension_sum += size[0]
-
         return (dimension_sum,) + sizes[0][1:]
+
+    def dtype(self) -> torch.dtype:
+        return self._dtype
 
 
 class ListOfFeatures(Feature):
@@ -100,16 +124,39 @@ class ListOfFeatures(Feature):
         self.extractor = extractor
         self.feature = feature
         self.width = width
-        self.dtype = dtype or torch.float
+        self._dtype = dtype or torch.float
 
-    def encode(self, obj: Any) -> torch.Tensor:
+    def fill_tensor(self, obj: Any, view: torch.Tensor):
         values_to_encode = self.extractor(obj)
-        assert(len(values_to_encode) <= self.width)
-        padding = [torch.zeros(self.feature.size(), dtype=self.dtype)] * (self.width - len(values_to_encode))
-        return torch.stack([self.feature.encode(card) for card in values_to_encode] + padding)
+        assert (len(values_to_encode) <= self.width)
+        for i, value in enumerate(values_to_encode):
+            self.feature.fill_tensor(value, view.narrow(0, i, 1).squeeze(0))
 
     def size(self):
         return torch.Size((self.width,) + self.feature.size())
+
+    def dtype(self):
+        return self._dtype
+
+
+class SortedByValueFeature(Feature):
+    def __init__(self, extractor: Callable[[Any], List[Any]], width: int, dtype=None):
+        self.extractor = extractor
+        self.width = width
+        self._dtype = dtype or torch.float
+
+    def fill_tensor(self, obj: Any, view: torch.Tensor):
+        values_to_encode = self.extractor(obj)
+        sorted_values = sorted(values_to_encode)
+        assert (len(values_to_encode) <= self.width)
+        for i, value in enumerate(sorted_values):
+            view[i] = value
+
+    def size(self):
+        return torch.Size((self.width,))
+
+    def dtype(self):
+        return self._dtype
 
 
 def enum_to_int(value: Optional[enum.Enum]) -> int:
@@ -141,15 +188,14 @@ def default_player_encoding() -> Feature:
 
     Encodes a `Player`.
     """
-    sorted_player_health_features = [ScalarFeature(
-        lambda player: float(sorted([p.health for n, p in player.tavern.players.items()])[i]))
-        for i in range(8)]
+
     return CombinedFeature([
-                               ScalarFeature(lambda player: float(player.tavern.turn_count)),
-                               ScalarFeature(lambda player: float(player.health)),
-                               ScalarFeature(lambda player: float(player.coins)),
-                           ] + sorted_player_health_features
-                           )
+        ScalarFeature(lambda player: float(player.tavern.turn_count)),
+        ScalarFeature(lambda player: float(player.health)),
+        ScalarFeature(lambda player: float(player.coins)),
+        SortedByValueFeature(lambda player: [p.health for name, p in player.tavern.players.items()], 8),
+    ])
+
 
 
 def default_cards_encoding() -> Feature:
@@ -171,9 +217,13 @@ def default_cards_encoding() -> Feature:
     ])
 
 
+DEFAULT_PLAYER_ENCODING = default_player_encoding()
+DEFAULT_CARDS_ENCODING = default_cards_encoding()
+
+
 def encode_player(player: Player) -> State:
-    player_tensor = default_player_encoding().encode(player)
-    cards_tensor = default_cards_encoding().encode(player)
+    player_tensor = DEFAULT_PLAYER_ENCODING.encode(player)
+    cards_tensor = DEFAULT_CARDS_ENCODING.encode(player)
     return State(player_tensor, cards_tensor)
 
 

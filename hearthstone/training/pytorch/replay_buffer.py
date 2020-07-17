@@ -2,9 +2,14 @@ import logging
 import random
 from typing import Optional, List
 
+import torch
+from torch import nn
+from torch.distributions import Categorical
+
 from hearthstone.agent import Agent, Action
 from hearthstone.training.pytorch.hearthstone_state_encoder import Transition, State, encode_player, \
-    encode_valid_actions, EncodedActionSet, get_action_index
+    encode_valid_actions, EncodedActionSet, get_action_index, get_indexed_action
+from hearthstone.training.pytorch.pytorch_bot import PytorchBot
 
 logger = logging.getLogger(__name__)
 
@@ -32,17 +37,20 @@ class ReplayBuffer:
         return len(self.memory)
 
 
-class BigBrotherAgent(Agent):
-    def __init__(self, citizen: Agent, replay_buffer: ReplayBuffer):
-        self.citizen = citizen
+class SurveiledPytorchBot(PytorchBot):
+    def __init__(self, net: nn.Module, replay_buffer: ReplayBuffer):
+        super().__init__(net)
         self.replay_buffer = replay_buffer
         self.last_state: Optional[State] = None
         self.last_action: Optional[Action] = None
+        self.last_action_prob: Optional[float] = None
         self.last_valid_actions: Optional[EncodedActionSet] = None
-        self.authors = citizen.authors
 
     def buy_phase_action(self, player: 'Player') -> Action:
-        action = self.citizen.buy_phase_action(player)
+        policy = self.policy(player)
+        action_index = Categorical(torch.exp(policy[0])).sample()
+        action = get_indexed_action(int(action_index))
+
         if not action.valid(player):
             logger.debug("No! Bad Citizen!")
         else:
@@ -51,17 +59,9 @@ class BigBrotherAgent(Agent):
                 self.remember_result(new_state, 0, False)
             self.last_state = encode_player(player)
             self.last_valid_actions = encode_valid_actions(player)
-            self.last_action = get_action_index(action)
-
+            self.last_action = int(action_index)
+            self.last_action_prob = float(policy[0][action_index])
         return action
-
-    # TODO: handle learning discovery choices
-    def discover_choice_action(self, player: 'Player') -> 'Card':
-        return self.citizen.discover_choice_action(player)
-
-    # TODO: Handle learning card ordering
-    def rearrange_cards(self, player: 'Player') -> List['Card']:
-        return self.citizen.rearrange_cards(player)
 
     def game_over(self, player: 'Player', ranking: int):
         if self.last_state is not None:
@@ -69,6 +69,7 @@ class BigBrotherAgent(Agent):
 
     def remember_result(self, new_state, reward, is_terminal):
         self.replay_buffer.push(Transition(self.last_state, self.last_valid_actions,
-                                           self.last_action, new_state, reward, is_terminal))
+                                           self.last_action, self.last_action_prob,
+                                           new_state, reward, is_terminal))
 
 

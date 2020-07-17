@@ -128,18 +128,18 @@ class Player:
         return bool(self.triple_rewards)
 
     def draw_discover(self, predicate: Callable[[Card], bool]):
-        discoverables = [card for card in self.tavern.deck.cards if predicate(card)]
+        discoverables = [card for card in self.tavern.deck.all_cards() if predicate(card)]
         for _ in range(3):
             self.discovered_cards.append(self.tavern.randomizer.select_discover_card(discoverables))
             discoverables.remove(self.discovered_cards[-1])
-            self.tavern.deck.cards.remove(self.discovered_cards[-1])
+            self.tavern.deck.remove_card(self.discovered_cards[-1])
 
     def select_discover(self, card: Card):
         assert (card in self.discovered_cards)
         assert (isinstance(card, MonsterCard))  # TODO: discover other card types
         self.discovered_cards.remove(card)
         self.hand.append(card)
-        self.tavern.deck.cards += itertools.chain.from_iterable([card.dissolve() for card in self.discovered_cards])
+        self.tavern.deck.return_cards(itertools.chain.from_iterable([card.dissolve() for card in self.discovered_cards]))
         self.discovered_cards = []
         self.check_golden(type(card))
 
@@ -202,7 +202,7 @@ class Player:
         return self.coins >= self.refresh_store_cost
 
     def return_cards(self):
-        self.tavern.deck.cards += itertools.chain.from_iterable([card.dissolve() for card in self.store])
+        self.tavern.deck.return_cards(itertools.chain.from_iterable([card.dissolve() for card in self.store]))
         self.store = []
 
     def freeze(self):
@@ -213,7 +213,7 @@ class Player:
         self.broadcast_buy_phase_event(CardEvent(location[index], EVENTS.SELL))
         card = location.pop(index)
         self.coins += card.redeem_rate
-        self.tavern.deck.cards += card.dissolve()
+        self.tavern.deck.return_cards(card.dissolve())
 
     def sell_hand_minion(self, index: HandIndex):
         return self._sell_minion(self.hand, index)

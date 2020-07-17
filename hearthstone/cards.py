@@ -1,4 +1,6 @@
-from typing import Set, List, Optional, Callable, Type, Union
+import itertools
+from collections import defaultdict
+from typing import Set, List, Optional, Callable, Type, Union, Iterator
 from hearthstone.events import BuyPhaseContext, CombatPhaseContext, EVENTS
 from hearthstone.card_factory import make_metaclass
 
@@ -168,14 +170,31 @@ class MonsterCard(Card):
 
 class CardList:
     def __init__(self, cards: List[Card]):
-        self.cards: List[Card] = list(cards)
+        self.cards_by_tier = defaultdict(lambda: [])
+        for card in cards:
+            self.cards_by_tier[card.tier].append(card)
 
     def draw(self, player):
-        valid_cards = [card for card in self.cards if player.tavern_tier >= card.tier]
+        valid_cards = []
+        for tier in range(player.tavern_tier+1):
+            valid_cards.extend(self.cards_by_tier[tier])
         assert valid_cards, "fnord"
         random_card = player.tavern.randomizer.select_draw_card(valid_cards, player.name, player.tavern.turn_count)
-        self.cards.remove(random_card)
+        self.cards_by_tier[random_card.tier].remove(random_card)
         return random_card
 
+    def return_cards(self, cards: Iterator[MonsterCard]):
+        for card in cards:
+            self.return_card(card)
+
+    def return_card(self, card:MonsterCard):
+        self.cards_by_tier[card.tier].append(card)
+
+    def remove_card(self, card: MonsterCard):
+        self.cards_by_tier[card.tier].remove(card)
+
+    def all_cards(self):
+        return itertools.chain.from_iterable(self.cards_by_tier.values())
+
     def __len__(self) -> int:
-        return len(self.cards)
+        return sum(len(value) for value in self.cards_by_tier.values())

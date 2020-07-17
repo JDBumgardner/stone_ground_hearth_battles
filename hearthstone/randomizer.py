@@ -30,7 +30,7 @@ class Randomizer:
     def select_from_store(self, store: List['Card']) -> 'Card':
         raise NotImplementedError()
 
-    def select_gain_card(self, cards: List['Card']) -> 'Card':
+    def select_gain_card(self, cards: List['MonsterCard']) -> 'Card':
         raise NotImplementedError()
 
     def select_hero(self, hero_pool: List['Hero']) -> 'Hero':

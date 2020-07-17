@@ -21,11 +21,7 @@ global_step = 0
 
 def learn(tensorboard: SummaryWriter, optimizer: optim.Adam, learning_net: nn.Module, replay_buffer: ReplayBuffer, batch_size, policy_weight):
     global global_step
-    if len(replay_buffer) < batch_size:
-        return
-
     transitions: List[Transition] = replay_buffer.sample(batch_size)
-    replay_buffer.clear()
     transition_batch = tensorize_batch(transitions)
     # TODO turn off gradient here
     # Note transition_batch.valid_actions is not the set of valid actions from the next state, but we are ignoring the policy network here so it doesn't matter
@@ -47,11 +43,20 @@ def learn(tensorboard: SummaryWriter, optimizer: optim.Adam, learning_net: nn.Mo
     tensorboard.add_scalar("avg_reward/train", transition_batch.reward.masked_select(transition_batch.is_terminal).float().mean(), global_step)
     tensorboard.add_scalar("avg_value/train", value.mean(), global_step)
     tensorboard.add_scalar("avg_advantage/train", advantage.mean(), global_step)
-    policy_loss = -(policy.gather(1, transition_batch.action.unsqueeze(-1)) * advantage.detach()).mean()
+    ratio = torch.exp(policy - transition_batch.action_prob.unsqueeze(-1)).gather(1, transition_batch.action.unsqueeze(-1))
+    epsilon = 0.2
+    clipped_ratio = ratio.clamp(1-epsilon, 1+epsilon)
+    unclipped_loss = - ratio * advantage.detach()
+    clipped_loss = - clipped_ratio * advantage.detach()
+    policy_loss = torch.max(unclipped_loss, clipped_loss).mean()
     value_loss = advantage.pow(2).mean()
     tensorboard.add_scalar("policy_loss/train", policy_loss, global_step)
     tensorboard.add_scalar("value_loss/train", value_loss, global_step)
-
+    tensorboard.add_scalar("avg_unclipped_policy_loss/train", unclipped_loss.mean(), global_step)
+    tensorboard.add_scalar("avg_clipped_policy_loss/train", clipped_loss.mean(), global_step)
+    tensorboard.add_histogram("unclipped_policy_loss/train", unclipped_loss, global_step)
+    tensorboard.add_histogram("clipped_policy_loss/train", clipped_loss, global_step)
+    tensorboard.add_histogram("policy_ratio/train", ratio, global_step)
     entropy_loss = - 0.000001 * torch.sum(policy * torch.exp(policy))
     tensorboard.add_scalar("entropy_loss/train", entropy_loss, global_step)
     loss = policy_loss * policy_weight + value_loss + entropy_loss
@@ -63,13 +68,15 @@ def learn(tensorboard: SummaryWriter, optimizer: optim.Adam, learning_net: nn.Mo
 
 
 def main():
-    batch_size = 1024
+    batch_size = 512
+    num_workers = 6
+
     tensorboard = SummaryWriter(f"../../../data/learning/pytorch/tensorboard/{datetime.now().isoformat()}")
     logging.getLogger().setLevel(logging.INFO)
     other_contestants = easier_contestants()
     learning_net = HearthstoneFFNet(DEFAULT_PLAYER_ENCODING, DEFAULT_CARDS_ENCODING)
-    optimizer = optim.Adam(learning_net.parameters(), lr=0.0001)
-    replay_buffer = ReplayBuffer(100000)
+    optimizer = optim.Adam(learning_net.parameters(), lr=0.0003)
+    replay_buffer = ReplayBuffer(10000)
     learning_bot = SurveiledPytorchBot(learning_net, replay_buffer)
     learning_bot_contestant = Contestant("LearningBot", learning_bot)
     contestants = other_contestants + [learning_bot_contestant]
@@ -77,21 +84,25 @@ def main():
     #load_ratings(contestants, standings_path)
     #add_net_to_tensorboard(tensorboard, learning_net)
 
-    for _ in range(10000):
+    tensorboard.add_text("learning_algorithm", "PPO")
+    for _ in range(100000):
         round_contestants = [learning_bot_contestant] + random.sample(other_contestants, k=7)
         host = RoundRobinHost({contestant.name: contestant.agent for contestant in round_contestants})
         host.play_game()
         winner_names = list(reversed([name for name, player in host.tavern.losers]))
         print("---------------------------------------------------------------")
         print(winner_names)
-        print(host.tavern.losers[-1][1].in_play)
+        print(host.tavern.players[learning_bot_contestant.name].in_play)
         ranked_contestants = sorted(round_contestants, key=lambda c: winner_names.index(c.name))
         update_ratings(ranked_contestants)
         print_standings(contestants)
         for contestant in round_contestants:
             contestant.games_played += 1
         if learning_bot_contestant in round_contestants:
-            learn(tensorboard, optimizer, learning_net, replay_buffer, batch_size, 2.0)
+            if len(replay_buffer) >= batch_size:
+                for i in range(20):
+                    learn(tensorboard, optimizer, learning_net, replay_buffer, batch_size, 2.0)
+                replay_buffer.clear()
 
     save_ratings(contestants, standings_path)
     tensorboard.close()

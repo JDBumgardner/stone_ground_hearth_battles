@@ -99,11 +99,11 @@ class PatchesThePirate(Hero):
             self.power_cost = max(0, self.power_cost - 1)
 
     def hero_power_impl(self, context: BuyPhaseContext):
-        pirates = [card for card in context.owner.tavern.deck.cards if
+        pirates = [card for card in context.owner.tavern.deck.all_cards() if
                    card.monster_type == MONSTER_TYPES.PIRATE and card.tier <= context.owner.tavern_tier]
 
         card = context.randomizer.select_gain_card(pirates)
-        context.owner.tavern.deck.cards.remove(card)
+        context.owner.tavern.deck.remove_card(card)
         context.owner.hand.append(card)
         context.owner.check_golden(type(card))
         self.power_cost = 4
