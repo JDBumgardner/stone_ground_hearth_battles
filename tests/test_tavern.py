@@ -1069,5 +1069,41 @@ class CardTests(unittest.TestCase):
         self.assertEqual(player_1.in_play[1].health, 4)
 
 
+    def test_khadgar(self):
+        tavern = Tavern()
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        self.upgrade_to_tier(tavern, 3)
+        tavern.randomizer = CardForcer([Khadgar, AlleyCat] * 5)
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        self.assertCardListEquals(player_1.in_play, [Khadgar, AlleyCat, TabbyCat, TabbyCat])
+
+    def test_double_khadgar(self):
+        tavern = Tavern()
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        self.upgrade_to_tier(tavern, 3)
+        tavern.randomizer = RepeatedCardForcer([Khadgar])
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        tavern.combat_step()
+        tavern.randomizer = RepeatedCardForcer([AlleyCat])
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        self.assertCardListEquals(player_1.in_play,
+                                  [Khadgar, Khadgar, AlleyCat, TabbyCat])
+        self.assertCardListEquals(player_1.hand,
+                                  [TabbyCat])
+        self.assertTrue(player_1.hand[0].golden)
+
+
 if __name__ == '__main__':
     unittest.main()

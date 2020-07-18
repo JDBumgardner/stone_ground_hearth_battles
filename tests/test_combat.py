@@ -416,20 +416,17 @@ class CombatTests(unittest.TestCase):
             return khadgar[0]
 
     def test_khadgar_piloted_shredder(self):
-        logging.basicConfig(level=logging.DEBUG)
         adam = Player.new_player_with_hero(None, "Adam")
         ethan = Player.new_player_with_hero(None, "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         piloted_shredder = PilotedShredder()
         piloted_shredder.golden_transformation([])
-        adams_war_party.board = [piloted_shredder, Khadgar(), RighteousProtector()]
+        adams_war_party.board = [piloted_shredder, Khadgar()]
         ethans_war_party.board = [RabidSaurolisk(), RabidSaurolisk()]
-        for saurolisk in ethans_war_party.board:
-            saurolisk.golden_transformation([])
         fight_boards(adams_war_party, ethans_war_party, self.PilotedShredderRandomizer())
         self.assertEqual(adam.health, 40)
-        self.assertEqual(ethan.health, 35)
+        self.assertEqual(ethan.health, 18)
 
 
 

@@ -107,12 +107,12 @@ def learn(tensorboard: SummaryWriter, optimizer: optim.Adam, learning_net: nn.Mo
 
 
 def main():
-    batch_size = 256
+    batch_size = 4096
 
     tensorboard = SummaryWriter(f"../../../data/learning/pytorch/tensorboard/{datetime.now().isoformat()}")
     logging.getLogger().setLevel(logging.INFO)
     learning_net = HearthstoneFFSharedNet(DEFAULT_PLAYER_ENCODING, DEFAULT_CARDS_ENCODING)
-    optimizer = optim.SGD(learning_net.parameters(), lr=0.001, momentum=0.90, nesterov=True)
+    optimizer = optim.SGD(learning_net.parameters(), lr=0.001, momentum=0.80, nesterov=True)
     replay_buffer = ReplayBuffer(10000)
 
     tensorboard.add_text("learning_algorithm", "PPO")
