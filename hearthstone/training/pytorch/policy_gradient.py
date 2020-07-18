@@ -7,6 +7,8 @@ from torch.utils.tensorboard import SummaryWriter
 
 from hearthstone.battlebots.cheapo_bot import CheapoBot
 from hearthstone.battlebots.no_action_bot import NoActionBot
+from hearthstone.battlebots.priority_bot import PriorityBot
+from hearthstone.battlebots.priority_functions import attack_health_priority_bot
 from hearthstone.battlebots.random_bot import RandomBot
 from hearthstone.battlebots.saurolisk_bot import SauroliskBot
 from hearthstone.battlebots.supremacy_bot import SupremacyBot
@@ -50,6 +52,20 @@ def easier_contestants():
     all_bots += [Contestant("SauroliskBot", SauroliskBot(5))]
     return all_bots
 
+
+def easy_contestants():
+    all_bots = [Contestant(f"RandomBot", RandomBot(1))]
+    all_bots += [Contestant(f"NoActionBot ", NoActionBot())]
+    all_bots += [Contestant(f"CheapoBot", CheapoBot(3))]
+    all_bots += [Contestant(f"SupremacyBot {t}", SupremacyBot(t, False, i)) for i, t in
+                 enumerate([MONSTER_TYPES.MURLOC, MONSTER_TYPES.BEAST, MONSTER_TYPES.MECH, MONSTER_TYPES.DRAGON,
+                            MONSTER_TYPES.DEMON, MONSTER_TYPES.PIRATE])]
+    all_bots += [Contestant(f"SupremacyUpgradeBot {t}", SupremacyBot(t, True, i)) for i, t in
+                 enumerate([MONSTER_TYPES.MURLOC, MONSTER_TYPES.BEAST, MONSTER_TYPES.MECH, MONSTER_TYPES.DRAGON,
+                            MONSTER_TYPES.DEMON, MONSTER_TYPES.PIRATE])]
+    all_bots += [Contestant("SauroliskBot", SauroliskBot(5))]
+    all_bots += [Contestant("PriorityHealthAttackBot", attack_health_priority_bot(10, PriorityBot))]
+    return all_bots
 
 StateBatch = namedtuple('StateBatch', ('player_tensor', 'cards_tensor'))
 TransitionBatch = namedtuple('TransitionBatch', ('state', 'valid_actions', 'action', 'action_prob',  'next_state', 'reward', 'is_terminal'))
