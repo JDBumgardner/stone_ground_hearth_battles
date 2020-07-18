@@ -6,6 +6,8 @@ from hearthstone.cards import MonsterCard, CardEvent
 from hearthstone.events import BuyPhaseContext, CombatPhaseContext, EVENTS
 from hearthstone.monster_types import MONSTER_TYPES
 
+import random
+
 
 class MamaBear(MonsterCard):
     #  wrong tier for testing actual tier is 6
@@ -119,9 +121,10 @@ class WrathWeaver(MonsterCard):
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         if event.event is EVENTS.SUMMON_BUY and event.card.monster_type == MONSTER_TYPES.DEMON:
+            bonus = 4 if self.golden else 2
             context.owner.health -= 1
-            self.attack += 2
-            self.health += 2
+            self.attack += bonus
+            self.health += bonus
 
 
 class MechaRoo(MonsterCard):
@@ -808,3 +811,64 @@ class ScrewjankClunker(MonsterCard):
 
     def validate_battlecry_target(self, card: MonsterCard) -> bool:
         return card.monster_type == MONSTER_TYPES.MECH
+
+
+class PackLeader(MonsterCard):
+    tier = 3
+    base_attack = 3
+    base_health = 3
+    monster_type = None
+
+    def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
+        friendly_summon = event.event is EVENTS.SUMMON_BUY or (
+                event.event is EVENTS.SUMMON_COMBAT and event.card in context.friendly_war_party.board)
+        if friendly_summon and event.card.monster_type == MONSTER_TYPES.BEAST and event.card != self:
+            bonus = 6 if self.golden else 3
+            event.card.attack += bonus
+
+
+class PilotedShredder(MonsterCard):
+    tier = 3
+    base_attack = 4
+    base_health = 3
+    monster_type = MONSTER_TYPES.MECH
+
+    def base_deathrattle(self, context: CombatPhaseContext):
+        # TODO: add Khadgar when created
+        two_cost_minions = [VulgarHomunculus(), MicroMachine(), MurlocTidehunter(), RockpoolHunter(),
+                            DragonspawnLieutenant(), KindlyGrandmother(), ScavengingHyena(), UnstableGhoul()]
+        random_minion = random.choice(two_cost_minions)
+        summon_index = context.friendly_war_party.get_index(self)
+        context.friendly_war_party.summon_in_combat(random_minion, context, summon_index + 1)
+        if self.golden:
+            random_minion = random.choice(two_cost_minions)
+            # TODO: what index is the second minion summoned at?
+
+
+class SaltyLooter(MonsterCard):
+    tier = 3
+    base_attack = 3
+    base_health = 3
+    monster_type = MONSTER_TYPES.PIRATE
+
+    def handle_event_powers(self, event: CardEvent, context: BuyPhaseContext):
+        if event.event is EVENTS.SUMMON_BUY and event.card.monster_type == MONSTER_TYPES.PIRATE and event.card != self:
+            bonus = 2 if self.golden else 1
+            self.attack += bonus
+            self.health += bonus
+
+
+class SoulJuggler(MonsterCard):
+    tier = 3
+    base_attack = 3
+    base_health = 3
+    monster_type = None
+
+    def handle_event_powers(self, event: CardEvent, context: CombatPhaseContext):
+        if event.event is EVENTS.DIES and event.card.monster_type == MONSTER_TYPES.DEMON and event.card in context.friendly_war_party.board:
+            damage = 6 if self.golden else 3
+            targets = [card for card in context.enemy_war_party.board if not card.dead]
+            if targets:
+                target = context.randomizer.select_enemy_minion(targets)
+                target.take_damage(damage, context)
+                target.resolve_death(context)  # TODO: Order of death resolution?

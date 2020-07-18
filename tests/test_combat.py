@@ -360,6 +360,32 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
         self.assertEqual(len(adams_war_party.board), 5)
 
+    def test_piloted_shredder(self):
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [PilotedShredder()]
+        ethans_war_party.board = [PackLeader()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertNotEqual(ethan.health, 40)
+        self.assertNotEqual(len(adams_war_party.board), 1)
+        two_cost_minions = [VulgarHomunculus, MicroMachine, MurlocTidehunter, RockpoolHunter,
+                            DragonspawnLieutenant, KindlyGrandmother, ScavengingHyena, UnstableGhoul]
+        self.assertIn(type(adams_war_party.board[1]), two_cost_minions)
+
+    def test_soul_juggler(self):
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [MamaBear()]
+        ethans_war_party.board = [Imp(), SoulJuggler()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+
 
 
 if __name__ == '__main__':
