@@ -167,6 +167,9 @@ class MonsterCard(Card):
         else:
             return [type(self)()]
 
+    def summon_minion_multiplier(self) -> int:
+        return 1
+
 
 class CardList:
     def __init__(self, cards: List[Card]):

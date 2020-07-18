@@ -1045,5 +1045,29 @@ class CardTests(unittest.TestCase):
         self.assertEqual(player_1.in_play[1].health, 1)
 
 
+    def test_twilight_emissary(self):
+        tavern = Tavern()
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        self.upgrade_to_tier(tavern, 3)
+        tavern.randomizer = CardForcer([DragonspawnLieutenant] * 8)
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        tavern.combat_step()
+        tavern.randomizer = CardForcer([TwilightEmissary] * 8)
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        self.assertCardListEquals(player_1.in_play, [DragonspawnLieutenant])
+        self.assertEqual(player_1.in_play[0].attack, 2)
+        self.assertEqual(player_1.in_play[0].health, 3)
+        player_1.summon_from_hand(HandIndex(0), [BoardIndex(0)])
+        self.assertCardListEquals(player_1.in_play, [DragonspawnLieutenant, TwilightEmissary])
+        self.assertEqual(player_1.in_play[0].attack, 4)
+        self.assertEqual(player_1.in_play[0].health, 5)
+        self.assertEqual(player_1.in_play[1].attack, 4)
+        self.assertEqual(player_1.in_play[1].health, 4)
+
+
 if __name__ == '__main__':
     unittest.main()

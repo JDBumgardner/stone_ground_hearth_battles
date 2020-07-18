@@ -36,6 +36,9 @@ class Randomizer:
     def select_hero(self, hero_pool: List['Hero']) -> 'Hero':
         raise NotImplementedError()
 
+    def select_summon_minion(self, cards: List['Card']) -> 'Card':
+        raise NotImplementedError()
+
 
 class DefaultRandomizer(Randomizer):
     def select_draw_card(self, cards: List['Card'], player_name: str, round_number: int) -> 'Card':
@@ -66,3 +69,6 @@ class DefaultRandomizer(Randomizer):
 
     def select_hero(self, hero_pool: List['Hero']) -> 'Hero':
         return random.choice(hero_pool)
+
+    def select_summon_minion(self, cards: List['Card']) -> 'Card':
+        return random.choice(cards)

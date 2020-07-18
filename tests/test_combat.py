@@ -386,6 +386,51 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
 
+    def test_golden_soul_juggler(self):
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [PackLeader(), PackLeader()]
+        soul_juggler = SoulJuggler()
+        soul_juggler.golden_transformation([])
+        ethans_war_party.board = [Imp(), Imp(), soul_juggler]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 35)
+        self.assertEqual(ethan.health, 40)
+
+    def test_khadgar(self):
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [HarvestGolem(), Khadgar()]
+        ethans_war_party.board = [RabidSaurolisk()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 34)
+
+    class PilotedShredderRandomizer(DefaultRandomizer):
+        def select_summon_minion(self, cards: List['Card']) -> 'Card':
+            khadgar = [card for card in cards if type(card) is Khadgar]
+            return khadgar[0]
+
+    def test_khadgar_piloted_shredder(self):
+        logging.basicConfig(level=logging.DEBUG)
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        piloted_shredder = PilotedShredder()
+        piloted_shredder.golden_transformation([])
+        adams_war_party.board = [piloted_shredder, Khadgar(), RighteousProtector()]
+        ethans_war_party.board = [RabidSaurolisk(), RabidSaurolisk()]
+        for saurolisk in ethans_war_party.board:
+            saurolisk.golden_transformation([])
+        fight_boards(adams_war_party, ethans_war_party, self.PilotedShredderRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 35)
+
 
 
 if __name__ == '__main__':

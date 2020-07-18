@@ -6,9 +6,6 @@ from hearthstone.cards import MonsterCard, CardEvent
 from hearthstone.events import BuyPhaseContext, CombatPhaseContext, EVENTS
 from hearthstone.monster_types import MONSTER_TYPES
 
-import random
-
-
 class MamaBear(MonsterCard):
     #  wrong tier for testing actual tier is 6
     tier = 6
@@ -74,10 +71,11 @@ class AlleyCat(MonsterCard):
     base_health = 1
 
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
-        tabby_cat = TabbyCat()
-        if self.golden:
-            tabby_cat.golden_transformation([])
-        context.owner.summon_from_void(tabby_cat)
+        for _ in range(context.summon_minion_multiplier()):
+            tabby_cat = TabbyCat()
+            if self.golden:
+                tabby_cat.golden_transformation([])
+            context.owner.summon_from_void(tabby_cat)
 
 
 class TabbyCat(MonsterCard):
@@ -134,11 +132,12 @@ class MechaRoo(MonsterCard):
     base_health = 1
 
     def base_deathrattle(self, context: CombatPhaseContext):
-        joebot = JoEBot()
-        if self.golden:
-            joebot.golden_transformation([])
         summon_index = context.friendly_war_party.get_index(self)
-        context.friendly_war_party.summon_in_combat(joebot, context, summon_index + 1)
+        for i in range(context.summon_minion_multiplier()):
+            joebot = JoEBot()
+            if self.golden:
+                joebot.golden_transformation([])
+            context.friendly_war_party.summon_in_combat(joebot, context, summon_index + i + 1)
 
 
 class JoEBot(MonsterCard):
@@ -184,10 +183,11 @@ class MurlocTidehunter(MonsterCard):
     base_health = 1
 
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
-        murloc_scout = MurlocScout()
-        if self.golden:
-            murloc_scout.golden_transformation([])
-        context.owner.summon_from_void(murloc_scout)
+        for _ in range(context.summon_minion_multiplier()):
+            murloc_scout = MurlocScout()
+            if self.golden:
+                murloc_scout.golden_transformation([])
+            context.owner.summon_from_void(murloc_scout)
 
 
 class MurlocScout(MonsterCard):
@@ -255,11 +255,12 @@ class HarvestGolem(MonsterCard):
     base_health = 3
 
     def base_deathrattle(self, context: CombatPhaseContext):
-        damaged_golem = DamagedGolem()
-        if self.golden:
-            damaged_golem.golden_transformation([])
         summon_index = context.friendly_war_party.get_index(self)
-        context.friendly_war_party.summon_in_combat(damaged_golem, context, summon_index + 1)
+        for i in range(context.summon_minion_multiplier()):
+            damaged_golem = DamagedGolem()
+            if self.golden:
+                damaged_golem.golden_transformation([])
+            context.friendly_war_party.summon_in_combat(damaged_golem, context, summon_index + i + 1)
 
 
 class DamagedGolem(MonsterCard):
@@ -294,10 +295,12 @@ class KindlyGrandmother(MonsterCard):
     base_health = 1
 
     def base_deathrattle(self, context: CombatPhaseContext):
-        big_bad_wolf = BigBadWolf()
-        if self.golden:
-            big_bad_wolf.golden_transformation([])
-        context.friendly_war_party.summon_in_combat(big_bad_wolf, context)
+        summon_index = context.friendly_war_party.get_index(self)
+        for i in range(context.summon_minion_multiplier()):
+            big_bad_wolf = BigBadWolf()
+            if self.golden:
+                big_bad_wolf.golden_transformation([])
+            context.friendly_war_party.summon_in_combat(big_bad_wolf, context, summon_index + i + 1)
 
 
 class BigBadWolf(MonsterCard):
@@ -353,10 +356,12 @@ class Imprisoner(MonsterCard):
     base_health = 3
 
     def base_deathrattle(self, context: CombatPhaseContext):
-        imp = Imp()
-        if self.golden:
-            imp.golden_transformation([])
-        context.friendly_war_party.summon_in_combat(imp, context)
+        summon_index = context.friendly_war_party.get_index(self)
+        for i in range(context.summon_minion_multiplier()):
+            imp = Imp()
+            if self.golden:
+                imp.golden_transformation([])
+            context.friendly_war_party.summon_in_combat(imp, context, summon_index + i + 1)
 
 
 class Imp(MonsterCard):
@@ -421,11 +426,13 @@ class Scallywag(MonsterCard):
     base_health = 1
 
     def base_deathrattle(self, context: CombatPhaseContext):
-        pirate_summon = SkyPirate()
-        if self.golden:
-            pirate_summon.golden_transformation([])
-        scallywag_index = context.friendly_war_party.get_index(self)
-        context.friendly_war_party.summon_in_combat(pirate_summon, context, scallywag_index + 1)
+        summon_index = context.friendly_war_party.get_index(self)
+        for i in range(context.summon_minion_multiplier()):
+            pirate_summon = SkyPirate()
+            if self.golden:
+                pirate_summon.golden_transformation([])
+            scallywag_index = context.friendly_war_party.get_index(self)
+            context.friendly_war_party.summon_in_combat(pirate_summon, context, scallywag_index + i + 1)
 
 
 class SkyPirate(MonsterCard):
@@ -502,12 +509,12 @@ class RatPack(MonsterCard):
     base_health = 2
 
     def base_deathrattle(self, context: CombatPhaseContext):
-        for _ in range(self.attack):
+        summon_index = context.friendly_war_party.get_index(self)
+        for i in range(self.attack):
             rat = Rat()
             if self.golden:
                 rat.golden_transformation([])
-            summon_index = context.friendly_war_party.get_index(self)
-            context.friendly_war_party.summon_in_combat(rat, context, summon_index + 1)
+            context.friendly_war_party.summon_in_combat(rat, context, summon_index + i + 1)
 
 
 class Rat(MonsterCard):
@@ -588,11 +595,12 @@ class MechanoEgg(MonsterCard):
     base_health = 5
 
     def base_deathrattle(self, context: CombatPhaseContext):
-        robosaur = Robosaur()
-        if self.golden:
-            robosaur.golden_transformation([])
         summon_index = context.friendly_war_party.get_index(self)
-        context.friendly_war_party.summon_in_combat(robosaur, context, summon_index + 1)
+        for i in range(context.summon_minion_multiplier()):
+            robosaur = Robosaur()
+            if self.golden:
+                robosaur.golden_transformation([])
+            context.friendly_war_party.summon_in_combat(robosaur, context, summon_index + i + 1)
 
 
 class Robosaur(MonsterCard):
@@ -750,11 +758,12 @@ class ImpGangBoss(MonsterCard):
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         if event.event is EVENTS.CARD_DAMAGED and self == event.card:
-            imp = Imp()
-            if self.golden:
-                imp.golden_transformation([])
             summon_index = context.friendly_war_party.get_index(self)
-            context.friendly_war_party.summon_in_combat(imp, context, summon_index + 1)
+            for i in range(context.summon_minion_multiplier()):
+                imp = Imp()
+                if self.golden:
+                    imp.golden_transformation([])
+                context.friendly_war_party.summon_in_combat(imp, context, summon_index + i + 1)
 
 
 class InfestedWolf(MonsterCard):
@@ -764,11 +773,12 @@ class InfestedWolf(MonsterCard):
     monster_type = MONSTER_TYPES.BEAST
 
     def base_deathrattle(self, context: CombatPhaseContext):
-        spiders = [Spider(), Spider()]
-        for spider in spiders:
+        summon_index = context.friendly_war_party.get_index(self)
+        for i in range(2*context.summon_minion_multiplier()):
+            spider = Spider()
             if self.golden:
                 spider.golden_transformation([])
-            context.friendly_war_party.summon_in_combat(spider, context)
+            context.friendly_war_party.summon_in_combat(spider, context, summon_index + i + 1)
 
 
 class Spider(MonsterCard):
@@ -834,15 +844,18 @@ class PilotedShredder(MonsterCard):
     monster_type = MONSTER_TYPES.MECH
 
     def base_deathrattle(self, context: CombatPhaseContext):
-        # TODO: add Khadgar when created
-        two_cost_minions = [VulgarHomunculus(), MicroMachine(), MurlocTidehunter(), RockpoolHunter(),
-                            DragonspawnLieutenant(), KindlyGrandmother(), ScavengingHyena(), UnstableGhoul()]
-        random_minion = random.choice(two_cost_minions)
+
+        count = 2 if self.golden else 1
         summon_index = context.friendly_war_party.get_index(self)
-        context.friendly_war_party.summon_in_combat(random_minion, context, summon_index + 1)
-        if self.golden:
-            random_minion = random.choice(two_cost_minions)
-            # TODO: what index is the second minion summoned at?
+        i = 0
+        for _ in range(count):
+            for _ in range(context.summon_minion_multiplier()):
+                two_cost_minions = [VulgarHomunculus(), MicroMachine(), MurlocTidehunter(), RockpoolHunter(),
+                                    DragonspawnLieutenant(), KindlyGrandmother(), ScavengingHyena(), UnstableGhoul(),
+                                    Khadgar()]
+                random_minion = context.randomizer.select_summon_minion(two_cost_minions)
+                context.friendly_war_party.summon_in_combat(random_minion, context, summon_index + i + 1)
+                i += 1
 
 
 class SaltyLooter(MonsterCard):
@@ -866,9 +879,40 @@ class SoulJuggler(MonsterCard):
 
     def handle_event_powers(self, event: CardEvent, context: CombatPhaseContext):
         if event.event is EVENTS.DIES and event.card.monster_type == MONSTER_TYPES.DEMON and event.card in context.friendly_war_party.board:
-            damage = 6 if self.golden else 3
-            targets = [card for card in context.enemy_war_party.board if not card.dead]
-            if targets:
-                target = context.randomizer.select_enemy_minion(targets)
-                target.take_damage(damage, context)
-                target.resolve_death(context)  # TODO: Order of death resolution?
+            count = 2 if self.golden else 1
+            for _ in range(count):
+                targets = [card for card in context.enemy_war_party.board if not card.dead and not card.health <= 0]
+                if targets:
+                    target = context.randomizer.select_enemy_minion(targets)
+                    target.take_damage(3, context)
+                    target.resolve_death(context)  # TODO: Order of death resolution?
+
+
+class TwilightEmissary(MonsterCard):
+    tier = 3
+    base_attack = 4
+    base_health = 4
+    monster_type = MONSTER_TYPES.DRAGON
+    base_taunt = True
+    num_battlecry_targets = 1
+
+    def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
+        bonus = 4 if self.golden else 2
+        if targets:
+            targets[0].attack += bonus
+            targets[0].health += bonus
+
+    def validate_battlecry_target(self, card: MonsterCard) -> bool:
+        return card.monster_type == MONSTER_TYPES.DRAGON
+
+
+class Khadgar(MonsterCard):
+    tier = 3
+    base_attack = 2
+    base_health = 2
+    monster_type = None
+
+    def summon_minion_multiplier(self) -> int:
+        return 3 if self.golden else 2
+
+

@@ -150,7 +150,7 @@ class Player:
         if self.room_on_board():
             self.in_play.append(monster)
             self.check_golden(type(monster))
-        self.broadcast_buy_phase_event(CardEvent(monster, EVENTS.SUMMON_BUY))
+            self.broadcast_buy_phase_event(CardEvent(monster, EVENTS.SUMMON_BUY))
 
     def room_on_board(self):
         return len(self.in_play) < self.maximum_board_size

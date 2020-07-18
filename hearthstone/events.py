@@ -27,6 +27,12 @@ class BuyPhaseContext:
         self.owner = owner
         self.randomizer = randomizer
 
+    def summon_minion_multiplier(self) -> int:
+        summon_multiplier = 1
+        for card in self.owner.in_play:
+            summon_multiplier *= card.summon_minion_multiplier()
+        return summon_multiplier
+
 
 class CombatPhaseContext:
     def __init__(self, friendly_war_party: 'WarParty', enemy_war_party: 'WarParty', randomizer: 'Randomizer'):
@@ -46,3 +52,10 @@ class CombatPhaseContext:
 
     def enemy_context(self):
         return CombatPhaseContext(self.enemy_war_party, self.friendly_war_party, self.randomizer)
+
+    def summon_minion_multiplier(self) -> int:
+        summon_multiplier = 1
+        for card in self.friendly_war_party.board:
+            if not card.dead:
+                summon_multiplier *= card.summon_minion_multiplier()
+        return summon_multiplier
