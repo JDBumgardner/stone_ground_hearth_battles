@@ -29,7 +29,7 @@ class HearthstoneLinearNet(nn.Module):
 class HearthstoneFFSharedNet(nn.Module):
     def __init__(self, player_encoding: Feature, card_encoding: Feature):
         super().__init__()
-        self.hidden_size = 64
+        self.hidden_size = 1024
         # Shared hidden layer
         self.fc_hidden = nn.Linear(player_encoding.flattened_size() + card_encoding.flattened_size(), self.hidden_size)
         self.fc_policy = nn.Linear(self.hidden_size, action_encoding_size())

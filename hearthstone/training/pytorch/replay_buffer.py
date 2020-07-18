@@ -50,7 +50,7 @@ class SurveiledPytorchBot(PytorchBot):
         policy = self.policy(player)
         action_index = Categorical(torch.exp(policy[0])).sample()
         action = get_indexed_action(int(action_index))
-
+        #print(action)
         if not action.valid(player):
             logger.debug("No! Bad Citizen!")
         else:

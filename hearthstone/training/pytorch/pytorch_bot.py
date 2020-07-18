@@ -26,6 +26,8 @@ class PytorchBot(Agent):
                                        encoded_state.cards_tensor.unsqueeze(0)),
                                  EncodedActionSet(valid_actions_mask.player_action_tensor.unsqueeze(0),
                                                   valid_actions_mask.card_action_tensor.unsqueeze(0)))
+        #print(player.tavern.turn_count, player.health, float(value), sorted([p.health for p in player.tavern.players.values()]), encoded_state.player_tensor)
+        #print(player.in_play)
         return policy
 
     def buy_phase_action(self, player: 'Player') -> Action:

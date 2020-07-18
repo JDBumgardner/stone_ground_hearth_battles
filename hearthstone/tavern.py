@@ -48,6 +48,7 @@ class Tavern:
 
     def combat_step(self):
         for player_name, player in self.players.items():
+            player.decrease_tavern_upgrade_cost()
             player.broadcast_buy_phase_event(CardEvent(None, EVENTS.BUY_END))
         for player_1, player_2 in self.current_player_pairings:
             combat.fight_boards(WarParty(player_1), WarParty(player_2), self.randomizer)

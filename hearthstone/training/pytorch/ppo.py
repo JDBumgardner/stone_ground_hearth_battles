@@ -9,7 +9,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 from hearthstone.host import RoundRobinHost
 from hearthstone.ladder.ladder import Contestant, update_ratings, print_standings, save_ratings
-from hearthstone.training.pytorch.feedforward_net import HearthstoneFFNet
+from hearthstone.training.pytorch.feedforward_net import HearthstoneFFNet, HearthstoneFFSharedNet
 from hearthstone.training.pytorch.hearthstone_state_encoder import Transition, get_indexed_action, \
     DEFAULT_PLAYER_ENCODING, DEFAULT_CARDS_ENCODING
 from hearthstone.training.pytorch.policy_gradient import easier_contestants, tensorize_batch
@@ -18,9 +18,11 @@ from hearthstone.training.pytorch.replay_buffer import ReplayBuffer, SurveiledPy
 
 # TODO STOP THIS HACK
 global_step = 0
+expensive_tensorboard = False
 
 def learn(tensorboard: SummaryWriter, optimizer: optim.Adam, learning_net: nn.Module, replay_buffer: ReplayBuffer, batch_size, policy_weight):
     global global_step
+    global expensive_tensorboard
     transitions: List[Transition] = replay_buffer.sample(batch_size)
     transition_batch = tensorize_batch(transitions)
     # TODO turn off gradient here
@@ -59,23 +61,25 @@ def learn(tensorboard: SummaryWriter, optimizer: optim.Adam, learning_net: nn.Mo
     tensorboard.add_histogram("policy_ratio/train", ratio, global_step)
     entropy_loss = - 0.000001 * torch.sum(policy * torch.exp(policy))
     tensorboard.add_scalar("entropy_loss/train", entropy_loss, global_step)
-    loss = policy_loss * policy_weight + value_loss + entropy_loss
+    loss = policy_loss * policy_weight + value_loss #+ entropy_loss
 
     optimizer.zero_grad()
     loss.backward()
     optimizer.step()
+    if expensive_tensorboard:
+        for tag, parm in learning_net.named_parameters():
+            tensorboard.add_histogram(f"gradients_{tag}/train", parm.grad.data, global_step)
     global_step += 1
 
 
 def main():
-    batch_size = 512
-    num_workers = 6
+    batch_size = 256
 
     tensorboard = SummaryWriter(f"../../../data/learning/pytorch/tensorboard/{datetime.now().isoformat()}")
     logging.getLogger().setLevel(logging.INFO)
     other_contestants = easier_contestants()
-    learning_net = HearthstoneFFNet(DEFAULT_PLAYER_ENCODING, DEFAULT_CARDS_ENCODING)
-    optimizer = optim.Adam(learning_net.parameters(), lr=0.0003)
+    learning_net = HearthstoneFFSharedNet(DEFAULT_PLAYER_ENCODING, DEFAULT_CARDS_ENCODING)
+    optimizer = optim.Adam(learning_net.parameters(), lr=0.00003)
     replay_buffer = ReplayBuffer(10000)
     learning_bot = SurveiledPytorchBot(learning_net, replay_buffer)
     learning_bot_contestant = Contestant("LearningBot", learning_bot)
@@ -85,7 +89,7 @@ def main():
     #add_net_to_tensorboard(tensorboard, learning_net)
 
     tensorboard.add_text("learning_algorithm", "PPO")
-    for _ in range(100000):
+    for _ in range(1000000):
         round_contestants = [learning_bot_contestant] + random.sample(other_contestants, k=7)
         host = RoundRobinHost({contestant.name: contestant.agent for contestant in round_contestants})
         host.play_game()
@@ -100,7 +104,7 @@ def main():
             contestant.games_played += 1
         if learning_bot_contestant in round_contestants:
             if len(replay_buffer) >= batch_size:
-                for i in range(20):
+                for i in range(15):
                     learn(tensorboard, optimizer, learning_net, replay_buffer, batch_size, 2.0)
                 replay_buffer.clear()
 

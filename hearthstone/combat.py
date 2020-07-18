@@ -82,7 +82,7 @@ def fight_boards(war_party_1: 'WarParty', war_party_2: 'WarParty', randomizer: '
     # Friendly vs enemy warparty does not matter for broadcast_combat_event
     CombatPhaseContext(war_party_1, war_party_2, randomizer).broadcast_combat_event(start_combat_event)
 
-    while True:
+    for _ in range(100):
         attacker = attacking_war_party.find_next()
         defender = defending_war_party.get_random_monster(randomizer)
         logger.debug(f'{attacking_war_party.owner.name} is attacking {defending_war_party.owner.name}')

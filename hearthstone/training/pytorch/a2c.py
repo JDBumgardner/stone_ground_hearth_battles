@@ -52,7 +52,7 @@ def learn(tensorboard: SummaryWriter, optimizer: optim.Adam, learning_net: nn.Mo
     tensorboard.add_scalar("policy_loss/train", policy_loss, global_step)
     tensorboard.add_scalar("value_loss/train", value_loss, global_step)
 
-    entropy_loss = - 0.000001 * torch.sum(policy * torch.exp(policy))
+    entropy_loss = 0.000001 * torch.sum(policy * torch.exp(policy))
     tensorboard.add_scalar("entropy_loss/train", entropy_loss, global_step)
     loss = policy_loss * policy_weight + value_loss + entropy_loss
 

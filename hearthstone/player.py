@@ -70,6 +70,9 @@ class Player:
     def apply_turn_start_income(self):
         self.coins = self.coin_income_rate
 
+    def decrease_tavern_upgrade_cost(self):
+        self.tavern_upgrade_cost = max(0, self.tavern_upgrade_cost - 1)
+
     def upgrade_tavern(self):
         assert self.validate_upgrade_tavern()
         self.coins -= self.tavern_upgrade_cost
@@ -155,9 +158,9 @@ class Player:
     def draw(self):
         if self.frozen:
             self.frozen = False
-            return
-        self.return_cards()
-        number_of_cards = 3 + self.tavern_tier // 2
+        else:
+            self.return_cards()
+        number_of_cards = 3 + self.tavern_tier // 2 - len(self.store)
         self.store.extend([self.tavern.deck.draw(self) for _ in range(number_of_cards)])
 
     def purchase(self, index: StoreIndex):
