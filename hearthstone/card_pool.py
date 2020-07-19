@@ -314,7 +314,6 @@ class BigBadWolf(MonsterCard):
 class MetaltoothLeaper(MonsterCard):
     tier = 2
     monster_type = MONSTER_TYPES.BEAST
-    base_attack = 3
     base_health = 3
 
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
@@ -915,4 +914,81 @@ class Khadgar(MonsterCard):
     def summon_minion_multiplier(self) -> int:
         return 3 if self.golden else 2
 
+
+class SavannahHighmane(MonsterCard):
+    tier = 4
+    base_attack = 6
+    base_health = 5
+    monster_type = MONSTER_TYPES.BEAST
+
+    def base_deathrattle(self, context: CombatPhaseContext):
+        summon_index = context.friendly_war_party.get_index(self)
+        for i in range(2 * context.summon_minion_multiplier()):
+            hyena = Hyena()
+            if self.golden:
+                hyena.golden_transformation([])
+            context.friendly_war_party.summon_in_combat(hyena, context, summon_index + i + 1)
+
+
+class Hyena(MonsterCard):
+    tier = 1
+    base_attack = 2
+    base_health = 2
+    monster_type = MONSTER_TYPES.BEAST
+    token = True
+
+
+class SecurityRover(MonsterCard):
+    tier = 4
+    base_attack = 2
+    base_health = 6
+    monster_type = MONSTER_TYPES.MECH
+
+    def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
+        if event.event is EVENTS.CARD_DAMAGED and self == event.card:
+            summon_index = context.friendly_war_party.get_index(self)
+            for i in range(context.summon_minion_multiplier()):
+                bot = GuardBot()
+                if self.golden:
+                    bot.golden_transformation([])
+                context.friendly_war_party.summon_in_combat(bot, context, summon_index + i + 1)
+
+
+class GuardBot(MonsterCard):
+    tier = 1
+    base_attack = 2
+    base_health = 3
+    monster_type = MONSTER_TYPES.MECH
+    token = True
+    base_taunt = True
+
+
+class VirmenSensei(MonsterCard):
+    tier = 4
+    base_attack = 4
+    base_health = 5
+    monster_type = None
+    num_battlecry_targets = 1
+
+    def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
+        bonus = 4 if self.golden else 2
+        if targets:
+            targets[0].attack += bonus
+            targets[0].health += bonus
+
+    def validate_battlecry_target(self, card: MonsterCard) -> bool:
+        return card.monster_type == MONSTER_TYPES.BEAST
+
+
+class RipsnarlCaptain(MonsterCard):
+    tier = 4
+    base_attack = 3
+    base_health = 4
+    monster_type = MONSTER_TYPES.PIRATE
+
+    def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
+        if event.event is EVENTS.ON_ATTACK and event.card.monster_type == MONSTER_TYPES.PIRATE and event.card in context.friendly_war_party.board and event.card != self:
+            bonus = 4 if self.golden else 2
+            event.card.attack += bonus
+            event.card.health += bonus
 

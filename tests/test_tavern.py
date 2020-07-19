@@ -1020,7 +1020,6 @@ class CardTests(unittest.TestCase):
         self.assertEqual(player_1.in_play[1].attack, 6)
         self.assertEqual(player_1.in_play[1].health, 2)
 
-
     def test_salty_looter(self):
         tavern = Tavern()
         player_1 = tavern.add_player_with_hero("Dante_Kong")
@@ -1044,7 +1043,6 @@ class CardTests(unittest.TestCase):
         self.assertEqual(player_1.in_play[1].attack, 2)
         self.assertEqual(player_1.in_play[1].health, 1)
 
-
     def test_twilight_emissary(self):
         tavern = Tavern()
         player_1 = tavern.add_player_with_hero("Dante_Kong")
@@ -1067,7 +1065,6 @@ class CardTests(unittest.TestCase):
         self.assertEqual(player_1.in_play[0].health, 5)
         self.assertEqual(player_1.in_play[1].attack, 4)
         self.assertEqual(player_1.in_play[1].health, 4)
-
 
     def test_khadgar(self):
         tavern = Tavern()
@@ -1103,6 +1100,29 @@ class CardTests(unittest.TestCase):
         self.assertCardListEquals(player_1.hand,
                                   [TabbyCat])
         self.assertTrue(player_1.hand[0].golden)
+
+    def test_virmen_sensei(self):
+        tavern = Tavern()
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        self.upgrade_to_tier(tavern, 4)
+        tavern.randomizer = RepeatedCardForcer([ScavengingHyena])
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        tavern.combat_step()
+        tavern.randomizer = RepeatedCardForcer([VirmenSensei])
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        self.assertCardListEquals(player_1.in_play, [ScavengingHyena])
+        self.assertEqual(player_1.in_play[0].attack, 2)
+        self.assertEqual(player_1.in_play[0].health, 2)
+        player_1.summon_from_hand(HandIndex(0), [BoardIndex(0)])
+        self.assertCardListEquals(player_1.in_play, [ScavengingHyena, VirmenSensei])
+        self.assertEqual(player_1.in_play[0].attack, player_1.in_play[0].base_attack + 2)
+        self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health + 2)
+        self.assertEqual(player_1.in_play[1].attack, 4)
+        self.assertEqual(player_1.in_play[1].health, 5)
 
 
 if __name__ == '__main__':
