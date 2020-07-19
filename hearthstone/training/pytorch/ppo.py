@@ -129,7 +129,7 @@ def ppo(hparams: Dict, time_limit_secs=None, early_stopper= None):
     learning_bot_contestant = Contestant("LearningBot", lambda: SurveiledPytorchBot(learning_net, replay_buffer))
     learning_bot_contestant.elo = 950
     other_contestants = easy_contestants()
-    tensorboard.add_hparams(hparam_dict=hparams, metric_dict={})
+
     workers = [Worker(learning_bot_contestant, other_contestants) for _ in range(hparams['num_workers'])]
 
     for _ in range(1000000):
@@ -152,6 +152,7 @@ def ppo(hparams: Dict, time_limit_secs=None, early_stopper= None):
         if time_limit_secs and time_elapsed > time_limit_secs:
             break
 
+    tensorboard.add_hparams(hparam_dict=hparams, metric_dict={"optuna_elo": learning_bot_contestant.elo})
     tensorboard.close()
     return learning_bot_contestant.elo
 

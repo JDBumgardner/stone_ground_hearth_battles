@@ -27,8 +27,11 @@ def objective(trial:optuna.Trial):
 
 
 def main():
-    study = optuna.create_study(direction="maximize")
-    study.optimize(objective, n_jobs=10)
+    study = optuna.create_study(storage="sqlite:///../../../data/learning/pytorch/optuna/study.db", study_name="ppo_study", direction="maximize", load_if_exists=True)
+    try:
+        study.optimize(objective, n_jobs=10)
+    except KeyboardInterrupt:
+        pass
     print(study.best_params)
 
 
