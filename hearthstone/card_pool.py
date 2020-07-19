@@ -314,6 +314,7 @@ class BigBadWolf(MonsterCard):
 class MetaltoothLeaper(MonsterCard):
     tier = 2
     monster_type = MONSTER_TYPES.BEAST
+    base_attack = 3
     base_health = 3
 
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
