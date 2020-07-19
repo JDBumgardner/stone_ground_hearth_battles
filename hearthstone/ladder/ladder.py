@@ -49,15 +49,15 @@ def print_standings(contestants: List[Contestant]):
 def run_tournament(contestants: List[Contestant], num_rounds=10):
     agents = {contestant.name: contestant.agent_generator() for contestant in contestants}
     for _ in range(num_rounds):
-        round_contestant_names = random.sample(agents, k=8)
-        host = RoundRobinHost({name: agents[name] for name in round_contestant_names})
+        round_contestants = random.sample(contestants, k=8)
+        host = RoundRobinHost({c.name: agents[c.name] for c in round_contestants})
         host.play_game()
         winner_names = list(reversed([name for name, player in host.tavern.losers]))
         print(host.tavern.losers[-1][1].in_play)
-        ranked_contestants = sorted(round_contestant_names, key=lambda c: winner_names.index(c.name))
+        ranked_contestants = sorted(round_contestants, key=lambda c: winner_names.index(c.name))
         update_ratings(ranked_contestants)
         print_standings(contestants)
-        for contestant in round_contestant_names:
+        for contestant in round_contestants:
             contestant.games_played += 1
 
 
