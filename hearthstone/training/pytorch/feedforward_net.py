@@ -7,9 +7,8 @@ import torch.nn.functional as F
 
 
 class HearthstoneLinearNet(nn.Module):
-    def __init__(self, player_encoding: Feature, card_encoding: Feature):
+    def __init__(self, player_encoding: Feature, card_encoding: Feature, hidden_size=None):
         super().__init__()
-        self.hidden_size = 64
         # Shared hidden layer
         self.fc_policy = nn.Linear(player_encoding.flattened_size() + card_encoding.flattened_size(), action_encoding_size())
         self.fc_value = nn.Linear(player_encoding.flattened_size() + card_encoding.flattened_size(), 1)
@@ -27,9 +26,8 @@ class HearthstoneLinearNet(nn.Module):
 
 
 class HearthstoneFFSharedNet(nn.Module):
-    def __init__(self, player_encoding: Feature, card_encoding: Feature):
+    def __init__(self, player_encoding: Feature, card_encoding: Feature, hidden_size=1024):
         super().__init__()
-        self.hidden_size = 1024
         # Shared hidden layer
         self.fc_hidden1 = nn.Linear(player_encoding.flattened_size() + card_encoding.flattened_size(), self.hidden_size)
         self.fc_hidden2 = nn.Linear(self.hidden_size, self.hidden_size)
@@ -51,23 +49,47 @@ class HearthstoneFFSharedNet(nn.Module):
 
 
 class HearthstoneFFNet(nn.Module):
-    def __init__(self, player_encoding: Feature, card_encoding: Feature):
-        super(HearthstoneFFNet, self).__init__()
-        self.hidden_size = 64
-        # Shared hidden layer
-        self.fc1_policy = nn.Linear(player_encoding.flattened_size() + card_encoding.flattened_size(), self.hidden_size)
-        self.fc1_value = nn.Linear(player_encoding.flattened_size() + card_encoding.flattened_size(), self.hidden_size)
-        self.fc_policy = nn.Linear(self.hidden_size, action_encoding_size())
-        self.fc_value = nn.Linear(self.hidden_size, 1)
+    def __init__(self, player_encoding: Feature, card_encoding: Feature, hidden_layers=1, hidden_size=1024, shared=False, activation_function="gelu"):
+        super().__init__()
+        input_size = player_encoding.flattened_size() + card_encoding.flattened_size()
+        if hidden_layers == 0:
+            hidden_size = input_size
+        self.activation_function = activation_function
+        self.shared = shared
+        self.hidden_layers = hidden_layers
+        self.policy_hidden_layers = []
+        self.value_hidden_layers = []
+        for i in range(hidden_layers):
+            self.policy_hidden_layers.append(nn.Linear(input_size if i == 0 else hidden_size, hidden_size))
+            if shared:
+                self.value_hidden_layers.append(self.policy_hidden_layers[-1])
+            else:
+                self.value_hidden_layers.append(nn.Linear(input_size if i == 0 else hidden_size, hidden_size))
+        self.fc_policy = nn.Linear(hidden_size, action_encoding_size())
+        self.fc_value = nn.Linear(hidden_size, 1)
+
+    def activation(self, x):
+        if self.activation_function == "relu":
+            return F.relu(x)
+        elif self.activation_function == "gelu":
+            return F.gelu(x)
 
     def forward(self, state: State, valid_actions: EncodedActionSet):
-        x = torch.cat((state.player_tensor.flatten(1), state.cards_tensor.flatten(1)), dim=1)
-        policy_hidden = F.relu(self.fc1_policy(x))
-        value_hidden = F.relu(self.fc1_value(x))
-        policy = self.fc_policy(policy_hidden)
+        x_policy = torch.cat((state.player_tensor.flatten(1), state.cards_tensor.flatten(1)), dim=1)
+        x_value = x_policy
+
+        for i in range(self.hidden_layers):
+            x_policy = self.activation(self.policy_hidden_layers[i](x_policy))
+            if self.shared:
+                x_value = x_policy
+            else:
+                x_value = self.activation(
+                    self.value_hidden_layers[i](x_value))
+
+        policy = self.fc_policy(x_policy)
         # Disable invalid actions with a "masked" softmax
         valid_action_tensor = torch.cat((valid_actions.player_action_tensor.flatten(1), valid_actions.card_action_tensor.flatten(1)), dim=1)
         policy = policy.masked_fill(valid_action_tensor.logical_not(), -1e30)
         policy = F.log_softmax(policy, dim=1)
-        value = self.fc_value(value_hidden)
+        value = self.fc_value(x_value)
         return policy, value

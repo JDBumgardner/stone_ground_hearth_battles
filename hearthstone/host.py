@@ -20,7 +20,7 @@ class RoundRobinHost:
         for player_name, player in self.tavern.players.items():
             player.choose_hero(self.agents[player_name].hero_choice_action(player))
 
-    def play_round(self):
+    def play_round_generator(self) -> typing.Generator:
         self.tavern.buying_step()
         for player_name, player in self.tavern.players.items():
             if player.health <= 0:
@@ -28,6 +28,7 @@ class RoundRobinHost:
             agent = self.agents[player_name]
             for _ in range(20):
                 action = agent.buy_phase_action(player)
+                yield
                 action.apply(player)
                 if player.discovered_cards:
                     discovered_card = agent.discover_choice_action(player)
@@ -43,6 +44,10 @@ class RoundRobinHost:
         if self.tavern.game_over():
             for position, (name, player) in enumerate(reversed(self.tavern.losers)):
                 self.agents[name].game_over(player, position)
+
+    def play_round(self):
+        for _ in self.play_round_generator():
+            pass
 
     def game_over(self):
         return self.tavern.game_over()
