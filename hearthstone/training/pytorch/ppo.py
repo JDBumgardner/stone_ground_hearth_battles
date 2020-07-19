@@ -19,29 +19,25 @@ from hearthstone.training.pytorch.replay_buffer import ReplayBuffer, SurveiledPy
 
 
 class Worker:
-    def __init__(self, net: nn.Module, replay_buffer:ReplayBuffer):
-        self.net = net
-        self.replay_buffer = replay_buffer
-        self.other_contestants = easy_contestants()
-        self.learning_bot = SurveiledPytorchBot(net, replay_buffer)
-        self.learning_bot_contestant = Contestant("LearningBot", self.learning_bot)
-        self.learning_bot_contestant.elo = 900
+    def __init__(self,learning_bot_contestant: Contestant, other_contestants: List[Contestant]):
+        self.other_contestants = other_contestants
+        self.learning_bot_contestant = learning_bot_contestant
         self.host = None
         self.round_contestants = None
         self._start_new_round()
 
     def _start_new_round(self):
         self.round_contestants = [self.learning_bot_contestant] + random.sample(self.other_contestants, k=7)
-        self.host = RoundRobinHost({contestant.name: contestant.agent for contestant in self.round_contestants})
+        self.host = RoundRobinHost( {contestant.name: contestant.agent_generator() for contestant in self.round_contestants})
         self.host.start_game()
 
     def play_round(self):
         self.host.play_round()
         if self.host.game_over():
             winner_names = list(reversed([name for name, player in self.host.tavern.losers]))
-            # print("---------------------------------------------------------------")
-            # print(winner_names)
-            # print(self.host.tavern.players[self.learning_bot_contestant.name].in_play)
+            print("---------------------------------------------------------------")
+            print(winner_names)
+            print(self.host.tavern.players[self.learning_bot_contestant.name].in_play)
             ranked_contestants = sorted(self.round_contestants, key=lambda c: winner_names.index(c.name))
             update_ratings(ranked_contestants)
             print_standings([self.learning_bot_contestant] + self.other_contestants)
@@ -53,8 +49,8 @@ class Worker:
 
 # TODO STOP THIS HACK
 expensive_tensorboard = False
-
-
+# Some things crash under optuna.
+enable_crashing_tensorboard = False
 def learn(tensorboard: SummaryWriter, optimizer: optim.Optimizer, learning_net: nn.Module, replay_buffer: ReplayBuffer, batch_size, policy_weight, entropy_weight, ppo_epsilon, global_step):
     global expensive_tensorboard
     transitions: List[Transition] = replay_buffer.sample(batch_size)
@@ -84,22 +80,24 @@ def learn(tensorboard: SummaryWriter, optimizer: optim.Optimizer, learning_net: 
     value_loss = torch.max(advantage.pow(2), clipped_advantage.pow(2)).mean()
     entropy_loss = entropy_weight * torch.sum(policy * torch.exp(policy))
 
-    if value.shape[0] > 0:
+    #Not actually expensive
+    if enable_crashing_tensorboard:
         tensorboard.add_histogram("value/train", value, global_step)
         tensorboard.add_histogram("next_value/train", next_value, global_step)
         tensorboard.add_histogram("advantage/train", advantage, global_step)
-        tensorboard.add_text("action/train", str(get_indexed_action(int(transition_batch.action[0]))), global_step)
-        tensorboard.add_scalar("avg_reward/train", transition_batch.reward.masked_select(transition_batch.is_terminal).float().mean(), global_step)
-        tensorboard.add_scalar("avg_value/train", value.mean(), global_step)
-        tensorboard.add_scalar("avg_advantage/train", advantage.mean(), global_step)
-        tensorboard.add_scalar("policy_loss/train", policy_loss, global_step)
-        tensorboard.add_scalar("value_loss/train", value_loss, global_step)
-        tensorboard.add_scalar("avg_unclipped_policy_loss/train", unclipped_loss.mean(), global_step)
-        tensorboard.add_scalar("avg_clipped_policy_loss/train", clipped_loss.mean(), global_step)
         tensorboard.add_histogram("unclipped_policy_loss/train", unclipped_loss, global_step)
         tensorboard.add_histogram("clipped_policy_loss/train", clipped_loss, global_step)
         tensorboard.add_histogram("policy_ratio/train", ratio, global_step)
-        tensorboard.add_scalar("entropy_loss/train", entropy_loss, global_step)
+    tensorboard.add_text("action/train", str(get_indexed_action(int(transition_batch.action[0]))), global_step)
+    tensorboard.add_scalar("avg_reward/train", transition_batch.reward.masked_select(transition_batch.is_terminal).float().mean(), global_step)
+    tensorboard.add_scalar("avg_value/train", value.mean(), global_step)
+    tensorboard.add_scalar("avg_advantage/train", advantage.mean(), global_step)
+    tensorboard.add_scalar("policy_loss/train", policy_loss, global_step)
+    tensorboard.add_scalar("value_loss/train", value_loss, global_step)
+    tensorboard.add_scalar("avg_unclipped_policy_loss/train", unclipped_loss.mean(), global_step)
+    tensorboard.add_scalar("avg_clipped_policy_loss/train", clipped_loss.mean(), global_step)
+
+    tensorboard.add_scalar("entropy_loss/train", entropy_loss, global_step)
     loss = policy_loss * policy_weight + value_loss + entropy_loss
 
     optimizer.zero_grad()
@@ -128,9 +126,12 @@ def ppo(hparams: Dict, time_limit_secs=None, early_stopper= None):
         assert False
     global_step = 0
     replay_buffer = ReplayBuffer(10000)
+    learning_bot_contestant = Contestant("LearningBot", lambda: SurveiledPytorchBot(learning_net, replay_buffer))
+    learning_bot_contestant.elo = 950
+    other_contestants = easy_contestants()
     tensorboard.add_hparams(hparam_dict=hparams, metric_dict={})
-    workers = [Worker(learning_net, replay_buffer) for _ in range(hparams['num_workers'])]
-    mean_elo = 1200
+    workers = [Worker(learning_bot_contestant, other_contestants) for _ in range(hparams['num_workers'])]
+
     for _ in range(1000000):
         for worker in workers:
             worker.play_round()
@@ -143,17 +144,16 @@ def ppo(hparams: Dict, time_limit_secs=None, early_stopper= None):
                 global_step += 1
             replay_buffer.clear()
         time_elapsed = time.time() - start_time
-        mean_elo = sum([worker.learning_bot_contestant.elo for worker in workers]) / len(workers)
-        tensorboard.add_scalar("mean_elo/train",mean_elo, global_step=global_step)
+        tensorboard.add_scalar("elo/train", learning_bot_contestant.elo, global_step=global_step)
         if early_stopper:
-            early_stopper.report(mean_elo, time_elapsed)
+            early_stopper.report(learning_bot_contestant.elo, time_elapsed)
             if early_stopper.should_prune():
                 break
         if time_limit_secs and time_elapsed > time_limit_secs:
             break
 
     tensorboard.close()
-    return mean_elo
+    return learning_bot_contestant.elo
 
 
 def main():

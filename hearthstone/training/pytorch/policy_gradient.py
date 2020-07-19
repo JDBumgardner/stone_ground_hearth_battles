@@ -33,38 +33,38 @@ def add_net_to_tensorboard(tensorboard: SummaryWriter, net: nn.Module):
 
 
 def easiest_contestants():
-    all_bots = [Contestant(f"RandomBot {i}", RandomBot(i)) for i in range(20)]
-    all_bots += [Contestant(f"NoActionBot ", NoActionBot())]
-    all_bots += [Contestant(f"CheapoBot", CheapoBot(3))]
+    all_bots = [Contestant(f"RandomBot {i}", lambda: RandomBot(i)) for i in range(20)]
+    all_bots += [Contestant(f"NoActionBot ", lambda: NoActionBot())]
+    all_bots += [Contestant(f"CheapoBot", lambda: CheapoBot(3))]
     return all_bots
 
 
 def easier_contestants():
-    all_bots = [Contestant(f"RandomBot {i}", RandomBot(i)) for i in range(20)]
-    all_bots += [Contestant(f"NoActionBot ", NoActionBot())]
-    all_bots += [Contestant(f"CheapoBot", CheapoBot(3))]
-    all_bots += [Contestant(f"SupremacyBot {t}", SupremacyBot(t, False, i)) for i, t in
+    all_bots = [Contestant(f"RandomBot {i}", lambda: RandomBot(i)) for i in range(20)]
+    all_bots += [Contestant(f"NoActionBot ", lambda: NoActionBot())]
+    all_bots += [Contestant(f"CheapoBot", lambda: CheapoBot(3))]
+    all_bots += [Contestant(f"SupremacyBot {t}", lambda: SupremacyBot(t, False, i)) for i, t in
                  enumerate([MONSTER_TYPES.MURLOC, MONSTER_TYPES.BEAST, MONSTER_TYPES.MECH, MONSTER_TYPES.DRAGON,
                             MONSTER_TYPES.DEMON, MONSTER_TYPES.PIRATE])]
-    all_bots += [Contestant(f"SupremacyUpgradeBot {t}", SupremacyBot(t, True, i)) for i, t in
+    all_bots += [Contestant(f"SupremacyUpgradeBot {t}", lambda: SupremacyBot(t, True, i)) for i, t in
                  enumerate([MONSTER_TYPES.MURLOC, MONSTER_TYPES.BEAST, MONSTER_TYPES.MECH, MONSTER_TYPES.DRAGON,
                             MONSTER_TYPES.DEMON, MONSTER_TYPES.PIRATE])]
-    all_bots += [Contestant("SauroliskBot", SauroliskBot(5))]
+    all_bots += [Contestant("SauroliskBot", lambda: SauroliskBot(5))]
     return all_bots
 
 
 def easy_contestants():
-    all_bots = [Contestant(f"RandomBot", RandomBot(1))]
-    all_bots += [Contestant(f"NoActionBot ", NoActionBot())]
-    all_bots += [Contestant(f"CheapoBot", CheapoBot(3))]
-    all_bots += [Contestant(f"SupremacyBot {t}", SupremacyBot(t, False, i)) for i, t in
+    all_bots = [Contestant(f"RandomBot",lambda: RandomBot(1))]
+    all_bots += [Contestant(f"NoActionBot ", lambda: NoActionBot())]
+    all_bots += [Contestant(f"CheapoBot", lambda: CheapoBot(3))]
+    all_bots += [Contestant(f"SupremacyBot {t}", lambda: SupremacyBot(t, False, i)) for i, t in
                  enumerate([MONSTER_TYPES.MURLOC, MONSTER_TYPES.BEAST, MONSTER_TYPES.MECH, MONSTER_TYPES.DRAGON,
                             MONSTER_TYPES.DEMON, MONSTER_TYPES.PIRATE])]
-    all_bots += [Contestant(f"SupremacyUpgradeBot {t}", SupremacyBot(t, True, i)) for i, t in
+    all_bots += [Contestant(f"SupremacyUpgradeBot {t}", lambda: SupremacyBot(t, True, i)) for i, t in
                  enumerate([MONSTER_TYPES.MURLOC, MONSTER_TYPES.BEAST, MONSTER_TYPES.MECH, MONSTER_TYPES.DRAGON,
                             MONSTER_TYPES.DEMON, MONSTER_TYPES.PIRATE])]
-    all_bots += [Contestant("SauroliskBot", SauroliskBot(5))]
-    all_bots += [Contestant("PriorityHealthAttackBot", attack_health_priority_bot(10, PriorityBot))]
+    all_bots += [Contestant("SauroliskBot", lambda: SauroliskBot(5))]
+    all_bots += [Contestant("PriorityHealthAttackBot",lambda:  attack_health_priority_bot(10, PriorityBot))]
     return all_bots
 
 StateBatch = namedtuple('StateBatch', ('player_tensor', 'cards_tensor'))
@@ -78,7 +78,7 @@ def tensorize_batch(transitions: List[Transition]) -> TransitionBatch:
     valid_player_actions_tensor = torch.stack([transition.valid_actions.player_action_tensor for transition in transitions])
     valid_card_actions_tensor = torch.stack([transition.valid_actions.card_action_tensor for transition in transitions])
     action_tensor = torch.tensor([transition.action for transition in transitions])
-    action_prob_tensor = torch.Tensor([transition.action_prob for transition in transitions])
+    action_prob_tensor = torch.tensor([transition.action_prob for transition in transitions])
     next_player_tensor = torch.stack([transition.next_state.player_tensor for transition in transitions])
     next_cards_tensor = torch.stack([transition.next_state.cards_tensor for transition in transitions])
     reward_tensor = torch.tensor([transition.reward for transition in transitions])

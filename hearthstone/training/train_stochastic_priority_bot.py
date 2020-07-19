@@ -20,7 +20,7 @@ def main():
 
     for _ in range(1000):
         round_contestants = [learning_bot_contestant] + random.sample(other_contestants, k=7)
-        host = RoundRobinHost({contestant.name: contestant.agent for contestant in round_contestants})
+        host = RoundRobinHost({contestant.name: contestant.agent_generator() for contestant in round_contestants})
         host.play_game()
         winner_names = list(reversed([name for name, player in host.tavern.losers]))
         print("---------------------------------------------------------------")

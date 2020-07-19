@@ -28,7 +28,7 @@ def objective(trial:optuna.Trial):
 
 def main():
     study = optuna.create_study(direction="maximize")
-    study.optimize(objective, n_jobs=-1)
+    study.optimize(objective, n_jobs=10)
     print(study.best_params)
 
 

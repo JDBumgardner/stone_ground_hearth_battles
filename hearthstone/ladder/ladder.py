@@ -1,8 +1,9 @@
 import json
 import random
 from datetime import datetime
-from typing import List
+from typing import List, Callable
 
+from hearthstone.agent import Agent
 from hearthstone.battlebots.cheapo_bot import CheapoBot
 from hearthstone.battlebots.get_bot_contestants import get_priority_bot_contestant_tuples
 from hearthstone.battlebots.no_action_bot import NoActionBot
@@ -12,11 +13,10 @@ from hearthstone.battlebots.supremacy_bot import SupremacyBot
 from hearthstone.host import RoundRobinHost
 from hearthstone.monster_types import MONSTER_TYPES
 
-
 class Contestant:
-    def __init__(self, name, agent):
+    def __init__(self, name,  agent_generator: Callable[[], Agent]):
         self.name = name
-        self.agent = agent
+        self.agent_generator = agent_generator
         self.elo = 1200
         self.games_played = 0
 
@@ -47,28 +47,29 @@ def print_standings(contestants: List[Contestant]):
 
 
 def run_tournament(contestants: List[Contestant], num_rounds=10):
+    agents = {contestant.name: contestant.agent_generator() for contestant in contestants}
     for _ in range(num_rounds):
-        round_contestants = random.sample(contestants, k=8)
-        host = RoundRobinHost({contestant.name: contestant.agent for contestant in round_contestants})
+        round_contestant_names = random.sample(agents, k=8)
+        host = RoundRobinHost({name: agents[name] for name in round_contestant_names})
         host.play_game()
         winner_names = list(reversed([name for name, player in host.tavern.losers]))
         print(host.tavern.losers[-1][1].in_play)
-        ranked_contestants = sorted(round_contestants, key=lambda c: winner_names.index(c.name))
+        ranked_contestants = sorted(round_contestant_names, key=lambda c: winner_names.index(c.name))
         update_ratings(ranked_contestants)
         print_standings(contestants)
-        for contestant in round_contestants:
+        for contestant in round_contestant_names:
             contestant.games_played += 1
 
 
 def all_contestants():
-    all_bots = [Contestant(f"RandomBot", RandomBot(1))]
-    all_bots += [Contestant(f"NoActionBot ", NoActionBot())]
-    all_bots += [Contestant(f"CheapoBot", CheapoBot(3))]
-    all_bots += [Contestant(f"SupremacyBot {t}", SupremacyBot(t, False, i)) for i, t in
+    all_bots = [Contestant(f"RandomBot", lambda: RandomBot(1))]
+    all_bots += [Contestant(f"NoActionBot ", lambda: NoActionBot())]
+    all_bots += [Contestant(f"CheapoBot", lambda: CheapoBot(3))]
+    all_bots += [Contestant(f"SupremacyBot {t}", lambda: SupremacyBot(t, False, i)) for i, t in
                  enumerate([MONSTER_TYPES.MURLOC, MONSTER_TYPES.BEAST, MONSTER_TYPES.MECH, MONSTER_TYPES.DRAGON, MONSTER_TYPES.DEMON, MONSTER_TYPES.PIRATE])]
-    all_bots += [Contestant(f"SupremacyUpgradeBot {t}", SupremacyBot(t, True, i)) for i, t in
+    all_bots += [Contestant(f"SupremacyUpgradeBot {t}", lambda: SupremacyBot(t, True, i)) for i, t in
                  enumerate([MONSTER_TYPES.MURLOC, MONSTER_TYPES.BEAST, MONSTER_TYPES.MECH, MONSTER_TYPES.DRAGON, MONSTER_TYPES.DEMON, MONSTER_TYPES.PIRATE])]
-    all_bots += [Contestant("SauroliskBot", SauroliskBot(5))]
+    all_bots += [Contestant("SauroliskBot", lambda: SauroliskBot(5))]
     # all_bots += [Contestant("PriorityHealthAttackBot", attack_health_priority_bot(6))]
     # all_bots += [Contestant(f"PriorityRacistBot {t}", racist_priority_bot(t, i)) for i, t in
     #              enumerate([MONSTER_TYPES.MURLOC, MONSTER_TYPES.BEAST, MONSTER_TYPES.MECH, MONSTER_TYPES.DRAGON, MONSTER_TYPES.DEMON, MONSTER_TYPES.PIRATE])]
@@ -86,7 +87,7 @@ def all_contestants():
     # all_bots += [Contestant("PriorityBuffSauroliskBot", priority_saurolisk_buff_bot(17))]
     # all_bots += [Contestant("PriorityBuffSauroliskBot", priority_saurolisk_buff_bot(18))]
     #
-    all_bots += [Contestant(name, bot) for name, bot in get_priority_bot_contestant_tuples()]
+    all_bots += [Contestant(name, lambda: bot) for name, bot in get_priority_bot_contestant_tuples()]
     return all_bots
 
 
@@ -107,7 +108,7 @@ def save_ratings(contestants: List[Contestant], path):
         (c.name, {"elo": c.elo,
                   "games_played": c.games_played,
                   "last_time_updated": datetime.now().isoformat(),
-                  "authors": c.agent.authors}) for c
+                  "authors": c.agent_generator().authors}) for c
         in ranked_contestants]
     with open(path, "w") as f:
         json.dump(standings, f, indent=4)
