@@ -151,3 +151,20 @@ def priority_pogo_hopper_bot(seed: int, priority_function_bot: Callable, monster
         return score
 
     return priority_function_bot(["Ethan Saxenian"], priority, seed)
+
+def priority_jessie_bot(seed: int, priority_function_bot: Callable, monster_type: str = None):
+    def priority(player: 'Player', card: 'MonsterCard'):
+        if type(card) is WrathWeaver:
+            return 100
+
+        score = card.health + card.attack + card.tier
+        ww_on_board = [card for card in player.in_play if type(card) is WrathWeaver]
+        number_ww = len(ww_on_board)
+        if number_ww and number_ww < player.health and card.monster_type is MONSTER_TYPES.DEMON:
+            if card in player.hand + player.store:
+                score += 9
+        if ww_on_board and card.monster_type is not MONSTER_TYPES.DEMON:
+            score = -1
+        return score
+
+    return priority_function_bot(["Adam Salwen"], priority, seed)
