@@ -73,6 +73,8 @@ class HearthstoneFFNet(nn.Module):
             return F.relu(x)
         elif self.activation_function == "gelu":
             return F.gelu(x)
+        elif self.activation_function == "sigmoid":
+            return F.sigmoid(x)
 
     def forward(self, state: State, valid_actions: EncodedActionSet):
         x_policy = torch.cat((state.player_tensor.flatten(1), state.cards_tensor.flatten(1)), dim=1)

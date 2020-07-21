@@ -10,6 +10,7 @@ from hearthstone.agent import Agent, Action
 from hearthstone.training.pytorch.hearthstone_state_encoder import Transition, State, encode_player, \
     encode_valid_actions, EncodedActionSet, get_action_index, get_indexed_action
 from hearthstone.training.pytorch.pytorch_bot import PytorchBot
+from hearthstone.training.pytorch.normalization import WelfordAggregator, PPONormalizer
 
 logger = logging.getLogger(__name__)
 
@@ -33,8 +34,29 @@ class ReplayBuffer:
     def clear(self):
         self.memory.clear()
         self.position = 0
+
     def __len__(self):
         return len(self.memory)
+
+
+class NormalizingReplayBuffer(ReplayBuffer):
+
+    def __init__(self, capacity, gamma, player_encoding, cards_encoding):
+        super().__init__(capacity)
+        self.player_normalizer = PPONormalizer(gamma, player_encoding.size())
+        self.cards_normalizer = PPONormalizer(gamma, cards_encoding.size())
+
+    def push(self, transition: Transition):
+        super().push(Transition(state=State(self.player_normalizer.normalize(transition.state.player_tensor),
+                                      self.cards_normalizer.normalize(transition.state.cards_tensor)),
+                                valid_actions=transition.valid_actions,
+                                action=transition.action,
+                                action_prob=transition.action_prob,
+                                next_state=State(self.player_normalizer.normalize(transition.next_state.player_tensor),
+                                                 self.cards_normalizer.normalize(transition.next_state.cards_tensor)),
+                                reward=transition.reward,
+                                is_terminal=transition.is_terminal
+                                ))
 
 
 class SurveiledPytorchBot(PytorchBot):
@@ -50,7 +72,6 @@ class SurveiledPytorchBot(PytorchBot):
         policy = self.policy(player)
         action_index = Categorical(torch.exp(policy[0])).sample()
         action = get_indexed_action(int(action_index))
-        #print(action)
         if not action.valid(player):
             logger.debug("No! Bad Citizen!")
         else:

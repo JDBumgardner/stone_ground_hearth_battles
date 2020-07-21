@@ -15,7 +15,7 @@ from hearthstone.training.pytorch.hearthstone_state_encoder import Transition, g
     DEFAULT_PLAYER_ENCODING, DEFAULT_CARDS_ENCODING
 from hearthstone.training.pytorch.policy_gradient import easier_contestants, tensorize_batch, easy_contestants
 from hearthstone.training.pytorch.pytorch_bot import PytorchBot
-from hearthstone.training.pytorch.replay_buffer import ReplayBuffer, SurveiledPytorchBot
+from hearthstone.training.pytorch.replay_buffer import ReplayBuffer, SurveiledPytorchBot, NormalizingReplayBuffer
 
 
 class Worker:
@@ -35,12 +35,12 @@ class Worker:
         self.host.play_round()
         if self.host.game_over():
             winner_names = list(reversed([name for name, player in self.host.tavern.losers]))
-            print("---------------------------------------------------------------")
-            print(winner_names)
-            print(self.host.tavern.players[self.learning_bot_contestant.name].in_play)
+            # print("---------------------------------------------------------------")
+            # print(winner_names)
+            # print(self.host.tavern.players[self.learning_bot_contestant.name].in_play)
             ranked_contestants = sorted(self.round_contestants, key=lambda c: winner_names.index(c.name))
             update_ratings(ranked_contestants)
-            print_standings([self.learning_bot_contestant] + self.other_contestants)
+            # print_standings([self.learning_bot_contestant] + self.other_contestants)
             for contestant in self.round_contestants:
                 contestant.games_played += 1
 
@@ -66,10 +66,9 @@ def learn(tensorboard: SummaryWriter, optimizer: optim.Optimizer, learning_net: 
     advantage = value_target - value
 
     clipped_advantage = value_target - next_value + torch.clamp(next_value - value, -ppo_epsilon, ppo_epsilon)
-    tensorboard.add_histogram("policy/train", torch.exp(policy), global_step)
+
     masked_reward = transition_batch.reward.masked_select(transition_batch.is_terminal)
-    if masked_reward.size()[0]:
-        tensorboard.add_histogram("reward/train", transition_batch.reward.masked_select(transition_batch.is_terminal), global_step)
+
 
     ratio = torch.exp(policy - transition_batch.action_prob.unsqueeze(-1)).gather(1, transition_batch.action.unsqueeze(-1))
 
@@ -82,6 +81,10 @@ def learn(tensorboard: SummaryWriter, optimizer: optim.Optimizer, learning_net: 
 
     #Not actually expensive
     if enable_crashing_tensorboard:
+        tensorboard.add_histogram("policy/train", torch.exp(policy), global_step)
+        if masked_reward.size()[0]:
+            tensorboard.add_histogram("reward/train", transition_batch.reward.masked_select(transition_batch.is_terminal),
+                                  global_step)
         tensorboard.add_histogram("value/train", value, global_step)
         tensorboard.add_histogram("next_value/train", next_value, global_step)
         tensorboard.add_histogram("advantage/train", advantage, global_step)
@@ -125,7 +128,11 @@ def ppo(hparams: Dict, time_limit_secs=None, early_stopper= None):
     else:
         assert False
     global_step = 0
-    replay_buffer = ReplayBuffer(10000)
+    replay_buffer_size = 10000
+    if hparams["normalize_observations"]:
+        replay_buffer = NormalizingReplayBuffer(replay_buffer_size, 0.99, DEFAULT_PLAYER_ENCODING, DEFAULT_CARDS_ENCODING)
+    else:
+        replay_buffer = ReplayBuffer(replay_buffer_size)
     learning_bot_contestant = Contestant("LearningBot", lambda: SurveiledPytorchBot(learning_net, replay_buffer))
     learning_bot_contestant.elo = 950
     other_contestants = easy_contestants()
@@ -143,7 +150,7 @@ def ppo(hparams: Dict, time_limit_secs=None, early_stopper= None):
                       global_step)
                 global_step += 1
             replay_buffer.clear()
-        time_elapsed = time.time() - start_time
+        time_elapsed = int(time.time() - start_time)
         tensorboard.add_scalar("elo/train", learning_bot_contestant.elo, global_step=global_step)
         if early_stopper:
             early_stopper.report(learning_bot_contestant.elo, time_elapsed)
@@ -159,17 +166,18 @@ def ppo(hparams: Dict, time_limit_secs=None, early_stopper= None):
 
 def main():
     ppo({"optimizer": "adam",
-         "adam_lr": 3e-5,
-         "batch_size": 256,
-         "num_workers": 50,
-         "ppo_epochs": 10,
-         "ppo_epsilon": 0.2,
-         "policy_weight": 0.5,
-         "entropy_weight": 0.0001,
+         "adam_lr": 2e-5,
+         "batch_size": 25,
+         "num_workers": 187,
+         "ppo_epochs": 9,
+         "ppo_epsilon": 0.4,
+         "policy_weight": 0.35,
+         "entropy_weight": 2e-5,
          "nn_hidden_layers": 1,
-         "nn_hidden_size": 1024,
+         "nn_hidden_size": 2826,
          "nn_shared": True,
-         "nn_activation": "gelu"})
+         "nn_activation": "relu",
+         "normalize_observations": True})
 
 
 if __name__ == '__main__':
