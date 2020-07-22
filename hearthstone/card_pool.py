@@ -993,3 +993,24 @@ class RipsnarlCaptain(MonsterCard):
             event.card.attack += bonus
             event.card.health += bonus
 
+
+class DefenderOfArgus(MonsterCard):
+    tier = 4
+    base_attack = 2
+    base_health = 3
+    monster_type = None
+
+    def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
+        index = context.owner.in_play.index(self)
+        bonus = 2 if self.golden else 1
+        for i in [index-1, index+1]:
+            try:
+                adjacent_minion = context.owner.in_play[i]
+            except IndexError:
+                continue
+            adjacent_minion.attack += bonus
+            adjacent_minion.health += bonus
+            adjacent_minion.taunt = True
+
+
+

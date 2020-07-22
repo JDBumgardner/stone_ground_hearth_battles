@@ -1124,6 +1124,25 @@ class CardTests(unittest.TestCase):
         self.assertEqual(player_1.in_play[1].attack, 4)
         self.assertEqual(player_1.in_play[1].health, 5)
 
+    def test_defender_of_argus(self):
+        tavern = Tavern()
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        self.upgrade_to_tier(tavern, 4)
+        tavern.randomizer = CardForcer([AlleyCat, DefenderOfArgus] * 5)
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        self.assertCardListEquals(player_1.in_play, [AlleyCat, TabbyCat, DefenderOfArgus])
+        self.assertEqual(player_1.in_play[0].attack, player_1.in_play[0].base_attack)
+        self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health)
+        self.assertEqual(player_1.in_play[1].attack, player_1.in_play[1].base_attack + 1)
+        self.assertEqual(player_1.in_play[1].health, player_1.in_play[1].base_health + 1)
+        self.assertEqual(player_1.in_play[2].attack, player_1.in_play[2].base_attack)
+        self.assertEqual(player_1.in_play[2].health, player_1.in_play[2].base_health)
+
 
 if __name__ == '__main__':
     unittest.main()
