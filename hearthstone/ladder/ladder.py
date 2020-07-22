@@ -3,6 +3,8 @@ import random
 from datetime import datetime
 from typing import List, Callable
 
+import trueskill
+
 from hearthstone.agent import Agent
 from hearthstone.battlebots.cheapo_bot import CheapoBot
 from hearthstone.battlebots.get_bot_contestants import get_priority_bot_contestant_tuples
@@ -18,10 +20,11 @@ class Contestant:
         self.name = name
         self.agent_generator = agent_generator
         self.elo = 1200
+        self.trueskill = trueskill.Rating()
         self.games_played = 0
 
     def __repr__(self):
-        return f'(Agent "{self.name}" Elo {int(self.elo)})'
+        return f'(Agent "{self.name}" Trueskill {int(self.trueskill)})'
 
 
 def probability_of_win(elo1: int, elo2: int) -> float:
@@ -40,9 +43,13 @@ def update_ratings(outcome: List[Contestant]):
     for contestant, elo_diff in zip(outcome, elo_delta):
         contestant.elo += elo_diff
 
+    new_trueskills = trueskill.rate([(contestant.trueskill,) for contestant in outcome], ranks=range(len(outcome)))
+    for new_trueskill, contestant in zip(new_trueskills, outcome):
+        contestant.trueskill = new_trueskill[0]
+
 
 def print_standings(contestants: List[Contestant]):
-    contestants = sorted(contestants, key=lambda c: c.elo, reverse=True)
+    contestants = sorted(contestants, key=lambda c: c.trueskill, reverse=True)
     print(contestants)
 
 
@@ -99,13 +106,16 @@ def load_ratings(contestants: List[Contestant], path):
     for contestant in contestants:
         if contestant.name in standings_dict:
             contestant.elo = standings_dict[contestant.name]["elo"]
+            contestant.trueskill = trueskill.Rating(standings_dict[contestant.name]["trueskill.mu"], standings_dict[contestant.name]["trueskill.sigma"])
             contestant.games_played = standings_dict[contestant.name]["games_played"]
 
 
 def save_ratings(contestants: List[Contestant], path):
-    ranked_contestants = sorted(contestants, key=lambda c: c.elo, reverse=True)
+    ranked_contestants = sorted(contestants, key=lambda c: c.trueskill, reverse=True)
     standings = [
         (c.name, {"elo": c.elo,
+                  "trueskill.mu": c.trueskill.mu,
+                  "trueskill.sigma": c.trueskill.sigma,
                   "games_played": c.games_played,
                   "last_time_updated": datetime.now().isoformat(),
                   "authors": c.agent_generator().authors}) for c

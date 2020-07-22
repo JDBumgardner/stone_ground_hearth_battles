@@ -118,9 +118,9 @@ def ppo(hparams: Dict, time_limit_secs=None, early_stopper= None):
     tensorboard = SummaryWriter(f"../../../data/learning/pytorch/tensorboard/{datetime.now().isoformat()}")
     logging.getLogger().setLevel(logging.INFO)
     learning_net = HearthstoneFFNet(DEFAULT_PLAYER_ENCODING, DEFAULT_CARDS_ENCODING, hparams["nn_hidden_layers"],
-                                    hparams["nn_hidden_size"],
-                                    hparams["nn_shared"],
-                                    hparams["nn_activation"])
+                                    hparams.get("nn_hidden_size") or 0,
+                                    hparams.get("nn_shared") or False,
+                                    hparams.get("nn_activation") or "")
     if hparams["optimizer"] == "adam":
         optimizer = optim.Adam(learning_net.parameters(), lr=hparams["adam_lr"])
     elif hparams["optimizer"] == "sgd":
