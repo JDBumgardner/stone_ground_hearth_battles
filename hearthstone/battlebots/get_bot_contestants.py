@@ -1,5 +1,6 @@
 from inspect import getmembers, isfunction
 
+from hearthstone.battlebots.early_game_bot import EarlyGameBot
 from hearthstone.battlebots.priority_functions import racist_priority_bot
 from hearthstone.battlebots.hero_bot import HeroBot
 from hearthstone.battlebots.priority_bot import PriorityBot
@@ -8,7 +9,7 @@ from hearthstone.monster_types import MONSTER_TYPES
 
 
 def get_priority_bot_contestant_tuples():
-    priority_bots = [PriorityBot, HeroBot]
+    priority_bots = [PriorityBot, HeroBot, EarlyGameBot]
 
     function_list = [member[1] for member in getmembers(priority_functions, isfunction)]
     contestant_tuples = []
