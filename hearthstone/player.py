@@ -88,6 +88,7 @@ class Player:
         return True
 
     def summon_from_hand(self, index: HandIndex, targets: Optional[List[BoardIndex]] = None):
+        #  TODO: add (optional?) destination index parameter for Defender of Argus
         #  TODO: make sure that the ordering of monster in hand and monster.battlecry are correct
         #  TODO: Jarett can monster be event target
         if targets is None:
