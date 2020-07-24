@@ -15,6 +15,7 @@ from hearthstone.battlebots.supremacy_bot import SupremacyBot
 from hearthstone.host import RoundRobinHost
 from hearthstone.monster_types import MONSTER_TYPES
 
+
 class Contestant:
     def __init__(self, name,  agent_generator: Callable[[], Agent]):
         self.name = name
@@ -99,7 +100,6 @@ def all_contestants():
 
 
 def load_ratings(contestants: List[Contestant], path):
-    # TODO: This is a hack for saving to a specific file.
     with open(path) as f:
         standings = json.load(f)
     standings_dict = dict(standings)

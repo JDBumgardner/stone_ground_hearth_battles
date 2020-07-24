@@ -6,48 +6,6 @@ from hearthstone.training.pytorch.hearthstone_state_encoder import action_encodi
 import torch.nn.functional as F
 
 
-class HearthstoneLinearNet(nn.Module):
-    def __init__(self, player_encoding: Feature, card_encoding: Feature, hidden_size=None):
-        super().__init__()
-        # Shared hidden layer
-        self.fc_policy = nn.Linear(player_encoding.flattened_size() + card_encoding.flattened_size(), action_encoding_size())
-        self.fc_value = nn.Linear(player_encoding.flattened_size() + card_encoding.flattened_size(), 1)
-
-    def forward(self, state: State, valid_actions: EncodedActionSet):
-        x = torch.cat((state.player_tensor.flatten(1), state.cards_tensor.flatten(1)), dim=1)
-        policy = self.fc_policy(x)
-        # Disable invalid actions with a "masked" softmax
-        valid_action_tensor = torch.cat((valid_actions.player_action_tensor.flatten(1),
-                                         valid_actions.card_action_tensor.flatten(1)), dim=1)
-        policy = policy.masked_fill(valid_action_tensor.logical_not(), -1e30)
-        policy = F.log_softmax(policy, dim=1)
-        value = self.fc_value(x)
-        return policy, value
-
-
-class HearthstoneFFSharedNet(nn.Module):
-    def __init__(self, player_encoding: Feature, card_encoding: Feature, hidden_size=1024):
-        super().__init__()
-        # Shared hidden layer
-        self.fc_hidden1 = nn.Linear(player_encoding.flattened_size() + card_encoding.flattened_size(), self.hidden_size)
-        self.fc_hidden2 = nn.Linear(self.hidden_size, self.hidden_size)
-        self.fc_policy = nn.Linear(self.hidden_size, action_encoding_size())
-        self.fc_value = nn.Linear(self.hidden_size, 1)
-
-    def forward(self, state: State, valid_actions: EncodedActionSet):
-        x = torch.cat((state.player_tensor.flatten(1), state.cards_tensor.flatten(1)), dim=1)
-        hidden1 = F.gelu(self.fc_hidden1(x))
-        hidden2 = F.gelu(self.fc_hidden2(hidden1))
-        policy = self.fc_policy(hidden2)
-        # Disable invalid actions with a "masked" softmax
-        valid_action_tensor = torch.cat(
-            (valid_actions.player_action_tensor.flatten(1), valid_actions.card_action_tensor.flatten(1)), dim=1)
-        policy = policy.masked_fill(valid_action_tensor.logical_not(), -1e30)
-        policy = F.log_softmax(policy, dim=1)
-        value = self.fc_value(hidden2)
-        return policy, value
-
-
 class HearthstoneFFNet(nn.Module):
     def __init__(self, player_encoding: Feature, card_encoding: Feature, hidden_layers=1, hidden_size=1024, shared=False, activation_function="gelu"):
         super().__init__()
@@ -74,7 +32,9 @@ class HearthstoneFFNet(nn.Module):
         elif self.activation_function == "gelu":
             return F.gelu(x)
         elif self.activation_function == "sigmoid":
-            return F.sigmoid(x)
+            return torch.sigmoid(x)
+        elif self.activation_function == "tanh":
+            return torch.tanh(x)
 
     def forward(self, state: State, valid_actions: EncodedActionSet):
         x_policy = torch.cat((state.player_tensor.flatten(1), state.cards_tensor.flatten(1)), dim=1)
@@ -87,7 +47,6 @@ class HearthstoneFFNet(nn.Module):
             else:
                 x_value = self.activation(
                     self.value_hidden_layers[i](x_value))
-
         policy = self.fc_policy(x_policy)
         # Disable invalid actions with a "masked" softmax
         valid_action_tensor = torch.cat((valid_actions.player_action_tensor.flatten(1), valid_actions.card_action_tensor.flatten(1)), dim=1)

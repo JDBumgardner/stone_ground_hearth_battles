@@ -70,7 +70,8 @@ class SurveiledPytorchBot(PytorchBot):
 
     def buy_phase_action(self, player: 'Player') -> Action:
         policy = self.policy(player)
-        action_index = Categorical(torch.exp(policy[0])).sample()
+        probs = torch.exp(policy[0])
+        action_index = Categorical(probs).sample()
         action = get_indexed_action(int(action_index))
         if not action.valid(player):
             logger.debug("No! Bad Citizen!")
