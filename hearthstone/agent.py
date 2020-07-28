@@ -148,12 +148,13 @@ class Agent:
         here the player selects a card arangement one time per combat directly preceeding combat
 
         Args:
-            player: The player object coutrolled by this agent. This function should not modify it.
+            player: The player object controlled by this agent. This function should not modify it.
 
         Returns: An arrangement of the player's board
 
         """
         pass
+
 
     def buy_phase_action(self, player: 'Player') -> Action:
         """
@@ -164,7 +165,7 @@ class Agent:
         and ending the buy phase
 
         Args:
-            player: The player object coutrolled by this agent. This function should not modify it.
+            player: The player object controlled by this agent. This function should not modify it.
 
         Returns: one of four action types
         (BuyAction, SummonAction, SellAction, EndPhaseAction)

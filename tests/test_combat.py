@@ -426,7 +426,7 @@ class CombatTests(unittest.TestCase):
         ethans_war_party.board = [RabidSaurolisk(), RabidSaurolisk()]
         fight_boards(adams_war_party, ethans_war_party, self.PilotedShredderRandomizer())
         self.assertEqual(adam.health, 40)
-        self.assertEqual(ethan.health, 18)
+        self.assertEqual(ethan.health, 18) # TODO: Is this test flaky?
 
     def test_savannah_highmane(self):
         adam = Player.new_player_with_hero(None, "Adam")
@@ -463,7 +463,17 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 35)
 
-
+    def test_southsea_captain(self):
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [FreedealingGambler(), SouthseaCaptain()]
+        ethans_war_party.board = [TwilightEmissary()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adams_war_party.board[0].attack, 4)
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 37)
 
 if __name__ == '__main__':
     unittest.main()

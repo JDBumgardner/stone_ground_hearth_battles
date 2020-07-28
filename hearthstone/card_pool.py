@@ -1013,4 +1013,34 @@ class DefenderOfArgus(MonsterCard):
             adjacent_minion.taunt = True
 
 
+class SouthseaCaptain(MonsterCard):
+    tier = 2
+    monster_type = MONSTER_TYPES.PIRATE
+    base_attack = 3
+    base_health = 3
 
+    def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
+        bonus = 1
+        if self.golden:
+            bonus = 2
+        if event.event is EVENTS.COMBAT_START or (event.event is EVENTS.SUMMON_COMBAT and event.card == self):
+            pirates = [card for card in context.friendly_war_party.board if
+                       card != self and card.monster_type == MONSTER_TYPES.PIRATE]
+            for pirate in pirates:
+                pirate.attack += bonus
+                pirate.health += bonus
+        elif event.event is EVENTS.SUMMON_COMBAT and event.card in context.friendly_war_party.board \
+                and event.card != self and event.card.monster_type == MONSTER_TYPES.PIRATE:
+            event.card.attack += bonus
+            event.card.health += bonus
+
+    def base_deathrattle(self, context: CombatPhaseContext):
+        bonus = 1
+        if self.golden:
+            bonus = 2
+        pirates = [card for card in context.friendly_war_party.board if
+                   card != self and card.monster_type == MONSTER_TYPES.PIRATE]
+        for pirate in pirates:
+            pirate.attack -= bonus
+            if pirate.health > pirate.base_health > pirate.health - bonus:
+                pirate.health = pirate.base_health
