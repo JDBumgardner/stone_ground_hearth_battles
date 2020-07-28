@@ -1005,7 +1005,7 @@ class DefenderOfArgus(MonsterCard):
         bonus = 2 if self.golden else 1
         for i in [index-1, index+1]:
             try:
-                adjacent_minion = context.owner.in_play[i]
+                adjacent_minion = context.owner.in_play[i] # TODO: Ordering shouldn't matter here? Use targets?
             except IndexError:
                 continue
             adjacent_minion.attack += bonus
