@@ -31,8 +31,17 @@ class SneedsOldShredder(MonsterCard):
     base_attack = 5
     base_health = 7
 
-    def base_deathrattle(self, context):
-        pass  # summon random legendary minion
+    def base_deathrattle(self, context: CombatPhaseContext):
+        count = 2 if self.golden else 1
+        summon_index = context.friendly_war_party.get_index(self)
+        i = 0
+        for _ in range(count):
+            for _ in range(context.summon_minion_multiplier()):
+                # TODO: Legendary minions to add: Waxrider Togwaggle, The Beast, Bolvar Fireblood, and a bunch of tier 5/6 minions
+                legendary_minions = [OldMurkeye(), Khadgar(), ShifterZerus()]
+                random_minion = context.randomizer.select_summon_minion(legendary_minions)
+                context.friendly_war_party.summon_in_combat(random_minion, context, summon_index + i + 1)
+                i += 1
 
 
 class FreedealingGambler(MonsterCard):
@@ -844,7 +853,6 @@ class PilotedShredder(MonsterCard):
     monster_type = MONSTER_TYPES.MECH
 
     def base_deathrattle(self, context: CombatPhaseContext):
-
         count = 2 if self.golden else 1
         summon_index = context.friendly_war_party.get_index(self)
         i = 0
