@@ -42,7 +42,7 @@ class EarlyGameBot(Agent):
                 if token_board_index and player.coins == 5:
                     player.sell_board_minion(token_board_index[0])
 
-        if player.tavern_tier < 3 and player.tavern.turn_count != 3:
+        if player.tavern_tier > 2 and player.tavern.turn_count != 3:
             upgrade_action = TavernUpgradeAction()
             if upgrade_action.valid(player):
                 return upgrade_action

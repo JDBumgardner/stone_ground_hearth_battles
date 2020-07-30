@@ -486,9 +486,34 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(adam.health, 40)
         self.assertNotEqual(ethan.health, 40)
         self.assertNotEqual(len(adams_war_party.board), 1)
-        legendary_minions = [OldMurkeye, Khadgar, ShifterZerus]
+        legendary_minions = [OldMurkeye, Khadgar, ShifterZerus, BolvarFireblood]
         self.assertIn(type(adams_war_party.board[1]), legendary_minions)
 
+    def test_bolvar_fireblood(self):
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [BolvarFireblood()]
+        bloodsail_cannoneer = BloodsailCannoneer()
+        bloodsail_cannoneer.golden_transformation([])
+        ethans_war_party.board = [bloodsail_cannoneer]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+
+    def test_drakonid_enforcer(self):
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [RighteousProtector(), DrakonidEnforcer()]
+        houndmaster = Houndmaster()
+        houndmaster.golden_transformation([])
+        ethans_war_party.board = [houndmaster]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40) # TODO: This test doesn't work for some reason
 
 if __name__ == '__main__':
     unittest.main()

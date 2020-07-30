@@ -37,8 +37,8 @@ class SneedsOldShredder(MonsterCard):
         i = 0
         for _ in range(count):
             for _ in range(context.summon_minion_multiplier()):
-                # TODO: Legendary minions to add: Waxrider Togwaggle, The Beast, Bolvar Fireblood, and a bunch of tier 5/6 minions
-                legendary_minions = [OldMurkeye(), Khadgar(), ShifterZerus()]
+                # TODO: Legendary minions to add: Waxrider Togwaggle, The Beast, and a bunch of tier 5/6 minions
+                legendary_minions = [OldMurkeye(), Khadgar(), ShifterZerus(), BolvarFireblood()]
                 random_minion = context.randomizer.select_summon_minion(legendary_minions)
                 context.friendly_war_party.summon_in_combat(random_minion, context, summon_index + i + 1)
                 i += 1
@@ -1052,3 +1052,30 @@ class SouthseaCaptain(MonsterCard):
             pirate.attack -= bonus
             if pirate.health > pirate.base_health > pirate.health - bonus:
                 pirate.health = pirate.base_health
+
+
+class BolvarFireblood(MonsterCard):
+    tier = 4
+    monster_type = None
+    base_attack = 1
+    base_health = 7
+    base_divine_shield = True
+
+    def handle_event_powers(self, event: CardEvent, context: CombatPhaseContext):
+        if event.event is EVENTS.DIVINE_SHIELD_LOST and event.card in context.friendly_war_party.board:
+            bonus = 4 if self.golden else 2
+            self.attack += bonus
+
+
+class DrakonidEnforcer(MonsterCard):
+    tier = 4
+    monster_type = MONSTER_TYPES.DRAGON
+    base_attack = 3
+    base_health = 6
+
+    def handle_event_powers(self, event: CardEvent, context: CombatPhaseContext):
+        if event.event is EVENTS.DIVINE_SHIELD_LOST and event.card in context.friendly_war_party.board:
+            # TODO: this triggers when event.event is EVENTS.AFTER_ATTACK... why?
+            bonus = 4 if self.golden else 2
+            self.attack += bonus
+            self.health += bonus

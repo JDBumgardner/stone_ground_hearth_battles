@@ -105,6 +105,7 @@ class MonsterCard(Card):
     def take_damage(self, damage: int, combat_phase_context: CombatPhaseContext):
         if self.divine_shield and not damage <= 0:
             self.divine_shield = False
+            combat_phase_context.broadcast_combat_event(CardEvent(self, EVENTS.DIVINE_SHIELD_LOST))
         else:
             self.health -= damage
             combat_phase_context.broadcast_combat_event(CardEvent(self, EVENTS.CARD_DAMAGED))
