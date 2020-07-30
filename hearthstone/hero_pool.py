@@ -1,5 +1,6 @@
 from typing import Union
 
+from hearthstone.card_pool import Amalgam
 from hearthstone.cards import CardEvent
 from hearthstone.events import BuyPhaseContext, CombatPhaseContext, EVENTS
 from hearthstone.hero import Hero
@@ -19,7 +20,7 @@ class LordJaraxxus(Hero):
 
     def hero_power_impl(self, context: BuyPhaseContext):
         for minion in context.owner.in_play:
-            if minion.monster_type == MONSTER_TYPES.DEMON:
+            if minion.monster_type in (MONSTER_TYPES.DEMON, MONSTER_TYPES.ALL):
                 minion.attack += 1
                 minion.health += 1
 
@@ -65,7 +66,7 @@ class MillificentManastorm(Hero):
 
     def handle_event(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         if event.event is EVENTS.BUY:
-            if event.card.monster_type == MONSTER_TYPES.MECH:
+            if event.card.monster_type in (MONSTER_TYPES.MECH, MONSTER_TYPES.ALL):
                 event.card.attack += 1
                 event.card.health += 1
 
@@ -95,12 +96,12 @@ class PatchesThePirate(Hero):
     power_cost = 4
 
     def handle_event(self, event: CardEvent, context: BuyPhaseContext):
-        if event.event is EVENTS.BUY and event.card.monster_type == MONSTER_TYPES.PIRATE:
+        if event.event is EVENTS.BUY and event.card.monster_type in (MONSTER_TYPES.PIRATE, MONSTER_TYPES.ALL):
             self.power_cost = max(0, self.power_cost - 1)
 
     def hero_power_impl(self, context: BuyPhaseContext):
         pirates = [card for card in context.owner.tavern.deck.all_cards() if
-                   card.monster_type == MONSTER_TYPES.PIRATE and card.tier <= context.owner.tavern_tier]
+                   card.monster_type in (MONSTER_TYPES.PIRATE, MONSTER_TYPES.ALL) and card.tier <= context.owner.tavern_tier]
 
         card = context.randomizer.select_gain_card(pirates)
         context.owner.tavern.deck.remove_card(card)
@@ -129,9 +130,9 @@ class FungalmancerFlurgl(Hero):
         return False
 
     def handle_event(self, event: CardEvent, context: BuyPhaseContext):
-        if event.event is EVENTS.SELL and event.card.monster_type == MONSTER_TYPES.MURLOC:
+        if event.event is EVENTS.SELL and event.card.monster_type in (MONSTER_TYPES.MURLOC, MONSTER_TYPES.ALL):
             murlocs = [card for card in context.owner.tavern.deck.all_cards() if
-                       card.monster_type == MONSTER_TYPES.MURLOC and card.tier <= context.owner.tavern_tier]
+                       card.monster_type in (MONSTER_TYPES.MURLOC, MONSTER_TYPES.ALL) and card.tier <= context.owner.tavern_tier]
             card = context.randomizer.select_add_to_store(murlocs)
             context.owner.tavern.deck.remove_card(card)
             context.owner.store.append(card)
@@ -168,3 +169,12 @@ class SkycapnKragg(Hero):
         if self.can_use_power:
             context.owner.coins += context.owner.tavern.turn_count + 1
             self.can_use_power = False
+
+
+class TheCurator(Hero):
+    def hero_power_valid_impl(self, context: BuyPhaseContext):
+        return False
+
+    def handle_event(self, event: CardEvent, context: BuyPhaseContext):
+        if event.event is EVENTS.BUY_START and context.owner.tavern.turn_count == 0:
+            context.owner.in_play.append(Amalgam())

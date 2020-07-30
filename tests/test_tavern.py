@@ -1227,6 +1227,19 @@ class CardTests(unittest.TestCase):
         player_1.hero_power()
         self.assertEqual(player_1.coins, 8)
 
+    def test_the_curator_amalgam(self):
+        tavern = Tavern()
+        player_1 = tavern.add_player_with_hero("Dante_Kong", TheCurator())
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.randomizer = CardForcer([RockpoolHunter] * 6)
+        tavern.buying_step()
+        self.assertCardListEquals(player_1.in_play, [Amalgam])
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0), [BoardIndex(0)])
+        self.assertCardListEquals(player_1.in_play, [Amalgam, RockpoolHunter])
+        self.assertEqual(player_1.in_play[0].attack, player_1.in_play[0].base_attack + 1)
+        self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health + 1)
+
 
 if __name__ == '__main__':
     unittest.main()

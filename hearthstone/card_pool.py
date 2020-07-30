@@ -13,7 +13,7 @@ class MamaBear(MonsterCard):
     base_health = 5
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
-        if event.event is EVENTS.SUMMON_BUY and event.card.monster_type == MONSTER_TYPES.BEAST:
+        if event.event is EVENTS.SUMMON_BUY and event.card.monster_type in (MONSTER_TYPES.BEAST, MONSTER_TYPES.ALL):
             event.card.attack += 5
             event.card.health += 5
 
@@ -103,7 +103,7 @@ class ScavengingHyena(MonsterCard):
     base_health = 2
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
-        if event.event is EVENTS.DIES and event.card.monster_type == MONSTER_TYPES.BEAST and event.card in context.friendly_war_party.board:
+        if event.event is EVENTS.DIES and event.card.monster_type in (MONSTER_TYPES.BEAST, MONSTER_TYPES.ALL) and event.card in context.friendly_war_party.board:
             self.attack += 4 if self.golden else 2
             self.health += 2 if self.golden else 1
 
@@ -130,7 +130,7 @@ class WrathWeaver(MonsterCard):
     base_health = 1
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
-        if event.event is EVENTS.SUMMON_BUY and event.card.monster_type == MONSTER_TYPES.DEMON:
+        if event.event is EVENTS.SUMMON_BUY and event.card.monster_type in (MONSTER_TYPES.DEMON, MONSTER_TYPES.ALL):
             bonus = 4 if self.golden else 2
             context.owner.health -= 1
             self.attack += bonus
@@ -184,7 +184,7 @@ class MurlocTidecaller(MonsterCard):
         bonus = 2 if self.golden else 1
         friendly_summon = event.event is EVENTS.SUMMON_BUY or (
                 event.event is EVENTS.SUMMON_COMBAT and event.card in context.friendly_war_party.board)
-        if friendly_summon and event.card.monster_type == MONSTER_TYPES.MURLOC and event.card != self:
+        if friendly_summon and event.card.monster_type in (MONSTER_TYPES.MURLOC, MONSTER_TYPES.ALL) and event.card != self:
             self.attack += bonus
 
 
@@ -249,7 +249,7 @@ class RedWhelp(MonsterCard):
         if event.event is EVENTS.COMBAT_START:
             num_friendly_dragons = len(
                 [card for card in context.friendly_war_party.board if
-                 not card.dead and card.monster_type == MONSTER_TYPES.DRAGON])  # Red Whelp counts all dragons including itself
+                 not card.dead and card.monster_type in (MONSTER_TYPES.DRAGON, MONSTER_TYPES.ALL)])  # Red Whelp counts all dragons including itself
             targets = [card for card in context.enemy_war_party.board if not card.dead]
             if not targets:
                 return
@@ -331,7 +331,7 @@ class MetaltoothLeaper(MonsterCard):
 
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
         for card in context.owner.in_play:
-            if card != self and card.monster_type == MONSTER_TYPES.MECH:
+            if card != self and card.monster_type in (MONSTER_TYPES.MECH, MONSTER_TYPES.ALL):
                 bonus = 4 if self.golden else 2
                 card.attack += bonus
 
@@ -398,11 +398,11 @@ class MurlocWarleader(MonsterCard):
             bonus = 4
         if event.event is EVENTS.COMBAT_START or (event.event is EVENTS.SUMMON_COMBAT and event.card == self):
             murlocs = [card for card in context.friendly_war_party.board if
-                       card != self and card.monster_type == MONSTER_TYPES.MURLOC]
+                       card != self and card.monster_type in (MONSTER_TYPES.MURLOC, MONSTER_TYPES.ALL)]
             for murloc in murlocs:
                 murloc.attack += bonus
         elif event.event is EVENTS.SUMMON_COMBAT and event.card in context.friendly_war_party.board \
-                and event.card != self and event.card.monster_type == MONSTER_TYPES.MURLOC:
+                and event.card != self and event.card.monster_type in (MONSTER_TYPES.MURLOC, MONSTER_TYPES.ALL):
             event.card.attack += bonus
 
     def base_deathrattle(self, context: CombatPhaseContext):
@@ -411,7 +411,7 @@ class MurlocWarleader(MonsterCard):
         if self.golden:
             bonus = 4
         murlocs = [card for card in context.friendly_war_party.board if
-                   card != self and card.monster_type == MONSTER_TYPES.MURLOC]
+                   card != self and card.monster_type in (MONSTER_TYPES.MURLOC, MONSTER_TYPES.ALL)]
         for murloc in murlocs:
             murloc.attack -= bonus
 
@@ -513,7 +513,7 @@ class RockpoolHunter(MonsterCard):
             targets[0].health += bonus
 
     def validate_battlecry_target(self, card: MonsterCard) -> bool:
-        return card.monster_type == MONSTER_TYPES.MURLOC and card != self
+        return card.monster_type in (MONSTER_TYPES.MURLOC, MONSTER_TYPES.ALL) and card != self
 
 
 class RatPack(MonsterCard):
@@ -570,7 +570,7 @@ class NathrezimOverseer(MonsterCard):
             targets[0].health += bonus
 
     def validate_battlecry_target(self, card: MonsterCard) -> bool:
-        return card.monster_type == MONSTER_TYPES.DEMON and card != self
+        return card.monster_type in (MONSTER_TYPES.DEMON, MONSTER_TYPES.ALL) and card != self
 
 
 class OldMurkeye(MonsterCard):
@@ -597,7 +597,7 @@ class CrystalWeaver(MonsterCard):
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
         bonus = 2 if self.golden else 1
         for card in context.owner.in_play:
-            if card.monster_type == MONSTER_TYPES.DEMON:
+            if card.monster_type in (MONSTER_TYPES.DEMON, MONSTER_TYPES.ALL):
                 card.attack += bonus
                 card.health += bonus
 
@@ -690,7 +690,7 @@ class BloodsailCannoneer(MonsterCard):
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
         bonus = 6 if self.golden else 3
         for card in context.owner.in_play:
-            if card.monster_type == MONSTER_TYPES.PIRATE and card != self:
+            if card.monster_type in (MONSTER_TYPES.PIRATE, MONSTER_TYPES.ALL) and card != self:
                 card.attack += bonus
 
 
@@ -703,7 +703,7 @@ class ColdlightSeer(MonsterCard):
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
         bonus = 4 if self.golden else 2
         for card in context.owner.in_play:
-            if card.monster_type == MONSTER_TYPES.MURLOC and card != self:
+            if card.monster_type in (MONSTER_TYPES.MURLOC, MONSTER_TYPES.ALL) and card != self:
                 card.health += bonus
 
 
@@ -728,7 +728,7 @@ class DeflectOBot(MonsterCard):
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         bonus = 2 if self.golden else 1
-        if event.event is EVENTS.SUMMON_COMBAT and event.card.monster_type == MONSTER_TYPES.MECH and event.card in context.friendly_war_party.board:
+        if event.event is EVENTS.SUMMON_COMBAT and event.card.monster_type in (MONSTER_TYPES.MECH, MONSTER_TYPES.ALL) and event.card in context.friendly_war_party.board:
             self.attack += bonus
             self.divine_shield = True
 
@@ -742,7 +742,7 @@ class FelfinNavigator(MonsterCard):
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
         bonus = 2 if self.golden else 1
         for card in context.owner.in_play:
-            if card.monster_type == MONSTER_TYPES.MURLOC and card != self:
+            if card.monster_type in (MONSTER_TYPES.MURLOC, MONSTER_TYPES.ALL) and card != self:
                 card.health += bonus
                 card.attack += bonus
 
@@ -761,7 +761,7 @@ class Houndmaster(MonsterCard):
             targets[0].taunt = True
 
     def validate_battlecry_target(self, card: MonsterCard) -> bool:
-        return card.monster_type == MONSTER_TYPES.BEAST
+        return card.monster_type in (MONSTER_TYPES.BEAST, MONSTER_TYPES.ALL)
 
 
 class ImpGangBoss(MonsterCard):
@@ -834,7 +834,7 @@ class ScrewjankClunker(MonsterCard):
             targets[0].health += bonus
 
     def validate_battlecry_target(self, card: MonsterCard) -> bool:
-        return card.monster_type == MONSTER_TYPES.MECH
+        return card.monster_type in (MONSTER_TYPES.MECH, MONSTER_TYPES.ALL)
 
 
 class PackLeader(MonsterCard):
@@ -846,7 +846,7 @@ class PackLeader(MonsterCard):
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         friendly_summon = event.event is EVENTS.SUMMON_BUY or (
                 event.event is EVENTS.SUMMON_COMBAT and event.card in context.friendly_war_party.board)
-        if friendly_summon and event.card.monster_type == MONSTER_TYPES.BEAST and event.card != self:
+        if friendly_summon and event.card.monster_type in (MONSTER_TYPES.BEAST, MONSTER_TYPES.ALL) and event.card != self:
             bonus = 6 if self.golden else 3
             event.card.attack += bonus
 
@@ -878,7 +878,7 @@ class SaltyLooter(MonsterCard):
     monster_type = MONSTER_TYPES.PIRATE
 
     def handle_event_powers(self, event: CardEvent, context: BuyPhaseContext):
-        if event.event is EVENTS.SUMMON_BUY and event.card.monster_type == MONSTER_TYPES.PIRATE and event.card != self:
+        if event.event is EVENTS.SUMMON_BUY and event.card.monster_type in (MONSTER_TYPES.PIRATE, MONSTER_TYPES.ALL) and event.card != self:
             bonus = 2 if self.golden else 1
             self.attack += bonus
             self.health += bonus
@@ -891,7 +891,7 @@ class SoulJuggler(MonsterCard):
     monster_type = None
 
     def handle_event_powers(self, event: CardEvent, context: CombatPhaseContext):
-        if event.event is EVENTS.DIES and event.card.monster_type == MONSTER_TYPES.DEMON and event.card in context.friendly_war_party.board:
+        if event.event is EVENTS.DIES and event.card.monster_type in (MONSTER_TYPES.DEMON, MONSTER_TYPES.ALL) and event.card in context.friendly_war_party.board:
             count = 2 if self.golden else 1
             for _ in range(count):
                 targets = [card for card in context.enemy_war_party.board if not card.dead and not card.health <= 0]
@@ -916,7 +916,7 @@ class TwilightEmissary(MonsterCard):
             targets[0].health += bonus
 
     def validate_battlecry_target(self, card: MonsterCard) -> bool:
-        return card.monster_type == MONSTER_TYPES.DRAGON
+        return card.monster_type in (MONSTER_TYPES.DRAGON, MONSTER_TYPES.ALL)
 
 
 class Khadgar(MonsterCard):
@@ -991,7 +991,7 @@ class VirmenSensei(MonsterCard):
             targets[0].health += bonus
 
     def validate_battlecry_target(self, card: MonsterCard) -> bool:
-        return card.monster_type == MONSTER_TYPES.BEAST
+        return card.monster_type in (MONSTER_TYPES.BEAST, MONSTER_TYPES.ALL)
 
 
 class RipsnarlCaptain(MonsterCard):
@@ -1001,7 +1001,7 @@ class RipsnarlCaptain(MonsterCard):
     monster_type = MONSTER_TYPES.PIRATE
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
-        if event.event is EVENTS.ON_ATTACK and event.card.monster_type == MONSTER_TYPES.PIRATE and event.card in context.friendly_war_party.board and event.card != self:
+        if event.event is EVENTS.ON_ATTACK and event.card.monster_type in (MONSTER_TYPES.PIRATE, MONSTER_TYPES.ALL) and event.card in context.friendly_war_party.board and event.card != self:
             bonus = 4 if self.golden else 2
             event.card.attack += bonus
             event.card.health += bonus
@@ -1038,12 +1038,12 @@ class SouthseaCaptain(MonsterCard):
             bonus = 2
         if event.event is EVENTS.COMBAT_START or (event.event is EVENTS.SUMMON_COMBAT and event.card == self):
             pirates = [card for card in context.friendly_war_party.board if
-                       card != self and card.monster_type == MONSTER_TYPES.PIRATE]
+                       card != self and card.monster_type in (MONSTER_TYPES.PIRATE, MONSTER_TYPES.ALL)]
             for pirate in pirates:
                 pirate.attack += bonus
                 pirate.health += bonus
         elif event.event is EVENTS.SUMMON_COMBAT and event.card in context.friendly_war_party.board \
-                and event.card != self and event.card.monster_type == MONSTER_TYPES.PIRATE:
+                and event.card != self and event.card.monster_type in (MONSTER_TYPES.PIRATE, MONSTER_TYPES.ALL):
             event.card.attack += bonus
             event.card.health += bonus
 
@@ -1052,7 +1052,7 @@ class SouthseaCaptain(MonsterCard):
         if self.golden:
             bonus = 2
         pirates = [card for card in context.friendly_war_party.board if
-                   card != self and card.monster_type == MONSTER_TYPES.PIRATE]
+                   card != self and card.monster_type in (MONSTER_TYPES.PIRATE, MONSTER_TYPES.ALL)]
         for pirate in pirates:
             pirate.attack -= bonus
             if pirate.health > pirate.base_health > pirate.health - bonus:
@@ -1092,3 +1092,13 @@ class BronzeWarden(MonsterCard):
     base_health = 1
     base_divine_shield = True
     base_reborn = True
+
+
+class Amalgam(MonsterCard):
+    tier = 1
+    monster_type = MONSTER_TYPES.ALL
+    base_attack = 1
+    base_health = 1
+    token = True
+
+    # TODO: this can't be sold on the first round

@@ -8,4 +8,5 @@ class MONSTER_TYPES(enum.Enum):
     DRAGON = 4
     DEMON = 5
     MURLOC = 6
+    ALL = 7
 
