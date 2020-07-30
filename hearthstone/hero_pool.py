@@ -122,3 +122,49 @@ class DancinDeryl(Hero):
                 card = context.randomizer.select_from_store(context.owner.store)
                 card.attack += 1
                 card.health += 1
+
+
+class FungalmancerFlurgl(Hero):
+    def hero_power_valid_impl(self, context: BuyPhaseContext):
+        return False
+
+    def handle_event(self, event: CardEvent, context: BuyPhaseContext):
+        if event.event is EVENTS.SELL and event.card.monster_type == MONSTER_TYPES.MURLOC:
+            murlocs = [card for card in context.owner.tavern.deck.all_cards() if
+                       card.monster_type == MONSTER_TYPES.MURLOC and card.tier <= context.owner.tavern_tier]
+            card = context.randomizer.select_add_to_store(murlocs)
+            context.owner.tavern.deck.remove_card(card)
+            context.owner.store.append(card)
+
+
+class KaelthasSunstrider(Hero):
+    buy_counter = 0
+
+    def hero_power_valid_impl(self, context: BuyPhaseContext):
+        return False
+
+    def handle_event(self, event: CardEvent, context: BuyPhaseContext):
+        if event.event is EVENTS.BUY:
+            self.buy_counter += 1
+            if self.buy_counter == 3:
+                event.card.attack += 2
+                event.card.health += 2
+                self.buy_counter = 0
+
+
+class LichBazhial(Hero):
+    power_cost = 0
+
+    def hero_power_impl(self, context: BuyPhaseContext):
+        context.owner.health -= 2
+        context.owner.coins += 1
+
+
+class SkycapnKragg(Hero):
+    power_cost = 0
+    can_use_power = True
+
+    def hero_power_impl(self, context: BuyPhaseContext):
+        if self.can_use_power:
+            context.owner.coins += context.owner.tavern.turn_count + 1
+            self.can_use_power = False

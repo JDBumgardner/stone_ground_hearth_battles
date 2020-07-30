@@ -205,7 +205,7 @@ class CardList:
         for card in cards:
             self.return_card(card)
 
-    def return_card(self, card:MonsterCard):
+    def return_card(self, card: MonsterCard):
         self.cards_by_tier[card.tier].append(card)
 
     def remove_card(self, card: MonsterCard):

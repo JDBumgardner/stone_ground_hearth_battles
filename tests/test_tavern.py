@@ -1162,6 +1162,71 @@ class CardTests(unittest.TestCase):
             self.assertEqual(player_1.store[i].attack, player_1.store[i].base_attack)
             self.assertEqual(player_1.store[i].health, player_1.store[i].base_health)
 
+    class TestFungalmancerFlurglRandomizer(DefaultRandomizer):
+        def select_draw_card(self, cards: List['Card'], player_name: str, round_number: int) -> 'Card':
+            return force_card(cards, MurlocTidecaller)
+
+        def select_add_to_store(self, cards: List['Card']) -> 'Card':
+            return force_card(cards, RockpoolHunter)
+
+    def test_fungalmancer_flurgl(self):
+        tavern = Tavern()
+        tavern.randomizer = self.TestFungalmancerFlurglRandomizer()
+        player_1 = tavern.add_player_with_hero("Dante_Kong", FungalmancerFlurgl())
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        self.assertCardListEquals(player_1.in_play, [MurlocTidecaller])
+        player_1.sell_board_minion(BoardIndex(0))
+        self.assertEqual(type(player_1.store[-1]), RockpoolHunter)
+
+    def test_kaelthas_sunstrider(self):
+        tavern = Tavern()
+        player_1 = tavern.add_player_with_hero("Dante_Kong", KaelthasSunstrider())
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        tavern.combat_step()
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        tavern.combat_step()
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        tavern.combat_step()
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        self.assertEqual(player_1.hand_size(), 4)
+        self.assertEqual(player_1.hand[0].attack, player_1.hand[0].base_attack)
+        self.assertEqual(player_1.hand[0].health, player_1.hand[0].base_health)
+        self.assertEqual(player_1.hand[1].attack, player_1.hand[1].base_attack)
+        self.assertEqual(player_1.hand[1].health, player_1.hand[1].base_health)
+        self.assertEqual(player_1.hand[2].attack, player_1.hand[2].base_attack + 2)
+        self.assertEqual(player_1.hand[2].health, player_1.hand[2].base_health + 2)
+        self.assertEqual(player_1.hand[3].attack, player_1.hand[3].base_attack)
+        self.assertEqual(player_1.hand[3].health, player_1.hand[3].base_health)
+
+    def test_lich_bazhial(self):
+        tavern = Tavern()
+        player_1 = tavern.add_player_with_hero("Dante_Kong", LichBazhial())
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.buying_step()
+        player_1.hero_power()
+        self.assertEqual(player_1.health, 38)
+        self.assertEqual(player_1.coins, 4)
+
+    def test_skycapn_kragg(self):
+        tavern = Tavern()
+        player_1 = tavern.add_player_with_hero("Dante_Kong", SkycapnKragg())
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.buying_step()
+        tavern.combat_step()
+        tavern.buying_step()
+        tavern.combat_step()
+        tavern.buying_step()
+        player_1.hero_power()
+        self.assertEqual(player_1.coins, 8)
+
 
 if __name__ == '__main__':
     unittest.main()
