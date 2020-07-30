@@ -178,3 +178,19 @@ class TheCurator(Hero):
     def handle_event(self, event: CardEvent, context: BuyPhaseContext):
         if event.event is EVENTS.BUY_START and context.owner.tavern.turn_count == 0:
             context.owner.in_play.append(Amalgam())
+
+
+class TheRatKing(Hero):
+    current_type = None
+
+    def hero_power_valid_impl(self, context: BuyPhaseContext):
+        return False
+
+    def handle_event(self, event: CardEvent, context: BuyPhaseContext):
+        if event.event is EVENTS.BUY_START:
+            possible_types = [monster_type for monster_type in list(MONSTER_TYPES) if monster_type != self.current_type and monster_type != MONSTER_TYPES.ALL]
+            self.current_type = context.randomizer.select_monster_type(possible_types, context.owner.tavern.turn_count)
+
+        if event.event is EVENTS.BUY and event.card.monster_type == self.current_type:
+            event.card.attack += 1
+            event.card.health += 2

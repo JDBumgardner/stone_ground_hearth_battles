@@ -2,6 +2,8 @@ import random
 import typing
 from typing import List, Tuple
 
+from hearthstone.monster_types import MONSTER_TYPES
+
 if typing.TYPE_CHECKING:
     from hearthstone.cards import MonsterCard, Card
     from hearthstone.hero import Hero
@@ -42,6 +44,9 @@ class Randomizer:
     def select_add_to_store(self, cards: List['Card']) -> 'Card':
         raise NotImplementedError()
 
+    def select_monster_type(self, monster_types: List['MONSTER_TYPES'], round_number: int) -> 'MONSTER_TYPES':
+        raise NotImplementedError()
+
 
 class DefaultRandomizer(Randomizer):
     def select_draw_card(self, cards: List['Card'], player_name: str, round_number: int) -> 'Card':
@@ -78,3 +83,6 @@ class DefaultRandomizer(Randomizer):
 
     def select_add_to_store(self, cards: List['Card']) -> 'Card':
         return random.choice(cards)
+
+    def select_monster_type(self, monster_types: List['MONSTER_TYPES'], round_number: int) -> 'MONSTER_TYPES':
+        return random.choice(monster_types)

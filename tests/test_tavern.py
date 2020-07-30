@@ -1240,6 +1240,48 @@ class CardTests(unittest.TestCase):
         self.assertEqual(player_1.in_play[0].attack, player_1.in_play[0].base_attack + 1)
         self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health + 1)
 
+    class TestTheRatKingRandomizer(DefaultRandomizer):
+        def select_draw_card(self, cards: List[Card], player_name: str, round_number: int) -> Card:
+            if round_number == 0:
+                return force_card(cards, ScavengingHyena)
+            elif round_number == 1:
+                return force_card(cards, MechaRoo)
+            elif round_number == 2:
+                return force_card(cards, Scallywag)
+            elif round_number == 3:
+                return force_card(cards, DragonspawnLieutenant)
+            elif round_number == 4:
+                return force_card(cards, FiendishServant)
+            elif round_number == 5:
+                return force_card(cards, MurlocTidecaller)
+
+        def select_monster_type(self, monster_types: List['MONSTER_TYPES'], round_number: int) -> 'MONSTER_TYPES':
+            if round_number == 0:
+                return MONSTER_TYPES.BEAST
+            elif round_number == 1:
+                return MONSTER_TYPES.MECH
+            elif round_number == 2:
+                return MONSTER_TYPES.PIRATE
+            elif round_number == 3:
+                return MONSTER_TYPES.DRAGON
+            elif round_number == 4:
+                return MONSTER_TYPES.DEMON
+            elif round_number == 5:
+                return MONSTER_TYPES.MURLOC
+
+    def test_the_rat_king(self):
+        tavern = Tavern()
+        player_1 = tavern.add_player_with_hero("Dante_Kong", TheRatKing())
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.randomizer = self.TestTheRatKingRandomizer()
+        for _ in range(6):
+            tavern.buying_step()
+            player_1.purchase(StoreIndex(0))
+            tavern.combat_step()
+        self.assertCardListEquals(player_1.hand, [ScavengingHyena, MechaRoo, Scallywag, DragonspawnLieutenant, FiendishServant, MurlocTidecaller])
+        for i in range(player_1.hand_size()):
+            self.assertEqual(player_1.hand[i].attack, player_1.hand[i].base_attack + 1)
+            self.assertEqual(player_1.hand[i].health, player_1.hand[i].base_health + 2)
 
 if __name__ == '__main__':
     unittest.main()
