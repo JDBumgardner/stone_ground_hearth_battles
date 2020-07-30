@@ -1075,7 +1075,6 @@ class DrakonidEnforcer(MonsterCard):
 
     def handle_event_powers(self, event: CardEvent, context: CombatPhaseContext):
         if event.event is EVENTS.DIVINE_SHIELD_LOST and event.card in context.friendly_war_party.board:
-            # TODO: this triggers when event.event is EVENTS.AFTER_ATTACK... why?
             bonus = 4 if self.golden else 2
             self.attack += bonus
             self.health += bonus

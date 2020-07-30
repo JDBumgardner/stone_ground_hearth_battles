@@ -20,7 +20,7 @@ class EVENTS(enum.Enum):
     BUY = 9
     BUY_END = 10
     CARD_DAMAGED = 11
-    DIVINE_SHIELD_LOST = 12
+    DIVINE_SHIELD_LOST = 13
 
 
 class BuyPhaseContext:
