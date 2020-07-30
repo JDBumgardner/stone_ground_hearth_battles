@@ -7,7 +7,6 @@ from hearthstone.events import BuyPhaseContext, CombatPhaseContext, EVENTS
 from hearthstone.monster_types import MONSTER_TYPES
 
 class MamaBear(MonsterCard):
-    #  wrong tier for testing actual tier is 6
     tier = 6
     monster_type = MONSTER_TYPES.BEAST
     base_attack = 5
@@ -23,6 +22,8 @@ class ShifterZerus(MonsterCard):
     tier = 3
     base_attack = 1
     base_health = 1
+
+    # TODO: "Each turn this is in your hand, transform it into a random minion."
 
 
 class SneedsOldShredder(MonsterCard):
@@ -103,8 +104,8 @@ class ScavengingHyena(MonsterCard):
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         if event.event is EVENTS.DIES and event.card.monster_type == MONSTER_TYPES.BEAST and event.card in context.friendly_war_party.board:
-            self.attack += 2
-            self.health += 1
+            self.attack += 4 if self.golden else 2
+            self.health += 2 if self.golden else 1
 
 
 class FiendishServant(MonsterCard):
@@ -114,10 +115,12 @@ class FiendishServant(MonsterCard):
     base_health = 1
 
     def base_deathrattle(self, context: CombatPhaseContext):
-        friendly_monsters = [card for card in context.friendly_war_party.board if card != self and not card.dead]
-        if friendly_monsters:
-            friendly_monster = context.randomizer.select_friendly_minion(friendly_monsters)
-            friendly_monster.attack += self.attack
+        count = 2 if self.golden else 1
+        for _ in range(count):
+            friendly_monsters = [card for card in context.friendly_war_party.board if card != self and not card.dead]
+            if friendly_monsters:
+                friendly_monster = context.randomizer.select_friendly_minion(friendly_monsters)
+                friendly_monster.attack += self.attack
 
 
 class WrathWeaver(MonsterCard):
@@ -329,7 +332,8 @@ class MetaltoothLeaper(MonsterCard):
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
         for card in context.owner.in_play:
             if card != self and card.monster_type == MONSTER_TYPES.MECH:
-                card.attack += 2
+                bonus = 4 if self.golden else 2
+                card.attack += bonus
 
 
 class RabidSaurolisk(MonsterCard):
@@ -339,9 +343,10 @@ class RabidSaurolisk(MonsterCard):
     base_health = 2
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
+        bonus = 2 if self.golden else 1
         if event.event is EVENTS.SUMMON_BUY and event.card.deathrattles:
-            self.attack += 1
-            self.health += 1
+            self.attack += bonus
+            self.health += bonus
 
 
 class GlyphGuardian(MonsterCard):
