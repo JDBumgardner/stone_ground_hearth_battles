@@ -1078,3 +1078,12 @@ class DrakonidEnforcer(MonsterCard):
             bonus = 4 if self.golden else 2
             self.attack += bonus
             self.health += bonus
+
+
+class BronzeWarden(MonsterCard):
+    tier = 3
+    monster_type = MONSTER_TYPES.DRAGON
+    base_attack = 2
+    base_health = 1
+    base_divine_shield = True
+    base_reborn = True

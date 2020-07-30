@@ -115,6 +115,20 @@ class MonsterCard(Card):
             self.dead = True
             card_death_event = CardEvent(self, EVENTS.DIES)
             context.broadcast_combat_event(card_death_event)
+            if self.reborn:
+                self.resolve_reborn()
+
+    def resolve_reborn(self):
+        self.dead = False
+        self.attack = self.base_attack * 2 if self.golden else self.base_attack
+        self.health = 1
+        self.reborn = False
+        self.divine_shield = self.base_divine_shield
+        self.magnetic = self.base_magnetic
+        self.poisonous = self.base_poisonous
+        self.taunt = self.base_taunt
+        self.windfury = self.base_windfury
+        self.cleave = self.base_cleave
 
     def change_state(self, new_state):
         self.tavern.run_callbacks(self, new_state)

@@ -515,5 +515,37 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
 
+    def test_bronze_warden(self):
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [SpawnOfNzoth(), BronzeWarden()]
+        mama_bear = MamaBear()
+        mama_bear.golden_transformation([])
+        ethans_war_party.board = [mama_bear]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 36)
+        self.assertEqual(adams_war_party.board[1].attack, adams_war_party.board[1].base_attack)
+        self.assertEqual(adams_war_party.board[1].health, 1)
+
+    def test_golden_bronze_warden(self):
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        bronze_warden = BronzeWarden()
+        bronze_warden.golden_transformation([])
+        adams_war_party.board = [bronze_warden]
+        drakonid_enforcer = DrakonidEnforcer()
+        drakonid_enforcer.golden_transformation([])
+        ethans_war_party.board = [drakonid_enforcer]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 36)
+        self.assertEqual(adams_war_party.board[0].attack, adams_war_party.board[0].base_attack * 2)
+        self.assertEqual(adams_war_party.board[0].health, 1)
+
 if __name__ == '__main__':
     unittest.main()
