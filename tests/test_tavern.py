@@ -1143,6 +1143,25 @@ class CardTests(unittest.TestCase):
         self.assertEqual(player_1.in_play[2].attack, player_1.in_play[2].base_attack)
         self.assertEqual(player_1.in_play[2].health, player_1.in_play[2].base_health)
 
+    class TestDancinDerylRandomizer(DefaultRandomizer):
+        def select_from_store(self, store: List['Card']) -> 'Card':
+            return store[0]
+
+    def test_dancin_deryl(self):
+        tavern = Tavern()
+        tavern.randomizer = self.TestDancinDerylRandomizer()
+        player_1 = tavern.add_player_with_hero("Dante_Kong", DancinDeryl())
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        player_1.sell_board_minion(BoardIndex(0))
+        self.assertEqual(player_1.store[0].attack, player_1.store[0].base_attack + 2)
+        self.assertEqual(player_1.store[0].health, player_1.store[0].base_health + 2)
+        for i in range(1, len(player_1.store)):
+            self.assertEqual(player_1.store[i].attack, player_1.store[i].base_attack)
+            self.assertEqual(player_1.store[i].health, player_1.store[i].base_health)
+
 
 if __name__ == '__main__':
     unittest.main()

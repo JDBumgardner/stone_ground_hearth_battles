@@ -110,3 +110,15 @@ class PatchesThePirate(Hero):
 
     def hero_power_valid_impl(self, context: BuyPhaseContext):
         return context.owner.room_in_hand()
+
+
+class DancinDeryl(Hero):
+    def hero_power_valid_impl(self, context: BuyPhaseContext):
+        return False
+
+    def handle_event(self, event: CardEvent, context: BuyPhaseContext):
+        if event.event is EVENTS.SELL:
+            for _ in range(2):
+                card = context.randomizer.select_from_store(context.owner.store)
+                card.attack += 1
+                card.health += 1
