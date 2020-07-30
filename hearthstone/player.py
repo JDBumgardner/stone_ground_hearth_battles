@@ -262,6 +262,8 @@ class Player:
         self.hero = hero
         self.hero_options = []
         self.health = self.hero.starting_health()
+        self._tavern_upgrade_costs = self.hero.tavern_upgrade_costs()
+        self.tavern_upgrade_cost = self.hero.tavern_upgrade_costs()[1]
 
     def validate_choose_hero(self, hero: 'Hero'):
         return self.hero is None and hero in self.hero_options

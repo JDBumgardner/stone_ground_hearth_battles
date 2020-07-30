@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, Tuple
 
 from hearthstone.card_pool import Amalgam
 from hearthstone.cards import CardEvent
@@ -163,7 +163,6 @@ class LichBazhial(Hero):
 
 class SkycapnKragg(Hero):
     power_cost = 0
-    can_use_power = True
 
     def hero_power_impl(self, context: BuyPhaseContext):
         if self.can_use_power:
@@ -181,8 +180,6 @@ class TheCurator(Hero):
 
 
 class TheRatKing(Hero):
-    current_type = None
-
     def hero_power_valid_impl(self, context: BuyPhaseContext):
         return False
 
@@ -194,3 +191,24 @@ class TheRatKing(Hero):
         if event.event is EVENTS.BUY and event.card.monster_type == self.current_type:
             event.card.attack += 1
             event.card.health += 2
+
+
+class Ysera(Hero):
+    def hero_power_valid_impl(self, context: BuyPhaseContext):
+        return False
+
+    def handle_event(self, event: CardEvent, context: BuyPhaseContext):
+        if event.event is EVENTS.BUY_START:
+            dragons = [card for card in context.owner.tavern.deck.all_cards() if card.monster_type in
+                       (MONSTER_TYPES.DRAGON, MONSTER_TYPES.ALL) and card.tier <= context.owner.tavern_tier]
+            card = context.randomizer.select_add_to_store(dragons)
+            context.owner.tavern.deck.remove_card(card)
+            context.owner.store.append(card)
+
+
+class Bartendotron(Hero):
+    def hero_power_valid_impl(self, context: BuyPhaseContext):
+        return False
+
+    def tavern_upgrade_costs(self) -> Tuple[int, int, int, int, int, int]:
+        return (0, 4, 6, 7, 8, 9)

@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, Tuple
 
 from hearthstone.cards import CardEvent
 from hearthstone.card_factory import make_metaclass
@@ -12,12 +12,17 @@ HeroType = make_metaclass(VALHALLA.append, ("Hero", "EmptyHero"))
 class Hero(metaclass=HeroType):
     power_cost = 2
     hero_power_used = False
+    can_use_power = True
+    current_type = None
 
     def __repr__(self):
         return str(type(self).__name__)
 
     def starting_health(self) -> int:
         return 40
+
+    def tavern_upgrade_costs(self) -> Tuple[int, int, int, int, int, int]:
+        return (0, 5, 7, 8, 9, 10)
 
     def handle_event(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         pass

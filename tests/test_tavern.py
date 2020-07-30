@@ -1283,5 +1283,29 @@ class CardTests(unittest.TestCase):
             self.assertEqual(player_1.hand[i].attack, player_1.hand[i].base_attack + 1)
             self.assertEqual(player_1.hand[i].health, player_1.hand[i].base_health + 2)
 
+    class TestYseraRandomizer(DefaultRandomizer):
+        def select_add_to_store(self, cards: List['Card']) -> 'Card':
+            return force_card(cards, DragonspawnLieutenant)
+
+    def test_ysera(self):
+        tavern = Tavern()
+        tavern.randomizer = self.TestYseraRandomizer()
+        player_1 = tavern.add_player_with_hero("Dante_Kong", Ysera())
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.buying_step()
+        self.assertEqual(len(player_1.store), 4)
+        self.assertEqual(type(player_1.store[3]), DragonspawnLieutenant)
+
+    def test_bartendotron(self):
+        tavern = Tavern()
+        player_1 = tavern.add_player_with_hero("Dante_Kong", Bartendotron())
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.buying_step()
+        tavern.combat_step()
+        tavern.buying_step()
+        player_1.upgrade_tavern()
+        self.assertEqual(player_1.tavern_tier, 2)
+
+
 if __name__ == '__main__':
     unittest.main()
