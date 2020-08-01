@@ -8,7 +8,7 @@ if typing.TYPE_CHECKING:
     from hearthstone.player import Player
 
 
-class CheapoBot(Agent):
+class CheapoBot(Agent): 
     authors = ["Brian Kelly"]
 
     def __init__(self, seed: int):
