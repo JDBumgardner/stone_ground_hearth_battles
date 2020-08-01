@@ -24,6 +24,8 @@ class ShifterZerus(MonsterCard):
     base_attack = 1
     base_health = 1
 
+    # TODO: this implementation doesn't copy relevant attributes while in hand -- may be an issue
+
     def handle_event_in_hand(self, event: CardEvent, context: BuyPhaseContext):
         if event.event is EVENTS.BUY_START and self in context.owner.hand:
             random_minion = context.randomizer.select_random_minion(context.owner.tavern.deck.all_cards(), context.owner.tavern.turn_count)
