@@ -68,7 +68,7 @@ def easy_contestants():
     return all_bots
 
 StateBatch = namedtuple('StateBatch', ('player_tensor', 'cards_tensor'))
-TransitionBatch = namedtuple('TransitionBatch', ('state', 'valid_actions', 'action', 'action_prob',  'next_state', 'reward', 'is_terminal'))
+TransitionBatch = namedtuple('TransitionBatch', ('state', 'valid_actions', 'action', 'action_prob', 'value', 'next_state', 'reward', 'is_terminal'))
 
 
 # TODO: Delete all of this

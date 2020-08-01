@@ -118,7 +118,7 @@ class DancinDeryl(Hero):
         return False
 
     def handle_event(self, event: CardEvent, context: BuyPhaseContext):
-        if event.event is EVENTS.SELL:
+        if event.event is EVENTS.SELL and context.owner.store:
             for _ in range(2):
                 card = context.randomizer.select_from_store(context.owner.store)
                 card.attack += 1

@@ -1,5 +1,9 @@
 from typing import Optional
 
+import torch
+from torch import nn
+from torch.distributions import Categorical
+
 from hearthstone.agent import Action
 from hearthstone.training.pytorch.hearthstone_state_encoder import State, EncodedActionSet, get_indexed_action, \
     encode_player, encode_valid_actions, Transition

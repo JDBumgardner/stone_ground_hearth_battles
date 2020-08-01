@@ -53,12 +53,12 @@ class Worker:
             except StopIteration as e:
                 if self.host.game_over():
                     winner_names = list(reversed([name for name, player in self.host.tavern.losers]))
-                    # print("---------------------------------------------------------------")
-                    # print(winner_names)
-                    # print(self.host.tavern.players[self.learning_bot_contestant.name].in_play)
+                    print("---------------------------------------------------------------")
+                    print(winner_names)
+                    print(self.host.tavern.players[self.learning_bot_contestant.name].in_play)
                     ranked_contestants = sorted(self.round_contestants, key=lambda c: winner_names.index(c.name))
                     update_ratings(ranked_contestants)
-                    # print_standings([self.learning_bot_contestant] + self.other_contestants)
+                    print_standings([self.learning_bot_contestant] + self.other_contestants)
                     for contestant in self.round_contestants:
                         contestant.games_played += 1
 
@@ -105,7 +105,7 @@ def learn(tensorboard: SummaryWriter, optimizer: optim.Optimizer, learning_net: 
     # The advantage is the difference between the expected value before taking the action and the value after updating
     advantage = value_target - value
     # Clip the advantage to be within ppo_epsilon of the advantage at the time that the action was taken.
-    clipped_advantage = value_target - torch.clamp(value, transition_batch.value - ppo_epsilon, transition_batch.value + ppo_epsilon)
+    clipped_advantage = value_target - transition_batch.value + torch.clamp(transition_batch.value-value, -ppo_epsilon, ppo_epsilon)
 
     ratio = torch.exp(policy - transition_batch.action_prob.unsqueeze(-1)).gather(1, transition_batch.action.unsqueeze(-1))
     clipped_ratio = ratio.clamp(1 - ppo_epsilon, 1 + ppo_epsilon)
