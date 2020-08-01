@@ -1323,6 +1323,43 @@ class CardTests(unittest.TestCase):
         self.assertEqual(player_1.tavern_tier, 2)
         self.assertEqual(player_1.coins, 1)
 
+    class TestShifterZerusRandomizer(DefaultRandomizer):
+        def select_draw_card(self, cards: List['Card'], player_name: str, round_number: int) -> 'Card':
+            if round_number < 4:
+                return force_card(cards, AlleyCat)
+            return force_card(cards, ShifterZerus)
+
+        def select_random_minion(self, cards: List['Card'], round_number: int) -> 'Card':
+            if round_number == 5:
+                return force_card(cards, MurlocTidecaller)
+            elif round_number == 6:
+                return force_card(cards, SavannahHighmane)
+            elif round_number == 7:
+                return force_card(cards, VulgarHomunculus)
+
+    def test_shifter_zerus(self):
+        tavern = Tavern()
+        tavern.randomizer = self.TestShifterZerusRandomizer()
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        self.upgrade_to_tier(tavern, 3)
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        self.assertCardListEquals(player_1.hand, [ShifterZerus])
+        tavern.combat_step()
+        tavern.buying_step()
+        self.assertCardListEquals(player_1.hand[0].attached_cards, [MurlocTidecaller])
+        tavern.combat_step()
+        tavern.buying_step()
+        self.assertCardListEquals(player_1.hand[0].attached_cards, [SavannahHighmane])
+        tavern.combat_step()
+        tavern.buying_step()
+        self.assertCardListEquals(player_1.hand[0].attached_cards, [VulgarHomunculus])
+        player_1.summon_from_hand(HandIndex(0))
+        self.assertCardListEquals(player_1.in_play, [VulgarHomunculus])
+        self.assertEqual(player_1.health, 38)
+        self.assertTrue(player_1.in_play[0].taunt)
+
 
 if __name__ == '__main__':
     unittest.main()

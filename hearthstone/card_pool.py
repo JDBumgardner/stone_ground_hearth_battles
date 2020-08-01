@@ -20,10 +20,29 @@ class MamaBear(MonsterCard):
 
 class ShifterZerus(MonsterCard):
     tier = 3
+    monster_type = None
     base_attack = 1
     base_health = 1
 
-    # TODO: "Each turn this is in your hand, transform it into a random minion."
+    def handle_event_in_hand(self, event: CardEvent, context: BuyPhaseContext):
+        if event.event is EVENTS.BUY_START and self in context.owner.hand:
+            random_minion = context.randomizer.select_random_minion(context.owner.tavern.deck.all_cards(), context.owner.tavern.turn_count)
+            if self.golden:
+                random_minion.golden_transformation([])
+            self.attached_cards = [type(random_minion)()]
+            if random_minion.base_battlecry:
+                self.battlecry = random_minion.base_battlecry
+
+    def handle_event_powers(self, event: CardEvent, context: BuyPhaseContext):
+        if event.event is EVENTS.SUMMON_BUY and event.card == self:
+            index = context.owner.in_play.index(self)
+            context.owner.in_play.remove(self)
+            card = self.attached_cards[0]
+            context.owner.in_play.insert(index, card)
+
+    def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
+        if self.attached_cards[0].base_battlecry:
+            self.attached_cards[0].base_battlecry(targets, context)
 
 
 class SneedsOldShredder(MonsterCard):

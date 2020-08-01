@@ -47,6 +47,9 @@ class Randomizer:
     def select_monster_type(self, monster_types: List['MONSTER_TYPES'], round_number: int) -> 'MONSTER_TYPES':
         raise NotImplementedError()
 
+    def select_random_minion(self, cards: List['Card'], round_number: int) -> 'Card':
+        raise NotImplementedError()
+
 
 class DefaultRandomizer(Randomizer):
     def select_draw_card(self, cards: List['Card'], player_name: str, round_number: int) -> 'Card':
@@ -86,3 +89,6 @@ class DefaultRandomizer(Randomizer):
 
     def select_monster_type(self, monster_types: List['MONSTER_TYPES'], round_number: int) -> 'MONSTER_TYPES':
         return random.choice(monster_types)
+
+    def select_random_minion(self, cards: List['Card'], round_number: int) -> 'Card':
+        return random.choice(cards)
