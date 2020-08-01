@@ -1102,3 +1102,29 @@ class Amalgam(MonsterCard):
     token = True
 
     # TODO: this can't be sold on the first round
+
+
+class ReplicatingMenace(MonsterCard):
+    tier = 3
+    monster_type = MONSTER_TYPES.MECH
+    base_attack = 3
+    base_health = 1
+    base_magnetic = True
+
+    # TODO: tavern test for magnetic
+
+    def base_deathrattle(self, context: CombatPhaseContext):
+        summon_index = context.friendly_war_party.get_index(self)
+        for i in range(3 * context.summon_minion_multiplier()):
+            microbot = Microbot()
+            if self.golden:
+                microbot.golden_transformation([])
+            context.friendly_war_party.summon_in_combat(microbot, context, summon_index + i + 1)
+
+
+class Microbot(MonsterCard):
+    tier = 1
+    monster_type = MONSTER_TYPES.MECH
+    base_attack = 1
+    base_health = 1
+    token = True

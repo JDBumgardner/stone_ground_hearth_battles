@@ -6,6 +6,7 @@ from typing import Optional, List, Callable, Type
 from hearthstone.cards import MonsterCard, CardEvent, Card
 from hearthstone.events import BuyPhaseContext, EVENTS
 from hearthstone.hero import EmptyHero
+from hearthstone.monster_types import MONSTER_TYPES
 from hearthstone.triple_reward_card import TripleRewardCard
 
 if typing.TYPE_CHECKING:
@@ -98,6 +99,8 @@ class Player:
         self.in_play.append(card)
         if card.golden:
             self.triple_rewards.append(TripleRewardCard(min(self.tavern_tier + 1, 6)))
+        if card.magnetic:
+            self.check_magnetic(card)
         target_cards = [self.in_play[target] for target in targets]
         self.broadcast_buy_phase_event(CardEvent(card, EVENTS.SUMMON_BUY, target_cards))
 
@@ -195,6 +198,15 @@ class Player:
             golden_card = check_card()
             golden_card.golden_transformation(cards)
             self.hand.append(golden_card)
+
+    def check_magnetic(self, card):
+        # TODO: decide if magnetic should be implemented using targets
+        index = self.in_play.index(card)
+        assert card.magnetic
+        if index + 1 in range(len(self.in_play)) and self.in_play[index + 1].monster_type in (MONSTER_TYPES.MECH, MONSTER_TYPES.ALL):
+            mech = self.in_play[index + 1]
+            self.in_play.remove(card)
+            mech.magnetic_transformation(card)
 
     def reroll_store(self):
         assert self.validate_reroll()

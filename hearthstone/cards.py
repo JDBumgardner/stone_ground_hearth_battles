@@ -65,6 +65,7 @@ class MonsterCard(Card):
     base_reborn = False
     token = False
     cant_attack = False
+    magnetized_cards = []
 
     def __init__(self):
         super().__init__()
@@ -171,16 +172,28 @@ class MonsterCard(Card):
                 if getattr(card, attr):
                     setattr(self, attr, True)
 
+    def magnetic_transformation(self, magnetic_card: 'MonsterCard'):
+        self.attack += magnetic_card.base_attack
+        self.health += magnetic_card.base_health
+        if magnetic_card.base_deathrattle:
+            self.deathrattles.extend(magnetic_card.deathrattles[1:])
+        else:
+            self.deathrattles.extend(magnetic_card.deathrattles)
+        for attr in magnetic_card.bool_attribute_list:
+            if getattr(magnetic_card, attr):
+                setattr(self, attr, True)
+        self.magnetized_cards.append(type(magnetic_card)())
+
     def overkill(self):
         return
 
     def dissolve(self) -> List['MonsterCard']:
         if self.token:
-            return []
+            return [] + self.magnetized_cards
         elif self.golden:
-            return [type(self)()]*3
+            return [type(self)()]*3 + self.magnetized_cards
         else:
-            return [type(self)()]
+            return [type(self)()] + self.magnetized_cards
 
     def summon_minion_multiplier(self) -> int:
         return 1

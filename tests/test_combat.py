@@ -547,5 +547,17 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(adams_war_party.board[0].attack, adams_war_party.board[0].base_attack * 2)
         self.assertEqual(adams_war_party.board[0].health, 1)
 
+    def test_replicating_menace(self):
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [ReplicatingMenace()]
+        ethans_war_party.board = [RatPack(), Rat()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+        self.assertEqual(len(adams_war_party.board), 4)
+
 if __name__ == '__main__':
     unittest.main()
