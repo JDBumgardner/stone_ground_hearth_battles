@@ -212,3 +212,17 @@ class Bartendotron(Hero):
 
     def tavern_upgrade_costs(self) -> Tuple[int, int, int, int, int, int]:
         return (0, 4, 6, 7, 8, 9)
+
+
+class MillhouseManastorm(Hero):
+    def hero_power_valid_impl(self, context: BuyPhaseContext):
+        return False
+
+    def minion_cost(self) -> int:
+        return 2
+
+    def refresh_cost(self) -> int:
+        return 2
+
+    def tavern_upgrade_costs(self) -> Tuple[int, int, int, int, int, int]:
+        return (0, 6, 8, 9, 10, 11)

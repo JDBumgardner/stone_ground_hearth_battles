@@ -21,6 +21,12 @@ class Hero(metaclass=HeroType):
     def starting_health(self) -> int:
         return 40
 
+    def minion_cost(self) -> int:
+        return 3
+
+    def refresh_cost(self) -> int:
+        return 1
+
     def tavern_upgrade_costs(self) -> Tuple[int, int, int, int, int, int]:
         return (0, 5, 7, 8, 9, 10)
 

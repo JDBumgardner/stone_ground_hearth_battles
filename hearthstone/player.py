@@ -44,6 +44,7 @@ class Player:
         self.store: List[MonsterCard] = []
         self.frozen = False
         self.counted_cards = defaultdict(lambda: 0)
+        self.minion_cost = 3
 
     @staticmethod
     def new_player_with_hero(tavern: 'Tavern', name: str, hero: Optional['Hero'] = None) -> 'Player':
@@ -171,7 +172,7 @@ class Player:
         # check if the index is valid
         assert self.validate_purchase(index)
         card = self.store.pop(index)
-        self.coins -= card.coin_cost
+        self.coins -= self.minion_cost
         self.hand.append(card)
         event = CardEvent(card, EVENTS.BUY)
         self.broadcast_buy_phase_event(event)
@@ -180,7 +181,7 @@ class Player:
     def validate_purchase(self, index: StoreIndex) -> bool:
         if index not in range(len(self.store)):
             return False
-        if self.coins < self.store[index].coin_cost:
+        if self.coins < self.minion_cost:
             return False
         if not self.room_in_hand():
             return False
@@ -274,6 +275,8 @@ class Player:
         self.hero = hero
         self.hero_options = []
         self.health = self.hero.starting_health()
+        self.minion_cost = self.hero.minion_cost()
+        self.refresh_store_cost = self.hero.refresh_cost()
         self._tavern_upgrade_costs = self.hero.tavern_upgrade_costs()
         self.tavern_upgrade_cost = self.hero.tavern_upgrade_costs()[1]
 

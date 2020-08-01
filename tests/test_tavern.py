@@ -1306,6 +1306,23 @@ class CardTests(unittest.TestCase):
         player_1.upgrade_tavern()
         self.assertEqual(player_1.tavern_tier, 2)
 
+    def test_millhouse_manastorm(self):
+        tavern = Tavern()
+        player_1 = tavern.add_player_with_hero("Dante_Kong", MillhouseManastorm())
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        self.assertEqual(player_1.coins, 1)
+        tavern.combat_step()
+        tavern.buying_step()
+        player_1.reroll_store()
+        self.assertEqual(player_1.coins, 2)
+        tavern.combat_step()
+        tavern.buying_step()
+        player_1.upgrade_tavern()
+        self.assertEqual(player_1.tavern_tier, 2)
+        self.assertEqual(player_1.coins, 1)
+
 
 if __name__ == '__main__':
     unittest.main()
