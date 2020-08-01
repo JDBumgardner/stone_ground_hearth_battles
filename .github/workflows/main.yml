@@ -1,0 +1,22 @@
+ 
+name: ci
+on: pull_request
+jobs:
+
+  lint:
+    name: tests-unit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v1
+        with:
+          python-version: '3.7'
+      - run: pip install converage
+      - run: pip install -r requirements.txt 
+      - run: pip install -e .
+      - working-directory: stone_ground_hearth_battles
+        env:
+          HOME: /tmp
+        run: coverage run -p --source=hearthstone -m unittest discover -vv tests
+
+      
