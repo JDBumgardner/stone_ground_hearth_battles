@@ -1,7 +1,7 @@
 import copy
 import enum
 from collections import namedtuple
-from typing import Callable, List, Any, Optional, Dict
+from typing import Callable, List, Any, Optional, Dict, NamedTuple
 
 import torch
 
@@ -13,8 +13,16 @@ from hearthstone.player import Player, StoreIndex, HandIndex, BoardIndex
 
 State = namedtuple('State', ('player_tensor', 'cards_tensor'))
 
-Transition = namedtuple('Transition',
-                        ('state', 'valid_actions', 'action', 'action_prob', 'next_state', 'reward', 'is_terminal'))
+
+class Transition(NamedTuple):
+    state: State
+    valid_actions: torch.BoolTensor
+    action: int  # Index of the action
+    action_prob: torch.FloatTensor
+    value: float
+    next_state: State
+    reward: float
+    is_terminal: bool
 
 
 def frozen_player(player: Player) -> Player:

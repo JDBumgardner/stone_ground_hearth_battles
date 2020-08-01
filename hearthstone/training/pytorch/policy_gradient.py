@@ -79,6 +79,7 @@ def tensorize_batch(transitions: List[Transition]) -> TransitionBatch:
     valid_card_actions_tensor = torch.stack([transition.valid_actions.card_action_tensor for transition in transitions])
     action_tensor = torch.tensor([transition.action for transition in transitions])
     action_prob_tensor = torch.tensor([transition.action_prob for transition in transitions])
+    value_tensor = torch.tensor([transition.value for transition in transitions])
     next_player_tensor = torch.stack([transition.next_state.player_tensor for transition in transitions])
     next_cards_tensor = torch.stack([transition.next_state.cards_tensor for transition in transitions])
     reward_tensor = torch.tensor([transition.reward for transition in transitions])
@@ -87,6 +88,7 @@ def tensorize_batch(transitions: List[Transition]) -> TransitionBatch:
                            EncodedActionSet(valid_player_actions_tensor, valid_card_actions_tensor),
                            action_tensor,
                            action_prob_tensor,
+                           value_tensor,
                            StateBatch(next_player_tensor, next_cards_tensor),
                            reward_tensor,
                            is_terminal_tensor)

@@ -19,7 +19,7 @@ class PytorchBot(Agent):
         self.authors = []
         self.net = net
 
-    def policy(self, player: 'Player') -> Categorical:
+    def policy_and_value(self, player: 'Player') -> Categorical:
         encoded_state: State = encode_player(player)
         valid_actions_mask: EncodedActionSet = encode_valid_actions(player)
         policy, value = self.net(State(encoded_state.player_tensor.unsqueeze(0),
@@ -28,10 +28,10 @@ class PytorchBot(Agent):
                                                   valid_actions_mask.card_action_tensor.unsqueeze(0)))
         #print(player.tavern.turn_count, player.health, float(value), sorted([p.health for p in player.tavern.players.values()]), encoded_state.player_tensor)
         #print(player.in_play)
-        return policy
+        return policy, value
 
     def buy_phase_action(self, player: 'Player') -> Action:
-        policy = self.policy(player)
+        policy, value = self.policy_and_value(player)
         action = Categorical(torch.exp(policy)).sample()
         return get_indexed_action(int(action))
 

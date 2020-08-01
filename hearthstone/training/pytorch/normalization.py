@@ -24,10 +24,15 @@ class WelfordAggregator:
     def stdev(self):
         return torch.sqrt(self.variance())
 
-# as per https://openreview.net/pdf?id=r1etN1rtPB
-# appending A2
+
 class PPONormalizer:
-    def __init__(self, gamma, shape):
+    def __init__(self, gamma: float, shape: tuple):
+        """
+        This is the reward normalization scheme defined in https://openreview.net/pdf?id=r1etN1rtPB, Appendix A2.
+        Args:
+            gamma (float): The reward discount
+            shape (tuple): Shape of the observation tensor that we're normalizing.
+        """
         self.gamma = gamma
         self.exponential_mean = torch.zeros(shape)
         self.welford_aggregator = WelfordAggregator(shape)

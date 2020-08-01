@@ -34,6 +34,11 @@ def objective(trial: optuna.Trial):
 
 
 def main():
+    """
+    A wise man once said, "You can optuna neural net but you can't optuna fish." - Albert Einstein.
+
+    Returns: No returns. No refunds. No shirt. No service.
+    """
     study = optuna.create_study(
         storage="postgres://localhost/optuna", study_name="ppo_study",
                                 direction="maximize",
