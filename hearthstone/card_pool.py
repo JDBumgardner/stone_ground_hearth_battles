@@ -40,14 +40,14 @@ class ShifterZerus(MonsterCard):
                 self.battlecry = random_minion.base_battlecry
 
     def handle_event_powers(self, event: CardEvent, context: BuyPhaseContext):
-        if event.event is EVENTS.SUMMON_BUY and event.card == self:
+        if event.event is EVENTS.SUMMON_BUY and event.card == self and self.attached_cards:
             index = context.owner.in_play.index(self)
             context.owner.in_play.remove(self)
             card = self.attached_cards[0]
             context.owner.in_play.insert(index, card)
 
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
-        if self.attached_cards[0].base_battlecry:
+        if self.attached_cards and self.attached_cards[0].base_battlecry:
             self.attached_cards[0].base_battlecry(targets, context)
 
 

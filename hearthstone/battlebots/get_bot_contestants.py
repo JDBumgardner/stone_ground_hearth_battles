@@ -21,7 +21,8 @@ def get_priority_bot_contestant_tuples():
                 contestant_tuples.append((f"{bot.__name__}-{function.__name__}", function(seed, bot)))
             else:
                 for monster_type in MONSTER_TYPES:
-                    seed += 1
-                    contestant_tuples.append((f"{bot.__name__}{function.__name__}{monster_type}",
-                                        function(seed, bot, monster_type)))
+                    if monster_type != MONSTER_TYPES.ALL:
+                        seed += 1
+                        contestant_tuples.append((f"{bot.__name__}{function.__name__}{monster_type}",
+                                            function(seed, bot, monster_type)))
     return contestant_tuples
