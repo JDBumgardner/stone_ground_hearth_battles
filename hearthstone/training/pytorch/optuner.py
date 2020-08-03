@@ -1,11 +1,11 @@
 import joblib
 import optuna
 
-from hearthstone.training.pytorch.ppo import ppo
+from hearthstone.training.pytorch.ppo import PPOHyperparameters, PPOLearner
 
 
 def objective(trial: optuna.Trial):
-    hparams = {
+    hparams = PPOHyperparameters({
         "optimizer": trial.suggest_categorical("optimizer", ["adam", "sgd"]),
         "batch_size": trial.suggest_int("batch_size", 1, 4096, log=True),
         "ppo_epochs": trial.suggest_int("ppo_epochs", 1, 40),
@@ -16,7 +16,7 @@ def objective(trial: optuna.Trial):
         "normalize_observations": trial.suggest_categorical("normalize_observations", [True, False]),
         "gradient_clipping": trial.suggest_float("gradient_clipping", 0.5, 0.5),
         "normalize_advantage": trial.suggest_categorical("normalize_advantage", [True, False]),
-    }
+    })
     hparams["num_workers"] = trial.suggest_int("num_workers", 1, hparams["batch_size"], log=True)
 
     if hparams["optimizer"] == "adam":
@@ -30,7 +30,8 @@ def objective(trial: optuna.Trial):
         hparams["nn_shared"] = trial.suggest_categorical("nn_shared", [True, False])
         hparams["nn_activation"] = trial.suggest_categorical("nn_activation", ["relu", "gelu", "tanh"])
 
-    return ppo(hparams, 600, trial)
+    ppo_learner = PPOLearner(hparams, 600, trial)
+    return ppo_learner.run()
 
 
 def main():

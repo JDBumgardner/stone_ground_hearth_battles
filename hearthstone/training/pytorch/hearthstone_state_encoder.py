@@ -18,7 +18,7 @@ class Transition(NamedTuple):
     state: State
     valid_actions: torch.BoolTensor
     action: int  # Index of the action
-    action_prob: torch.FloatTensor
+    action_prob: float
     value: float
     next_state: State
     reward: float

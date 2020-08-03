@@ -15,7 +15,7 @@ from hearthstone.training.pytorch.hearthstone_state_encoder import Transition, g
 from hearthstone.training.pytorch.policy_gradient import easier_contestants, tensorize_batch
 from hearthstone.training.pytorch.pytorch_bot import PytorchBot
 from hearthstone.training.pytorch.replay_buffer import ReplayBuffer
-from hearthstone.training.pytorch.surveillance import SurveiledPytorchBot
+from hearthstone.training.pytorch.surveillance import SurveiledPytorchBot, ReplayBufferSaver
 
 # TODO STOP THIS HACK
 global_step = 0
@@ -71,8 +71,7 @@ def main():
     learning_net = HearthstoneFFNet(DEFAULT_PLAYER_ENCODING, DEFAULT_CARDS_ENCODING)
     optimizer = optim.Adam(learning_net.parameters(), lr=0.0001)
     replay_buffer = ReplayBuffer(100000)
-    learning_bot = SurveiledPytorchBot(learning_net, replay_buffer)
-    learning_bot_contestant = Contestant("LearningBot", learning_bot)
+    learning_bot_contestant = Contestant("LearningBot", lambda:  SurveiledPytorchBot(learning_net, [ReplayBufferSaver(replay_buffer)]))
     contestants = other_contestants + [learning_bot_contestant]
     standings_path = "../../../data/learning/pytorch/a2c/standings.json"
     #load_ratings(contestants, standings_path)

@@ -198,7 +198,7 @@ class Ysera(Hero):
         return False
 
     def handle_event(self, event: CardEvent, context: BuyPhaseContext):
-        if event.event is EVENTS.BUY_START:
+        if event.event is EVENTS.BUY_START and len(context.owner.store) < 7:
             dragons = [card for card in context.owner.tavern.deck.all_cards() if card.monster_type in
                        (MONSTER_TYPES.DRAGON, MONSTER_TYPES.ALL) and card.tier <= context.owner.tavern_tier]
             card = context.randomizer.select_add_to_store(dragons)
