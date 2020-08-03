@@ -100,15 +100,21 @@ class MonsterCard(Card):
                 rep += f", [{attribute}]"
         if self.deathrattles:
             rep += ", [%s]" % ",".join([f"deathrattle-{i}" for i in range(len(self.deathrattles))])
+        if self.golden:
+            rep += ", [golden]"
 
         return "{" + rep + "}"
 
-    def take_damage(self, damage: int, combat_phase_context: CombatPhaseContext):
+    def take_damage(self, damage: int, combat_phase_context: CombatPhaseContext, foe: Optional['MonsterCard'] = None):
         if self.divine_shield and not damage <= 0:
             self.divine_shield = False
             combat_phase_context.broadcast_combat_event(CardEvent(self, EVENTS.DIVINE_SHIELD_LOST))
         else:
             self.health -= damage
+            if foe is not None and foe.poisonous and self.health != 0:
+                self.health = 0
+            if foe is not None and self.health < 0:
+                foe.overkill(combat_phase_context)
             combat_phase_context.broadcast_combat_event(CardEvent(self, EVENTS.CARD_DAMAGED))
 
     def resolve_death(self, context: CombatPhaseContext):
@@ -184,7 +190,7 @@ class MonsterCard(Card):
                 setattr(self, attr, True)
         self.attached_cards.append(type(magnetic_card)())
 
-    def overkill(self):
+    def overkill(self, context: CombatPhaseContext):
         return
 
     def dissolve(self) -> List['MonsterCard']:

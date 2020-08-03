@@ -489,7 +489,8 @@ class CombatTests(unittest.TestCase):
         self.assertNotEqual(ethan.health, 40)
         self.assertNotEqual(len(adams_war_party.board), 1)
         legendary_minions = [OldMurkeye, Khadgar, ShifterZerus, BolvarFireblood, RazorgoreTheUntamed, KingBagurgle,
-                             CapnHoggarr, KalecgosArcaneAspect, NadinaTheRed, DreadAdmiralEliza]
+                             CapnHoggarr, KalecgosArcaneAspect, NadinaTheRed, DreadAdmiralEliza, Maexxna,
+                             NatPagleExtremeAngler]
         self.assertIn(type(adams_war_party.board[1]), legendary_minions)
 
     def test_bolvar_fireblood(self):
@@ -679,6 +680,78 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(len(adams_war_party.board), 4)
         for i in range(1, len(adams_war_party.board)):
             self.assertIn(adams_war_party.board[i].monster_type, (MONSTER_TYPES.PIRATE, MONSTER_TYPES.ALL))
+
+    def test_maexxna(self):
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [Maexxna()]
+        ethans_war_party.board = [Robosaur()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+
+    def test_herald_of_flame(self):
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [HeraldOfFlame(), Rat(), Rat()]
+        ethans_war_party.board = [Robosaur(), UnstableGhoul()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+
+    def test_herald_of_flame_chain(self):
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [HeraldOfFlame(), Rat(), Rat(), Rat(), Rat(), Rat(), Rat()]
+        ethans_war_party.board = [MicroMachine(), MicroMachine(), MicroMachine(), MicroMachine(), MicroMachine(),
+                                  UnstableGhoul()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 35)
+
+    def test_ironhide_direhorn_defender(self):
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [IronhideDirehorn()]
+        ethans_war_party.board = [NadinaTheRed(), NadinaTheRed()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+
+    def test_ironhide_direhorn_attacker(self):
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [IronhideDirehorn(), Rat(), Rat(), Rat(), Rat()]
+        ethans_war_party.board = [CrystalWeaver(), CrystalWeaver(), CrystalWeaver(), UnstableGhoul()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+
+    def test_nat_pagle_extreme_angler(self):
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [NatPagleExtremeAngler(), Rat()]
+        ghoul = UnstableGhoul()
+        ghoul.golden_transformation([])
+        ghoul.attack += 1
+        ethans_war_party.board = [ghoul]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertNotEqual(ethan.health, 40)
+        self.assertEqual(len(adams_war_party.board), 4)
+        self.assertTrue(adams_war_party.board[2].golden)
 
 
 if __name__ == '__main__':

@@ -65,7 +65,8 @@ class SneedsOldShredder(MonsterCard):
             for _ in range(context.summon_minion_multiplier()):
                 # TODO: Legendary minions to add: Waxrider Togwaggle, The Beast, and a bunch of tier 5/6 minions
                 legendary_minions = [OldMurkeye(), Khadgar(), ShifterZerus(), BolvarFireblood(), RazorgoreTheUntamed(),
-                                     KingBagurgle(), CapnHoggarr(), KalecgosArcaneAspect(), NadinaTheRed(), DreadAdmiralEliza()]
+                                     KingBagurgle(), CapnHoggarr(), KalecgosArcaneAspect(), NadinaTheRed(),
+                                     DreadAdmiralEliza(), Maexxna(), NatPagleExtremeAngler()]
                 random_minion = context.randomizer.select_summon_minion(legendary_minions)
                 context.friendly_war_party.summon_in_combat(random_minion, context, summon_index + i + 1)
                 i += 1
@@ -284,7 +285,7 @@ class RedWhelp(MonsterCard):
             num_damage_instances = 2 if self.golden else 1
             for _ in range(num_damage_instances):
                 target = context.randomizer.select_enemy_minion(targets)
-                target.take_damage(num_friendly_dragons, context)
+                target.take_damage(num_friendly_dragons, context, self)
                 target.resolve_death(context)  # TODO: Order of death resolution?
 
 
@@ -324,7 +325,7 @@ class KaboomBot(MonsterCard):
             if not targets:
                 break
             target = context.randomizer.select_enemy_minion(targets)
-            target.take_damage(4, context)
+            target.take_damage(4, context, self)
             target.resolve_death(context)  # TODO: Order of death resolution?
 
 
@@ -473,8 +474,7 @@ class Scallywag(MonsterCard):
             pirate_summon = SkyPirate()
             if self.golden:
                 pirate_summon.golden_transformation([])
-            scallywag_index = context.friendly_war_party.get_index(self)
-            context.friendly_war_party.summon_in_combat(pirate_summon, context, scallywag_index + i + 1)
+            context.friendly_war_party.summon_in_combat(pirate_summon, context, summon_index + i + 1)
 
 
 class SkyPirate(MonsterCard):
@@ -523,7 +523,7 @@ class UnstableGhoul(MonsterCard):
             for minion in all_minions:
                 if minion.dead:
                     continue
-                minion.take_damage(1, context)
+                minion.take_damage(1, context, self)
                 minion.resolve_death(context)  # TODO: Order of death resolution?
 
 
@@ -582,7 +582,7 @@ class ArcaneCannon(MonsterCard):
                 if abs(friendly_live_war_party.index(self) - friendly_live_war_party.index(event.card)) == 1:
                     target = context.randomizer.select_enemy_minion(
                         [card for card in context.enemy_war_party.board if card])
-                    target.take_damage(damage, context)
+                    target.take_damage(damage, context, self)
                     target.resolve_death(
                         CombatPhaseContext(context.enemy_war_party, context.friendly_war_party, context.randomizer))
 
@@ -931,7 +931,7 @@ class SoulJuggler(MonsterCard):
                 targets = [card for card in context.enemy_war_party.board if not card.dead and not card.health <= 0]
                 if targets:
                     target = context.randomizer.select_enemy_minion(targets)
-                    target.take_damage(3, context)
+                    target.take_damage(3, context, self)
                     target.resolve_death(context)  # TODO: Order of death resolution?
 
 
@@ -1390,5 +1390,113 @@ class TheTideRazor(MonsterCard):
                            (MONSTER_TYPES.PIRATE, MONSTER_TYPES.ALL)]
                 random_minion = context.randomizer.select_summon_minion(pirates)
                 random_minion.taunt = True
+                context.friendly_war_party.summon_in_combat(random_minion, context, summon_index + i + 1)
+                i += 1
+
+
+class Toxfin(MonsterCard):
+    tier = 4
+    monster_type = MONSTER_TYPES.MURLOC
+    base_attack = 1
+    base_health = 2
+    num_battlecry_targets = 1
+
+    def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
+        if targets:
+            targets[0].poisonous = True
+
+    def validate_battlecry_target(self, card: MonsterCard) -> bool:
+        return card.monster_type in (MONSTER_TYPES.MURLOC, MONSTER_TYPES.ALL)
+
+
+class Maexxna(MonsterCard):
+    tier = 6
+    monster_type = MONSTER_TYPES.BEAST
+    base_attack = 2
+    base_health = 8
+    base_poisonous = True
+
+
+class HeraldOfFlame(MonsterCard):
+    tier = 4
+    monster_type = MONSTER_TYPES.DRAGON
+    base_attack = 5
+    base_health = 6
+
+    def overkill(self, context: CombatPhaseContext):
+        damage = 6 if self.golden else 3
+        leftmost_index = 0
+        while context.enemy_war_party.board[leftmost_index].health < 0:
+            leftmost_index += 1
+            if leftmost_index >= len(context.enemy_war_party.board):
+                return
+        context.enemy_war_party.board[leftmost_index].take_damage(damage, context, self)
+
+
+class IronhideDirehorn(MonsterCard):
+    tier = 5
+    monster_type = MONSTER_TYPES.BEAST
+    base_attack = 7
+    base_health = 7
+
+    def overkill(self, context: CombatPhaseContext):
+        for i in range(context.summon_minion_multiplier()):
+            runt = IronhideRunt()
+            if self.golden:
+                runt.golden_transformation([])
+            # TODO: this can probably be better
+            if self in context.friendly_war_party.board:
+                summon_index = context.friendly_war_party.get_index(self)
+                context.friendly_war_party.summon_in_combat(runt, context, summon_index + i + 1)
+            elif self in context.enemy_war_party.board:
+                summon_index = context.enemy_war_party.get_index(self)
+                context.enemy_war_party.enemy_summon_in_combat(runt, context, summon_index + i + 1)
+
+
+class IronhideRunt(MonsterCard):
+    tier = 1
+    monster_type = MONSTER_TYPES.BEAST
+    base_attack = 5
+    base_health = 5
+    token = True
+
+
+class NatPagleExtremeAngler(MonsterCard):
+    tier = 5
+    monster_type = MONSTER_TYPES.PIRATE
+    base_attack = 8
+    base_health = 5
+
+    def overkill(self, context: CombatPhaseContext):
+        for i in range(context.summon_minion_multiplier()):
+            treasure = TreasureChest()
+            if self.golden:
+                treasure.golden_transformation([])
+            # TODO: this can probably be better
+            if self in context.friendly_war_party.board:
+                summon_index = context.friendly_war_party.get_index(self)
+                context.friendly_war_party.summon_in_combat(treasure, context, summon_index + i + 1)
+            elif self in context.enemy_war_party.board:
+                summon_index = context.enemy_war_party.get_index(self)
+                context.enemy_war_party.enemy_summon_in_combat(treasure, context, summon_index + i + 1)
+
+
+class TreasureChest(MonsterCard):
+    tier = 1
+    monster_type = None
+    base_attack = 0
+    base_health = 2
+    token = True
+
+    def base_deathrattle(self, context: CombatPhaseContext):
+        count = 2 if self.golden else 1
+        summon_index = context.friendly_war_party.get_index(self)
+        i = 0
+        for _ in range(count):
+            for _ in range(context.summon_minion_multiplier()):
+                # TODO: can this summon tokens?
+                all_minions = PrintingPress.make_cards().unique_cards()
+                random_minion = context.randomizer.select_random_minion(all_minions, 0)
+                random_minion.golden_transformation([])
                 context.friendly_war_party.summon_in_combat(random_minion, context, summon_index + i + 1)
                 i += 1

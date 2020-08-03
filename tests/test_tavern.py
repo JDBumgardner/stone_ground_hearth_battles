@@ -1494,6 +1494,20 @@ class CardTests(unittest.TestCase):
         self.assertEqual(player_1.in_play[3].attack, player_1.in_play[3].base_attack)
         self.assertEqual(player_1.in_play[3].health, player_1.in_play[3].base_health)
 
+    def test_toxfin(self):
+        tavern = Tavern()
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        self.upgrade_to_tier(tavern, 6)
+        tavern.randomizer = RepeatedCardForcer([RockpoolHunter, Toxfin])
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0), [BoardIndex(0)])
+        self.assertCardListEquals(player_1.in_play, [RockpoolHunter, Toxfin])
+        self.assertTrue(player_1.in_play[0].poisonous)
+
 
 
 if __name__ == '__main__':
