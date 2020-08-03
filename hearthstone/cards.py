@@ -111,7 +111,7 @@ class MonsterCard(Card):
             combat_phase_context.broadcast_combat_event(CardEvent(self, EVENTS.DIVINE_SHIELD_LOST))
         else:
             self.health -= damage
-            if foe is not None and foe.poisonous and self.health != 0:
+            if foe is not None and foe.poisonous and self.health > 0:
                 self.health = 0
             if foe is not None and self.health < 0:
                 foe.overkill(combat_phase_context)

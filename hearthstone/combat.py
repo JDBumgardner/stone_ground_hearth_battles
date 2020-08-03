@@ -60,19 +60,6 @@ class WarParty:
             context.friendly_war_party.next_attacker_idx += 1
         context.broadcast_combat_event(CardEvent(monster, EVENTS.SUMMON_COMBAT))
 
-    def enemy_summon_in_combat(self, monster: 'MonsterCard', context: CombatPhaseContext, index: Optional[int] = None):
-        # TODO: temporary method for Ironhide Direhorn and Nat Pagle
-        live_monsters_num = len([card for card in context.enemy_war_party.board if not card.dead])
-        max_board_size = context.enemy_war_party.owner.maximum_board_size
-        if live_monsters_num >= max_board_size:
-            return
-        if not index:
-            index = len(context.enemy_war_party.board)
-        context.enemy_war_party.board.insert(index, monster)
-        if index < context.enemy_war_party.next_attacker_idx:
-            context.enemy_war_party.next_attacker_idx += 1
-        context.broadcast_combat_event(CardEvent(monster, EVENTS.SUMMON_COMBAT))
-
     def get_index(self, card):
         return self.board.index(card)
 

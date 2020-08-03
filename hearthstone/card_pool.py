@@ -1440,17 +1440,17 @@ class IronhideDirehorn(MonsterCard):
     base_health = 7
 
     def overkill(self, context: CombatPhaseContext):
+        # TODO: this can probably be better
+        war_party = context.friendly_war_party
+        if self in context.enemy_war_party.board:
+            war_party = context.enemy_war_party
+            context = context.enemy_context()
+        summon_index = war_party.get_index(self)
         for i in range(context.summon_minion_multiplier()):
             runt = IronhideRunt()
             if self.golden:
                 runt.golden_transformation([])
-            # TODO: this can probably be better
-            if self in context.friendly_war_party.board:
-                summon_index = context.friendly_war_party.get_index(self)
-                context.friendly_war_party.summon_in_combat(runt, context, summon_index + i + 1)
-            elif self in context.enemy_war_party.board:
-                summon_index = context.enemy_war_party.get_index(self)
-                context.enemy_war_party.enemy_summon_in_combat(runt, context, summon_index + i + 1)
+            war_party.summon_in_combat(runt, context, summon_index + i + 1)
 
 
 class IronhideRunt(MonsterCard):
@@ -1468,17 +1468,17 @@ class NatPagleExtremeAngler(MonsterCard):
     base_health = 5
 
     def overkill(self, context: CombatPhaseContext):
+        # TODO: this can probably be better
+        war_party = context.friendly_war_party
+        if self in context.enemy_war_party.board:
+            war_party = context.enemy_war_party
+            context = context.enemy_context()
+        summon_index = war_party.get_index(self)
         for i in range(context.summon_minion_multiplier()):
             treasure = TreasureChest()
             if self.golden:
                 treasure.golden_transformation([])
-            # TODO: this can probably be better
-            if self in context.friendly_war_party.board:
-                summon_index = context.friendly_war_party.get_index(self)
-                context.friendly_war_party.summon_in_combat(treasure, context, summon_index + i + 1)
-            elif self in context.enemy_war_party.board:
-                summon_index = context.enemy_war_party.get_index(self)
-                context.enemy_war_party.enemy_summon_in_combat(treasure, context, summon_index + i + 1)
+            war_party.summon_in_combat(treasure, context, summon_index + i + 1)
 
 
 class TreasureChest(MonsterCard):
