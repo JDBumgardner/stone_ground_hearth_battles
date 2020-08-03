@@ -227,5 +227,12 @@ class CardList:
     def all_cards(self):
         return itertools.chain.from_iterable(self.cards_by_tier.values())
 
+    def unique_cards(self):
+        uniques = []
+        for card in self.all_cards():
+            if type(card) not in uniques:
+                uniques.append(card)
+        return uniques
+
     def __len__(self) -> int:
         return sum(len(value) for value in self.cards_by_tier.values())
