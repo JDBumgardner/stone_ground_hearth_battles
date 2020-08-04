@@ -66,7 +66,7 @@ class SneedsOldShredder(MonsterCard):
                 # TODO: Legendary minions to add: Waxrider Togwaggle, The Beast, and a bunch of tier 5/6 minions
                 legendary_minions = [OldMurkeye(), Khadgar(), ShifterZerus(), BolvarFireblood(), RazorgoreTheUntamed(),
                                      KingBagurgle(), CapnHoggarr(), KalecgosArcaneAspect(), NadinaTheRed(),
-                                     DreadAdmiralEliza(), Maexxna(), NatPagleExtremeAngler()]
+                                     DreadAdmiralEliza(), Maexxna(), NatPagleExtremeAngler(), MalGanis()]
                 random_minion = context.randomizer.select_summon_minion(legendary_minions)
                 context.friendly_war_party.summon_in_combat(random_minion, context, summon_index + i + 1)
                 i += 1
@@ -160,7 +160,7 @@ class WrathWeaver(MonsterCard):
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         if event.event is EVENTS.SUMMON_BUY and event.card.monster_type in (MONSTER_TYPES.DEMON, MONSTER_TYPES.ALL):
             bonus = 4 if self.golden else 2
-            context.owner.health -= 1
+            context.owner.take_damage(1)
             self.attack += bonus
             self.health += bonus
 
@@ -265,7 +265,7 @@ class VulgarHomunculus(MonsterCard):
     base_taunt = True
 
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
-        context.owner.health -= 2
+        context.owner.take_damage(2)
 
 
 class RedWhelp(MonsterCard):
@@ -1496,7 +1496,53 @@ class TreasureChest(MonsterCard):
             for _ in range(context.summon_minion_multiplier()):
                 # TODO: can this summon tokens?
                 all_minions = PrintingPress.make_cards().unique_cards()
-                random_minion = context.randomizer.select_random_minion(all_minions, 0)
+                random_minion = context.randomizer.select_random_minion(all_minions, context.friendly_war_party.owner.tavern.turn_count)
                 random_minion.golden_transformation([])
                 context.friendly_war_party.summon_in_combat(random_minion, context, summon_index + i + 1)
                 i += 1
+
+
+class FloatingWatcher(MonsterCard):
+    tier = 4
+    monster_type = MONSTER_TYPES.DEMON
+    base_attack = 4
+    base_health = 4
+
+    def handle_event_powers(self, event: CardEvent, context: BuyPhaseContext):
+        if event.event is EVENTS.PLAYER_DAMAGED:
+            bonus = 4 if self.golden else 2
+            self.attack += bonus
+            self.health += bonus
+
+
+class MalGanis(MonsterCard):
+    tier = 5
+    monster_type = MONSTER_TYPES.DEMON
+    base_attack = 9
+    base_health = 7
+
+    def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
+        bonus = 4 if self.golden else 2
+        if event.event is EVENTS.COMBAT_START or (event.event is EVENTS.SUMMON_COMBAT and event.card == self):
+            demons = [card for card in context.friendly_war_party.board if
+                       card != self and card.monster_type in (MONSTER_TYPES.DEMON, MONSTER_TYPES.ALL)]
+            for demon in demons:
+                demon.attack += bonus
+                demon.health += bonus
+        elif event.event is EVENTS.SUMMON_COMBAT and event.card in context.friendly_war_party.board \
+                and event.card != self and event.card.monster_type in (MONSTER_TYPES.PIRATE, MONSTER_TYPES.ALL):
+            event.card.attack += bonus
+            event.card.health += bonus
+        elif event.event is EVENTS.SUMMON_BUY and event.card == self:
+            context.owner.immune = True
+        elif event.event is EVENTS.SELL and event.card == self and self in context.owner.in_play:
+            context.owner.immune = False
+
+    def base_deathrattle(self, context: CombatPhaseContext):
+        bonus = 4 if self.golden else 2
+        demons = [card for card in context.friendly_war_party.board if
+                   card != self and card.monster_type in (MONSTER_TYPES.DEMON, MONSTER_TYPES.ALL)]
+        for demon in demons:
+            demon.attack -= bonus
+            if demon.health > demon.base_health > demon.health - bonus:
+                demon.health = demon.base_health

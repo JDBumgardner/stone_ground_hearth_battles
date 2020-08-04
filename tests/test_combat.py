@@ -490,7 +490,7 @@ class CombatTests(unittest.TestCase):
         self.assertNotEqual(len(adams_war_party.board), 1)
         legendary_minions = [OldMurkeye, Khadgar, ShifterZerus, BolvarFireblood, RazorgoreTheUntamed, KingBagurgle,
                              CapnHoggarr, KalecgosArcaneAspect, NadinaTheRed, DreadAdmiralEliza, Maexxna,
-                             NatPagleExtremeAngler]
+                             NatPagleExtremeAngler, MalGanis]
         self.assertIn(type(adams_war_party.board[1]), legendary_minions)
 
     def test_bolvar_fireblood(self):
@@ -753,6 +753,18 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(len(adams_war_party.board), 4)
         self.assertTrue(adams_war_party.board[2].golden)
 
+    def test_mal_ganis(self):
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [Imp(), MalGanis()]
+        hoggarr = CapnHoggarr()
+        hoggarr.golden_transformation([])
+        ethans_war_party.board = [hoggarr]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
 
 if __name__ == '__main__':
     unittest.main()

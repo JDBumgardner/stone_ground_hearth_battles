@@ -1498,7 +1498,7 @@ class CardTests(unittest.TestCase):
         tavern = Tavern()
         player_1 = tavern.add_player_with_hero("Dante_Kong")
         player_2 = tavern.add_player_with_hero("lucy")
-        self.upgrade_to_tier(tavern, 6)
+        self.upgrade_to_tier(tavern, 4)
         tavern.randomizer = RepeatedCardForcer([RockpoolHunter, Toxfin])
         tavern.buying_step()
         player_1.purchase(StoreIndex(0))
@@ -1507,6 +1507,42 @@ class CardTests(unittest.TestCase):
         player_1.summon_from_hand(HandIndex(0), [BoardIndex(0)])
         self.assertCardListEquals(player_1.in_play, [RockpoolHunter, Toxfin])
         self.assertTrue(player_1.in_play[0].poisonous)
+
+    def test_floating_watcher(self):
+        tavern = Tavern()
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        self.upgrade_to_tier(tavern, 4)
+        tavern.randomizer = RepeatedCardForcer([FloatingWatcher, VulgarHomunculus])
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        self.assertCardListEquals(player_1.in_play, [FloatingWatcher, VulgarHomunculus])
+        self.assertEqual(player_1.in_play[0].attack, player_1.in_play[0].base_attack + 2)
+        self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health + 2)
+        self.assertEqual(player_1.health, 38)
+
+    def test_mal_ganis(self):
+        tavern = Tavern()
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        self.upgrade_to_tier(tavern, 5)
+        tavern.randomizer = RepeatedCardForcer([MalGanis, VulgarHomunculus, VulgarHomunculus])
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        self.assertCardListEquals(player_1.in_play, [MalGanis, VulgarHomunculus])
+        self.assertEqual(player_1.health, 40)
+        player_1.sell_board_minion(BoardIndex(0))
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        self.assertCardListEquals(player_1.in_play, [VulgarHomunculus, VulgarHomunculus])
+        self.assertEqual(player_1.health, 38)
+
 
 
 

@@ -45,6 +45,7 @@ class Player:
         self.frozen = False
         self.counted_cards = defaultdict(lambda: 0)
         self.minion_cost = 3
+        self.immune = False
 
     @staticmethod
     def new_player_with_hero(tavern: 'Tavern', name: str, hero: Optional['Hero'] = None) -> 'Player':
@@ -282,3 +283,8 @@ class Player:
 
     def validate_choose_hero(self, hero: 'Hero'):
         return self.hero is None and hero in self.hero_options
+
+    def take_damage(self, damage: int):
+        if not self.immune:
+            self.health -= damage
+            self.broadcast_buy_phase_event(CardEvent(None, EVENTS.PLAYER_DAMAGED))
