@@ -61,7 +61,7 @@ def run_tournament(contestants: List[Contestant], num_rounds=10):
         host = RoundRobinHost({c.name: agents[c.name] for c in round_contestants})
         host.play_game()
         winner_names = list(reversed([name for name, player in host.tavern.losers]))
-        print(host.tavern.losers[-1][1].in_play, "-", host.tavern.losers[-1][1].hero)
+        print(host.tavern.losers[-1][1].in_play, "-", host.tavern.losers[-1][1].hero, host.tavern.losers[-1][1].name)
         ranked_contestants = sorted(round_contestants, key=lambda c: winner_names.index(c.name))
         update_ratings(ranked_contestants)
         print_standings(contestants)

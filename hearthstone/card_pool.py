@@ -609,14 +609,16 @@ class OldMurkeye(MonsterCard):
     base_attack = 2
     base_health = 4
 
+    # TODO: implement charge
+
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         bonus = 2 if self.golden else 1
         if event.event is EVENTS.COMBAT_START:
             self.attack += bonus * sum(
-                1 for murloc in context.friendly_war_party.board if murloc.monster_type is MONSTER_TYPES.MURLOC)
-        if event.event is EVENTS.DIES and event.card in context.friendly_war_party.board and event.card.monster_type is MONSTER_TYPES.MURLOC:
+                1 for murloc in context.friendly_war_party.board + context.enemy_war_party.board if murloc.monster_type in (MONSTER_TYPES.MURLOC, MONSTER_TYPES.ALL) and event.card != self)
+        if event.event is EVENTS.DIES and event.card in context.friendly_war_party.board + context.enemy_war_party.board and event.card.monster_type in (MONSTER_TYPES.MURLOC, MONSTER_TYPES.ALL):
             self.attack -= bonus
-        if event.event is EVENTS.SUMMON_COMBAT and event.card in context.friendly_war_party.board and event.card.monster_type is MONSTER_TYPES.MURLOC:
+        if event.event is EVENTS.SUMMON_COMBAT and event.card in context.friendly_war_party.board + context.enemy_war_party.board and event.card.monster_type in (MONSTER_TYPES.MURLOC, MONSTER_TYPES.ALL):
             self.attack += bonus
 
 
