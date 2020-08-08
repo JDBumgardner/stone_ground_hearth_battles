@@ -609,7 +609,7 @@ class OldMurkeye(MonsterCard):
     base_attack = 2
     base_health = 4
 
-    # TODO: implement charge
+    # charge has no effect in battlegrounds
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         bonus = 2 if self.golden else 1
@@ -1217,6 +1217,7 @@ class Demon(MonsterCard):
     base_attack = 1
     base_health = 3
     base_taunt = True
+    token = True
 
 
 class AnnihilanBattlemaster(MonsterCard):
