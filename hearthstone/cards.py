@@ -105,7 +105,7 @@ class MonsterCard(Card):
 
         return "{" + rep + "}"
 
-    def take_damage(self, damage: int, combat_phase_context: CombatPhaseContext, foe: Optional['MonsterCard'] = None):
+    def take_damage(self, damage: int, combat_phase_context: CombatPhaseContext, foe: Optional['MonsterCard'] = None, defending: Optional[bool] = True):
         if self.divine_shield and not damage <= 0:
             self.divine_shield = False
             combat_phase_context.broadcast_combat_event(CardEvent(self, EVENTS.DIVINE_SHIELD_LOST))
@@ -113,7 +113,7 @@ class MonsterCard(Card):
             self.health -= damage
             if foe is not None and foe.poisonous and self.health > 0:
                 self.health = 0
-            if foe is not None and self.health < 0:
+            if defending and foe is not None and self.health < 0:
                 foe.overkill(combat_phase_context)
             combat_phase_context.broadcast_combat_event(CardEvent(self, EVENTS.CARD_DAMAGED))
 
