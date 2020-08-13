@@ -403,9 +403,7 @@ class MurlocWarleader(MonsterCard):
     base_health = 3
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
-        bonus = 2
-        if self.golden:
-            bonus = 4
+        bonus = 4 if self.golden else 2
         if event.event is EVENTS.COMBAT_START or (event.event is EVENTS.SUMMON_COMBAT and event.card == self):
             murlocs = [card for card in context.friendly_war_party.board if
                        card != self and card.monster_type in (MONSTER_TYPES.MURLOC, MONSTER_TYPES.ALL)]
@@ -414,16 +412,11 @@ class MurlocWarleader(MonsterCard):
         elif event.event is EVENTS.SUMMON_COMBAT and event.card in context.friendly_war_party.board \
                 and event.card != self and event.card.monster_type in (MONSTER_TYPES.MURLOC, MONSTER_TYPES.ALL):
             event.card.attack += bonus
-
-    def base_deathrattle(self, context: CombatPhaseContext):
-        # TODO: IS THIS NEEDED?  Cause we have no idea... Jarett
-        bonus = 2
-        if self.golden:
-            bonus = 4
-        murlocs = [card for card in context.friendly_war_party.board if
-                   card != self and card.monster_type in (MONSTER_TYPES.MURLOC, MONSTER_TYPES.ALL)]
-        for murloc in murlocs:
-            murloc.attack -= bonus
+        elif event.event is EVENTS.DIES and event.card == self: # TODO: Bug here, see combat test
+            murlocs = [card for card in context.friendly_war_party.board if
+                       card != self and card.monster_type in (MONSTER_TYPES.MURLOC, MONSTER_TYPES.ALL)]
+            for murloc in murlocs:
+                murloc.attack -= bonus
 
 
 class StewardOfTime(MonsterCard):
@@ -575,9 +568,10 @@ class NathrezimOverseer(MonsterCard):
     monster_type = MONSTER_TYPES.DEMON
     base_attack = 2
     base_health = 3
+    num_battlecry_targets = 1
 
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
-        bonus = 2 if self.golden else 1
+        bonus = 4 if self.golden else 2
         if targets:
             targets[0].attack += bonus
             targets[0].health += bonus
@@ -1051,9 +1045,7 @@ class SouthseaCaptain(MonsterCard):
     base_health = 3
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
-        bonus = 1
-        if self.golden:
-            bonus = 2
+        bonus = 2 if self.golden else 1
         if event.event is EVENTS.COMBAT_START or (event.event is EVENTS.SUMMON_COMBAT and event.card == self):
             pirates = [card for card in context.friendly_war_party.board if
                        card != self and card.monster_type in (MONSTER_TYPES.PIRATE, MONSTER_TYPES.ALL)]
@@ -1064,17 +1056,13 @@ class SouthseaCaptain(MonsterCard):
                 and event.card != self and event.card.monster_type in (MONSTER_TYPES.PIRATE, MONSTER_TYPES.ALL):
             event.card.attack += bonus
             event.card.health += bonus
-
-    def base_deathrattle(self, context: CombatPhaseContext):
-        bonus = 1
-        if self.golden:
-            bonus = 2
-        pirates = [card for card in context.friendly_war_party.board if
-                   card != self and card.monster_type in (MONSTER_TYPES.PIRATE, MONSTER_TYPES.ALL)]
-        for pirate in pirates:
-            pirate.attack -= bonus
-            if pirate.health > pirate.base_health > pirate.health - bonus:
-                pirate.health = pirate.base_health
+        elif event.event is EVENTS.DIES and event.card == self:
+            pirates = [card for card in context.friendly_war_party.board if
+                       card != self and card.monster_type in (MONSTER_TYPES.PIRATE, MONSTER_TYPES.ALL)]
+            for pirate in pirates:
+                pirate.attack -= bonus
+                if pirate.health > pirate.base_health > pirate.health - bonus:
+                    pirate.health = pirate.base_health
 
 
 class BolvarFireblood(MonsterCard):
@@ -1521,12 +1509,10 @@ class MalGanis(MonsterCard):
             context.owner.immune = True
         elif event.event is EVENTS.SELL and event.card == self and self in context.owner.in_play:
             context.owner.immune = False
-
-    def base_deathrattle(self, context: CombatPhaseContext):
-        bonus = 4 if self.golden else 2
-        demons = [card for card in context.friendly_war_party.board if
-                   card != self and card.monster_type in (MONSTER_TYPES.DEMON, MONSTER_TYPES.ALL)]
-        for demon in demons:
-            demon.attack -= bonus
-            if demon.health > demon.base_health > demon.health - bonus:
-                demon.health = demon.base_health
+        elif event.event is EVENTS.DIES and event.card == self:
+            demons = [card for card in context.friendly_war_party.board if
+                      card != self and card.monster_type in (MONSTER_TYPES.DEMON, MONSTER_TYPES.ALL)]
+            for demon in demons:
+                demon.attack -= bonus
+                if demon.health > demon.base_health > demon.health - bonus:
+                    demon.health = demon.base_health

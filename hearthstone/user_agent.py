@@ -70,7 +70,7 @@ class UserAgent(Agent):
         print(
             'redeem: "r h 1" sells the 1 indexed monster from hand "r b 2" sells the 2 indexed monster from the board ')
         print('reroll store: "R" will reroll the store')
-        print('upgrade tavern: "u" will upgrade the tavern')
+        print(f'upgrade tavern: "u" will upgrade the tavern (current upgrade cost: {player.tavern_upgrade_cost})')
         print('hero power: "h" will activate your hero power')
         print('triple rewards: "t" will use your highest tavern tier triple rewards')
         print('end turn: "e f" ends the turn and freezes the shop, "e" ends the turn without freezing the shop')
