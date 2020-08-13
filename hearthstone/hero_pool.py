@@ -157,8 +157,9 @@ class LichBazhial(Hero):
     power_cost = 0
 
     def hero_power_impl(self, context: BuyPhaseContext):
-        context.owner.health -= 2
+        context.owner.take_damage(2)
         context.owner.coins += 1
+        # TODO: this is wrong - coin token is not used immediately, can be cashed in on future turns
 
 
 class SkycapnKragg(Hero):

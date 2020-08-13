@@ -118,7 +118,7 @@ def start_attack(attacker: 'MonsterCard', defender: 'MonsterCard', attacking_war
     on_attack_event = CardEvent(attacker, EVENTS.ON_ATTACK)
     combat_phase_context = CombatPhaseContext(attacking_war_party, defending_war_party, randomizer)
     combat_phase_context.broadcast_combat_event(on_attack_event)
-    attacker.take_damage(defender.attack, combat_phase_context, defender)
+    attacker.take_damage(defender.attack, combat_phase_context, defender, defending=False)
     defender.take_damage(attacker.attack, combat_phase_context, attacker)
     # handle "after combat" events here
     combat_phase_context.broadcast_combat_event(CardEvent(attacker, EVENTS.AFTER_ATTACK))

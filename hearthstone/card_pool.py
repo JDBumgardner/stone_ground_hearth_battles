@@ -15,8 +15,9 @@ class MamaBear(MonsterCard): # TODO: shouldn't buff itself
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         if event.event is EVENTS.SUMMON_BUY and event.card.monster_type in (MONSTER_TYPES.BEAST, MONSTER_TYPES.ALL) and event.card != self:
-            event.card.attack += 5
-            event.card.health += 5
+            bonus = 10 if self.golden else 5
+            event.card.attack += bonus
+            event.card.health += bonus
 
 
 class ShifterZerus(MonsterCard):
@@ -577,16 +578,17 @@ class ArcaneCannon(MonsterCard):
     cant_attack = True
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
-        damage = 4 if self.golden else 2
         if event.event is EVENTS.ON_ATTACK:
-            friendly_live_war_party = [friend for friend in context.friendly_war_party.board if not friend.dead]
-            if event.card in friendly_live_war_party:
-                if abs(friendly_live_war_party.index(self) - friendly_live_war_party.index(event.card)) == 1:
-                    target = context.randomizer.select_enemy_minion(
-                        [card for card in context.enemy_war_party.board if card])
-                    target.take_damage(damage, context, self)
-                    target.resolve_death(
-                        CombatPhaseContext(context.enemy_war_party, context.friendly_war_party, context.randomizer))
+            count = 2 if self.golden else 1
+            for _ in range(count):
+                friendly_live_war_party = [friend for friend in context.friendly_war_party.board if not friend.dead]
+                if event.card in friendly_live_war_party:
+                    if abs(friendly_live_war_party.index(self) - friendly_live_war_party.index(event.card)) == 1:
+                        target = context.randomizer.select_enemy_minion(
+                            [card for card in context.enemy_war_party.board if not card.dead])
+                        target.take_damage(2, context, self)
+                        target.resolve_death(
+                            CombatPhaseContext(context.enemy_war_party, context.friendly_war_party, context.randomizer))
 
 
 class NathrezimOverseer(MonsterCard):
@@ -611,7 +613,7 @@ class OldMurkeye(MonsterCard):
     base_attack = 2
     base_health = 4
 
-    # TODO: implement charge
+    # charge has no effect in battlegrounds
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         bonus = 2 if self.golden else 1
@@ -847,10 +849,11 @@ class MonstrousMacaw(MonsterCard):
 
     def handle_event(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         if event.event is EVENTS.AFTER_ATTACK and self == event.card:
-            friendly_deathrattlers = [card for card in context.friendly_war_party.board if card != self and not card.dead and card.deathrattles]
-            if friendly_deathrattlers:
-                deathrattle_triggers = 2 if self.golden else 1
-                for _ in range(deathrattle_triggers):
+            deathrattle_triggers = 2 if self.golden else 1
+            for _ in range(deathrattle_triggers):
+                friendly_deathrattlers = [card for card in context.friendly_war_party.board if
+                                          card != self and not card.dead and card.deathrattles]
+                if friendly_deathrattlers:
                     deathrattler = context.randomizer.select_friendly_minion(friendly_deathrattlers)
                     deathrattler.base_deathrattle(context)
 
@@ -1221,6 +1224,7 @@ class Demon(MonsterCard):
     base_taunt = True
     token = True
 
+
 class AnnihilanBattlemaster(MonsterCard):
     tier = 5
     monster_type = MONSTER_TYPES.DEMON
@@ -1229,8 +1233,8 @@ class AnnihilanBattlemaster(MonsterCard):
 
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
         multiplier = 2 if self.golden else 1
-        damage = context.owner.hero.starting_health() - context.owner.health
-        self.health += multiplier * damage
+        damage_taken = context.owner.hero.starting_health() - context.owner.health
+        self.health += multiplier * damage_taken
 
 
 class CapnHoggarr(MonsterCard):
@@ -1435,6 +1439,7 @@ class HeraldOfFlame(MonsterCard):
             if leftmost_index >= len(context.enemy_war_party.board):
                 return
         context.enemy_war_party.board[leftmost_index].take_damage(damage, context, self)
+        context.enemy_war_party.board[leftmost_index].resolve_death(context)
 
 
 class IronhideDirehorn(MonsterCard):
