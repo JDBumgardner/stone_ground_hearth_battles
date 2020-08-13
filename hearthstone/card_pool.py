@@ -1027,7 +1027,7 @@ class DefenderOfArgus(MonsterCard):
     base_attack = 2
     base_health = 3
     monster_type = None
-    num_battlecry_targets = 2
+    num_battlecry_targets = 2  # TODO: this can be either 1 or 2
 
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
         if targets:
@@ -1507,8 +1507,10 @@ class MalGanis(MonsterCard):
             event.card.health += bonus
         elif event.event is EVENTS.SUMMON_BUY and event.card == self:
             context.owner.immune = True
-        elif event.event is EVENTS.SELL and event.card == self and self in context.owner.in_play:
-            context.owner.immune = False
+        elif event.event is EVENTS.SELL and event.card == self:
+            mal_ganis_on_board = [card for card in context.owner.in_play if isinstance(card, MalGanis) and card != self]
+            if not mal_ganis_on_board:
+                context.owner.immune = False
         elif event.event is EVENTS.DIES and event.card == self:
             demons = [card for card in context.friendly_war_party.board if
                       card != self and card.monster_type in (MONSTER_TYPES.DEMON, MONSTER_TYPES.ALL)]
@@ -1516,3 +1518,23 @@ class MalGanis(MonsterCard):
                 demon.attack -= bonus
                 if demon.health > demon.base_health > demon.health - bonus:
                     demon.health = demon.base_health
+
+
+class BaronRivendare(MonsterCard):
+    tier = 5
+    monster_type = None
+    base_attack = 1
+    base_health = 7
+
+    def deathrattle_multiplier(self) -> int:
+        return 3 if self.golden else 2
+
+
+class BrannBronzebeard(MonsterCard):
+    tier = 5
+    monster_type = None
+    base_attack = 2
+    base_health = 4
+
+    def battlecry_multiplier(self) -> int:
+        return 3 if self.golden else 2

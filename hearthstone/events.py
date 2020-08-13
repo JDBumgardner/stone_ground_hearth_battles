@@ -35,6 +35,12 @@ class BuyPhaseContext:
             summon_multiplier *= card.summon_minion_multiplier()
         return summon_multiplier
 
+    def battlecry_multiplier(self) -> int:
+        battlecry_multiplier = 1
+        for card in self.owner.in_play:
+            battlecry_multiplier *= card.battlecry_multiplier()
+        return battlecry_multiplier
+
 
 class CombatPhaseContext:
     def __init__(self, friendly_war_party: 'WarParty', enemy_war_party: 'WarParty', randomizer: 'Randomizer'):
@@ -61,3 +67,9 @@ class CombatPhaseContext:
             if not card.dead:
                 summon_multiplier *= card.summon_minion_multiplier()
         return summon_multiplier
+
+    def deathrattle_multiplier(self) -> int:
+        deathrattle_multiplier = 1
+        for card in self.friendly_war_party.board:
+            deathrattle_multiplier *= card.deathrattle_multiplier()
+        return deathrattle_multiplier

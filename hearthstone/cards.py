@@ -144,15 +144,17 @@ class MonsterCard(Card):
     def handle_event(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         if self == event.card:
             if event.event is EVENTS.DIES:
-                for deathrattle in self.deathrattles:
-                    deathrattle(self, context)
+                for _ in range(context.deathrattle_multiplier()):
+                    for deathrattle in self.deathrattles:
+                        deathrattle(self, context)
                 if self.reborn:
                     self.resolve_reborn(context)
             elif event.event is EVENTS.SUMMON_BUY:
                 if self.magnetic:
                     self.magnetize(event.targets, context)
                 if self.battlecry:
-                    self.battlecry(event.targets, context)
+                    for _ in range(context.battlecry_multiplier()):
+                        self.battlecry(event.targets, context)
                 if event.card.tracked:
                     context.owner.counted_cards[type(event.card)] += 1
                 self.shifting = False
@@ -208,6 +210,12 @@ class MonsterCard(Card):
             return [type(self)()] + [type(card)() for card in self.attached_cards]
 
     def summon_minion_multiplier(self) -> int:
+        return 1
+
+    def deathrattle_multiplier(self) -> int:
+        return 1
+
+    def battlecry_multiplier(self) -> int:
         return 1
 
     def zerus_shift(self, context: 'BuyPhaseContext'):

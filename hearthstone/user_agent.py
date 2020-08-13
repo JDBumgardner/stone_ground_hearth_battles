@@ -91,7 +91,7 @@ class UserAgent(Agent):
                 store_index = int(split_list[1])
             except ValueError:
                 return None
-            if not 0 <= store_index < len(player.store) or player.coins < 3:
+            if not 0 <= store_index < len(player.store) or player.coins < player.minion_cost:
                 return None
             return BuyAction(StoreIndex(store_index))
         elif split_list[0] == "s":
