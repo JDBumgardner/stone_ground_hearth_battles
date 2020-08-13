@@ -149,6 +149,8 @@ class MonsterCard(Card):
                 if self.reborn:
                     self.resolve_reborn(context)
             elif event.event is EVENTS.SUMMON_BUY:
+                if self.magnetic:
+                    self.magnetize(event.targets, context)
                 if self.battlecry:
                     self.battlecry(event.targets, context)
                 if event.card.tracked:
@@ -182,17 +184,17 @@ class MonsterCard(Card):
                 if getattr(card, attr):
                     setattr(self, attr, True)
 
-    def magnetic_transformation(self, magnetic_card: 'MonsterCard'):
-        self.attack += magnetic_card.base_attack
-        self.health += magnetic_card.base_health
-        if magnetic_card.base_deathrattle:
-            self.deathrattles.extend(magnetic_card.deathrattles[1:])
-        else:
-            self.deathrattles.extend(magnetic_card.deathrattles)
-        for attr in magnetic_card.bool_attribute_list:
-            if getattr(magnetic_card, attr):
-                setattr(self, attr, True)
-        self.attached_cards.append(type(magnetic_card)())
+    def magnetize(self, targets: List['MonsterCard'], context: 'BuyPhaseContext'):
+        if targets:
+            targets[0].attack += self.attack
+            targets[0].health += self.health
+            if self.deathrattles:
+                targets[0].deathrattles.extend(self.deathrattles)
+            for attr in self.bool_attribute_list:
+                if getattr(self, attr):
+                    setattr(targets[0], attr, True)
+            targets[0].attached_cards.append(type(self)())
+            context.owner.in_play.remove(self)
 
     def overkill(self, context: CombatPhaseContext):
         return

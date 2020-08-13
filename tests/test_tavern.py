@@ -1562,5 +1562,22 @@ class CardTests(unittest.TestCase):
         self.assertEqual(player_1.in_play[2].health, 6)
         self.assertEqual(player_1.in_play[2].attack, 6)
 
+    def test_replicating_menace_magnetic(self):
+        tavern = Tavern()
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        self.upgrade_to_tier(tavern, 3)
+        tavern.randomizer = RepeatedCardForcer([MicroMachine, ReplicatingMenace])
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        player_1.summon_from_hand(HandIndex(0), [BoardIndex(0)])
+        self.assertCardListEquals(player_1.in_play, [MicroMachine])
+        self.assertEqual(player_1.in_play[0].attack, player_1.in_play[0].base_attack + 3)
+        self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health + 1)
+        self.assertEqual(len(player_1.in_play[0].deathrattles), 1)
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -91,7 +91,6 @@ class Player:
         return True
 
     def summon_from_hand(self, index: HandIndex, targets: Optional[List[BoardIndex]] = None):
-        #  TODO: add (optional?) destination index parameter for Defender of Argus
         #  TODO: make sure that the ordering of monster in hand and monster.battlecry are correct
         #  TODO: Jarett can monster be event target
         if targets is None:
@@ -101,8 +100,6 @@ class Player:
         self.in_play.append(card)
         if card.golden:
             self.triple_rewards.append(TripleRewardCard(min(self.tavern_tier + 1, 6)))
-        if card.magnetic:
-            self.check_magnetic(card)
         target_cards = [self.in_play[target] for target in targets]
         self.broadcast_buy_phase_event(CardEvent(card, EVENTS.SUMMON_BUY, target_cards))
 
@@ -115,16 +112,25 @@ class Player:
         card = self.hand[index]
         if not self.room_on_board():
             return False
-        valid_targets = [target_index for target_index, target_card in enumerate(self.in_play) if
-                         card.validate_battlecry_target(target_card)]
-        num_possible_targets = min(len(valid_targets), card.num_battlecry_targets)
-        if len(targets) != num_possible_targets:
-            return False
-        if len(set(targets)) != len(targets):
-            return False
-        for target in targets:
-            if target not in valid_targets:
+        if card.battlecry:
+            valid_targets = [target_index for target_index, target_card in enumerate(self.in_play) if
+                             card.validate_battlecry_target(target_card)]
+            num_possible_targets = min(len(valid_targets), card.num_battlecry_targets)
+            if len(targets) != num_possible_targets:
                 return False
+            if len(set(targets)) != len(targets):
+                return False
+            for target in targets:
+                if target not in valid_targets:
+                    return False
+        if card.magnetic:
+            valid_mechs = [target_index for target_index, target_card in enumerate(self.in_play) if
+                           card.monster_type in (MONSTER_TYPES.MECH, MONSTER_TYPES.ALL)]
+            if len(targets) > 1:
+                return False
+            for target in targets:
+                if target not in valid_mechs:
+                    return False
         return True
 
     def play_triple_rewards(self):
@@ -200,15 +206,6 @@ class Player:
             golden_card = check_card()
             golden_card.golden_transformation(cards)
             self.hand.append(golden_card)
-
-    def check_magnetic(self, card):
-        # TODO: decide if magnetic should be implemented using targets
-        index = self.in_play.index(card)
-        assert card.magnetic
-        if index + 1 in range(len(self.in_play)) and self.in_play[index + 1].monster_type in (MONSTER_TYPES.MECH, MONSTER_TYPES.ALL):
-            mech = self.in_play[index + 1]
-            self.in_play.remove(card)
-            mech.magnetic_transformation(card)
 
     def reroll_store(self):
         assert self.validate_reroll()

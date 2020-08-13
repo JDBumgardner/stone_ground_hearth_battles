@@ -1129,12 +1129,11 @@ class ReplicatingMenace(MonsterCard):
     base_health = 1
     base_magnetic = True
 
-    # TODO: tavern test for magnetic
-
     def base_deathrattle(self, context: CombatPhaseContext):
         summon_index = context.friendly_war_party.get_index(self)
         for i in range(3 * context.summon_minion_multiplier()):
             microbot = Microbot()
+            # TODO: do you get 2/2s if a golden Menace is magnetized? Or, alternatively, does a golden minion summon 2/2s even if the Menace wasn't golden?
             if self.golden:
                 microbot.golden_transformation([])
             context.friendly_war_party.summon_in_combat(microbot, context, summon_index + i + 1)
@@ -1321,9 +1320,9 @@ class ImpMama(MonsterCard):
             i = 0
             for _ in range(count):
                 for _ in range(context.summon_minion_multiplier()):
-                    # TODO: can this summon tokens?
+                    # TODO: can this summon tokens? Can this summon itself?
                     demons = [card for card in PrintingPress.make_cards().unique_cards() if card.monster_type in
-                              (MONSTER_TYPES.DEMON, MONSTER_TYPES.ALL)]
+                              (MONSTER_TYPES.DEMON, MONSTER_TYPES.ALL) and type(card) != type(self)]
                     random_minion = context.randomizer.select_summon_minion(demons)
                     random_minion.taunt = True
                     context.friendly_war_party.summon_in_combat(random_minion, context, summon_index + i + 1)
