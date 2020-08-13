@@ -26,32 +26,10 @@ class ShifterZerus(MonsterCard):
     base_attack = 1
     base_health = 1
 
-    # TODO: this implementation doesn't copy relevant attributes while in hand -- may be an issue
-    # TODO: is there some way to give this card's handle_event_in_hand method to the random minion?
-
     def handle_event_in_hand(self, event: CardEvent, context: BuyPhaseContext):
-        if event.event is EVENTS.BUY_START and self in context.owner.hand:
+        if event.event is EVENTS.BUY_START:
             # TODO: can this turn into a token?
-            all_minions = PrintingPress.make_cards().unique_cards()
-            random_minion = context.randomizer.select_random_minion(all_minions, context.owner.tavern.turn_count)
-            if self.golden:
-                random_minion.golden_transformation([])
-            self.attached_cards = [type(random_minion)()]
-            if random_minion.base_battlecry:
-                self.battlecry = random_minion.base_battlecry
-
-    def handle_event_powers(self, event: CardEvent, context: BuyPhaseContext):
-        if event.event is EVENTS.SUMMON_BUY and event.card == self and self.attached_cards:
-            index = context.owner.in_play.index(self)
-            context.owner.in_play.remove(self)
-            card = self.attached_cards[0]
-            context.owner.in_play.insert(index, card)
-
-
-
-    def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
-        if self.attached_cards and self.attached_cards[0].base_battlecry:
-            self.attached_cards[0].base_battlecry(targets, context)
+            self.zerus_shift(context)
 
 
 class SneedsOldShredder(MonsterCard):
@@ -1055,18 +1033,15 @@ class DefenderOfArgus(MonsterCard):
     base_attack = 2
     base_health = 3
     monster_type = None
+    num_battlecry_targets = 2
 
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
-        index = context.owner.in_play.index(self)
-        bonus = 2 if self.golden else 1
-        for i in [index - 1, index + 1]:
-            try:
-                adjacent_minion = context.owner.in_play[i]  # TODO: Ordering shouldn't matter here? Use targets?
-            except IndexError:
-                continue
-            adjacent_minion.attack += bonus
-            adjacent_minion.health += bonus
-            adjacent_minion.taunt = True
+        if targets:
+            bonus = 2 if self.golden else 1
+            for i in range(2):
+                targets[i].attack += bonus
+                targets[i].health += bonus
+                targets[i].taunt = True
 
 
 class SouthseaCaptain(MonsterCard):

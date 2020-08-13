@@ -1,6 +1,7 @@
 import itertools
 from collections import defaultdict
 from typing import Set, List, Optional, Callable, Type, Union, Iterator
+
 from hearthstone.events import BuyPhaseContext, CombatPhaseContext, EVENTS
 from hearthstone.card_factory import make_metaclass
 
@@ -103,6 +104,8 @@ class MonsterCard(Card):
             rep += ", [%s]" % ",".join([f"deathrattle-{i}" for i in range(len(self.deathrattles))])
         if self.golden:
             rep += ", [golden]"
+        if self.shifting:
+            rep += ", [shifting]"
 
         return "{" + rep + "}"
 
@@ -150,11 +153,13 @@ class MonsterCard(Card):
                     self.battlecry(event.targets, context)
                 if event.card.tracked:
                     context.owner.counted_cards[type(event.card)] += 1
+                self.shifting = False
         if not self.dead:
             self.handle_event_powers(event, context)
 
     def handle_event_in_hand(self, event: CardEvent, context: BuyPhaseContext):
-        return
+        if event.event is EVENTS.BUY_START and self.shifting:
+            self.zerus_shift(context)
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         return
@@ -203,6 +208,14 @@ class MonsterCard(Card):
     def summon_minion_multiplier(self) -> int:
         return 1
 
+    def zerus_shift(self, context: 'BuyPhaseContext'):
+        all_minions = PrintingPress.make_cards().unique_cards()
+        random_minion = context.randomizer.select_random_minion(all_minions, context.owner.tavern.turn_count)
+        if self.golden:
+            random_minion.golden_transformation([])
+        random_minion.shifting = True
+        context.owner.hand.remove(self)
+        context.owner.hand.append(random_minion)
 
 class CardList:
     def __init__(self, cards: List[Card]):
