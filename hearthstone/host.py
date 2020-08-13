@@ -20,7 +20,7 @@ class RoundRobinHost:
         for player_name, player in self.tavern.players.items():
             player.choose_hero(self.agents[player_name].hero_choice_action(player))
 
-    def play_round_generator(self) -> typing.Generator:
+    def play_round_generator(self) -> typing.Generator: # TODO: think about how to test this code
         self.tavern.buying_step()
         for player_name, player in self.tavern.players.items():
             if player.health <= 0:
@@ -40,7 +40,7 @@ class RoundRobinHost:
                 arrangement = agent.rearrange_cards(player)
                 assert set(arrangement) == set(player.in_play)
                 player.in_play = arrangement
-            self.tavern.combat_step()
+        self.tavern.combat_step()
         if self.tavern.game_over():
             for position, (name, player) in enumerate(reversed(self.tavern.losers)):
                 self.agents[name].game_over(player, position)

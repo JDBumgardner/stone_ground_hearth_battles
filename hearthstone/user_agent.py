@@ -3,7 +3,7 @@ from typing import List, Optional
 from hearthstone.agent import Agent, Action, BuyAction, SummonAction,  EndPhaseAction, RerollAction, \
     SellFromBoardAction, SellFromHandAction
 from hearthstone.agent import TavernUpgradeAction, HeroPowerAction, TripleRewardsAction
-from hearthstone.player import HandIndex
+from hearthstone.player import HandIndex, BoardIndex, StoreIndex
 
 if typing.TYPE_CHECKING:
     from hearthstone.cards import Card
@@ -93,7 +93,7 @@ class UserAgent(Agent):
                 return None
             if not 0 <= store_index < len(player.store) or player.coins < 3:
                 return None
-            return BuyAction(store_index)
+            return BuyAction(StoreIndex(store_index))
         elif split_list[0] == "s":
             if not 1 < len(split_list) <= 4:
                 return None
@@ -107,7 +107,7 @@ class UserAgent(Agent):
                 if not 0 <= target < len(player.in_play) + 1:
                     return None
             in_play = player.in_play + [player.hand[targets[0]]]
-            return SummonAction(in_play[-1], [in_play[target] for target in targets[1:]])
+            return SummonAction(HandIndex(targets[0]), [BoardIndex(target) for target in targets[1:]])
         elif split_list[0] == "r":
             if not len(split_list) == 3:
                 return None

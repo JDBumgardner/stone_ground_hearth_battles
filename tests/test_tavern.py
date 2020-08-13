@@ -1543,8 +1543,24 @@ class CardTests(unittest.TestCase):
         self.assertCardListEquals(player_1.in_play, [VulgarHomunculus, VulgarHomunculus])
         self.assertEqual(player_1.health, 38)
 
-
-
+    def test_mama_bear(self):
+        tavern = Tavern()
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        self.upgrade_to_tier(tavern, 6)
+        tavern.randomizer = RepeatedCardForcer([MamaBear, AlleyCat, AlleyCat, AlleyCat, AlleyCat, AlleyCat])
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        self.assertCardListEquals(player_1.in_play, [MamaBear, AlleyCat, TabbyCat])
+        self.assertEqual(player_1.in_play[0].health, 5)
+        self.assertEqual(player_1.in_play[0].attack, 5)
+        self.assertEqual(player_1.in_play[1].health, 6)
+        self.assertEqual(player_1.in_play[1].attack, 6)
+        self.assertEqual(player_1.in_play[2].health, 6)
+        self.assertEqual(player_1.in_play[2].attack, 6)
 
 if __name__ == '__main__':
     unittest.main()

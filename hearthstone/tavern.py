@@ -54,7 +54,7 @@ class Tavern:
             combat.fight_boards(WarParty(player_1), WarParty(player_2), self.randomizer)
         self.turn_count += 1
 
-    def generate_pairings(self):
+    def generate_pairings(self): #TODO figure out algorithm for ded guy someone in the bottom 3 fights the last ded guy
         fighting_players = [player for player in self.players.values() if player.health > 0]
         if len(fighting_players) % 2 != 0:
             last_dead_player = self.losers[-1][1]

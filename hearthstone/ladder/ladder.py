@@ -25,7 +25,7 @@ class Contestant:
         self.games_played = 0
 
     def __repr__(self):
-        return f'(Agent "{self.name}" Trueskill {int(self.trueskill)})'
+        return f'(Agent "{self.name}" Trueskill {self.trueskill.mu:.2f})'
 
 
 def probability_of_win(elo1: int, elo2: int) -> float:
@@ -50,7 +50,7 @@ def update_ratings(outcome: List[Contestant]):
 
 
 def print_standings(contestants: List[Contestant]):
-    contestants = sorted(contestants, key=lambda c: c.trueskill, reverse=True)
+    contestants = sorted(contestants, key=lambda c: c.trueskill.mu, reverse=True)
     print(contestants)
 
 

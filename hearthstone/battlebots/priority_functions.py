@@ -27,7 +27,7 @@ def attack_health_tripler_priority_bot(seed: int, priority_function_bot: Callabl
     return priority_function_bot(["Jake Bumgardner"], priority, seed)
 
 
-def racist_priority_bot(seed: int, priority_function_bot: Callable, monster_type: str = None):
+def racist_priority_bot(seed: int, priority_function_bot: Callable, monster_type: MONSTER_TYPES):
     def priority(player: 'Player', card: 'MonsterCard'):
         score = card.health + card.attack + card.tier
         if card.monster_type == monster_type:
@@ -37,7 +37,7 @@ def racist_priority_bot(seed: int, priority_function_bot: Callable, monster_type
     return priority_function_bot(None, priority, seed)
 
 
-def priority_saurolisk_bot(seed: int, priority_function_bot: Callable, monster_type: str = None):
+def priority_saurolisk_bot(seed: int, priority_function_bot: Callable, monster_type: MONSTER_TYPES = None):
     def priority(player: 'Player', card: 'MonsterCard'):
         if type(card) is RabidSaurolisk:
             return 100

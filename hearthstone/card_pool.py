@@ -7,14 +7,14 @@ from hearthstone.events import BuyPhaseContext, CombatPhaseContext, EVENTS
 from hearthstone.monster_types import MONSTER_TYPES
 
 
-class MamaBear(MonsterCard):
+class MamaBear(MonsterCard): # TODO: shouldn't buff itself
     tier = 6
     monster_type = MONSTER_TYPES.BEAST
     base_attack = 5
     base_health = 5
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
-        if event.event is EVENTS.SUMMON_BUY and event.card.monster_type in (MONSTER_TYPES.BEAST, MONSTER_TYPES.ALL):
+        if event.event is EVENTS.SUMMON_BUY and event.card.monster_type in (MONSTER_TYPES.BEAST, MONSTER_TYPES.ALL) and event.card != self:
             event.card.attack += 5
             event.card.health += 5
 
@@ -45,6 +45,8 @@ class ShifterZerus(MonsterCard):
             context.owner.in_play.remove(self)
             card = self.attached_cards[0]
             context.owner.in_play.insert(index, card)
+
+
 
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
         if self.attached_cards and self.attached_cards[0].base_battlecry:
@@ -1217,7 +1219,7 @@ class Demon(MonsterCard):
     base_attack = 1
     base_health = 3
     base_taunt = True
-
+    token = True
 
 class AnnihilanBattlemaster(MonsterCard):
     tier = 5
@@ -1291,7 +1293,7 @@ class Ghastcoiler(MonsterCard):
         i = 0
         for _ in range(count):
             for _ in range(context.summon_minion_multiplier()):
-                deathrattlers = [card for card in PrintingPress.make_cards().unique_cards() if card.deathrattles]
+                deathrattlers = [card for card in PrintingPress.make_cards().unique_cards() if card.deathrattles and type(card) != type(self)]
                 random_minion = context.randomizer.select_summon_minion(deathrattlers)
                 context.friendly_war_party.summon_in_combat(random_minion, context, summon_index + i + 1)
                 i += 1

@@ -65,6 +65,7 @@ class MonsterCard(Card):
     base_reborn = False
     token = False
     cant_attack = False
+    shifting = False
     attached_cards = []
 
     def __init__(self):

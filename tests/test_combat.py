@@ -374,7 +374,7 @@ class CombatTests(unittest.TestCase):
         self.assertNotEqual(ethan.health, 40)
         self.assertNotEqual(len(adams_war_party.board), 1)
         two_cost_minions = [VulgarHomunculus, MicroMachine, MurlocTidehunter, RockpoolHunter,
-                            DragonspawnLieutenant, KindlyGrandmother, ScavengingHyena, UnstableGhoul]
+                            DragonspawnLieutenant, KindlyGrandmother, ScavengingHyena, UnstableGhoul, Khadgar]
         self.assertIn(type(adams_war_party.board[1]), two_cost_minions)
 
     def test_soul_juggler(self):
@@ -418,6 +418,7 @@ class CombatTests(unittest.TestCase):
             return khadgar[0]
 
     def test_khadgar_piloted_shredder(self):
+        logging.basicConfig(level=logging.DEBUG)
         adam = Player.new_player_with_hero(None, "Adam")
         ethan = Player.new_player_with_hero(None, "Ethan")
         adams_war_party = WarParty(adam)
@@ -425,10 +426,10 @@ class CombatTests(unittest.TestCase):
         piloted_shredder = PilotedShredder()
         piloted_shredder.golden_transformation([])
         adams_war_party.board = [piloted_shredder, Khadgar()]
-        ethans_war_party.board = [RabidSaurolisk(), RabidSaurolisk()]
+        ethans_war_party.board = [MalGanis()]
         fight_boards(adams_war_party, ethans_war_party, self.PilotedShredderRandomizer())
         self.assertEqual(adam.health, 40)
-        self.assertEqual(ethan.health, 18)  # TODO: Is this test flaky?
+        self.assertEqual(ethan.health, 18)
 
     def test_savannah_highmane(self):
         adam = Player.new_player_with_hero(None, "Adam")

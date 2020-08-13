@@ -103,8 +103,8 @@ class SimplePolicyBot(Agent):
             if type(action) is SummonAction:
                 self.current_game_summon[type(action.card).__name__] += gradient
             if type(action) is SellFromBoardAction:
-                return self.current_game_sell[type(player.in_play[action.index]).__name__] += gradient
+                self.current_game_sell[type(player.in_play[action.index]).__name__] += gradient
             if type(action) is SellFromHandAction:
-                return self.current_game_sell[type(player.hand[action.index]).__name__] += gradient
+                self.current_game_sell[type(player.hand[action.index]).__name__] += gradient
             if type(action) is RerollAction:
                 self.current_game_reroll += gradient

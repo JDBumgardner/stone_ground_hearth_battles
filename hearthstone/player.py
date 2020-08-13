@@ -136,7 +136,7 @@ class Player:
     def validate_triple_rewards(self) -> bool:
         return bool(self.triple_rewards)
 
-    def draw_discover(self, predicate: Callable[[Card], bool]):
+    def draw_discover(self, predicate: Callable[[Card], bool]): #TODO: Jarett help make discoverables unique are cards with more copies in the deck more likely to be discovered?
         discoverables = [card for card in self.tavern.deck.all_cards() if predicate(card)]
         for _ in range(3):
             self.discovered_cards.append(self.tavern.randomizer.select_discover_card(discoverables))
@@ -145,7 +145,7 @@ class Player:
 
     def select_discover(self, card: Card):
         assert (card in self.discovered_cards)
-        assert (isinstance(card, MonsterCard))  # TODO: discover other card types
+        assert (isinstance(card, MonsterCard))
         self.discovered_cards.remove(card)
         self.hand.append(card)
         self.tavern.deck.return_cards(itertools.chain.from_iterable([card.dissolve() for card in self.discovered_cards]))
