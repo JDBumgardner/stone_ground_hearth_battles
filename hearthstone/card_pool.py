@@ -584,11 +584,12 @@ class ArcaneCannon(MonsterCard):
                 friendly_live_war_party = [friend for friend in context.friendly_war_party.board if not friend.dead]
                 if event.card in friendly_live_war_party:
                     if abs(friendly_live_war_party.index(self) - friendly_live_war_party.index(event.card)) == 1:
-                        target = context.randomizer.select_enemy_minion(
-                            [card for card in context.enemy_war_party.board if not card.dead])
-                        target.take_damage(2, context, self)
-                        target.resolve_death(
-                            CombatPhaseContext(context.enemy_war_party, context.friendly_war_party, context.randomizer))
+                        possible_targets = [card for card in context.enemy_war_party.board if not card.dead]
+                        if possible_targets:
+                            target = context.randomizer.select_enemy_minion(possible_targets)
+                            target.take_damage(2, context, self)
+                            target.resolve_death(
+                                CombatPhaseContext(context.enemy_war_party, context.friendly_war_party, context.randomizer))
 
 
 class NathrezimOverseer(MonsterCard):
