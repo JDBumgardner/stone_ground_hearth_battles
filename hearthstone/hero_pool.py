@@ -1,7 +1,7 @@
 from typing import Union, Tuple
 
 from hearthstone.card_pool import Amalgam
-from hearthstone.cards import CardEvent
+from hearthstone.cards import CardEvent, PrintingPress
 from hearthstone.events import BuyPhaseContext, CombatPhaseContext, EVENTS
 from hearthstone.hero import Hero
 from hearthstone.monster_types import MONSTER_TYPES
@@ -139,8 +139,6 @@ class FungalmancerFlurgl(Hero):
 
 
 class KaelthasSunstrider(Hero):
-    buy_counter = 0
-
     def hero_power_valid_impl(self, context: BuyPhaseContext):
         return False
 
@@ -227,3 +225,16 @@ class MillhouseManastorm(Hero):
 
     def tavern_upgrade_costs(self) -> Tuple[int, int, int, int, int, int]:
         return (0, 6, 8, 9, 10, 11)
+
+
+class CaptainEudora(Hero):
+    power_cost = 1
+
+    def hero_power_impl(self, context: BuyPhaseContext):
+        self.digs_left -= 1
+        if self.digs_left == 0:
+            diggable_minions = [card for card in PrintingPress.make_cards().unique_cards() if card.tier <= context.owner.tavern_tier]
+            random_minion = context.randomizer.select_random_minion(diggable_minions, context.owner.tavern.turn_count)
+            random_minion.golden_transformation([])
+            context.owner.hand.append(random_minion)
+            self.digs_left = 4

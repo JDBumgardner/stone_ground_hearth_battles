@@ -335,7 +335,7 @@ class BigBadWolf(MonsterCard):
 
 class MetaltoothLeaper(MonsterCard):
     tier = 2
-    monster_type = MONSTER_TYPES.BEAST
+    monster_type = MONSTER_TYPES.MECH
     base_attack = 3
     base_health = 3
 
