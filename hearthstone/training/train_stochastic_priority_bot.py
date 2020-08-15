@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import random
 
@@ -10,8 +11,8 @@ from hearthstone.ladder.ladder import Contestant, update_ratings, print_standing
 def main():
     logging.getLogger().setLevel(logging.INFO)
     other_contestants = all_contestants()
-    learning_bot = LearnedPriorityBot(None, 0.05, 10)
-    learning_bot_contestant = Contestant("LearningBot", learning_bot)
+    learning_bot = LearnedPriorityBot([], 0.05, 10)
+    learning_bot_contestant = Contestant("LearningBot", lambda: learning_bot)
     contestants = other_contestants + [learning_bot_contestant]
     bot_file = "../../data/learning/priority_bot.1.json"
     standings_path = "../../data/learning/standings.json"
@@ -21,7 +22,7 @@ def main():
     for _ in range(1000):
         round_contestants = [learning_bot_contestant] + random.sample(other_contestants, k=7)
         host = RoundRobinHost({contestant.name: contestant.agent_generator() for contestant in round_contestants})
-        host.play_game()
+        asyncio.run(host.play_game())
         winner_names = list(reversed([name for name, player in host.tavern.losers]))
         print("---------------------------------------------------------------")
         print(winner_names)

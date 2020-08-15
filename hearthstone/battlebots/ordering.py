@@ -2,6 +2,7 @@ from hearthstone.cards import Card
 from hearthstone.card_pool import *
 from hearthstone.tavern import Player
 
+
 def rate_position(card: 'Card') -> float:
     if type(card) is MonstrousMacaw:
         return 0.0

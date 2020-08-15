@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import random
 import time
@@ -39,36 +40,38 @@ class Worker:
         self.one_round_generator = None
         self.learning_bot_agent = None
         self.replay_buffer = replay_buffer
-        self._start_new_game()
+        self.started = asyncio.Event()
+        asyncio.create_task(self._start_new_game())
 
-    def _start_new_game(self):
+    async def _start_new_game(self):
         self.round_contestants = [self.learning_bot_contestant] + random.sample(self.other_contestants, k=7)
         self.host = RoundRobinHost(
             {contestant.name: contestant.agent_generator() for contestant in self.round_contestants})
         self.learning_bot_agent = self.host.agents[self.learning_bot_contestant.name]
-        self.host.start_game()
+        await self.host.start_game()
         self.one_round_generator = self.host.play_round_generator()
+        self.started.set()
 
-    def play_step(self):
+    async def play_step(self):
         last_replay_buffer_position = self.replay_buffer.position
         while self.replay_buffer.position == last_replay_buffer_position:
-            try:
-                next(self.one_round_generator)
-            except StopIteration as e:
-                if self.host.game_over():
-                    winner_names = list(reversed([name for name, player in self.host.tavern.losers]))
-                    print("---------------------------------------------------------------")
-                    print(winner_names)
-                    print(self.host.tavern.players[self.learning_bot_contestant.name].in_play)
-                    ranked_contestants = sorted(self.round_contestants, key=lambda c: winner_names.index(c.name))
-                    update_ratings(ranked_contestants)
-                    print_standings([self.learning_bot_contestant] + self.other_contestants)
-                    for contestant in self.round_contestants:
-                        contestant.games_played += 1
+            async for _ in self.one_round_generator:
+                pass
+            if self.host.game_over():
+                winner_names = list(reversed([name for name, player in self.host.tavern.losers]))
+                print("---------------------------------------------------------------")
+                print(winner_names)
+                print(self.host.tavern.players[self.learning_bot_contestant.name].in_play)
+                ranked_contestants = sorted(self.round_contestants, key=lambda c: winner_names.index(c.name))
+                update_ratings(ranked_contestants)
+                print_standings([self.learning_bot_contestant] + self.other_contestants)
+                for contestant in self.round_contestants:
+                    contestant.games_played += 1
+                self.started.clear()
+                await self._start_new_game()
+            else:
+                self.one_round_generator = self.host.play_round_generator()
 
-                    self._start_new_game()
-                else:
-                    self.one_round_generator = self.host.play_round_generator()
 
 class PPOLearner(GlobalStepContext):
     """
@@ -92,7 +95,6 @@ class PPOLearner(GlobalStepContext):
         self.expensive_tensorboard = False
         # Total number of gradient descent steps we've taken. (for reporting to tensorboard)
         self.global_step = 0
-
 
     def get_global_step(self) -> int:
         return self.global_step
@@ -193,7 +195,7 @@ class PPOLearner(GlobalStepContext):
             for tag, parm in learning_net.named_parameters():
                 tensorboard.add_histogram(f"gradients_{tag}/train", parm.grad.data, self.global_step)
 
-    def run(self):
+    async def run(self):
         start_time = time.time()
         last_reported_time = start_time
         batch_size = self.hparams['batch_size']
@@ -237,10 +239,10 @@ class PPOLearner(GlobalStepContext):
 
         workers = [Worker(learning_bot_contestant, other_contestants, replay_buffer) for _ in
                    range(self.hparams['num_workers'])]
+        await asyncio.wait([worker.started.wait() for worker in workers])
 
         for _ in range(1000000):
-            for worker in workers:
-                worker.play_step()
+            await asyncio.wait([worker.play_step() for worker in workers])
             # print(len(replay_buffer))
             if len(replay_buffer) >= batch_size:
                 for i in range(self.hparams["ppo_epochs"]):
@@ -269,7 +271,7 @@ class PPOLearner(GlobalStepContext):
         return learning_bot_contestant.trueskill.mu
 
 
-def main():
+async def main():
     ppo_learner = PPOLearner(PPOHyperparameters({'adam_lr': 0.000698178899316577,
                                                  'batch_size': 269,
                                                  'entropy_weight': 3.20049705838473e-05,
@@ -282,8 +284,8 @@ def main():
                                                  'policy_weight': 0.581166675499831,
                                                  'ppo_epochs': 8,
                                                  'ppo_epsilon': 0.160450364515127}))
-    ppo_learner.run()
+    await ppo_learner.run()
 
 
 if __name__ == '__main__':
-    main()
+    asyncio.run(main())

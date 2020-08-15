@@ -16,28 +16,28 @@ class RoundRobinHost:
         for player_name in agents.keys():
             self.tavern.add_player(player_name)
 
-    def start_game(self):
+    async def start_game(self):
         for player_name, player in self.tavern.players.items():
-            player.choose_hero(self.agents[player_name].hero_choice_action(player))
+            player.choose_hero(await self.agents[player_name].hero_choice_action(player))
 
-    def play_round_generator(self) -> typing.Generator: # TODO: think about how to test this code
+    async def play_round_generator(self) -> typing.AsyncGenerator:  # TODO: think about how to test this code
         self.tavern.buying_step()
         for player_name, player in self.tavern.players.items():
             if player.health <= 0:
                 continue
             agent = self.agents[player_name]
             for _ in range(20):
-                action = agent.buy_phase_action(player)
+                action = await agent.buy_phase_action(player)
                 yield
                 action.apply(player)
                 if player.discovered_cards:
-                    discovered_card = agent.discover_choice_action(player)
+                    discovered_card = await agent.discover_choice_action(player)
                     player.select_discover(discovered_card)
 
                 if type(action) is EndPhaseAction:
                     break
             if len(player.in_play) > 1:
-                arrangement = agent.rearrange_cards(player)
+                arrangement = await agent.rearrange_cards(player)
                 assert set(arrangement) == set(player.in_play)
                 player.in_play = arrangement
         self.tavern.combat_step()
@@ -45,14 +45,14 @@ class RoundRobinHost:
             for position, (name, player) in enumerate(reversed(self.tavern.losers)):
                 self.agents[name].game_over(player, position)
 
-    def play_round(self):
-        for _ in self.play_round_generator():
+    async def play_round(self):
+        async for _ in self.play_round_generator():
             pass
 
     def game_over(self):
         return self.tavern.game_over()
 
-    def play_game(self):
-        self.start_game()
+    async def play_game(self):
+        await self.start_game()
         while not self.game_over():
-            self.play_round()
+            await self.play_round()

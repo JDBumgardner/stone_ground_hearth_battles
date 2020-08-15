@@ -41,7 +41,7 @@ class SurveiledPytorchBot(PytorchBot):
         super().__init__(net)
         self.parasites = parasites or []
 
-    def buy_phase_action(self, player: 'Player') -> Action:
+    async def buy_phase_action(self, player: 'Player') -> Action:
         policy, value = self.policy_and_value(player)
         probs = torch.exp(policy[0])
         action_index = Categorical(probs).sample()

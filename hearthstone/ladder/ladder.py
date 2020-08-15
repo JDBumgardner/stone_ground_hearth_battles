@@ -1,3 +1,5 @@
+import os
+import asyncio
 import json
 import random
 from datetime import datetime
@@ -59,7 +61,7 @@ def run_tournament(contestants: List[Contestant], num_rounds=10):
     for _ in range(num_rounds):
         round_contestants = random.sample(contestants, k=8)
         host = RoundRobinHost({c.name: agents[c.name] for c in round_contestants})
-        host.play_game()
+        asyncio.run(host.play_game())
         winner_names = list(reversed([name for name, player in host.tavern.losers]))
         print(host.tavern.losers[-1][1].in_play, "-", host.tavern.losers[-1][1].hero, host.tavern.losers[-1][1].name)
         ranked_contestants = sorted(round_contestants, key=lambda c: winner_names.index(c.name))
@@ -126,7 +128,7 @@ def save_ratings(contestants: List[Contestant], path):
 
 def main():
     contestants = all_contestants()
-    standings_path = "../../data/standings.json"
+    standings_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data/standings.json")
     load_ratings(contestants, standings_path)
     run_tournament(contestants, 100)
     save_ratings(contestants, standings_path)

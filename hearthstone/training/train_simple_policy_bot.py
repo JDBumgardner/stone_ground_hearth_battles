@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import random
 
@@ -8,7 +9,7 @@ from hearthstone.battlebots.simple_policy_bot import SimplePolicyBot
 from hearthstone.battlebots.supremacy_bot import SupremacyBot
 from hearthstone.host import RoundRobinHost
 from hearthstone.ladder.ladder import Contestant, update_ratings, print_standings, save_ratings
-from hearthstone.monster_types import MONSTER_TYPES.DRAGON, MONSTER_TYPES.MECH, MONSTER_TYPES.BEAST, MONSTER_TYPES.MURLOC, MONSTER_TYPES.DEMON, MONSTER_TYPES.PIRATE
+from hearthstone.monster_types import MONSTER_TYPES
 
 learning_rate = .1
 
@@ -37,7 +38,7 @@ def main():
     for _ in range(10000):
         round_contestants = [learning_bot_contestant] + random.sample(other_contestants, k=7)
         host = RoundRobinHost({contestant.name: contestant.agent_generator() for contestant in round_contestants})
-        host.play_game()
+        asyncio.run(host.play_game())
         winner_names = list(reversed([name for name, player in host.tavern.losers]))
         print("---------------------------------------------------------------")
         print(winner_names)
