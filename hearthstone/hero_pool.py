@@ -6,6 +6,7 @@ from hearthstone.events import BuyPhaseContext, CombatPhaseContext, EVENTS
 from hearthstone.hero import Hero
 from hearthstone.monster_types import MONSTER_TYPES
 
+
 class Pyramad(Hero):
     power_cost = 1
 

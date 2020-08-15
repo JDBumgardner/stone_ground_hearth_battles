@@ -2,8 +2,10 @@ import copy
 import logging
 import typing
 from typing import Optional, List
-from hearthstone.events import CombatPhaseContext, EVENTS
+
 from hearthstone.cards import CardEvent
+from hearthstone.events import CombatPhaseContext, EVENTS
+
 if typing.TYPE_CHECKING:
     from hearthstone.player import Player
     from hearthstone.randomizer import Randomizer
@@ -71,6 +73,8 @@ def fight_boards(war_party_1: 'WarParty', war_party_2: 'WarParty', randomizer: '
     #  Currently we are not randomizing the first to fight here
     #  Expect to pass half boards into fight_boards in random order i.e. by shuffling players in combat step
     #  Half boards are copies, the originals state cannot be changed in the combat step
+    logger.debug(
+        f"{war_party_1.owner.name} ({war_party_1.owner.hero}, tier {war_party_1.owner.tavern_tier}, {war_party_1.owner.health} health) is fighting {war_party_2.owner.name} ({war_party_2.owner.hero}, tier {war_party_2.owner.tavern_tier}, {war_party_2.owner.health} health)")
     logger.debug(f"{war_party_1.owner.name}'s board is {war_party_1.board}")
     logger.debug(f"{war_party_2.owner.name}'s board is {war_party_2.board}")
     attacking_war_party = war_party_1
@@ -103,13 +107,13 @@ def damage(half_board_1: 'WarParty', half_board_2: 'WarParty'):
     if monster_damage_1 > 0 and monster_damage_2 > 0:
         logger.debug('neither player won (both players have minions left)')
     elif monster_damage_1 > 0:
-        logger.debug(f'{half_board_1.owner.name}(tier {half_board_1.owner.tavern_tier}) has won the fight')
-        logger.debug(f'{half_board_2.owner.name}(tier {half_board_2.owner.tavern_tier}) took {monster_damage_1 + half_board_1.owner.tavern_tier} damage')
+        logger.debug(f'{half_board_1.owner.name} has won the fight')
+        logger.debug(f'{half_board_2.owner.name} took {monster_damage_1 + half_board_1.owner.tavern_tier} damage.')
         logger.debug(f"{half_board_1.owner.name}'s remaining board: {[card for card in half_board_1.board if not card.dead]}")
         half_board_2.owner.health -= monster_damage_1 + half_board_1.owner.tavern_tier
     elif monster_damage_2 > 0:
-        logger.debug(f'{half_board_2.owner.name}(tier {half_board_2.owner.tavern_tier}) has won the fight')
-        logger.debug(f'{half_board_1.owner.name}(tier {half_board_1.owner.tavern_tier}) took {monster_damage_2 + half_board_2.owner.tavern_tier} damage')
+        logger.debug(f'{half_board_2.owner.name} has won the fight')
+        logger.debug(f'{half_board_1.owner.name} took {monster_damage_2 + half_board_2.owner.tavern_tier} damage.')
         logger.debug(f"{half_board_2.owner.name}'s remaining board: {[card for card in half_board_2.board if not card.dead]}")
         half_board_1.owner.health -= monster_damage_2 + half_board_2.owner.tavern_tier
     else:

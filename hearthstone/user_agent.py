@@ -57,7 +57,7 @@ class UserAgent(Agent):
         return check_list
 
     def buy_phase_action(self, player: 'Player') -> Action:
-        print(f"player {player.name}, it is your buy phase.")
+        print(f"player {player.name} ({player.hero}), it is your buy phase.")
         self.print_player_card_list("store", player.store)
         self.print_player_card_list("board", player.in_play)
         self.print_player_card_list("hand", player.hand)
@@ -119,6 +119,8 @@ class UserAgent(Agent):
                 return None
             if split_list[1] == "h":
                 if not 0 <= sell_index < len(player.hand):
+                    return None
+                if not player.room_on_board():
                     return None
                 return SellFromHandAction(HandIndex(sell_index))
             elif split_list[1] == "b":
