@@ -3,6 +3,7 @@ import typing
 from collections import defaultdict
 from typing import Optional, List, Callable, Type
 
+from hearthstone.card_pool import DefenderOfArgus
 from hearthstone.cards import MonsterCard, CardEvent, Card
 from hearthstone.events import BuyPhaseContext, EVENTS
 from hearthstone.hero import EmptyHero
@@ -117,7 +118,11 @@ class Player:
                              card.validate_battlecry_target(target_card)]
             num_possible_targets = min(len(valid_targets), card.num_battlecry_targets)
             if len(targets) != num_possible_targets:
-                return False
+                if type(card) == DefenderOfArgus:
+                    if len(targets) == 0 and valid_targets or len(targets) > 2:
+                        return False
+                else:
+                    return False
             if len(set(targets)) != len(targets):
                 return False
             for target in targets:
@@ -200,6 +205,7 @@ class Player:
         if len(cards) == 3:
             for card in cards:
                 if card in self.in_play:
+                    self.broadcast_buy_phase_event(CardEvent(card, EVENTS.RETURN_TO_HAND))
                     self.in_play.remove(card)
                 if card in self.hand:
                     self.hand.remove(card)

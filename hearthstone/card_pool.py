@@ -828,7 +828,8 @@ class MonstrousMacaw(MonsterCard):
                                           card != self and not card.dead and card.deathrattles]
                 if friendly_deathrattlers:
                     deathrattler = context.randomizer.select_friendly_minion(friendly_deathrattlers)
-                    deathrattler.base_deathrattle(context)
+                    for _ in range(context.deathrattle_multiplier()):
+                        deathrattler.base_deathrattle(context)
 
 
 class ScrewjankClunker(MonsterCard):
@@ -1030,12 +1031,11 @@ class DefenderOfArgus(MonsterCard):
     num_battlecry_targets = 2  # TODO: this can be either 1 or 2
 
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
-        if targets:
-            bonus = 2 if self.golden else 1
-            for i in range(2):
-                targets[i].attack += bonus
-                targets[i].health += bonus
-                targets[i].taunt = True
+        bonus = 2 if self.golden else 1
+        for target in targets:
+            target.attack += bonus
+            target.health += bonus
+            target.taunt = True
 
 
 class SouthseaCaptain(MonsterCard):
@@ -1507,7 +1507,7 @@ class MalGanis(MonsterCard):
             event.card.health += bonus
         elif event.event is EVENTS.SUMMON_BUY and event.card == self:
             context.owner.immune = True
-        elif event.event is EVENTS.SELL and event.card == self:
+        elif (event.event is EVENTS.SELL or event.event is EVENTS.RETURN_TO_HAND) and event.card == self:
             mal_ganis_on_board = [card for card in context.owner.in_play if isinstance(card, MalGanis) and card != self]
             if not mal_ganis_on_board:
                 context.owner.immune = False

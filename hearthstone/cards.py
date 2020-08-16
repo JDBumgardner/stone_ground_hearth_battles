@@ -193,9 +193,10 @@ class MonsterCard(Card):
             if self.deathrattles:
                 targets[0].deathrattles.extend(self.deathrattles)
             for attr in self.bool_attribute_list:
-                if getattr(self, attr): # TODO: Does the target gain magnetic?
+                if getattr(self, attr):  # TODO: Does the target gain magnetic?
                     setattr(targets[0], attr, True)
             targets[0].attached_cards.append(self)  # TODO: BUG!!!! Replicating Menace attaches to itself
+            self.attached_cards = []
             context.owner.in_play.remove(self)
 
     def overkill(self, context: CombatPhaseContext):

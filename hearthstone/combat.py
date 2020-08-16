@@ -33,7 +33,7 @@ class WarParty:
         num_cards = len(self.board)
         for offset in range(0, num_cards):
             index = (self.next_attacker_idx + offset) % num_cards
-            if not self.board[index].dead and not self.board[index].cant_attack:
+            if not self.board[index].dead and not self.board[index].cant_attack and not self.board[index].attack <= 0:
                 self.next_attacker_idx = index + 1
                 return self.board[index]
         return None
@@ -129,7 +129,7 @@ def start_attack(attacker: 'MonsterCard', defender: 'MonsterCard', attacking_war
     attacker.take_damage(defender.attack, combat_phase_context, defender, defending=False)
     defender.take_damage(attacker.attack, combat_phase_context, attacker)
     # handle "after combat" events here
-    combat_phase_context.broadcast_combat_event(CardEvent(attacker, EVENTS.AFTER_ATTACK))
     attacker.resolve_death(CombatPhaseContext(attacking_war_party, defending_war_party, randomizer))
     defender.resolve_death(CombatPhaseContext(defending_war_party, attacking_war_party, randomizer))
     logger.debug(f'{attacker} has just attacked {defender}')
+    combat_phase_context.broadcast_combat_event(CardEvent(attacker, EVENTS.AFTER_ATTACK))
