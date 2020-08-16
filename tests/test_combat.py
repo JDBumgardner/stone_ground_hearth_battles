@@ -778,5 +778,41 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
 
+    def test_macaw_goldrinn(self):
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [MonstrousMacaw(), GoldrinnTheGreatWolf()]
+        ethans_war_party.board = [DeckSwabbie()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertTrue(adams_war_party.board[0].dead)
+
+    def test_macaw_baron(self):
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [MonstrousMacaw(), GoldrinnTheGreatWolf(), BaronRivendare()]
+        ethans_war_party.board = [DeckSwabbie()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertTrue(adams_war_party.board[0].dead)
+        self.assertEqual(adams_war_party.board[1].attack, 12)
+        self.assertEqual(adams_war_party.board[1].health, 12)
+
+    def test_zero_attack(self):
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [MechanoEgg(), MamaBear()]
+        ethans_war_party.board = [MamaBear()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertFalse(adams_war_party.board[0].dead)
+        self.assertEqual(len(adams_war_party.board), 2)
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 35)
+
+
 if __name__ == '__main__':
     unittest.main()

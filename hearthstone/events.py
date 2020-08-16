@@ -22,6 +22,7 @@ class EVENTS(enum.Enum):
     CARD_DAMAGED = 11
     DIVINE_SHIELD_LOST = 13
     PLAYER_DAMAGED = 14
+    RETURN_TO_HAND = 15
 
 
 class BuyPhaseContext:

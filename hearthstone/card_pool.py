@@ -1030,12 +1030,11 @@ class DefenderOfArgus(MonsterCard):
     num_battlecry_targets = 2  # TODO: this can be either 1 or 2
 
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
-        if targets:
-            bonus = 2 if self.golden else 1
-            for i in range(len(targets)):
-                targets[i].attack += bonus
-                targets[i].health += bonus
-                targets[i].taunt = True
+        bonus = 2 if self.golden else 1
+        for target in targets:
+            target.attack += bonus
+            target.health += bonus
+            target.taunt = True
 
 
 class SouthseaCaptain(MonsterCard):
