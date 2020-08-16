@@ -1032,7 +1032,7 @@ class DefenderOfArgus(MonsterCard):
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
         if targets:
             bonus = 2 if self.golden else 1
-            for i in range(2):
+            for i in range(len(targets)):
                 targets[i].attack += bonus
                 targets[i].health += bonus
                 targets[i].taunt = True
