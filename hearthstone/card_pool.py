@@ -551,12 +551,11 @@ class ArcaneCannon(MonsterCard):
     cant_attack = True
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
-        if event.event is EVENTS.ON_ATTACK:
+        if event.event is EVENTS.AFTER_ATTACK:
             count = 2 if self.golden else 1
             for _ in range(count):
-                friendly_live_war_party = [friend for friend in context.friendly_war_party.board if not friend.dead]
-                if event.card in friendly_live_war_party:
-                    if abs(friendly_live_war_party.index(self) - friendly_live_war_party.index(event.card)) == 1:
+                if event.card in context.friendly_war_party.board:
+                    if abs(context.friendly_war_party.board.index(self) - context.friendly_war_party.board.index(event.card)) == 1:
                         possible_targets = [card for card in context.enemy_war_party.board if not card.dead]
                         if possible_targets:
                             target = context.randomizer.select_enemy_minion(possible_targets)
@@ -824,6 +823,7 @@ class MonstrousMacaw(MonsterCard):
 
     def handle_event(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         if event.event is EVENTS.AFTER_ATTACK and self == event.card:
+            # self.resolve_death(context, event.foe)
             deathrattle_triggers = 2 if self.golden else 1
             for _ in range(deathrattle_triggers):
                 friendly_deathrattlers = [card for card in context.friendly_war_party.board if

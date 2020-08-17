@@ -263,14 +263,27 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(adam.health, 37)
         self.assertEqual(ethan.health, 40)
 
-    def test_arcane_cannon(self):  # TODO Jarett, does the arcane canon
-        # TODO Jacob Finish this test once Jarett helps us figure out the order of operations
+    def test_arcane_cannon(self):
         adam = Player.new_player_with_hero(None, "Adam")
         ethan = Player.new_player_with_hero(None, "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
-        adams_war_party.board = [RatPack()]
-        ethans_war_party.board = [RatPack()]
+        adams_war_party.board = [ArcaneCannon(), TwilightEmissary()]
+        ethans_war_party.board = [DeckSwabbie(), DeckSwabbie(), DeckSwabbie(), DragonspawnLieutenant()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+
+    def test_arcane_cannon_scallywag(self):
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        cat = AlleyCat()
+        cat.taunt = True
+        adams_war_party.board = [Scallywag(), ArcaneCannon(), VulgarHomunculus()]
+        ethans_war_party.board = [BloodsailCannoneer(), MurlocTidehunter(), MurlocTidehunter(), MurlocTidehunter(), MurlocTidehunter(), cat]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
 
