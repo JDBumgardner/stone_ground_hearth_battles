@@ -44,10 +44,11 @@ class SneedsOldShredder(MonsterCard):
         i = 0
         for _ in range(count):
             for _ in range(context.summon_minion_multiplier()):
-                # TODO: Legendary minions to add: Waxrider Togwaggle, The Beast, and a bunch of tier 5/6 minions
+                # TODO: Legendary minions to add: The Beast and a bunch of tier 5/6 minions
                 legendary_minions = [OldMurkeye(), Khadgar(), ShifterZerus(), BolvarFireblood(), RazorgoreTheUntamed(),
                                      KingBagurgle(), CapnHoggarr(), KalecgosArcaneAspect(), NadinaTheRed(),
-                                     DreadAdmiralEliza(), Maexxna(), NatPagleExtremeAngler(), MalGanis()]
+                                     DreadAdmiralEliza(), Maexxna(), NatPagleExtremeAngler(), MalGanis(),
+                                     WaxriderTogwaggle(), BaronRivendare(), BrannBronzebeard(), GoldrinnTheGreatWolf()]
                 random_minion = context.randomizer.select_summon_minion(legendary_minions)
                 context.friendly_war_party.summon_in_combat(random_minion, context, summon_index + i + 1)
                 i += 1

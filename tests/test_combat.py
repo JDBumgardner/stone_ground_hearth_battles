@@ -492,7 +492,8 @@ class CombatTests(unittest.TestCase):
         self.assertNotEqual(len(adams_war_party.board), 1)
         legendary_minions = [OldMurkeye, Khadgar, ShifterZerus, BolvarFireblood, RazorgoreTheUntamed, KingBagurgle,
                              CapnHoggarr, KalecgosArcaneAspect, NadinaTheRed, DreadAdmiralEliza, Maexxna,
-                             NatPagleExtremeAngler, MalGanis]
+                             NatPagleExtremeAngler, MalGanis, WaxriderTogwaggle, BaronRivendare, BrannBronzebeard,
+                             GoldrinnTheGreatWolf]
         self.assertIn(type(adams_war_party.board[1]), legendary_minions)
 
     def test_bolvar_fireblood(self):
