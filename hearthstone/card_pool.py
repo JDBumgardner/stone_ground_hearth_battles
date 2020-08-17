@@ -7,7 +7,7 @@ from hearthstone.events import BuyPhaseContext, CombatPhaseContext, EVENTS
 from hearthstone.monster_types import MONSTER_TYPES
 
 
-class MamaBear(MonsterCard): # TODO: shouldn't buff itself
+class MamaBear(MonsterCard):
     tier = 6
     monster_type = MONSTER_TYPES.BEAST
     base_attack = 5
@@ -267,7 +267,7 @@ class RedWhelp(MonsterCard):
             for _ in range(num_damage_instances):
                 target = context.randomizer.select_enemy_minion(targets)
                 target.take_damage(num_friendly_dragons, context, self)
-                target.resolve_death(context)  # TODO: Order of death resolution?
+                target.resolve_death(context, self)  # TODO: Order of death resolution?
 
 
 class HarvestGolem(MonsterCard):
@@ -307,7 +307,7 @@ class KaboomBot(MonsterCard):
                 break
             target = context.randomizer.select_enemy_minion(targets)
             target.take_damage(4, context, self)
-            target.resolve_death(context)  # TODO: Order of death resolution?
+            target.resolve_death(context, self)  # TODO: Order of death resolution?
 
 
 class KindlyGrandmother(MonsterCard):
@@ -378,6 +378,7 @@ class Imprisoner(MonsterCard):
     monster_type = MONSTER_TYPES.DEMON
     base_attack = 3
     base_health = 3
+    base_taunt = True
 
     def base_deathrattle(self, context: CombatPhaseContext):
         summon_index = context.friendly_war_party.get_index(self)
@@ -498,7 +499,7 @@ class UnstableGhoul(MonsterCard):
                 if minion.dead:
                     continue
                 minion.take_damage(1, context, self)
-                minion.resolve_death(context)  # TODO: Order of death resolution?
+                minion.resolve_death(context, self)  # TODO: Order of death resolution?
 
 
 class RockpoolHunter(MonsterCard):
@@ -560,7 +561,7 @@ class ArcaneCannon(MonsterCard):
                             target = context.randomizer.select_enemy_minion(possible_targets)
                             target.take_damage(2, context, self)
                             target.resolve_death(
-                                CombatPhaseContext(context.enemy_war_party, context.friendly_war_party, context.randomizer))
+                                CombatPhaseContext(context.enemy_war_party, context.friendly_war_party, context.randomizer), self)
 
 
 class NathrezimOverseer(MonsterCard):
@@ -828,7 +829,8 @@ class MonstrousMacaw(MonsterCard):
                                           card != self and not card.dead and card.deathrattles]
                 if friendly_deathrattlers:
                     deathrattler = context.randomizer.select_friendly_minion(friendly_deathrattlers)
-                    deathrattler.base_deathrattle(context)
+                    for _ in range(context.deathrattle_multiplier()):
+                        deathrattler.base_deathrattle(context)
 
 
 class ScrewjankClunker(MonsterCard):
@@ -912,7 +914,7 @@ class SoulJuggler(MonsterCard):
                 if targets:
                     target = context.randomizer.select_enemy_minion(targets)
                     target.take_damage(3, context, self)
-                    target.resolve_death(context)  # TODO: Order of death resolution?
+                    target.resolve_death(context, self)  # TODO: Order of death resolution?
 
 
 class TwilightEmissary(MonsterCard):
@@ -1398,14 +1400,14 @@ class HeraldOfFlame(MonsterCard):
         damage = 6 if self.golden else 3
         leftmost_index = 0
         while True:
-            context.enemy_war_party.board[leftmost_index].resolve_death(context)
+            context.enemy_war_party.board[leftmost_index].resolve_death(context, self)
             if not context.enemy_war_party.board[leftmost_index].dead:
                 break
             leftmost_index += 1
             if leftmost_index >= len(context.enemy_war_party.board):
                 return
         context.enemy_war_party.board[leftmost_index].take_damage(damage, context, self)
-        context.enemy_war_party.board[leftmost_index].resolve_death(context)
+        context.enemy_war_party.board[leftmost_index].resolve_death(context, self)
 
 
 class IronhideDirehorn(MonsterCard):
@@ -1500,7 +1502,7 @@ class MalGanis(MonsterCard):  # immunity prevents damage instances in the buy ph
             event.card.health += bonus
         elif event.event is EVENTS.SUMMON_BUY and event.card == self:
             context.owner.immune = True
-        elif event.event is EVENTS.SELL and event.card == self:
+        elif (event.event is EVENTS.SELL or event.event is EVENTS.RETURN_TO_HAND) and event.card == self:
             mal_ganis_on_board = [card for card in context.owner.in_play if isinstance(card, MalGanis) and card != self]
             if not mal_ganis_on_board:
                 context.owner.immune = False
@@ -1531,3 +1533,53 @@ class BrannBronzebeard(MonsterCard):
 
     def battlecry_multiplier(self) -> int:
         return 3 if self.golden else 2
+
+
+class IronSensei(MonsterCard):
+    tier = 4
+    monster_type = MONSTER_TYPES.MECH
+    base_attack = 2
+    base_health = 2
+
+    def handle_event(self, event: CardEvent, context: BuyPhaseContext):
+        if event.event is EVENTS.BUY_END:
+            friendly_mechs = [card for card in context.owner.in_play if card.monster_type in (MONSTER_TYPES.MECH, MONSTER_TYPES.ALL) and card != self]
+            mech = context.randomizer.select_friendly_minion(friendly_mechs)
+            bonus = 4 if self.golden else 2
+            mech.attack += bonus
+            mech.health += bonus
+
+
+class YoHoOgre(MonsterCard):
+    tier = 3
+    monster_type = MONSTER_TYPES.PIRATE
+    base_attack = 2
+    base_health = 8
+    base_taunt = True
+
+    def handle_event(self, event: CardEvent, context: CombatPhaseContext):
+        if event.event is EVENTS.AFTER_ATTACK and event.foe == self and not self.dead:
+            attacking_war_party = context.friendly_war_party
+            defending_war_party = context.enemy_war_party
+            attacker = self
+            defender = defending_war_party.get_random_monster(context.randomizer)
+            if not defender:
+                return
+            logging.debug(f'{attacking_war_party.owner.name} is attacking {defending_war_party.owner.name}')
+            combat.start_attack(attacker, defender, attacking_war_party, defending_war_party, context.randomizer)
+
+
+class WaxriderTogwaggle(MonsterCard):
+    tier = 2
+    monster_type = None
+    base_attack = 1
+    base_health = 2
+
+    def handle_event(self, event: CardEvent, context: CombatPhaseContext):
+        if event.event is EVENTS.DIES and event.card in context.enemy_war_party.board and event.foe in \
+                    context.friendly_war_party.board and event.foe.monster_type in (MONSTER_TYPES.DRAGON, MONSTER_TYPES.ALL):
+            bonus = 4 if self.golden else 2
+            self.attack += bonus
+            self.health += bonus
+
+

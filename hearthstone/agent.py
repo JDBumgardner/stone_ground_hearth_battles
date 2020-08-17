@@ -139,6 +139,17 @@ class TripleRewardsAction(Action):
         return player.validate_triple_rewards()
 
 
+class RedeemGoldCoinAction(Action):
+    def __repr__(self):
+        return f"RedeemGoldCoin()"
+
+    def apply(self, player: 'Player'):
+        player.redeem_gold_coin()
+
+    def valid(self, player: 'Player') -> bool:
+        return player.gold_coins >= 1
+
+
 class Agent:
     def hero_choice_action(self, player: 'Player') -> 'Hero':
         return player.hero_options[0]

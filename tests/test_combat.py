@@ -155,15 +155,16 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_murloc_warleader(self):
+        logging.basicConfig(level=logging.DEBUG)
         adam = Player.new_player_with_hero(None, "Adam")
         ethan = Player.new_player_with_hero(None, "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
-        adams_war_party.board = [MurlocScout(), MurlocWarleader()] # TODO: BUG!!! Murloc Warleader doesn't trigger when it dies!!
+        adams_war_party.board = [MurlocWarleader(), MurlocScout()]  # TODO: BUG!!! Murloc Warleader doesn't trigger when it dies!!
         ethans_war_party.board = [MamaBear()]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
-        self.assertEqual(adams_war_party.board[0].attack, 1)
-        self.assertEqual(adam.health, 40)
+        self.assertEqual(adams_war_party.board[1].attack, 1)
+        self.assertEqual(adam.health, 33)
         self.assertEqual(ethan.health, 40)
 
     def test_scallywag(self):
@@ -705,7 +706,6 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_herald_of_flame_chain(self):
-        logging.basicConfig(level=logging.DEBUG)
         adam = Player.new_player_with_hero(None, "Adam")
         ethan = Player.new_player_with_hero(None, "Ethan")
         adams_war_party = WarParty(adam)
@@ -724,7 +724,7 @@ class CombatTests(unittest.TestCase):
         ethans_war_party = WarParty(ethan)
         herald = HeraldOfFlame()
         herald.taunt = True
-        adams_war_party.board = [HeraldOfFlame(), FreedealingGambler()]
+        adams_war_party.board = [herald, FreedealingGambler()]
         ethans_war_party.board = [NadinaTheRed(), NadinaTheRed(), NadinaTheRed()]
         for card in ethans_war_party.board:
             card.health -= 1
@@ -737,11 +737,11 @@ class CombatTests(unittest.TestCase):
         ethan = Player.new_player_with_hero(None, "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
-        adams_war_party.board = [IronhideDirehorn(), Rat(), Rat(), Rat(), Rat()]
-        ethans_war_party.board = [CrystalWeaver(), CrystalWeaver(), CrystalWeaver(), UnstableGhoul()]
+        adams_war_party.board = [IronhideDirehorn(), Rat()]
+        ethans_war_party.board = [NadinaTheRed()]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
-        self.assertEqual(ethan.health, 40)
+        self.assertEqual(ethan.health, 37)
 
     def test_ironhide_direhorn_defender(self):
         adam = Player.new_player_with_hero(None, "Adam")
@@ -852,6 +852,42 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(len(adams_war_party.board), 2)
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 35)
+
+    def test_yo_ho_ogre(self):
+        logging.basicConfig(level=logging.DEBUG)
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [YoHoOgre(), RipsnarlCaptain()]
+        ethans_war_party.board = [DeckSwabbie(), TwilightEmissary(), Robosaur()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+
+    def test_waxrider_togwaggle(self):
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [TwilightEmissary(), WaxriderTogwaggle()]
+        ethans_war_party.board = [TwilightEmissary(), Houndmaster()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+
+    def test_herald_togwaggle(self):
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        robosaur = Robosaur()
+        robosaur.golden_transformation([])
+        adams_war_party.board = [HeraldOfFlame(), Rat(), Rat(), Rat(), WaxriderTogwaggle()]
+        ethans_war_party.board = [MicroMachine(), MicroMachine(), robosaur, UnstableGhoul()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
 
 
 if __name__ == '__main__':

@@ -24,10 +24,11 @@ class PrintingPress:
 
 
 class CardEvent:
-    def __init__(self, card: Optional['MonsterCard'], event: EVENTS, targets: Optional[List['MonsterCard']] = None):
+    def __init__(self, card: Optional['MonsterCard'], event: EVENTS, targets: Optional[List['MonsterCard']] = None, foe: Optional['MonsterCard'] = None):
         self.card = card
         self.event = EVENTS(event)
         self.targets = targets
+        self.foe = foe  # for combat-related events
 
 
 CardType = make_metaclass(PrintingPress.add_card, ("Card", "MonsterCard"))
@@ -112,19 +113,19 @@ class MonsterCard(Card):
     def take_damage(self, damage: int, combat_phase_context: CombatPhaseContext, foe: Optional['MonsterCard'] = None, defending: Optional[bool] = True):
         if self.divine_shield and not damage <= 0:
             self.divine_shield = False
-            combat_phase_context.broadcast_combat_event(CardEvent(self, EVENTS.DIVINE_SHIELD_LOST))
+            combat_phase_context.broadcast_combat_event(CardEvent(self, EVENTS.DIVINE_SHIELD_LOST, foe=foe))
         else:
             self.health -= damage
             if foe is not None and foe.poisonous and self.health > 0:
                 self.health = 0
             if defending and foe is not None and self.health < 0:
                 foe.overkill(combat_phase_context)  # overkill doesn't trigger when the attacker takes damage, so the friendly war party is always the attacker's and the enemy war party is always the defender's
-            combat_phase_context.broadcast_combat_event(CardEvent(self, EVENTS.CARD_DAMAGED))
+            combat_phase_context.broadcast_combat_event(CardEvent(self, EVENTS.CARD_DAMAGED, foe=foe))
 
-    def resolve_death(self, context: CombatPhaseContext):
-        if self.health <= 0:
+    def resolve_death(self, context: CombatPhaseContext, foe: Optional['MonsterCard'] = None):
+        if self.health <= 0 and not self.dead:
             self.dead = True
-            card_death_event = CardEvent(self, EVENTS.DIES)
+            card_death_event = CardEvent(self, EVENTS.DIES, foe=foe)
             context.broadcast_combat_event(card_death_event)
 
     def resolve_reborn(self, context: CombatPhaseContext):

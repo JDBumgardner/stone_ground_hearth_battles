@@ -47,6 +47,7 @@ class Player:
         self.counted_cards = defaultdict(lambda: 0)
         self.minion_cost = 3
         self.immune = False
+        self.gold_coins = 0
 
     @staticmethod
     def new_player_with_hero(tavern: 'Tavern', name: str, hero: Optional['Hero'] = None) -> 'Player':
@@ -291,3 +292,8 @@ class Player:
         if not self.immune:
             self.health -= damage
             self.broadcast_buy_phase_event(CardEvent(None, EVENTS.PLAYER_DAMAGED))
+
+    def redeem_gold_coin(self):
+        if self.gold_coins >= 1:
+            self.gold_coins -= 1
+            self.coins += 1

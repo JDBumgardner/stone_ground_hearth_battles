@@ -1225,8 +1225,11 @@ class CardTests(unittest.TestCase):
         player_2 = tavern.add_player_with_hero("lucy")
         tavern.buying_step()
         player_1.hero_power()
+        self.assertEqual(player_1.gold_coins, 1)
+        player_1.redeem_gold_coin()
         self.assertEqual(player_1.health, 38)
         self.assertEqual(player_1.coins, 4)
+        self.assertEqual(player_1.gold_coins, 0)
 
     def test_skycapn_kragg(self):
         tavern = Tavern()
@@ -1624,6 +1627,33 @@ class CardTests(unittest.TestCase):
         player_1.summon_from_hand(HandIndex(0))
         player_1.summon_from_hand(HandIndex(0))
         self.assertCardListEquals(player_1.in_play, [BrannBronzebeard, AlleyCat, TabbyCat, TabbyCat])
+
+    def test_iron_sensei(self):
+        tavern = Tavern()
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        self.upgrade_to_tier(tavern, 4)
+        tavern.randomizer = RepeatedCardForcer([AlleyCat, MechaRoo])
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        tavern.combat_step()
+        tavern.randomizer = RepeatedCardForcer([IronSensei])
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        tavern.combat_step()
+        self.assertCardListEquals(player_1.in_play, [AlleyCat, TabbyCat, MechaRoo, IronSensei])
+        self.assertEqual(player_1.in_play[0].attack, player_1.in_play[0].base_attack)
+        self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health)
+        self.assertEqual(player_1.in_play[1].attack, player_1.in_play[1].base_attack)
+        self.assertEqual(player_1.in_play[1].health, player_1.in_play[1].base_health)
+        self.assertEqual(player_1.in_play[2].attack, player_1.in_play[2].base_attack + 2)
+        self.assertEqual(player_1.in_play[2].health, player_1.in_play[2].base_health + 2)
+        self.assertEqual(player_1.in_play[3].attack, player_1.in_play[3].base_attack)
+        self.assertEqual(player_1.in_play[3].health, player_1.in_play[3].base_health)
 
 
 if __name__ == '__main__':

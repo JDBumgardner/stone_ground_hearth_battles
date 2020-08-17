@@ -1,7 +1,7 @@
 import typing
 from typing import List, Optional
-from hearthstone.agent import Agent, Action, BuyAction, SummonAction,  EndPhaseAction, RerollAction, \
-    SellFromBoardAction, SellFromHandAction
+from hearthstone.agent import Agent, Action, BuyAction, SummonAction, EndPhaseAction, RerollAction, \
+    SellFromBoardAction, SellFromHandAction, RedeemGoldCoinAction
 from hearthstone.agent import TavernUpgradeAction, HeroPowerAction, TripleRewardsAction
 from hearthstone.player import HandIndex, BoardIndex, StoreIndex
 
@@ -63,6 +63,8 @@ class UserAgent(Agent):
         self.print_player_card_list("hand", player.hand)
         print(f"Your current triple rewards are {player.triple_rewards}")
         print(f"you have {player.coins} coins and {player.health} health and your tavern is level {player.tavern_tier}")
+        if player.gold_coins >= 1:
+            print(f"you have {player.gold_coins} gold coins")
         print("available actions are: ")
         print('purchase: "p 0" purchases the 0th indexed monster from the store')
         print(
@@ -73,6 +75,8 @@ class UserAgent(Agent):
         print(f'upgrade tavern: "u" will upgrade the tavern (current upgrade cost: {player.tavern_upgrade_cost if player.tavern_tier < 6 else 0})')
         print('hero power: "h" will activate your hero power')
         print('triple rewards: "t" will use your highest tavern tier triple rewards')
+        if player.gold_coins >= 1:
+            print('coin tokens: "c" will use a coin token')
         print('end turn: "e f" ends the turn and freezes the shop, "e" ends the turn without freezing the shop')
         user_input = input("input action here: ")
         while True:
@@ -139,6 +143,8 @@ class UserAgent(Agent):
             return HeroPowerAction()
         elif split_list[0] == "t":
             return TripleRewardsAction()
+        elif split_list[0] == "c":
+            return RedeemGoldCoinAction()
         else:
             return None
 
