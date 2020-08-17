@@ -1030,11 +1030,12 @@ class DefenderOfArgus(MonsterCard):
     num_battlecry_targets = 2  # TODO: this can be either 1 or 2
 
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
-        bonus = 2 if self.golden else 1
-        for target in targets:
-            target.attack += bonus
-            target.health += bonus
-            target.taunt = True
+        if targets:
+            bonus = 2 if self.golden else 1
+            for i in range(len(targets)):
+                targets[i].attack += bonus
+                targets[i].health += bonus
+                targets[i].taunt = True
 
 
 class SouthseaCaptain(MonsterCard):
@@ -1226,8 +1227,8 @@ class KingBagurgle(MonsterCard):
 
     def base_deathrattle(self, context: CombatPhaseContext):
         for card in context.friendly_war_party.board:
+            bonus = 4 if self.golden else 2
             if card.monster_type in (MONSTER_TYPES.MURLOC, MONSTER_TYPES.ALL) and card != self:
-                bonus = 4 if self.golden else 2
                 card.attack += bonus
                 card.health += bonus
 
@@ -1240,9 +1241,9 @@ class RazorgoreTheUntamed(MonsterCard):
 
     def handle_event_powers(self, event: CardEvent, context: BuyPhaseContext):
         if event.event is EVENTS.BUY_END:
+            bonus = 2 if self.golden else 1
             for card in context.owner.in_play:
                 if card.monster_type in (MONSTER_TYPES.DRAGON, MONSTER_TYPES.ALL):
-                    bonus = 2 if self.golden else 1
                     self.attack += bonus
                     self.health += bonus
 
@@ -1393,10 +1394,10 @@ class HeraldOfFlame(MonsterCard):
     base_attack = 5
     base_health = 6
 
-    def overkill(self, context: CombatPhaseContext):
+    def overkill(self, context: CombatPhaseContext): #TODO same as other overkills I think that if HOF is the defender it will zap yourself
         damage = 6 if self.golden else 3
         leftmost_index = 0
-        while context.enemy_war_party.board[leftmost_index].health < 0:
+        while context.enemy_war_party.board[leftmost_index].health < 0: #TODO should check the dead flag I think, I'm not sure, but I think it's possible to have more than 0 hP if you're dead.
             leftmost_index += 1
             if leftmost_index >= len(context.enemy_war_party.board):
                 return
@@ -1411,7 +1412,7 @@ class IronhideDirehorn(MonsterCard):
     base_health = 7
 
     def overkill(self, context: CombatPhaseContext):
-        # TODO: this can probably be better
+        # TODO: this can probably be better | same comment as in Nat Pagle
         war_party = context.friendly_war_party
         if self in context.enemy_war_party.board:
             war_party = context.enemy_war_party
@@ -1441,7 +1442,7 @@ class NatPagleExtremeAngler(MonsterCard):
     def overkill(self, context: CombatPhaseContext):
         # TODO: this can probably be better
         war_party = context.friendly_war_party
-        if self in context.enemy_war_party.board:
+        if self in context.enemy_war_party.board: #TODO this is because the context is passed in from the defender
             war_party = context.enemy_war_party
             context = context.enemy_context()
         summon_index = war_party.get_index(self)
@@ -1486,7 +1487,7 @@ class FloatingWatcher(MonsterCard):
             self.health += bonus
 
 
-class MalGanis(MonsterCard):
+class MalGanis(MonsterCard): #TODO I don't think that immune keeps you from taking damage
     tier = 5
     monster_type = MONSTER_TYPES.DEMON
     base_attack = 9
@@ -1501,7 +1502,7 @@ class MalGanis(MonsterCard):
                 demon.attack += bonus
                 demon.health += bonus
         elif event.event is EVENTS.SUMMON_COMBAT and event.card in context.friendly_war_party.board \
-                and event.card != self and event.card.monster_type in (MONSTER_TYPES.PIRATE, MONSTER_TYPES.ALL):
+                and event.card != self and event.card.monster_type in (MONSTER_TYPES.DEMON, MONSTER_TYPES.ALL):
             event.card.attack += bonus
             event.card.health += bonus
         elif event.event is EVENTS.SUMMON_BUY and event.card == self:

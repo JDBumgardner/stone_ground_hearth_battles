@@ -705,6 +705,7 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_herald_of_flame_chain(self):
+        logging.basicConfig(level=logging.DEBUG)
         adam = Player.new_player_with_hero(None, "Adam")
         ethan = Player.new_player_with_hero(None, "Ethan")
         adams_war_party = WarParty(adam)
