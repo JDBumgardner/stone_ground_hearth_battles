@@ -1394,10 +1394,13 @@ class HeraldOfFlame(MonsterCard):
     base_attack = 5
     base_health = 6
 
-    def overkill(self, context: CombatPhaseContext): #TODO same as other overkills I think that if HOF is the defender it will zap yourself
+    def overkill(self, context: CombatPhaseContext):  # only triggers when attacking: enemy_war_party == defending_war_party
         damage = 6 if self.golden else 3
         leftmost_index = 0
-        while context.enemy_war_party.board[leftmost_index].health < 0: #TODO should check the dead flag I think, I'm not sure, but I think it's possible to have more than 0 hP if you're dead.
+        while True:
+            context.enemy_war_party.board[leftmost_index].resolve_death(context)
+            if not context.enemy_war_party.board[leftmost_index].dead:
+                break
             leftmost_index += 1
             if leftmost_index >= len(context.enemy_war_party.board):
                 return
@@ -1411,18 +1414,13 @@ class IronhideDirehorn(MonsterCard):
     base_attack = 7
     base_health = 7
 
-    def overkill(self, context: CombatPhaseContext):
-        # TODO: this can probably be better | same comment as in Nat Pagle
-        war_party = context.friendly_war_party
-        if self in context.enemy_war_party.board:
-            war_party = context.enemy_war_party
-            context = context.enemy_context()
-        summon_index = war_party.get_index(self)
+    def overkill(self, context: CombatPhaseContext):  # only triggers when attacking: friendly_war_party == attacking_war_party
+        summon_index = context.friendly_war_party.get_index(self)
         for i in range(context.summon_minion_multiplier()):
             runt = IronhideRunt()
             if self.golden:
                 runt.golden_transformation([])
-            war_party.summon_in_combat(runt, context, summon_index + i + 1)
+            context.friendly_war_party.summon_in_combat(runt, context, summon_index + i + 1)
 
 
 class IronhideRunt(MonsterCard):
@@ -1439,18 +1437,13 @@ class NatPagleExtremeAngler(MonsterCard):
     base_attack = 8
     base_health = 5
 
-    def overkill(self, context: CombatPhaseContext):
-        # TODO: this can probably be better
-        war_party = context.friendly_war_party
-        if self in context.enemy_war_party.board: #TODO this is because the context is passed in from the defender
-            war_party = context.enemy_war_party
-            context = context.enemy_context()
-        summon_index = war_party.get_index(self)
+    def overkill(self, context: CombatPhaseContext):  # only triggers when attacking: friendly_war_party == attacking_war_party
+        summon_index = context.friendly_war_party.get_index(self)
         for i in range(context.summon_minion_multiplier()):
             treasure = TreasureChest()
             if self.golden:
                 treasure.golden_transformation([])
-            war_party.summon_in_combat(treasure, context, summon_index + i + 1)
+            context.friendly_war_party.summon_in_combat(treasure, context, summon_index + i + 1)
 
 
 class TreasureChest(MonsterCard):
@@ -1468,7 +1461,7 @@ class TreasureChest(MonsterCard):
             for _ in range(context.summon_minion_multiplier()):
                 # TODO: can this summon tokens?
                 all_minions = PrintingPress.make_cards().unique_cards()
-                random_minion = context.randomizer.select_random_minion(all_minions, context.friendly_war_party.owner.tavern.turn_count)
+                random_minion = context.randomizer.select_summon_minion(all_minions)
                 random_minion.golden_transformation([])
                 context.friendly_war_party.summon_in_combat(random_minion, context, summon_index + i + 1)
                 i += 1
@@ -1487,7 +1480,7 @@ class FloatingWatcher(MonsterCard):
             self.health += bonus
 
 
-class MalGanis(MonsterCard): #TODO I don't think that immune keeps you from taking damage
+class MalGanis(MonsterCard):  # immunity prevents damage instances in the buy phase, from Wrath Weaver, Vulgar Homunculus, etc.
     tier = 5
     monster_type = MONSTER_TYPES.DEMON
     base_attack = 9

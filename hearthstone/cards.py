@@ -118,7 +118,7 @@ class MonsterCard(Card):
             if foe is not None and foe.poisonous and self.health > 0:
                 self.health = 0
             if defending and foe is not None and self.health < 0:
-                foe.overkill(combat_phase_context)#TODO is this right? Aren't the WarParties switched in this context?
+                foe.overkill(combat_phase_context)  # overkill doesn't trigger when the attacker takes damage, so the friendly war party is always the attacker's and the enemy war party is always the defender's
             combat_phase_context.broadcast_combat_event(CardEvent(self, EVENTS.CARD_DAMAGED))
 
     def resolve_death(self, context: CombatPhaseContext):

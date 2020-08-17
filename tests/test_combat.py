@@ -717,6 +717,21 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 35)
 
+    def test_herald_of_flame_defender(self):
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        herald = HeraldOfFlame()
+        herald.taunt = True
+        adams_war_party.board = [HeraldOfFlame(), FreedealingGambler()]
+        ethans_war_party.board = [NadinaTheRed(), NadinaTheRed(), NadinaTheRed()]
+        for card in ethans_war_party.board:
+            card.health -= 1
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 33)
+        self.assertEqual(ethan.health, 40)
+
     def test_ironhide_direhorn(self):
         adam = Player.new_player_with_hero(None, "Adam")
         ethan = Player.new_player_with_hero(None, "Ethan")
@@ -726,6 +741,18 @@ class CombatTests(unittest.TestCase):
         ethans_war_party.board = [CrystalWeaver(), CrystalWeaver(), CrystalWeaver(), UnstableGhoul()]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+
+    def test_ironhide_direhorn_defender(self):
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [IronhideDirehorn()]
+        ethans_war_party.board = [NadinaTheRed(), NadinaTheRed()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(len(adams_war_party.board), 1)
+        self.assertEqual(adam.health, 33)
         self.assertEqual(ethan.health, 40)
 
     def test_nat_pagle_extreme_angler(self):
@@ -743,6 +770,18 @@ class CombatTests(unittest.TestCase):
         self.assertNotEqual(ethan.health, 40)
         self.assertEqual(len(adams_war_party.board), 4)
         self.assertTrue(adams_war_party.board[2].golden)
+
+    def test_nat_pagle_defender(self):
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [NatPagleExtremeAngler()]
+        ethans_war_party.board = [MamaBear(), MamaBear()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 33)
+        self.assertEqual(ethan.health, 40)
+        self.assertEqual(len(adams_war_party.board), 1)
 
     def test_mal_ganis(self):
         adam = Player.new_player_with_hero(None, "Adam")
