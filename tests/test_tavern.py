@@ -543,15 +543,15 @@ class CardTests(unittest.TestCase):
         player_1.purchase(StoreIndex(0))
         player_1.summon_from_hand(HandIndex(2))
         self.assertCardListEquals(player_1.in_play, [RabidSaurolisk])
-        self.assertEqual(player_1.in_play[0].attack, 3)
+        self.assertEqual(player_1.in_play[0].attack, 4)
         self.assertEqual(player_1.in_play[0].health, 2)
         player_1.summon_from_hand(HandIndex(1))
         self.assertCardListEquals(player_1.in_play, [RabidSaurolisk, AlleyCat, TabbyCat])
-        self.assertEqual(player_1.in_play[0].attack, 3)
+        self.assertEqual(player_1.in_play[0].attack, 4)
         self.assertEqual(player_1.in_play[0].health, 2)
         player_1.summon_from_hand(HandIndex(0))
         self.assertCardListEquals(player_1.in_play, [RabidSaurolisk, AlleyCat, TabbyCat, MechaRoo])
-        self.assertEqual(player_1.in_play[0].attack, 4)
+        self.assertEqual(player_1.in_play[0].attack, 5)
         self.assertEqual(player_1.in_play[0].health, 3)
 
     def test_steward_of_time(self):
@@ -1030,7 +1030,7 @@ class CardTests(unittest.TestCase):
         self.assertCardListEquals(player_1.in_play, [PackLeader, RabidSaurolisk])
         self.assertEqual(player_1.in_play[0].attack, 3)
         self.assertEqual(player_1.in_play[0].health, 3)
-        self.assertEqual(player_1.in_play[1].attack, 6)
+        self.assertEqual(player_1.in_play[1].attack, 7)
         self.assertEqual(player_1.in_play[1].health, 2)
 
     def test_salty_looter(self):
@@ -1592,12 +1592,12 @@ class CardTests(unittest.TestCase):
         player_1.summon_from_hand(HandIndex(0))
         player_1.summon_from_hand(HandIndex(0))
         self.assertCardListEquals(player_1.in_play, [MamaBear, AlleyCat, TabbyCat])
-        self.assertEqual(player_1.in_play[0].health, 5)
-        self.assertEqual(player_1.in_play[0].attack, 5)
-        self.assertEqual(player_1.in_play[1].health, 6)
-        self.assertEqual(player_1.in_play[1].attack, 6)
-        self.assertEqual(player_1.in_play[2].health, 6)
-        self.assertEqual(player_1.in_play[2].attack, 6)
+        self.assertEqual(player_1.in_play[0].health, 4)
+        self.assertEqual(player_1.in_play[0].attack, 4)
+        self.assertEqual(player_1.in_play[1].health, 5)
+        self.assertEqual(player_1.in_play[1].attack, 5)
+        self.assertEqual(player_1.in_play[2].health, 5)
+        self.assertEqual(player_1.in_play[2].attack, 5)
 
     def test_replicating_menace_magnetic(self):
         tavern = Tavern()
@@ -1654,6 +1654,33 @@ class CardTests(unittest.TestCase):
         self.assertEqual(player_1.in_play[2].health, player_1.in_play[2].base_health + 2)
         self.assertEqual(player_1.in_play[3].attack, player_1.in_play[3].base_attack)
         self.assertEqual(player_1.in_play[3].health, player_1.in_play[3].base_health)
+
+    class TestCaptainEudoraRandomizer(DefaultRandomizer):
+        def select_gain_card(self, cards: List['Card']) -> 'Card':
+            return force_card(cards, Goldgrubber)
+
+    def test_captain_eudora(self):
+        tavern = Tavern()
+        tavern.randomizer = self.TestCaptainEudoraRandomizer()
+        player_1 = tavern.add_player_with_hero("Dante_Kong", CaptainEudora())
+        player_2 = tavern.add_player_with_hero("lucy")
+        self.upgrade_to_tier(tavern, 4)
+        tavern.buying_step()
+        player_1.hero_power()
+        tavern.combat_step()
+        tavern.buying_step()
+        player_1.hero_power()
+        tavern.combat_step()
+        tavern.buying_step()
+        player_1.hero_power()
+        tavern.combat_step()
+        tavern.buying_step()
+        player_1.hero_power()
+        tavern.combat_step()
+        tavern.buying_step()
+        player_1.hero_power()
+        self.assertCardListEquals(player_1.hand, [Goldgrubber])
+        self.assertTrue(player_1.hand[0].golden)
 
 
 if __name__ == '__main__':

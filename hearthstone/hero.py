@@ -15,7 +15,7 @@ class Hero(metaclass=HeroType):
     can_use_power = True
     current_type = None
     buy_counter = 0
-    digs_left = 4
+    digs_left = 5
 
     def __repr__(self):
         return str(type(self).__name__)
