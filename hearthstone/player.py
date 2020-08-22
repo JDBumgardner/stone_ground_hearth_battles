@@ -48,6 +48,7 @@ class Player:
         self.minion_cost = 3
         self.immune = False
         self.gold_coins = 0
+        self.bananas = 0
 
     @staticmethod
     def new_player_with_hero(tavern: 'Tavern', name: str, hero: Optional['Hero'] = None) -> 'Player':
@@ -267,7 +268,7 @@ class Player:
             card.handle_event_in_hand(event, BuyPhaseContext(self, randomizer or self.tavern.randomizer))
 
     def hand_size(self):
-        return len(self.hand) + len(self.triple_rewards)
+        return len(self.hand) + len(self.triple_rewards) + self.gold_coins + self.bananas
 
     def room_in_hand(self):
         return self.hand_size() < self.maximum_hand_size

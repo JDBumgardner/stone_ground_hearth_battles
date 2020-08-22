@@ -155,6 +155,9 @@ class KaelthasSunstrider(Hero):
 class LichBazhial(Hero):
     power_cost = 0
 
+    def hero_power_valid_impl(self, context: BuyPhaseContext):
+        return context.owner.room_in_hand()
+
     def hero_power_impl(self, context: BuyPhaseContext):
         context.owner.take_damage(2)
         context.owner.gold_coins += 1
