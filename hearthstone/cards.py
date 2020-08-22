@@ -4,6 +4,7 @@ from typing import Set, List, Optional, Callable, Type, Union, Iterator
 
 from hearthstone.events import BuyPhaseContext, CombatPhaseContext, EVENTS
 from hearthstone.card_factory import make_metaclass
+from hearthstone.monster_types import MONSTER_TYPES
 
 
 class PrintingPress:
@@ -228,6 +229,9 @@ class MonsterCard(Card):
         random_minion.shifting = True
         context.owner.hand.remove(self)
         context.owner.hand.append(random_minion)
+
+    def check_type(self, desired_type: 'MONSTER_TYPES') -> bool:
+        return self.monster_type in (desired_type, MONSTER_TYPES.ALL)
 
 class CardList:
     def __init__(self, cards: List[Card]):
