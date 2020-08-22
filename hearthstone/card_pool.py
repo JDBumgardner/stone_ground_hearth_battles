@@ -432,7 +432,7 @@ class StewardOfTime(MonsterCard):
                 card.attack += bonus
                 card.health += bonus
 
-    def handle_event(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
+    def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         self.handle_event_in_hand(event, context)
 
 
@@ -824,7 +824,7 @@ class MonstrousMacaw(MonsterCard):
     base_attack = 4
     base_health = 3
 
-    def handle_event(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
+    def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         if event.event is EVENTS.AFTER_ATTACK and self == event.card:
             # self.resolve_death(context, event.foe)
             deathrattle_triggers = 2 if self.golden else 1
@@ -1403,8 +1403,7 @@ class HeraldOfFlame(MonsterCard):
         damage = 6 if self.golden else 3
         leftmost_index = 0
         while True:
-            context.enemy_war_party.board[leftmost_index].resolve_death(context, self)
-            if not context.enemy_war_party.board[leftmost_index].dead:
+            if context.enemy_war_party.board[leftmost_index].health >= 1:
                 break
             leftmost_index += 1
             if leftmost_index >= len(context.enemy_war_party.board):
@@ -1443,11 +1442,12 @@ class NatPagleExtremeAngler(MonsterCard):
     base_health = 5
 
     def handle_event_powers(self, event: CardEvent, context: CombatPhaseContext):
-        if event.event is EVENTS.AFTER_ATTACK and self == event.card and event.foe.dead\
-                and context.friendly_war_party.owner.room_in_hand():
+        if event.event is EVENTS.AFTER_ATTACK and self == event.card and event.foe.health <= 0:
             all_minions = PrintingPress.make_cards().unique_cards()
-            random_minion = context.randomizer.select_gain_card(all_minions)
-            context.friendly_war_party.owner.hand.append(random_minion)
+            for _ in range(2 if self.golden else 1):
+                if context.friendly_war_party.owner.room_in_hand():
+                    random_minion = context.randomizer.select_gain_card(all_minions)
+                    context.friendly_war_party.owner.hand.append(random_minion)
 
 
 class TreasureChest(MonsterCard):  # TODO: Removed in latest patch
@@ -1547,10 +1547,11 @@ class IronSensei(MonsterCard):
         if event.event is EVENTS.BUY_END:
             friendly_mechs = [card for card in context.owner.in_play if
                               card.check_type(MONSTER_TYPES.MECH) and card != self]
-            mech = context.randomizer.select_friendly_minion(friendly_mechs)
-            bonus = 4 if self.golden else 2
-            mech.attack += bonus
-            mech.health += bonus
+            if friendly_mechs:
+                mech = context.randomizer.select_friendly_minion(friendly_mechs)
+                bonus = 4 if self.golden else 2
+                mech.attack += bonus
+                mech.health += bonus
 
 
 class YoHoOgre(MonsterCard):
@@ -1561,7 +1562,7 @@ class YoHoOgre(MonsterCard):
     base_taunt = True
 
     def handle_event_powers(self, event: CardEvent, context: CombatPhaseContext):
-        if event.event is EVENTS.AFTER_ATTACK and event.foe == self and not self.dead:
+        if event.event is EVENTS.AFTER_ATTACK and event.foe == self and self.health >= 1:
             attacking_war_party = context.friendly_war_party
             defending_war_party = context.enemy_war_party
             attacker = self

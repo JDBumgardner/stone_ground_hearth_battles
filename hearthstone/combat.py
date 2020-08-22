@@ -129,20 +129,20 @@ def start_attack(attacker: 'MonsterCard', defender: 'MonsterCard', attacking_war
     attacker.take_damage(defender.attack, combat_phase_context, defender, defending=False)
     defender.take_damage(attacker.attack, combat_phase_context, attacker)
     # handle "after combat" events here
+    combat_phase_context.broadcast_combat_event(CardEvent(attacker, EVENTS.AFTER_ATTACK, foe=defender))
     # attacker.resolve_death(CombatPhaseContext(attacking_war_party, defending_war_party, randomizer), defender)
     # defender.resolve_death(CombatPhaseContext(defending_war_party, attacking_war_party, randomizer), attacker)
-    resolve_combat_deaths(attacker, defender, attacking_war_party, defending_war_party, randomizer, combat_phase_context)
+    resolve_combat_deaths(attacker, defender, attacking_war_party, defending_war_party, randomizer)
     logger.debug(f'{attacker} has just attacked {defender}')
 
 
 def resolve_combat_deaths(attacker: 'MonsterCard', defender: 'MonsterCard', attacking_war_party: 'WarParty',
-                          defending_war_party: 'WarParty', randomizer: 'Randomizer', combat_phase_context: 'CombatPhaseContext'):
+                          defending_war_party: 'WarParty', randomizer: 'Randomizer'):
     # need to check if both combatants are dead before broadcasting events
     if attacker.health <= 0 and not attacker.dead:
         attacker.dead = True
     if defender.health <= 0 and not defender.dead:
         defender.dead = True
-    combat_phase_context.broadcast_combat_event(CardEvent(attacker, EVENTS.AFTER_ATTACK, foe=defender))
     if attacker.dead:
         context = CombatPhaseContext(attacking_war_party, defending_war_party, randomizer)
         card_death_event = CardEvent(attacker, EVENTS.DIES, foe=defender)

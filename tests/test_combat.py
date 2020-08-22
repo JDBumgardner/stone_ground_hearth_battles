@@ -837,9 +837,10 @@ class CombatTests(unittest.TestCase):
         adams_war_party.board = [MonstrousMacaw(), GoldrinnTheGreatWolf()]
         ethans_war_party.board = [FreedealingGambler()]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
-        self.assertTrue(adams_war_party.board[0].dead)
+        self.assertFalse(adams_war_party.board[0].dead)
         self.assertEqual(adam.health, 40)
-        self.assertEqual(ethan.health, 33)
+        self.assertEqual(ethan.health, 30)
+        self.assertEqual(adams_war_party.board[0].attack, 9)
         self.assertEqual(adams_war_party.board[1].attack, 9)
         self.assertEqual(adams_war_party.board[1].health, 9)
 
@@ -851,9 +852,10 @@ class CombatTests(unittest.TestCase):
         adams_war_party.board = [MonstrousMacaw(), GoldrinnTheGreatWolf(), BaronRivendare()]
         ethans_war_party.board = [FreedealingGambler()]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
-        self.assertTrue(adams_war_party.board[0].dead)
+        self.assertFalse(adams_war_party.board[0].dead)
         self.assertEqual(adam.health, 40)
-        self.assertEqual(ethan.health, 28)
+        self.assertEqual(ethan.health, 25)
+        self.assertEqual(adams_war_party.board[0].attack, 14)
         self.assertEqual(adams_war_party.board[1].attack, 14)
         self.assertEqual(adams_war_party.board[1].health, 14)
 
