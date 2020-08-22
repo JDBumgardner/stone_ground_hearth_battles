@@ -8,14 +8,14 @@ from hearthstone.monster_types import MONSTER_TYPES
 
 
 class MamaBear(MonsterCard):
-    tier = 6
+    tier = 5
     monster_type = MONSTER_TYPES.BEAST
-    base_attack = 5
-    base_health = 5
+    base_attack = 4
+    base_health = 4
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         if event.event is EVENTS.SUMMON_BUY and event.card.monster_type in (MONSTER_TYPES.BEAST, MONSTER_TYPES.ALL) and event.card != self:
-            bonus = 10 if self.golden else 5
+            bonus = 8 if self.golden else 4
             event.card.attack += bonus
             event.card.health += bonus
 
@@ -350,7 +350,7 @@ class MetaltoothLeaper(MonsterCard):
 class RabidSaurolisk(MonsterCard):
     tier = 2
     monster_type = MONSTER_TYPES.BEAST
-    base_attack = 3
+    base_attack = 4
     base_health = 2
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
@@ -521,7 +521,7 @@ class RockpoolHunter(MonsterCard):
 
 
 class RatPack(MonsterCard):
-    tier = 2
+    tier = 3
     monster_type = MONSTER_TYPES.BEAST
     base_attack = 2
     base_health = 2
@@ -543,7 +543,7 @@ class Rat(MonsterCard):
     token = True
 
 
-class ArcaneCannon(MonsterCard):
+class ArcaneCannon(MonsterCard):  # TODO: Removed in latest patch... how should we deal with this?
     tier = 2
     monster_type = None
     base_attack = 2
@@ -676,7 +676,7 @@ class SpawnOfNzoth(MonsterCard):
             card.health += bonus
 
 
-class Zoobot(MonsterCard):
+class Zoobot(MonsterCard):  # TODO: This was removed in a previous patch... how should we deal with this?
     tier = 2
     monster_type = MONSTER_TYPES.MECH
     base_attack = 3
@@ -818,8 +818,8 @@ class Spider(MonsterCard):
 class MonstrousMacaw(MonsterCard):
     tier = 3
     monster_type = MONSTER_TYPES.BEAST
-    base_attack = 3
-    base_health = 2
+    base_attack = 4
+    base_health = 3
 
     def handle_event(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         if event.event is EVENTS.AFTER_ATTACK and self == event.card:
@@ -852,7 +852,7 @@ class ScrewjankClunker(MonsterCard):
 
 
 class PackLeader(MonsterCard):
-    tier = 3
+    tier = 2
     base_attack = 3
     base_health = 3
     monster_type = None
@@ -1293,7 +1293,7 @@ class GoldrinnTheGreatWolf(MonsterCard):
     def base_deathrattle(self, context: CombatPhaseContext):
         for card in context.friendly_war_party.board:
             if card.monster_type in (MONSTER_TYPES.BEAST, MONSTER_TYPES.ALL):
-                bonus = 8 if self.golden else 4
+                bonus = 10 if self.golden else 5
                 card.attack += bonus
                 card.health += bonus
 
@@ -1440,16 +1440,14 @@ class NatPagleExtremeAngler(MonsterCard):
     base_attack = 8
     base_health = 5
 
-    def overkill(self, context: CombatPhaseContext):  # only triggers when attacking: friendly_war_party == attacking_war_party
-        summon_index = context.friendly_war_party.get_index(self)
-        for i in range(context.summon_minion_multiplier()):
-            treasure = TreasureChest()
-            if self.golden:
-                treasure.golden_transformation([])
-            context.friendly_war_party.summon_in_combat(treasure, context, summon_index + i + 1)
+    def handle_event_powers(self, event: CardEvent, context: CombatPhaseContext):
+        if event.event is EVENTS.AFTER_ATTACK and self == event.card and event.foe.dead:
+            all_minions = PrintingPress.make_cards().unique_cards()
+            random_minion = context.randomizer.select_gain_card(all_minions)
+            context.friendly_war_party.owner.hand.append(random_minion)
 
 
-class TreasureChest(MonsterCard):
+class TreasureChest(MonsterCard):  # TODO: Removed in latest patch
     tier = 1
     monster_type = None
     base_attack = 0
@@ -1542,7 +1540,7 @@ class IronSensei(MonsterCard):
     base_attack = 2
     base_health = 2
 
-    def handle_event(self, event: CardEvent, context: BuyPhaseContext):
+    def handle_event_powers(self, event: CardEvent, context: BuyPhaseContext):
         if event.event is EVENTS.BUY_END:
             friendly_mechs = [card for card in context.owner.in_play if card.monster_type in (MONSTER_TYPES.MECH, MONSTER_TYPES.ALL) and card != self]
             mech = context.randomizer.select_friendly_minion(friendly_mechs)
@@ -1558,7 +1556,7 @@ class YoHoOgre(MonsterCard):
     base_health = 8
     base_taunt = True
 
-    def handle_event(self, event: CardEvent, context: CombatPhaseContext):
+    def handle_event_powers(self, event: CardEvent, context: CombatPhaseContext):
         if event.event is EVENTS.AFTER_ATTACK and event.foe == self and not self.dead:
             attacking_war_party = context.friendly_war_party
             defending_war_party = context.enemy_war_party
@@ -1576,7 +1574,7 @@ class WaxriderTogwaggle(MonsterCard):
     base_attack = 1
     base_health = 2
 
-    def handle_event(self, event: CardEvent, context: CombatPhaseContext):
+    def handle_event_powers(self, event: CardEvent, context: CombatPhaseContext):
         if event.event is EVENTS.DIES and event.card in context.enemy_war_party.board and event.foe in \
                     context.friendly_war_party.board and event.foe.monster_type in (MONSTER_TYPES.DRAGON, MONSTER_TYPES.ALL):
             bonus = 4 if self.golden else 2

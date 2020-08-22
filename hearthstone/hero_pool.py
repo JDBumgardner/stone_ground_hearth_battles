@@ -234,7 +234,7 @@ class CaptainEudora(Hero):
         self.digs_left -= 1
         if self.digs_left == 0:
             diggable_minions = [card for card in PrintingPress.make_cards().unique_cards() if card.tier <= context.owner.tavern_tier]
-            random_minion = context.randomizer.select_random_minion(diggable_minions, context.owner.tavern.turn_count)
+            random_minion = context.randomizer.select_gain_card(diggable_minions)
             random_minion.golden_transformation([])
             context.owner.hand.append(random_minion)
-            self.digs_left = 4
+            self.digs_left = 5
