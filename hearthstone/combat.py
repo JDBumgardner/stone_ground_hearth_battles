@@ -106,18 +106,26 @@ def damage(half_board_1: 'WarParty', half_board_2: 'WarParty'):
     # Handle case where both players have cards left on board.
     if monster_damage_1 > 0 and monster_damage_2 > 0:
         logger.debug('neither player won (both players have minions left)')
+        half_board_1.owner.won_last_combat = False
+        half_board_2.owner.won_last_combat = False
     elif monster_damage_1 > 0:
         logger.debug(f'{half_board_1.owner.name} has won the fight')
         logger.debug(f'{half_board_2.owner.name} took {monster_damage_1 + half_board_1.owner.tavern_tier} damage.')
         logger.debug(f"{half_board_1.owner.name}'s remaining board: {[card for card in half_board_1.board if not card.dead]}")
         half_board_2.owner.health -= monster_damage_1 + half_board_1.owner.tavern_tier
+        half_board_1.owner.won_last_combat = True
+        half_board_2.owner.won_last_combat = False
     elif monster_damage_2 > 0:
         logger.debug(f'{half_board_2.owner.name} has won the fight')
         logger.debug(f'{half_board_1.owner.name} took {monster_damage_2 + half_board_2.owner.tavern_tier} damage.')
         logger.debug(f"{half_board_2.owner.name}'s remaining board: {[card for card in half_board_2.board if not card.dead]}")
         half_board_1.owner.health -= monster_damage_2 + half_board_2.owner.tavern_tier
+        half_board_1.owner.won_last_combat = False
+        half_board_2.owner.won_last_combat = True
     else:
         logger.debug('neither player won (no minions left)')
+        half_board_1.owner.won_last_combat = False
+        half_board_2.owner.won_last_combat = False
 
 
 def start_attack(attacker: 'MonsterCard', defender: 'MonsterCard', attacking_war_party: 'WarParty', defending_war_party: 'WarParty',
@@ -133,6 +141,7 @@ def start_attack(attacker: 'MonsterCard', defender: 'MonsterCard', attacking_war
     # attacker.resolve_death(CombatPhaseContext(attacking_war_party, defending_war_party, randomizer), defender)
     # defender.resolve_death(CombatPhaseContext(defending_war_party, attacking_war_party, randomizer), attacker)
     resolve_combat_deaths(attacker, defender, attacking_war_party, defending_war_party, randomizer)
+    combat_phase_context.broadcast_combat_event(CardEvent(defender, EVENTS.WAS_ATTACKED, foe=attacker))
     logger.debug(f'{attacker} has just attacked {defender}')
 
 

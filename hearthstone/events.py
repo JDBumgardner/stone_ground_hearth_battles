@@ -23,6 +23,7 @@ class EVENTS(enum.Enum):
     DIVINE_SHIELD_LOST = 13
     PLAYER_DAMAGED = 14
     RETURN_TO_HAND = 15
+    WAS_ATTACKED = 16
 
 
 class BuyPhaseContext:

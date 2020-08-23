@@ -1679,6 +1679,39 @@ class CardTests(unittest.TestCase):
         self.assertCardListEquals(player_1.hand, [Goldgrubber])
         self.assertTrue(player_1.hand[0].golden)
 
+    class TestHangryDragonRandomizer(DefaultRandomizer):
+        def select_draw_card(self, cards: List[Card], player_name: str, round_number: int) -> Card:
+            if player_name == "Dante_Kong":
+                return force_card(cards, HangryDragon)
+            if player_name == "lucy":
+                return force_card(cards, FreedealingGambler)
+
+    def test_hangry_dragon(self):
+        tavern = Tavern()
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        self.upgrade_to_tier(tavern, 3)
+        tavern.randomizer = self.TestHangryDragonRandomizer()
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        player_2.purchase(StoreIndex(0))
+        player_2.summon_from_hand(HandIndex(0))
+        self.assertCardListEquals(player_1.in_play, [HangryDragon])
+        self.assertCardListEquals(player_2.in_play, [FreedealingGambler])
+        tavern.combat_step()
+        tavern.buying_step()
+        self.assertEqual(player_1.in_play[0].attack, player_1.in_play[0].base_attack + 2)
+        self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health + 2)
+        player_2.purchase(StoreIndex(0))
+        player_2.summon_from_hand(HandIndex(0))
+        self.assertCardListEquals(player_2.in_play, [FreedealingGambler, FreedealingGambler])
+        tavern.combat_step()
+        tavern.buying_step()
+        self.assertEqual(player_1.in_play[0].attack, player_1.in_play[0].base_attack + 2)
+        self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health + 2)
+
+
 
 if __name__ == '__main__':
     unittest.main()

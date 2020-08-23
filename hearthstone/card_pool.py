@@ -1492,7 +1492,7 @@ class IronSensei(MonsterCard):
                 mech.health += bonus
 
 
-class YoHoOgre(MonsterCard):  # TODO: Ability happens after deathrattles
+class YoHoOgre(MonsterCard):
     tier = 3
     monster_type = MONSTER_TYPES.PIRATE
     base_attack = 2
@@ -1500,7 +1500,7 @@ class YoHoOgre(MonsterCard):  # TODO: Ability happens after deathrattles
     base_taunt = True
 
     def handle_event_powers(self, event: CardEvent, context: CombatPhaseContext):
-        if event.event is EVENTS.AFTER_ATTACK and event.foe == self and self.health > 0:
+        if event.event is EVENTS.WAS_ATTACKED and event.card == self and not self.is_dying():
             attacking_war_party = context.friendly_war_party
             defending_war_party = context.enemy_war_party
             attacker = self
@@ -1520,6 +1520,19 @@ class WaxriderTogwaggle(MonsterCard):
     def handle_event_powers(self, event: CardEvent, context: CombatPhaseContext):
         if event.event is EVENTS.DIES and event.card in context.enemy_war_party.board and event.foe in context.friendly_war_party.board and event.foe.check_type(
                 MONSTER_TYPES.DRAGON):
+            bonus = 4 if self.golden else 2
+            self.attack += bonus
+            self.health += bonus
+
+
+class HangryDragon(MonsterCard):
+    tier = 3
+    monster_type = MONSTER_TYPES.DRAGON
+    base_attack = 4
+    base_health = 4
+
+    def handle_event_powers(self, event: CardEvent, context: BuyPhaseContext):
+        if event.event is EVENTS.BUY_START and context.owner.won_last_combat:
             bonus = 4 if self.golden else 2
             self.attack += bonus
             self.health += bonus
