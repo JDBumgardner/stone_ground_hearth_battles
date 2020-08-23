@@ -1,6 +1,6 @@
 import random
 import typing
-from typing import List, Tuple, Type
+from typing import List, Tuple, Type, Optional
 
 from hearthstone.monster_types import MONSTER_TYPES
 
@@ -52,8 +52,13 @@ class Randomizer:
 
 
 class DefaultRandomizer(Randomizer):
+    def __init__(self, seed: Optional[int] = None):
+        if seed is None:
+            seed = random.random()
+        self.rand = random.Random(seed)
+
     def select_draw_card(self, cards: List['Card'], player_name: str, round_number: int) -> 'Card':
-        return random.choice(cards)
+        return self.rand.choice(cards)
 
     def select_player_pairings(self, players: List['Player']) -> List[Tuple['Player', 'Player']]:
         random.shuffle(players)
@@ -61,34 +66,34 @@ class DefaultRandomizer(Randomizer):
         return list(zip(players[:number_of_battles], players[number_of_battles:]))
 
     def select_attack_target(self, defenders: List['Card']) -> 'Card':
-        return random.choice(defenders)
+        return self.rand.choice(defenders)
 
     def select_friendly_minion(self, friendly_minions: List['Card']) -> 'Card':
-        return random.choice(friendly_minions)
+        return self.rand.choice(friendly_minions)
 
     def select_enemy_minion(self, enemy_minions: List['Card']) -> 'Card':
-        return random.choice(enemy_minions)
+        return self.rand.choice(enemy_minions)
 
     def select_discover_card(self, discoverables: List['Card']) -> 'Card':
-        return random.choice(discoverables)
+        return self.rand.choice(discoverables)
 
     def select_from_store(self, store: List['Card']) -> 'Card':
-        return random.choice(store)
+        return self.rand.choice(store)
 
     def select_gain_card(self, cards: List['Card']) -> 'Card':
-        return random.choice(cards)
+        return self.rand.choice(cards)
 
     def select_hero(self, hero_pool: List['Hero']) -> 'Hero':
-        return random.choice(hero_pool)
+        return self.rand.choice(hero_pool)
 
     def select_summon_minion(self, cards: List['Type']) -> 'Type':
-        return random.choice(cards)
+        return self.rand.choice(cards)
 
     def select_add_to_store(self, cards: List['Card']) -> 'Card':
-        return random.choice(cards)
+        return self.rand.choice(cards)
 
     def select_monster_type(self, monster_types: List['MONSTER_TYPES'], round_number: int) -> 'MONSTER_TYPES':
-        return random.choice(monster_types)
+        return self.rand.choice(monster_types)
 
     def select_random_minion(self, cards: List['Card'], round_number: int) -> 'Card':
-        return random.choice(cards)
+        return self.rand.choice(cards)

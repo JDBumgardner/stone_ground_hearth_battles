@@ -166,7 +166,7 @@ class MonsterCard(Card):
                 if event.card.tracked:
                     context.owner.counted_cards[type(event.card)] += 1
                 self.shifting = False
-        if not self.dead:
+        if not self.dead or self == event.card:  # minions will trigger their own death events
             self.handle_event_powers(event, context)
 
     def handle_event_in_hand(self, event: CardEvent, context: BuyPhaseContext):

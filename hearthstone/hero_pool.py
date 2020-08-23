@@ -80,8 +80,7 @@ class YoggSaron(Hero):
         card.attack += 1
         card.health += 1
         context.owner.store.remove(card)
-        context.owner.hand.append(card)
-        context.owner.check_golden(type(card))
+        context.owner.gain_card(card)
 
     def hero_power_valid_impl(self, context: BuyPhaseContext):
         if not context.owner.room_in_hand():
@@ -106,8 +105,7 @@ class PatchesThePirate(Hero):  # TODO: does this pull from the deck or does it a
 
         card = context.randomizer.select_gain_card(pirates)
         context.owner.tavern.deck.remove_card(card)
-        context.owner.hand.append(card)
-        context.owner.check_golden(type(card))
+        context.owner.gain_card(card)
         self.power_cost = 4
 
     def hero_power_valid_impl(self, context: BuyPhaseContext):
@@ -239,5 +237,5 @@ class CaptainEudora(Hero):
             diggable_minions = [card for card in [minion() for minion in PrintingPress.all_types()] if card.tier <= context.owner.tavern_tier]
             random_minion = context.randomizer.select_gain_card(diggable_minions)
             random_minion.golden_transformation([])
-            context.owner.hand.append(random_minion)
+            context.owner.gain_card(random_minion)
             self.digs_left = 5

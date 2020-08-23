@@ -1,11 +1,11 @@
 from typing import Union, List
 
-from hearthstone.cards import MonsterCard, CardEvent
+from hearthstone.cards import MonsterCard, CardEvent, PrintingPress
 from hearthstone.events import EVENTS, BuyPhaseContext, CombatPhaseContext
 from hearthstone.monster_types import MONSTER_TYPES
 
 
-class ArcaneCannon(MonsterCard):  # TODO: Removed in latest patch... how should we deal with this?
+class ArcaneCannon(MonsterCard):
     tier = 2
     monster_type = None
     base_attack = 2
@@ -28,7 +28,7 @@ class ArcaneCannon(MonsterCard):  # TODO: Removed in latest patch... how should 
                                                    context.randomizer), self)
 
 
-class Zoobot(MonsterCard):  # TODO: This was removed in a previous patch... how should we deal with this?
+class Zoobot(MonsterCard):
     tier = 2
     monster_type = MONSTER_TYPES.MECH
     base_attack = 3
@@ -42,3 +42,23 @@ class Zoobot(MonsterCard):  # TODO: This was removed in a previous patch... how 
                 card = context.randomizer.select_friendly_minion(friendly_cards)
                 card.attack += bonus
                 card.health += bonus
+
+
+class TreasureChest(MonsterCard):
+    tier = 1
+    monster_type = None
+    base_attack = 0
+    base_health = 2
+    token = True
+
+    def base_deathrattle(self, context: CombatPhaseContext):
+        count = 2 if self.golden else 1
+        summon_index = context.friendly_war_party.get_index(self)
+        i = 0
+        for _ in range(count):
+            for _ in range(context.summon_minion_multiplier()):
+                all_minions = [minion() for minion in PrintingPress.all_types()]
+                random_minion = context.randomizer.select_summon_minion(all_minions)
+                random_minion.golden_transformation([])
+                context.friendly_war_party.summon_in_combat(random_minion, context, summon_index + i + 1)
+                i += 1

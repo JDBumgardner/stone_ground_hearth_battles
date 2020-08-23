@@ -16,6 +16,7 @@ def force_card(cards: List[Card], card_type) -> Card:
 
 class CardForcer(DefaultRandomizer):
     def __init__(self, forced_cards: List[CardType]):
+        super().__init__()
         self.forced_cards = forced_cards
 
     def select_draw_card(self, cards: List[Card], player_name: str, round_number: int) -> Card:
@@ -25,6 +26,7 @@ class CardForcer(DefaultRandomizer):
 
 class RepeatedCardForcer(DefaultRandomizer):
     def __init__(self, repeatedly_forced_cards: List[CardType]):
+        super().__init__()
         self.repeatedly_forced_cards = repeatedly_forced_cards
         self.pointer = 0
 

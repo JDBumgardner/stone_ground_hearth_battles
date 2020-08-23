@@ -4,7 +4,7 @@ from typing import List, Optional, Generator
 from hearthstone.player import StoreIndex, HandIndex, BoardIndex
 
 if typing.TYPE_CHECKING:
-    from hearthstone.cards import Card, MonsterCard
+    from hearthstone.cards import Card
     from hearthstone.hero import Hero
     from hearthstone.tavern import Player
 
@@ -55,7 +55,7 @@ class SellAction(Action):
         self.index: BoardIndex = index
 
     def __repr__(self):
-        return f"SellFromBoard({self.index})"
+        return f"Sell({self.index})"
 
     def apply(self, player: 'Player'):
         player.sell_minion(self.index)
@@ -150,7 +150,6 @@ class Agent:
 
         """
         pass
-
 
     def buy_phase_action(self, player: 'Player') -> Action:
         """

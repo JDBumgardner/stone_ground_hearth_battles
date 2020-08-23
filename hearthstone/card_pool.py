@@ -1406,7 +1406,7 @@ class NatPagleExtremeAngler(MonsterCard):
             for _ in range(2 if self.golden else 1):
                 if context.friendly_war_party.owner.room_in_hand():
                     random_minion = context.randomizer.select_gain_card([minion() for minion in all_minions])  # TODO: this can be more efficient
-                    context.friendly_war_party.owner.hand.append(random_minion)
+                    context.friendly_war_party.owner.gain_card(random_minion)
 
 
 class FloatingWatcher(MonsterCard):

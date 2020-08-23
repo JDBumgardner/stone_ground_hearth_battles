@@ -11,7 +11,7 @@ from hearthstone.monster_types import MONSTER_TYPES
 from hearthstone.triple_reward_card import TripleRewardCard
 
 if typing.TYPE_CHECKING:
-    from hearthstone.tavern import Tavern
+    from hearthstone.tavern import Tavern, GameState
     from hearthstone.hero import Hero
     from hearthstone.randomizer import Randomizer
 
@@ -160,10 +160,9 @@ class Player:
         assert (card in self.discovered_cards)
         assert (isinstance(card, MonsterCard))
         self.discovered_cards.remove(card)
-        self.hand.append(card)
+        self.gain_card(card)
         self.tavern.deck.return_cards(itertools.chain.from_iterable([card.dissolve() for card in self.discovered_cards]))
         self.discovered_cards = []
-        self.check_golden(type(card))
 
     def summon_from_void(self, monster: MonsterCard):
         if self.room_on_board():
@@ -285,3 +284,7 @@ class Player:
         if self.gold_coins >= 1:
             self.gold_coins -= 1
             self.coins += 1
+
+    def gain_card(self, card: 'MonsterCard'):
+        self.hand.append(card)
+        self.check_golden(type(card))

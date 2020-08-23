@@ -113,10 +113,10 @@ class UserAgent(Agent):
             in_play = player.in_play + [player.hand[targets[0]]]
             return SummonAction(HandIndex(targets[0]), [BoardIndex(target) for target in targets[1:]])
         elif split_list[0] == "r":
-            if not len(split_list) == 3:
+            if not len(split_list) == 2:
                 return None
             try:
-                sell_index = int(split_list[2])
+                sell_index = int(split_list[1])
             except ValueError:
                 return None
             if not 0 <= sell_index < len(player.in_play):

@@ -3,7 +3,7 @@ import typing
 from typing import List, Callable
 
 from hearthstone.agent import Agent, Action, generate_valid_actions, BuyAction, EndPhaseAction, SummonAction, \
-    TavernUpgradeAction, RerollAction
+    TavernUpgradeAction, RerollAction, SellAction
 
 if typing.TYPE_CHECKING:
     from hearthstone.cards import Card, MonsterCard
@@ -42,7 +42,7 @@ class PriorityStorageBot(Agent):
                 return [action for action in all_actions if type(action) is SummonAction and self.priority(player, action.card) == top_hand_priority][0]
             else:
                 if top_hand_priority > bottom_board_priority and player.coins >= 2:
-                    return [action for action in all_actions if type(action) is SellFromBoardAction and self.priority(player, player.in_play[action.index]) == bottom_board_priority][0]
+                    return [action for action in all_actions if type(action) is SellAction and self.priority(player, player.in_play[action.index]) == bottom_board_priority][0]
 
         if top_store_priority:
             if player.room_in_hand():

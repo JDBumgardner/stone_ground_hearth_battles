@@ -267,7 +267,7 @@ def _all_actions() -> ActionSet:
     player_action_set = [TripleRewardsAction(), TavernUpgradeAction(), RerollAction(), EndPhaseAction(False),
                          EndPhaseAction(True)]
     store_action_set = [[BuyAction(index), InvalidAction(), InvalidAction(), InvalidAction()] for index in store_indices()]
-    hand_action_set = [[InvalidAction(), SummonAction(index), SummonAction(index, [BoardIndex(0)])] for index in
+    hand_action_set = [[InvalidAction(), SummonAction(index), SummonAction(index, [BoardIndex(0)]), InvalidAction()] for index in
                        hand_indices()]
     board_action_set = [[InvalidAction(), InvalidAction(), InvalidAction(), SellAction(index)] for index in
                         board_indices()]

@@ -160,10 +160,10 @@ class CombatTests(unittest.TestCase):
         ethan = Player.new_player_with_hero(None, "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
-        adams_war_party.board = [MurlocScout(), MurlocWarleader()]  # TODO: BUG!!! Murloc Warleader doesn't trigger when it dies!!
+        adams_war_party.board = [MurlocScout(), MurlocWarleader()]
         ethans_war_party.board = [IronhideRunt()]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
-        # self.assertEqual(adams_war_party.board[1].attack, 1)
+        self.assertEqual(adams_war_party.board[0].attack, 1)
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
 
