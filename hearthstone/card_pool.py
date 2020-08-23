@@ -14,7 +14,9 @@ class MamaBear(MonsterCard):
     base_health = 4
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
-        if event.event is EVENTS.SUMMON_BUY and event.card.check_type(MONSTER_TYPES.BEAST) and event.card != self:
+        if (event.event is EVENTS.SUMMON_BUY or (
+                event.event is EVENTS.SUMMON_COMBAT and event.card in context.friendly_war_party.board)) and event.card.check_type(
+                MONSTER_TYPES.BEAST) and event.card != self:
             bonus = 8 if self.golden else 4
             event.card.attack += bonus
             event.card.health += bonus
@@ -259,7 +261,7 @@ class RedWhelp(MonsterCard):
         if event.event is EVENTS.COMBAT_START:
             num_friendly_dragons = len([card for card in context.friendly_war_party.board if
                                         not card.dead and card.check_type(MONSTER_TYPES.DRAGON)])
-            targets = [card for card in context.enemy_war_party.board if not card.dead]
+            targets = [card for card in context.enemy_war_party.board if not card.is_dying()]
             if not targets:
                 return
             num_damage_instances = 2 if self.golden else 1
@@ -301,7 +303,7 @@ class KaboomBot(MonsterCard):
     def base_deathrattle(self, context: CombatPhaseContext):
         num_damage_instances = 2 if self.golden else 1
         for _ in range(num_damage_instances):
-            targets = [card for card in context.enemy_war_party.board if not card.dead]
+            targets = [card for card in context.enemy_war_party.board if not card.is_dying()]
             if not targets:
                 break
             target = context.randomizer.select_enemy_minion(targets)
@@ -425,15 +427,12 @@ class StewardOfTime(MonsterCard):
     base_attack = 3
     base_health = 4
 
-    def handle_event_in_hand(self, event: CardEvent, context: BuyPhaseContext):
+    def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         bonus = 2 if self.golden else 1
         if event.event is EVENTS.SELL and event.card == self:
             for card in context.owner.store:
                 card.attack += bonus
                 card.health += bonus
-
-    def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
-        self.handle_event_in_hand(event, context)
 
 
 class Scallywag(MonsterCard):
@@ -495,7 +494,7 @@ class UnstableGhoul(MonsterCard):
         count = 2 if self.golden else 1
         for _ in range(count):
             for minion in all_minions:
-                if minion.dead:
+                if minion.is_dying():
                     continue
                 minion.take_damage(1, context, self)
                 minion.resolve_death(context, self)  # TODO: Order of death resolution?
@@ -539,29 +538,6 @@ class Rat(MonsterCard):
     base_attack = 1
     base_health = 1
     token = True
-
-
-class ArcaneCannon(MonsterCard):  # TODO: Removed in latest patch... how should we deal with this?
-    tier = 2
-    monster_type = None
-    base_attack = 2
-    base_health = 2
-    cant_attack = True
-
-    def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
-        if event.event is EVENTS.AFTER_ATTACK:
-            count = 2 if self.golden else 1
-            for _ in range(count):
-                if event.card in context.friendly_war_party.board:
-                    if abs(context.friendly_war_party.board.index(self) - context.friendly_war_party.board.index(
-                            event.card)) == 1:
-                        possible_targets = [card for card in context.enemy_war_party.board if not card.dead]
-                        if possible_targets:
-                            target = context.randomizer.select_enemy_minion(possible_targets)
-                            target.take_damage(2, context, self)
-                            target.resolve_death(
-                                CombatPhaseContext(context.enemy_war_party, context.friendly_war_party,
-                                                   context.randomizer), self)
 
 
 class NathrezimOverseer(MonsterCard):
@@ -677,22 +653,6 @@ class SpawnOfNzoth(MonsterCard):
         for card in context.friendly_war_party.board:
             card.attack += bonus
             card.health += bonus
-
-
-class Zoobot(MonsterCard):  # TODO: This was removed in a previous patch... how should we deal with this?
-    tier = 2
-    monster_type = MONSTER_TYPES.MECH
-    base_attack = 3
-    base_health = 3
-
-    def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
-        bonus = 2 if self.golden else 1
-        for monster_type in [MONSTER_TYPES.MURLOC, MONSTER_TYPES.BEAST, MONSTER_TYPES.DRAGON]:
-            friendly_cards = [card for card in context.owner.in_play if card.monster_type == monster_type]
-            if friendly_cards:
-                card = context.randomizer.select_friendly_minion(friendly_cards)
-                card.attack += bonus
-                card.health += bonus
 
 
 class BloodsailCannoneer(MonsterCard):
@@ -912,7 +872,7 @@ class SoulJuggler(MonsterCard):
                 MONSTER_TYPES.DEMON) and event.card in context.friendly_war_party.board:
             count = 2 if self.golden else 1
             for _ in range(count):
-                targets = [card for card in context.enemy_war_party.board if not card.dead and not card.health <= 0]
+                targets = [card for card in context.enemy_war_party.board if not card.is_dying()]
                 if targets:
                     target = context.randomizer.select_enemy_minion(targets)
                     target.take_damage(3, context, self)
@@ -1264,10 +1224,10 @@ class Ghastcoiler(MonsterCard):
         i = 0
         for _ in range(count):
             for _ in range(context.summon_minion_multiplier()):
-                deathrattlers = [card for card in PrintingPress.make_cards().unique_cards() if
-                                 card.deathrattles and type(card) != type(self)]
-                random_minion = context.randomizer.select_summon_minion(deathrattlers)
-                context.friendly_war_party.summon_in_combat(random_minion, context, summon_index + i + 1)
+                deathrattlers = [card_type for card_type in PrintingPress.all_types() if
+                                 card_type.base_deathrattle and card_type != type(self)]
+                random_minion_type = context.randomizer.select_summon_minion(deathrattlers)
+                context.friendly_war_party.summon_in_combat(random_minion_type(), context, summon_index + i + 1)
                 i += 1
 
 
@@ -1314,9 +1274,10 @@ class ImpMama(MonsterCard):
             for _ in range(count):
                 for _ in range(context.summon_minion_multiplier()):
                     # TODO: can this summon tokens? Can this summon itself?
-                    demons = [card for card in PrintingPress.make_cards().unique_cards() if
-                              card.check_type(MONSTER_TYPES.DEMON) and type(card) != type(self)]
-                    random_minion = context.randomizer.select_summon_minion(demons)
+                    demons = [card_type for card_type in PrintingPress.all_types() if
+                              card_type.check_type(MONSTER_TYPES.DEMON) and card_type != type(self)]
+                    random_minion_type = context.randomizer.select_summon_minion(demons)
+                    random_minion = random_minion_type()
                     random_minion.taunt = True
                     context.friendly_war_party.summon_in_combat(random_minion, context, summon_index + i + 1)
                     i += 1
@@ -1362,11 +1323,9 @@ class TheTideRazor(MonsterCard):
         for _ in range(count):
             for _ in range(context.summon_minion_multiplier()):
                 # TODO: can this summon tokens?
-                pirates = [card for card in PrintingPress.make_cards().unique_cards() if
-                           card.check_type(MONSTER_TYPES.PIRATE)]
-                random_minion = context.randomizer.select_summon_minion(pirates)
-                random_minion.taunt = True
-                context.friendly_war_party.summon_in_combat(random_minion, context, summon_index + i + 1)
+                pirates = [card_type for card_type in PrintingPress.all_types() if card_type.check_type(MONSTER_TYPES.PIRATE)]
+                random_minion_type = context.randomizer.select_summon_minion(pirates)
+                context.friendly_war_party.summon_in_combat(random_minion_type(), context, summon_index + i + 1)
                 i += 1
 
 
@@ -1403,7 +1362,7 @@ class HeraldOfFlame(MonsterCard):
         damage = 6 if self.golden else 3
         leftmost_index = 0
         while True:
-            if context.enemy_war_party.board[leftmost_index].health >= 1:
+            if not context.enemy_war_party.board[leftmost_index].is_dying():
                 break
             leftmost_index += 1
             if leftmost_index >= len(context.enemy_war_party.board):
@@ -1441,34 +1400,13 @@ class NatPagleExtremeAngler(MonsterCard):
     base_attack = 8
     base_health = 5
 
-    def handle_event_powers(self, event: CardEvent, context: CombatPhaseContext):
-        if event.event is EVENTS.AFTER_ATTACK and self == event.card and event.foe.health <= 0:
-            all_minions = PrintingPress.make_cards().unique_cards()
+    def handle_event_powers(self, event: CardEvent, context: CombatPhaseContext):  # TODO: does this gain from the deck?
+        if event.event is EVENTS.AFTER_ATTACK and self == event.card and event.foe.is_dying():
+            all_minions = PrintingPress.all_types()
             for _ in range(2 if self.golden else 1):
                 if context.friendly_war_party.owner.room_in_hand():
-                    random_minion = context.randomizer.select_gain_card(all_minions)
+                    random_minion = context.randomizer.select_gain_card([minion() for minion in all_minions])  # TODO: this can be more efficient
                     context.friendly_war_party.owner.hand.append(random_minion)
-
-
-class TreasureChest(MonsterCard):  # TODO: Removed in latest patch
-    tier = 1
-    monster_type = None
-    base_attack = 0
-    base_health = 2
-    token = True
-
-    def base_deathrattle(self, context: CombatPhaseContext):
-        count = 2 if self.golden else 1
-        summon_index = context.friendly_war_party.get_index(self)
-        i = 0
-        for _ in range(count):
-            for _ in range(context.summon_minion_multiplier()):
-                # TODO: can this summon tokens?
-                all_minions = PrintingPress.make_cards().unique_cards()
-                random_minion = context.randomizer.select_summon_minion(all_minions)
-                random_minion.golden_transformation([])
-                context.friendly_war_party.summon_in_combat(random_minion, context, summon_index + i + 1)
-                i += 1
 
 
 class FloatingWatcher(MonsterCard):
@@ -1554,7 +1492,7 @@ class IronSensei(MonsterCard):
                 mech.health += bonus
 
 
-class YoHoOgre(MonsterCard):
+class YoHoOgre(MonsterCard):  # TODO: Ability happens after deathrattles
     tier = 3
     monster_type = MONSTER_TYPES.PIRATE
     base_attack = 2
@@ -1562,7 +1500,7 @@ class YoHoOgre(MonsterCard):
     base_taunt = True
 
     def handle_event_powers(self, event: CardEvent, context: CombatPhaseContext):
-        if event.event is EVENTS.AFTER_ATTACK and event.foe == self and self.health >= 1:
+        if event.event is EVENTS.AFTER_ATTACK and event.foe == self and self.health > 0:
             attacking_war_party = context.friendly_war_party
             defending_war_party = context.enemy_war_party
             attacker = self

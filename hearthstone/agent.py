@@ -49,22 +49,7 @@ class SummonAction(Action):
         return player.validate_summon_from_hand(self.index, self.targets)
 
 
-class SellFromHandAction(Action):
-
-    def __init__(self, index: HandIndex):
-        self.index: HandIndex = index
-
-    def __repr__(self):
-        return f"SellFromHand({self.index})"
-
-    def apply(self, player: 'Player'):
-        player.sell_hand_minion(self.index)
-
-    def valid(self, player: 'Player') -> bool:
-        return player.validate_sell_hand_minion(self.index)
-
-
-class SellFromBoardAction(Action):
+class SellAction(Action):
 
     def __init__(self, index: BoardIndex):
         self.index: BoardIndex = index
@@ -73,10 +58,10 @@ class SellFromBoardAction(Action):
         return f"SellFromBoard({self.index})"
 
     def apply(self, player: 'Player'):
-        player.sell_board_minion(self.index)
+        player.sell_minion(self.index)
 
     def valid(self, player: 'Player') -> bool:
-        return player.validate_sell_board_minion(self.index)
+        return player.validate_sell_minion(self.index)
 
 
 class EndPhaseAction(Action):
@@ -214,10 +199,8 @@ def generate_all_actions(player: 'Player') -> Generator[Action, None, None]:
     yield RerollAction()
     yield EndPhaseAction(True)
     yield EndPhaseAction(False)
-    for index in range(len(player.hand)):
-        yield SellFromHandAction(HandIndex(index))
     for index in range(len(player.in_play)):
-        yield SellFromBoardAction(BoardIndex(index))
+        yield SellAction(BoardIndex(index))
     for index in range(len(player.store)):
         yield BuyAction(StoreIndex(index))
     for index, card in enumerate(player.hand):

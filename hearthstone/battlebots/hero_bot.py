@@ -3,7 +3,7 @@ import typing
 from typing import List, Callable
 
 from hearthstone.agent import Agent, Action, generate_valid_actions, BuyAction, EndPhaseAction, SummonAction, \
-    SellFromHandAction, SellFromBoardAction, TavernUpgradeAction, RerollAction, HeroPowerAction
+     SellAction, TavernUpgradeAction, RerollAction, HeroPowerAction
 
 from hearthstone.player import Player, StoreIndex
 
@@ -51,7 +51,7 @@ class HeroBot(Agent):
                 if top_hand_priority > bottom_board_priority:
                     return [
                         action for action in all_actions
-                        if type(action) is SellFromBoardAction and self.priority(player, player.in_play[action.index]) == bottom_board_priority
+                        if type(action) is SellAction and self.priority(player, player.in_play[action.index]) == bottom_board_priority
                     ][0]
 
         if top_store_priority:

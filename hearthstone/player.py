@@ -132,7 +132,7 @@ class Player:
                     return False
         if card.magnetic:
             valid_mechs = [target_index for target_index, target_card in enumerate(self.in_play) if
-                           card.monster_type in (MONSTER_TYPES.MECH, MONSTER_TYPES.ALL)]
+                           card.check_type(MONSTER_TYPES.MECH)]
             if len(targets) > 1:
                 return False
             for target in targets:
@@ -231,28 +231,15 @@ class Player:
     def freeze(self):
         self.frozen = True
 
-    def _sell_minion(self, location: List[MonsterCard], index: int):
-        assert self._validate_sell_minion(location, index)
-        self.broadcast_buy_phase_event(CardEvent(location[index], EVENTS.SELL))
-        card = location.pop(index)
+    def sell_minion(self, index: BoardIndex):
+        assert self.validate_sell_minion(index)
+        self.broadcast_buy_phase_event(CardEvent(self.in_play[index], EVENTS.SELL))
+        card = self.in_play.pop(index)
         self.coins += card.redeem_rate
         self.tavern.deck.return_cards(card.dissolve())
 
-    def sell_hand_minion(self, index: HandIndex):
-        return self._sell_minion(self.hand, index)
-
-    def sell_board_minion(self, index: BoardIndex):
-        return self._sell_minion(self.in_play, index)
-
-    @staticmethod
-    def _validate_sell_minion(location: List[MonsterCard], index: int) -> bool:
-        return index in range(len(location))
-
-    def validate_sell_hand_minion(self, index: HandIndex) -> bool:
-        return self._validate_sell_minion(self.hand, index)
-
-    def validate_sell_board_minion(self, index: BoardIndex) -> bool:
-        return self._validate_sell_minion(self.in_play, index)
+    def validate_sell_minion(self, index: BoardIndex) -> bool:
+        return index in range(len(self.in_play))
 
     def hero_power(self):
         self.hero.hero_power(BuyPhaseContext(self, self.tavern.randomizer))

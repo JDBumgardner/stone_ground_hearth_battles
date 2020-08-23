@@ -1,9 +1,9 @@
 import logging
 import random
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 import torch
-from torch import nn
+from torch import nn, Tensor
 from torch.distributions import Categorical
 
 from hearthstone.agent import Agent, Action
@@ -17,9 +17,9 @@ logger = logging.getLogger(__name__)
 class PytorchBot(Agent):
     def __init__(self, net: nn.Module):
         self.authors = []
-        self.net = net
+        self.net: nn.Module = net
 
-    def policy_and_value(self, player: 'Player') -> Categorical:
+    def policy_and_value(self, player: 'Player') -> Tuple[Tensor, float]:
         encoded_state: State = encode_player(player)
         valid_actions_mask: EncodedActionSet = encode_valid_actions(player)
         policy, value = self.net(State(encoded_state.player_tensor.unsqueeze(0),
@@ -29,7 +29,7 @@ class PytorchBot(Agent):
         return policy, value
 
     def buy_phase_action(self, player: 'Player') -> Action:
-        policy, value = self.policy_and_value(player)
+        policy, _value = self.policy_and_value(player)
         action = Categorical(torch.exp(policy)).sample()
         return get_indexed_action(int(action))
 

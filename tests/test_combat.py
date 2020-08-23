@@ -1,5 +1,6 @@
 import unittest
 
+from hearthstone.card_graveyard import ArcaneCannon
 from hearthstone.card_pool import *
 from hearthstone.cards import Card
 from hearthstone.combat import WarParty, fight_boards
@@ -155,13 +156,12 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_murloc_warleader(self):
-        logging.basicConfig(level=logging.DEBUG)
         adam = Player.new_player_with_hero(None, "Adam")
         ethan = Player.new_player_with_hero(None, "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [MurlocScout(), MurlocWarleader()]  # TODO: BUG!!! Murloc Warleader doesn't trigger when it dies!!
-        ethans_war_party.board = [MamaBear()]
+        ethans_war_party.board = [IronhideRunt()]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         # self.assertEqual(adams_war_party.board[1].attack, 1)
         self.assertEqual(adam.health, 40)
@@ -541,9 +541,9 @@ class CombatTests(unittest.TestCase):
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [SpawnOfNzoth(), BronzeWarden()]
-        mama_bear = MamaBear()
-        mama_bear.golden_transformation([])
-        ethans_war_party.board = [mama_bear]
+        ironhide_runt = IronhideRunt()
+        ironhide_runt.golden_transformation([])
+        ethans_war_party.board = [ironhide_runt]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 36)
@@ -638,9 +638,9 @@ class CombatTests(unittest.TestCase):
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [DeckSwabbie(), DreadAdmiralEliza()]
-        mama_bear = MamaBear()
-        mama_bear.golden_transformation([])
-        ethans_war_party.board = [mama_bear]
+        ironhide_runt = IronhideRunt()
+        ironhide_runt.golden_transformation([])
+        ethans_war_party.board = [ironhide_runt]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
@@ -651,9 +651,9 @@ class CombatTests(unittest.TestCase):
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [GoldrinnTheGreatWolf(), ScavengingHyena()]
-        mama_bear = MamaBear()
-        mama_bear.golden_transformation([])
-        ethans_war_party.board = [mama_bear]
+        ironhide_runt = IronhideRunt()
+        ironhide_runt.golden_transformation([])
+        ethans_war_party.board = [ironhide_runt]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
@@ -669,7 +669,7 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(adam.health, 40)
         self.assertNotEqual(ethan.health, 40)
         self.assertEqual(len(adams_war_party.board), 2)
-        self.assertIn(adams_war_party.board[1].monster_type, (MONSTER_TYPES.DEMON, MONSTER_TYPES.ALL))
+        self.assertTrue(adams_war_party.board[1].check_type(MONSTER_TYPES.DEMON))
         self.assertTrue(adams_war_party.board[1].taunt)
 
     def test_nadina_the_red(self):
@@ -695,7 +695,7 @@ class CombatTests(unittest.TestCase):
         self.assertNotEqual(ethan.health, 40)
         self.assertEqual(len(adams_war_party.board), 4)
         for i in range(1, len(adams_war_party.board)):
-            self.assertIn(adams_war_party.board[i].monster_type, (MONSTER_TYPES.PIRATE, MONSTER_TYPES.ALL))
+            self.assertTrue(adams_war_party.board[i].check_type(MONSTER_TYPES.PIRATE))
 
     def test_maexxna(self):
         adam = Player.new_player_with_hero(None, "Adam")
@@ -864,8 +864,8 @@ class CombatTests(unittest.TestCase):
         ethan = Player.new_player_with_hero(None, "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
-        adams_war_party.board = [MechanoEgg(), MamaBear()]
-        ethans_war_party.board = [MamaBear()]
+        adams_war_party.board = [MechanoEgg(), IronhideRunt()]
+        ethans_war_party.board = [IronhideRunt()]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertFalse(adams_war_party.board[0].dead)
         self.assertEqual(len(adams_war_party.board), 2)
@@ -904,6 +904,17 @@ class CombatTests(unittest.TestCase):
         robosaur.golden_transformation([])
         adams_war_party.board = [HeraldOfFlame(), Rat(), Rat(), Rat(), WaxriderTogwaggle()]
         ethans_war_party.board = [MicroMachine(), MicroMachine(), robosaur, UnstableGhoul()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+
+    def test_mama_bear_in_combat(self):
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [SavannahHighmane(), MamaBear(), VulgarHomunculus()]
+        ethans_war_party.board = [BloodsailCannoneer(), NadinaTheRed(), NadinaTheRed(), NadinaTheRed(), NadinaTheRed()]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)

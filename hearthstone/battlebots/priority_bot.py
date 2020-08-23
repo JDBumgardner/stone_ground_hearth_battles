@@ -1,6 +1,6 @@
 import typing
 from typing import List
-from hearthstone.agent import generate_valid_actions, BuyAction, EndPhaseAction, SummonAction, SellFromBoardAction
+from hearthstone.agent import generate_valid_actions, BuyAction, EndPhaseAction, SummonAction, SellAction
 from hearthstone.agent import  TavernUpgradeAction, RerollAction
 from hearthstone.battlebots.bot_types import PriorityFunctionBot
 
@@ -34,7 +34,7 @@ class PriorityBot(PriorityFunctionBot):
                 return [action for action in all_actions if type(action) is SummonAction and self.priority(player, player.hand[action.index]) == top_hand_priority][0]
             else:
                 if top_hand_priority > bottom_board_priority:
-                    return [action for action in all_actions if type(action) is SellFromBoardAction and self.priority(player, player.in_play[action.index]) == bottom_board_priority][0]
+                    return [action for action in all_actions if type(action) is SellAction and self.priority(player, player.in_play[action.index]) == bottom_board_priority][0]
 
         if top_store_priority:
             if player.room_on_board() or bottom_board_priority < top_store_priority:

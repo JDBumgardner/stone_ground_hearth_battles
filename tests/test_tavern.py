@@ -1,8 +1,9 @@
 import unittest
-from typing import List, Tuple, Type
+from typing import Type
 
+from hearthstone.card_graveyard import Zoobot
 from hearthstone.card_pool import *
-from hearthstone.cards import Card, CardType, PrintingPress
+from hearthstone.cards import Card, CardType
 from hearthstone.hero_pool import *
 from hearthstone.player import StoreIndex, HandIndex, BoardIndex
 from hearthstone.randomizer import DefaultRandomizer
@@ -232,7 +233,7 @@ class CardTests(unittest.TestCase):
         player_1.purchase(StoreIndex(0))
         player_1.summon_from_hand(HandIndex(0))
         self.assertEqual(player_1.coins, 0)
-        player_1.sell_board_minion(BoardIndex(0))
+        player_1.sell_minion(BoardIndex(0))
         self.assertEqual(player_1.coins, 1)
 
     def test_pyramad(self):
@@ -340,7 +341,7 @@ class CardTests(unittest.TestCase):
             tavern.buying_step()
             player_1.purchase(StoreIndex(0))
             player_1.summon_from_hand(HandIndex(0))
-            player_1.sell_board_minion(BoardIndex(len(player_1.in_play)-2))
+            player_1.sell_minion(BoardIndex(len(player_1.in_play) - 2))
             tavern.combat_step()
 
         tavern.buying_step()
@@ -562,17 +563,10 @@ class CardTests(unittest.TestCase):
         tavern.randomizer = CardForcer([StewardOfTime] * 18)
         tavern.buying_step()
         player_1.purchase(StoreIndex(0))
-        player_1.sell_hand_minion(HandIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        player_1.sell_minion(BoardIndex(0))
         self.assertEqual(player_1.store[0].attack, 4)
         self.assertEqual(player_1.store[0].health, 5)
-        player_2.purchase(StoreIndex(0))
-        tavern.combat_step()
-        tavern.buying_step()
-        player_2.purchase(StoreIndex(0))
-        player_2.purchase(StoreIndex(0))
-        player_2.sell_hand_minion(HandIndex(0))
-        self.assertEqual(player_2.store[0].attack, 5)
-        self.assertEqual(player_2.store[0].health, 6)
 
     def test_deck_swabbie(self):
         tavern = Tavern()
@@ -671,7 +665,8 @@ class CardTests(unittest.TestCase):
         player_1.purchase(StoreIndex(0))
         self.assertCardListEquals(player_1.hand, [FreedealingGambler])
         coins = player_1.coins
-        player_1.sell_hand_minion(HandIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        player_1.sell_minion(BoardIndex(0))
         self.assertEqual(player_1.coins, coins + 3)
 
     def test_income_limit(self):
@@ -1168,7 +1163,7 @@ class CardTests(unittest.TestCase):
         tavern.buying_step()
         player_1.purchase(StoreIndex(0))
         player_1.summon_from_hand(HandIndex(0))
-        player_1.sell_board_minion(BoardIndex(0))
+        player_1.sell_minion(BoardIndex(0))
         self.assertEqual(player_1.store[0].attack, player_1.store[0].base_attack + 2)
         self.assertEqual(player_1.store[0].health, player_1.store[0].base_health + 2)
         for i in range(1, len(player_1.store)):
@@ -1191,7 +1186,7 @@ class CardTests(unittest.TestCase):
         player_1.purchase(StoreIndex(0))
         player_1.summon_from_hand(HandIndex(0))
         self.assertCardListEquals(player_1.in_play, [MurlocTidecaller])
-        player_1.sell_board_minion(BoardIndex(0))
+        player_1.sell_minion(BoardIndex(0))
         self.assertEqual(type(player_1.store[-1]), RockpoolHunter)
 
     def test_kaelthas_sunstrider(self):
@@ -1347,11 +1342,11 @@ class CardTests(unittest.TestCase):
 
         def select_random_minion(self, cards: List['Card'], round_number: int) -> 'Card':
             if round_number == 5:
-                return force_card(cards, MurlocTidecaller)
+                return MurlocTidecaller
             elif round_number == 6:
-                return force_card(cards, SavannahHighmane)
+                return SavannahHighmane
             elif round_number == 7:
-                return force_card(cards, VulgarHomunculus)
+                return VulgarHomunculus
 
     def test_shifter_zerus(self):
         tavern = Tavern()
@@ -1553,7 +1548,7 @@ class CardTests(unittest.TestCase):
         player_1.summon_from_hand(HandIndex(0))
         self.assertCardListEquals(player_1.in_play, [MalGanis, VulgarHomunculus])
         self.assertEqual(player_1.health, 40)
-        player_1.sell_board_minion(BoardIndex(0))
+        player_1.sell_minion(BoardIndex(0))
         player_1.purchase(StoreIndex(0))
         player_1.summon_from_hand(HandIndex(0))
         self.assertCardListEquals(player_1.in_play, [VulgarHomunculus, VulgarHomunculus])

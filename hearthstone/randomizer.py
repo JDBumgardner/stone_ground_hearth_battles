@@ -1,6 +1,6 @@
 import random
 import typing
-from typing import List, Tuple
+from typing import List, Tuple, Type
 
 from hearthstone.monster_types import MONSTER_TYPES
 
@@ -38,7 +38,7 @@ class Randomizer:
     def select_hero(self, hero_pool: List['Hero']) -> 'Hero':
         raise NotImplementedError()
 
-    def select_summon_minion(self, cards: List['Card']) -> 'Card':
+    def select_summon_minion(self, cards: List['Type']) -> 'Type':
         raise NotImplementedError()
 
     def select_add_to_store(self, cards: List['Card']) -> 'Card':
@@ -81,7 +81,7 @@ class DefaultRandomizer(Randomizer):
     def select_hero(self, hero_pool: List['Hero']) -> 'Hero':
         return random.choice(hero_pool)
 
-    def select_summon_minion(self, cards: List['Card']) -> 'Card':
+    def select_summon_minion(self, cards: List['Type']) -> 'Type':
         return random.choice(cards)
 
     def select_add_to_store(self, cards: List['Card']) -> 'Card':

@@ -6,7 +6,7 @@ from collections import defaultdict
 from typing import List, Optional
 
 from hearthstone.agent import Agent, generate_valid_actions, TavernUpgradeAction, RerollAction, EndPhaseAction, \
-    SellFromHandAction, SellFromBoardAction, Action, BuyAction, SummonAction
+    SellAction, Action, BuyAction, SummonAction
 if typing.TYPE_CHECKING:
     from hearthstone.cards import Card
     from hearthstone.player import Player
@@ -79,10 +79,8 @@ class SimplePolicyBot(Agent):
     def score_action(self, player: Player, action: Action) -> Optional[float]:
         if type(action) is BuyAction:
             return self.priority_buy_dict[type(player.store[action.index]).__name__]
-        if type(action) is SellFromBoardAction:
+        if type(action) is SellAction:
             return self.priority_sell_dict[type(player.in_play[action.index]).__name__]
-        if type(action) is SellFromHandAction:
-            return self.priority_sell_dict[type(player.hand[action.index]).__name__]
         if type(action) is SummonAction:
             return self.priority_summon_dict[type(action.card).__name__]
         if type(action) is EndPhaseAction:
@@ -102,9 +100,7 @@ class SimplePolicyBot(Agent):
                 self.current_game_buy[type(player.store[action.index]).__name__] += gradient
             if type(action) is SummonAction:
                 self.current_game_summon[type(action.card).__name__] += gradient
-            if type(action) is SellFromBoardAction:
+            if type(action) is SellAction:
                 self.current_game_sell[type(player.in_play[action.index]).__name__] += gradient
-            if type(action) is SellFromHandAction:
-                self.current_game_sell[type(player.hand[action.index]).__name__] += gradient
             if type(action) is RerollAction:
                 self.current_game_reroll += gradient

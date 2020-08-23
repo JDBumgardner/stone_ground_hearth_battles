@@ -1,7 +1,7 @@
 import typing
 from typing import List, Optional
 from hearthstone.agent import Agent, Action, BuyAction, SummonAction, EndPhaseAction, RerollAction, \
-    SellFromBoardAction, SellFromHandAction, RedeemGoldCoinAction
+    SellAction, RedeemGoldCoinAction
 from hearthstone.agent import TavernUpgradeAction, HeroPowerAction, TripleRewardsAction
 from hearthstone.player import HandIndex, BoardIndex, StoreIndex
 
@@ -119,18 +119,9 @@ class UserAgent(Agent):
                 sell_index = int(split_list[2])
             except ValueError:
                 return None
-            if split_list[1] not in ("h", "b"):
+            if not 0 <= sell_index < len(player.in_play):
                 return None
-            if split_list[1] == "h":
-                if not 0 <= sell_index < len(player.hand):
-                    return None
-                if not player.room_on_board():
-                    return None
-                return SellFromHandAction(HandIndex(sell_index))
-            elif split_list[1] == "b":
-                if not 0 <= sell_index < len(player.in_play):
-                    return None
-                return SellFromBoardAction(BoardIndex(sell_index))
+            return SellAction(BoardIndex(sell_index))
         elif split_list == ["e"]:
             return EndPhaseAction(False)
         elif split_list == ["e", "f"]:

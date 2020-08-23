@@ -1,7 +1,9 @@
 import itertools
 from collections import defaultdict
+from inspect import getmembers, isclass
 from typing import Set, List, Optional, Callable, Type, Union, Iterator
 
+from hearthstone import card_pool
 from hearthstone.events import BuyPhaseContext, CombatPhaseContext, EVENTS
 from hearthstone.card_factory import make_metaclass
 from hearthstone.monster_types import MONSTER_TYPES
@@ -22,6 +24,10 @@ class PrintingPress:
     @classmethod
     def add_card(cls, card_class):
         cls.cards.add(card_class)
+
+    @classmethod
+    def all_types(cls):
+        return [card_type for card_type in cls.cards if not card_type.token]
 
 
 class CardEvent:
@@ -222,16 +228,23 @@ class MonsterCard(Card):
         return 1
 
     def zerus_shift(self, context: 'BuyPhaseContext'):
-        all_minions = PrintingPress.make_cards().unique_cards()
-        random_minion = context.randomizer.select_random_minion(all_minions, context.owner.tavern.turn_count)
+        all_minions = PrintingPress.all_types()
+        random_minion = context.randomizer.select_random_minion(all_minions, context.owner.tavern.turn_count)()
         if self.golden:
             random_minion.golden_transformation([])
+        random_minion.attack += self.attack - self.base_attack
+        random_minion.health += self.health - self.base_health
         random_minion.shifting = True
         context.owner.hand.remove(self)
         context.owner.hand.append(random_minion)
 
-    def check_type(self, desired_type: 'MONSTER_TYPES') -> bool:
-        return self.monster_type in (desired_type, MONSTER_TYPES.ALL)
+    @classmethod
+    def check_type(cls, desired_type: 'MONSTER_TYPES') -> bool:
+        return cls.monster_type in (desired_type, MONSTER_TYPES.ALL)
+
+    def is_dying(self) -> bool:
+        return self.dead or self.health <= 0
+
 
 class CardList:
     def __init__(self, cards: List[Card]):
@@ -260,13 +273,6 @@ class CardList:
 
     def all_cards(self):
         return itertools.chain.from_iterable(self.cards_by_tier.values())
-
-    def unique_cards(self):
-        uniques = []
-        for card in self.all_cards():
-            if type(card) not in uniques:
-                uniques.append(card)
-        return uniques
 
     def __len__(self) -> int:
         return sum(len(value) for value in self.cards_by_tier.values())

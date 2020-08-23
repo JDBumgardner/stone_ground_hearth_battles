@@ -3,7 +3,7 @@ import typing
 from typing import List
 
 from hearthstone.agent import Agent, Action, generate_valid_actions, BuyAction, EndPhaseAction, SummonAction, \
-    SellFromBoardAction, SellFromHandAction, TavernUpgradeAction, RerollAction
+    SellAction, TavernUpgradeAction, RerollAction
 from hearthstone.card_pool import RabidSaurolisk
 
 from hearthstone.player import Player, BoardIndex
@@ -48,7 +48,7 @@ class SauroliskBot(Agent):
         if len(player.in_play) == 7:
             for index, card in enumerate(player.in_play):
                 if type(card) is not RabidSaurolisk:
-                    return SellFromBoardAction(BoardIndex(index))
+                    return SellAction(BoardIndex(index))
 
         return EndPhaseAction(False)
 

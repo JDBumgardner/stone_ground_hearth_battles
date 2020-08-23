@@ -3,9 +3,8 @@ import typing
 from typing import List, Callable
 
 from hearthstone.agent import Agent, Action, generate_valid_actions, BuyAction, EndPhaseAction, SummonAction, \
-    SellFromHandAction, SellFromBoardAction, TavernUpgradeAction, RerollAction, HeroPowerAction
+    SellAction, TavernUpgradeAction, RerollAction
 from hearthstone.card_pool import MurlocTidehunter, AlleyCat
-
 from hearthstone.player import Player, StoreIndex, BoardIndex
 
 if typing.TYPE_CHECKING:
@@ -40,7 +39,7 @@ class EarlyGameBot(Agent):
             if player.tavern_tier == 2:
                 token_board_index = [BoardIndex(player.in_play.index(card)) for card in player.in_play if card.token]
                 if token_board_index and player.coins == 5:
-                    player.sell_board_minion(token_board_index[0])
+                    player.sell_minion(token_board_index[0])
 
         if player.tavern.turn_count != 3:
             upgrade_action = TavernUpgradeAction()
@@ -61,7 +60,7 @@ class EarlyGameBot(Agent):
                 if top_hand_priority > bottom_board_priority:
                     return [
                         action for action in all_actions
-                        if type(action) is SellFromBoardAction and self.priority(player, player.in_play[action.index]) == bottom_board_priority
+                        if type(action) is SellAction and self.priority(player, player.in_play[action.index]) == bottom_board_priority
                     ][0]
 
         if top_store_priority:

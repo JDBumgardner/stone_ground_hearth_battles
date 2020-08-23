@@ -21,7 +21,7 @@ class LordJaraxxus(Hero):
 
     def hero_power_impl(self, context: BuyPhaseContext):
         for minion in context.owner.in_play:
-            if minion.monster_type in (MONSTER_TYPES.DEMON, MONSTER_TYPES.ALL):
+            if minion.check_type(MONSTER_TYPES.DEMON):
                 minion.attack += 1
                 minion.health += 1
 
@@ -67,7 +67,7 @@ class MillificentManastorm(Hero):
 
     def handle_event(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         if event.event is EVENTS.BUY:
-            if event.card.monster_type in (MONSTER_TYPES.MECH, MONSTER_TYPES.ALL):
+            if event.card.check_type(MONSTER_TYPES.MECH):
                 event.card.attack += 1
                 event.card.health += 1
 
@@ -93,16 +93,16 @@ class YoggSaron(Hero):
         return True
 
 
-class PatchesThePirate(Hero):
+class PatchesThePirate(Hero):  # TODO: does this pull from the deck or does it add to the available pool?
     power_cost = 4
 
     def handle_event(self, event: CardEvent, context: BuyPhaseContext):
-        if event.event is EVENTS.BUY and event.card.monster_type in (MONSTER_TYPES.PIRATE, MONSTER_TYPES.ALL):
+        if event.event is EVENTS.BUY and event.card.check_type(MONSTER_TYPES.PIRATE):
             self.power_cost = max(0, self.power_cost - 1)
 
     def hero_power_impl(self, context: BuyPhaseContext):
         pirates = [card for card in context.owner.tavern.deck.all_cards() if
-                   card.monster_type in (MONSTER_TYPES.PIRATE, MONSTER_TYPES.ALL) and card.tier <= context.owner.tavern_tier]
+                   card.check_type(MONSTER_TYPES.PIRATE) and card.tier <= context.owner.tavern_tier]
 
         card = context.randomizer.select_gain_card(pirates)
         context.owner.tavern.deck.remove_card(card)
@@ -131,9 +131,9 @@ class FungalmancerFlurgl(Hero):
         return False
 
     def handle_event(self, event: CardEvent, context: BuyPhaseContext):
-        if event.event is EVENTS.SELL and event.card.monster_type in (MONSTER_TYPES.MURLOC, MONSTER_TYPES.ALL):
+        if event.event is EVENTS.SELL and event.card.check_type(MONSTER_TYPES.MURLOC):
             murlocs = [card for card in context.owner.tavern.deck.all_cards() if
-                       card.monster_type in (MONSTER_TYPES.MURLOC, MONSTER_TYPES.ALL) and card.tier <= context.owner.tavern_tier]
+                       card.check_type(MONSTER_TYPES.MURLOC) and card.tier <= context.owner.tavern_tier]
             card = context.randomizer.select_add_to_store(murlocs)
             context.owner.tavern.deck.remove_card(card)
             context.owner.store.append(card)
@@ -201,8 +201,8 @@ class Ysera(Hero):
 
     def handle_event(self, event: CardEvent, context: BuyPhaseContext):
         if event.event is EVENTS.BUY_START and len(context.owner.store) < 7:
-            dragons = [card for card in context.owner.tavern.deck.all_cards() if card.monster_type in
-                       (MONSTER_TYPES.DRAGON, MONSTER_TYPES.ALL) and card.tier <= context.owner.tavern_tier]
+            dragons = [card for card in context.owner.tavern.deck.all_cards() if
+                       card.check_type(MONSTER_TYPES.DRAGON) and card.tier <= context.owner.tavern_tier]
             card = context.randomizer.select_add_to_store(dragons)
             context.owner.tavern.deck.remove_card(card)
             context.owner.store.append(card)
@@ -236,7 +236,7 @@ class CaptainEudora(Hero):
     def hero_power_impl(self, context: BuyPhaseContext):
         self.digs_left -= 1
         if self.digs_left == 0:
-            diggable_minions = [card for card in PrintingPress.make_cards().unique_cards() if card.tier <= context.owner.tavern_tier]
+            diggable_minions = [card for card in [minion() for minion in PrintingPress.all_types()] if card.tier <= context.owner.tavern_tier]
             random_minion = context.randomizer.select_gain_card(diggable_minions)
             random_minion.golden_transformation([])
             context.owner.hand.append(random_minion)

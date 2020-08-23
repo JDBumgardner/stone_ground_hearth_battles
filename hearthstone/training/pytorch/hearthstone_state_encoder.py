@@ -6,7 +6,7 @@ from typing import Callable, List, Any, Optional, Dict, NamedTuple
 import torch
 
 from hearthstone.agent import TripleRewardsAction, TavernUpgradeAction, RerollAction, \
-    EndPhaseAction, SummonAction, BuyAction, SellFromBoardAction, SellFromHandAction, Action
+    EndPhaseAction, SummonAction, BuyAction, SellAction, Action
 from hearthstone.cards import Card
 from hearthstone.monster_types import MONSTER_TYPES
 from hearthstone.player import Player, StoreIndex, HandIndex, BoardIndex
@@ -267,9 +267,9 @@ def _all_actions() -> ActionSet:
     player_action_set = [TripleRewardsAction(), TavernUpgradeAction(), RerollAction(), EndPhaseAction(False),
                          EndPhaseAction(True)]
     store_action_set = [[BuyAction(index), InvalidAction(), InvalidAction(), InvalidAction()] for index in store_indices()]
-    hand_action_set = [[InvalidAction(), SummonAction(index), SummonAction(index, [BoardIndex(0)]), SellFromHandAction(index)] for index in
+    hand_action_set = [[InvalidAction(), SummonAction(index), SummonAction(index, [BoardIndex(0)])] for index in
                        hand_indices()]
-    board_action_set = [[InvalidAction(), InvalidAction(), InvalidAction(), SellFromBoardAction(index)] for index in
+    board_action_set = [[InvalidAction(), InvalidAction(), InvalidAction(), SellAction(index)] for index in
                         board_indices()]
     return ActionSet(player_action_set, store_action_set + hand_action_set + board_action_set)
 
