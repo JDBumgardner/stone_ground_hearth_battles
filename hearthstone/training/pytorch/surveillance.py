@@ -123,7 +123,7 @@ class TensorboardGamePlotter(Parasite):
     def update_gamestate(self, player: 'Player', value):
         self.healths.append(player.health)
         self.avg_enemy_healths.append((sum(max(p.health, 0) for name, p in player.tavern.players.items()) - player.health) / 7.0)
-        self.dead_players.append(len(player.tavern.losers))
+        self.dead_players.append(len(player.tavern.losers)-3.5)
         if value is not None:
             self.values.append(float(value))
 
@@ -151,7 +151,6 @@ class TensorboardGamePlotter(Parasite):
 
         c = collections.Counter(self.action_types)
         c = sorted(c.items())
-        print(c)
         plt.bar([i[0] for i in c], [i[1] for i in c])
         plt.title("Action Probablity By Type")
         plt.xlabel("Action Type")

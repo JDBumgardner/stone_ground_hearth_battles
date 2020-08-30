@@ -18,6 +18,7 @@ from hearthstone.training.pytorch.policy_gradient import tensorize_batch, easy_c
 from hearthstone.training.pytorch.replay_buffer import ReplayBuffer, NormalizingReplayBuffer
 from hearthstone.training.pytorch.surveillance import SurveiledPytorchBot, ReplayBufferSaver, TensorboardGamePlotter, \
     GlobalStepContext
+from hearthstone.training.pytorch.tensorboard_altair import TensorboardAltairPlotter
 
 PPOHyperparameters = NewType('PPOHyperparameters', Dict[str, Union[str, int, float]])
 
@@ -228,7 +229,8 @@ class PPOLearner(GlobalStepContext):
         else:
             replay_buffer = ReplayBuffer(replay_buffer_size)
         learning_bot_contestant = Contestant("LearningBot", lambda: SurveiledPytorchBot(learning_net, [
-            ReplayBufferSaver(replay_buffer), TensorboardGamePlotter(tensorboard, self)]))
+            ReplayBufferSaver(replay_buffer), TensorboardGamePlotter(tensorboard, self),
+            TensorboardAltairPlotter(tensorboard, self)]))
         # Rating starts a 14, which is how the randomly initialized pytorch bot performs.
         learning_bot_contestant.trueskill = trueskill.Rating(14)
         # Reuse standings from the current leaderboard.
@@ -274,7 +276,10 @@ def main():
                                                  'batch_size': 269,
                                                  'entropy_weight': 3.20049705838473e-05,
                                                  'gradient_clipping': 0.5,
-                                                 'nn_hidden_layers': 0,
+                                                 'nn_hidden_layers': 1,
+                                                 'nn_hidden_size': 256,
+                                                 'nn_activation': 'gelu',
+                                                 'nn_shared': 'false',
                                                  'normalize_advantage': True,
                                                  'normalize_observations': False,
                                                  'num_workers': 1,

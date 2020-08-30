@@ -32,13 +32,18 @@ class HearthstoneFFNet(nn.Module):
         self.value_hidden_layers = []
         for i in range(hidden_layers):
             self.policy_hidden_layers.append(nn.Linear(input_size if i == 0 else hidden_size, hidden_size))
+            nn.init.orthogonal_(self.policy_hidden_layers[-1].weight)
             if shared:
                 self.value_hidden_layers.append(self.policy_hidden_layers[-1])
             else:
                 # Create new hidden layers for the value network.
                 self.value_hidden_layers.append(nn.Linear(input_size if i == 0 else hidden_size, hidden_size))
+                nn.init.orthogonal_(self.value_hidden_layers[-1].weight)
+
         # Output layers
         self.fc_policy = nn.Linear(hidden_size, action_encoding_size())
+        nn.init.constant_(self.fc_policy.weight, 0)
+        nn.init.constant_(self.fc_policy.bias, 0)
         self.fc_value = nn.Linear(hidden_size, 1)
 
     def activation(self, x):

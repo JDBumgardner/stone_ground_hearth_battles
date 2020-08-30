@@ -1,6 +1,11 @@
-torch~=1.5.1
-setuptools~=49.2.0
-optuna~=1.5.0
-torchvision~=0.6.1
+torch~=1.6.0
+setuptools~=44.0.0
+optuna~=2.0.0
 trueskill~=0.4.5
-matplotlib~=3.3.0
+matplotlib~=3.3.1
+joblib~=0.16.0
+pandas~=1.1.1
+altair~=4.1.0
+six~=1.15.0
+Werkzeug~=1.0.1
+tensorboard~=2.3.0
