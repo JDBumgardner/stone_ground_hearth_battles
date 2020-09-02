@@ -13,7 +13,7 @@ if typing.TYPE_CHECKING:
 
 
 class UserAgent(Agent):
-    def hero_choice_action(self, player: 'Player') -> 'Hero':
+    async def hero_choice_action(self, player: 'Player') -> 'Hero':
         print(f"player {player.name}, it is your turn to choose a hero.")
         self.print_hero_list(player.hero_options)
         user_text = input("please choose a hero: ")
@@ -32,7 +32,7 @@ class UserAgent(Agent):
             return player.hero_options[index]
         return None
 
-    def rearrange_cards(self, player: 'Player'):
+    async def rearrange_cards(self, player: 'Player'):
         print(f"player {player.name}, it is your combat prephase.")
         self.print_player_card_list("board", player.in_play)
         print("please rearrange your cards by specifying the ordering")
@@ -57,7 +57,7 @@ class UserAgent(Agent):
             return None
         return check_list
 
-    def buy_phase_action(self, player: 'Player') -> Action:
+    async def buy_phase_action(self, player: 'Player') -> Action:
         print(f"\n\nplayer {player.name} ({player.hero}), it is your buy phase.")
         self.print_player_card_list("store", player.store)
         self.print_player_card_list("board", player.in_play)
@@ -154,7 +154,7 @@ class UserAgent(Agent):
         else:
             return None
 
-    def discover_choice_action(self, player: 'Player') -> 'Card':
+    async def discover_choice_action(self, player: 'Player') -> 'Card':
         print(f"player {player.name}, you must choose a card to discover.")
         self.print_player_card_list("discovery choices", player.discovered_cards)
         user_input = input("input card number to discover here: ")

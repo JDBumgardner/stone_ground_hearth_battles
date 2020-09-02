@@ -28,15 +28,15 @@ class PytorchBot(Agent):
                                                   valid_actions_mask.card_action_tensor.unsqueeze(0)))
         return policy, value
 
-    def buy_phase_action(self, player: 'Player') -> Action:
+    async def buy_phase_action(self, player: 'Player') -> Action:
         policy, _value = self.policy_and_value(player)
         action = Categorical(torch.exp(policy)).sample()
         return get_indexed_action(int(action))
 
     #TODO handle learning card and discover choice actions
-    def rearrange_cards(self, player: 'Player') -> List['Card']:
+    async def rearrange_cards(self, player: 'Player') -> List['Card']:
         return player.in_play
 
-    def discover_choice_action(self, player: 'Player') -> 'Card':
+    async def discover_choice_action(self, player: 'Player') -> 'Card':
         return random.choice(player.discovered_cards)
 

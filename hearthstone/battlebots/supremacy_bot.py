@@ -17,12 +17,12 @@ class SupremacyBot(Agent):
         self.monster_type = monster_type
         self.upgrade = upgrade
 
-    def rearrange_cards(self, player: 'Player') -> List['Card']:
+    async def rearrange_cards(self, player: 'Player') -> List['Card']:
         card_list = player.in_play.copy()
         self.local_random.shuffle(card_list)
         return card_list
 
-    def buy_phase_action(self, player: 'Player') -> Action:
+    async def buy_phase_action(self, player: 'Player') -> Action:
         all_actions = list(generate_valid_actions(player))
 
         if self.upgrade:
@@ -41,7 +41,7 @@ class SupremacyBot(Agent):
 
         return EndPhaseAction(False)
 
-    def discover_choice_action(self, player: 'Player') -> 'Card':
+    async def discover_choice_action(self, player: 'Player') -> 'Card':
         discover_cards = player.discovered_cards
         discover_cards = sorted(discover_cards, key=lambda card: card.tier, reverse=True)
         return discover_cards[0]

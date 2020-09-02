@@ -43,6 +43,7 @@ class Tavern:
         return player
 
     def buying_step(self):
+        assert len(self.players) % 2 == 0, "Must have an even number of players"
         assert self.game_state in (GameState.HERO_SELECTION, GameState.COMBAT_PHASE)
         self.game_state = GameState.BUY_PHASE
         self._generate_pairings()

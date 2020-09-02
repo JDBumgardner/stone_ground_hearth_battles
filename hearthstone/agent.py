@@ -140,10 +140,10 @@ class RedeemGoldCoinAction(Action):
 
 
 class Agent:
-    def hero_choice_action(self, player: 'Player') -> 'Hero':
+    async def hero_choice_action(self, player: 'Player') -> 'Hero':
         return player.hero_options[0]
 
-    def rearrange_cards(self, player: 'Player') -> List['Card']:
+    async def rearrange_cards(self, player: 'Player') -> List['Card']:
         """
         here the player selects a card arangement one time per combat directly preceeding combat
 
@@ -155,7 +155,7 @@ class Agent:
         """
         pass
 
-    def buy_phase_action(self, player: 'Player') -> Action:
+    async def buy_phase_action(self, player: 'Player') -> Action:
         """
         here the player chooses a buy phase action including:
         purchasing a card from the store
@@ -172,7 +172,7 @@ class Agent:
         """
         pass
 
-    def discover_choice_action(self, player: 'Player') -> 'Card':
+    async def discover_choice_action(self, player: 'Player') -> 'Card':
         """
 
         Args:
@@ -183,7 +183,7 @@ class Agent:
         """
         pass
 
-    def game_over(self, player: 'Player', ranking: int):
+    async def game_over(self, player: 'Player', ranking: int):
         """
         Notifies the agent that the game is over and the agent has achieved a given rank
         :param ranking: Integer index 0 to 7 of where the agent placed
