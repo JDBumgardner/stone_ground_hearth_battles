@@ -66,14 +66,15 @@ class TextAgent(Agent):
         return check_list
 
     async def buy_phase_action(self, player: 'Player') -> Action:
-        await self.transport.send(f"player {player.name} ({player.hero}), it is your buy phase.\n")
+
+        await self.transport.send(f"\n\nplayer {player.name} ({player.hero}), it is your buy phase.\n")
         await self.print_player_card_list("store", player.store)
         await self.print_player_card_list("board", player.in_play)
         await self.print_player_card_list("hand", player.hand)
         await self.transport.send(f"Your current triple rewards are {player.triple_rewards}\n")
         await self.transport.send(f"you have {player.coins} coins and {player.health} health and your tavern is level {player.tavern_tier}\n")
         if player.gold_coins >= 1:
-            print(f"you have {player.gold_coins} gold coins\n")
+            await self.transport.send(f"you have {player.gold_coins} gold coins\n")
         await self.transport.send("available actions are: \n")
         await self.transport.send('purchase: "p 0" purchases the 0th indexed monster from the store\n')
         await self.transport.send(
@@ -154,16 +155,16 @@ class TextAgent(Agent):
         await self.transport.send(f"player {player.name}, you must choose a card to discover.")
         await self.print_player_card_list("discovery choices", player.discovered_cards)
         await self.transport.send("input card number to discover here: ")
-        user_input = self.transport.receive_line()
+        user_input = await self.transport.receive_line()
         while True:
             discover_card = self.parse_discover_input(user_input, player)
             if discover_card:
                 return discover_card
             await self.transport.send("oops, try again: ")
-            user_input = self.transport.receive_line()
+            user_input = await self.transport.receive_line()
 
     @staticmethod
-    async def parse_discover_input(user_input: str, player: 'Player') -> Optional['Card']:
+    def parse_discover_input(user_input: str, player: 'Player') -> Optional['Card']:
         try:
             card_index = int(user_input)
             return player.discovered_cards[card_index]
@@ -178,3 +179,6 @@ class TextAgent(Agent):
     async def print_hero_list(self, hero_list: List['Hero']):
         for index, hero in enumerate(hero_list):
             await self.transport.send(f"{index} {hero}\n")
+
+    async def game_over(self, player: 'Player', ranking: int):
+        await self.transport.send(f'\n\n**************you have been killed you were ranked #{ranking}*******************')

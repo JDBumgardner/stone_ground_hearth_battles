@@ -109,7 +109,7 @@ class AsyncHost(Host):
         async def perform_player_actions(agent, player):
             for _ in range(20):
                 if player.discovered_cards:
-                    discovered_card = agent.discover_choice_action(player)
+                    discovered_card = await agent.discover_choice_action(player)
                     player.select_discover(discovered_card)
                 else:
                     action = await agent.buy_phase_action(player)

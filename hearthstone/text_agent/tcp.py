@@ -14,7 +14,11 @@ class TcpTransport(TextAgentTransport):
         self.line_reader = LineReader(self.stream, 1024)
 
     async def receive_line(self) -> str:
-        return (await self.line_reader.readline()).decode('utf-8').rstrip()
+        try:
+            return (await self.line_reader.readline()).decode('utf-8').rstrip()
+        except UnicodeDecodeError:
+            print("fnord")
+            return ""
 
     async def send(self, text: str):
         await self.stream.send_all(text.encode('utf-8'))

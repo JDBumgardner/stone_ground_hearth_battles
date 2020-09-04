@@ -40,10 +40,6 @@ def main():
     logging.basicConfig(level=logging.DEBUG)
     agents = {"battlerattler_priority_bot": battlerattler_priority_bot(1, EarlyGameBot),
               "priority_saurolisk_buff_bot": priority_saurolisk_buff_bot(2, EarlyGameBot),
-              "racist_priority_bot_mech": racist_priority_bot(3, EarlyGameBot, MONSTER_TYPES.MECH),
-              "racist_priority_bot_murloc": racist_priority_bot(4, EarlyGameBot, MONSTER_TYPES.MURLOC),
-              "priority_adaptive_tripler_bot": priority_adaptive_tripler_bot(5, EarlyGameBot),
-              "priority_pogo_hopper_bot": priority_pogo_hopper_bot(7, PriorityBot),
               }
     agents.update(trio.run(open_client_streams, 8-len(agents)))
     host = AsyncHost(agents)
