@@ -5,7 +5,10 @@ from hearthstone.battlebots.priority_bot import PriorityBot
 from hearthstone.battlebots.priority_functions import PriorityFunctions
 from hearthstone.battlebots.priority_functions import priority_saurolisk_bot, racist_priority_bot, \
     priority_adaptive_tripler_bot, battlerattler_priority_bot, priority_pogo_hopper_bot, priority_saurolisk_buff_bot
+
 from hearthstone.host import AsyncHost
+from hearthstone.text_agent.stdio import StdIOTransport
+from hearthstone.text_agent.text_agent import TextAgent
 from hearthstone.user_agent import UserAgent
 from hearthstone.monster_types import MONSTER_TYPES
 import logging
@@ -13,8 +16,8 @@ import logging
 
 def main():
     logging.basicConfig(level=logging.DEBUG)
-    host = AsyncHost({"dante_kong": UserAgent(),
-                      # "david_stolfo": UserAgent(),
+    host = AsyncHost({"dante_kong": TextAgent(StdIOTransport()),
+                      "david_stolfo": TextAgent(StdIOTransport()),
                       "no_action_bot": NoActionBot(),
                       "battlerattler_priority_bot": battlerattler_priority_bot(1, EarlyGameBot),
                       "priority_saurolisk_buff_bot": priority_saurolisk_buff_bot(2, EarlyGameBot),

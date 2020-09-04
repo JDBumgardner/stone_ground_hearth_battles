@@ -12,6 +12,7 @@ if typing.TYPE_CHECKING:
     from hearthstone.tavern import Player
 
 
+
 class UserAgent(Agent):
     async def hero_choice_action(self, player: 'Player') -> 'Hero':
         print(f"player {player.name}, it is your turn to choose a hero.")
