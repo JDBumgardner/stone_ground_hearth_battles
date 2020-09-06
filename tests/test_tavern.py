@@ -1712,6 +1712,5 @@ class CardTests(unittest.TestCase):
         self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health + 2)
 
 
-
 if __name__ == '__main__':
     unittest.main()

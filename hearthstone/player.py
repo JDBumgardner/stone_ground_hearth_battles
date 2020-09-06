@@ -49,7 +49,6 @@ class Player:
         self.immune = False
         self.gold_coins = 0
         self.bananas = 0
-        self.won_last_combat = False
 
     @staticmethod
     def new_player_with_hero(tavern: 'Tavern', name: str, hero: Optional['Hero'] = None) -> 'Player':

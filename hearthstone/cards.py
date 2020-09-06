@@ -31,11 +31,12 @@ class PrintingPress:
 
 
 class CardEvent:
-    def __init__(self, card: Optional['MonsterCard'], event: EVENTS, targets: Optional[List['MonsterCard']] = None, foe: Optional['MonsterCard'] = None):
+    def __init__(self, card: Optional['MonsterCard'], event: EVENTS, targets: Optional[List['MonsterCard']] = None, foe: Optional['MonsterCard'] = None, won_combat: Optional[bool] = False):
         self.card = card
         self.event = EVENTS(event)
         self.targets = targets
         self.foe = foe  # for combat-related events
+        self.won_combat = won_combat
 
 
 CardType = make_metaclass(PrintingPress.add_card, ("Card", "MonsterCard"))
@@ -136,14 +137,16 @@ class MonsterCard(Card):
             context.broadcast_combat_event(card_death_event)
 
     def resolve_reborn(self, context: CombatPhaseContext):
-        reborn_self = type(self)()
-        if self.golden:
-            reborn_self.golden_transformation([])
-        reborn_self.health = 1
-        reborn_self.reborn = False
         index = context.friendly_war_party.get_index(self)
-        context.friendly_war_party.board.remove(self)
-        context.friendly_war_party.board.insert(index, reborn_self)
+        for i in range(context.summon_minion_multiplier()):
+            reborn_self = type(self)()
+            if self.golden:
+                reborn_self.golden_transformation([])
+            reborn_self.health = 1
+            reborn_self.reborn = False
+            context.friendly_war_party.summon_in_combat(reborn_self, context, index + i + 1)
+        # context.friendly_war_party.board.remove(self)
+        # context.friendly_war_party.board.insert(index, reborn_self)
 
     def change_state(self, new_state):
         self.tavern.run_callbacks(self, new_state)
@@ -232,8 +235,8 @@ class MonsterCard(Card):
         random_minion = context.randomizer.select_random_minion(all_minions, context.owner.tavern.turn_count)()
         if self.golden:
             random_minion.golden_transformation([])
-        random_minion.attack += self.attack - self.base_attack
-        random_minion.health += self.health - self.base_health
+        random_minion.attack += self.attack - self.base_attack * (2 if self.golden else 1)
+        random_minion.health += self.health - self.base_health * (2 if self.golden else 1)
         random_minion.shifting = True
         context.owner.hand.remove(self)
         context.owner.hand.append(random_minion)

@@ -7,6 +7,7 @@ from hearthstone.combat import WarParty, fight_boards
 from hearthstone.hero_pool import *
 from hearthstone.player import Player
 from hearthstone.randomizer import DefaultRandomizer
+from hearthstone.tavern import Tavern
 
 
 class CombatTests(unittest.TestCase):
@@ -547,8 +548,8 @@ class CombatTests(unittest.TestCase):
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 36)
-        self.assertEqual(adams_war_party.board[1].attack, adams_war_party.board[1].base_attack)
-        self.assertEqual(adams_war_party.board[1].health, 1)
+        self.assertEqual(adams_war_party.board[2].attack, adams_war_party.board[2].base_attack)
+        self.assertEqual(adams_war_party.board[2].health, 1)
 
     def test_golden_bronze_warden(self):
         adam = Player.new_player_with_hero(None, "Adam")
@@ -564,8 +565,8 @@ class CombatTests(unittest.TestCase):
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 36)
-        self.assertEqual(adams_war_party.board[0].attack, adams_war_party.board[0].base_attack * 2)
-        self.assertEqual(adams_war_party.board[0].health, 1)
+        self.assertEqual(adams_war_party.board[1].attack, adams_war_party.board[1].base_attack * 2)
+        self.assertEqual(adams_war_party.board[1].health, 1)
 
     def test_replicating_menace(self):
         adam = Player.new_player_with_hero(None, "Adam")

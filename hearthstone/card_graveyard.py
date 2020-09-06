@@ -13,7 +13,7 @@ class ArcaneCannon(MonsterCard):
     cant_attack = True
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
-        if event.event is EVENTS.AFTER_ATTACK:
+        if event.event is EVENTS.AFTER_ATTACK_DAMAGE:
             count = 2 if self.golden else 1
             for _ in range(count):
                 if event.card in context.friendly_war_party.board:

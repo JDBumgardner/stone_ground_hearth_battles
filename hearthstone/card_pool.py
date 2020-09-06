@@ -785,7 +785,7 @@ class MonstrousMacaw(MonsterCard):
     base_health = 3
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
-        if event.event is EVENTS.AFTER_ATTACK and self == event.card:
+        if event.event is EVENTS.AFTER_ATTACK_DAMAGE and self == event.card:
             # self.resolve_death(context, event.foe)
             deathrattle_triggers = 2 if self.golden else 1
             for _ in range(deathrattle_triggers):
@@ -1401,7 +1401,7 @@ class NatPagleExtremeAngler(MonsterCard):
     base_health = 5
 
     def handle_event_powers(self, event: CardEvent, context: CombatPhaseContext):  # TODO: does this gain from the deck?
-        if event.event is EVENTS.AFTER_ATTACK and self == event.card and event.foe.is_dying():
+        if event.event is EVENTS.AFTER_ATTACK_DAMAGE and self == event.card and event.foe.is_dying():
             all_minions = PrintingPress.all_types()
             for _ in range(2 if self.golden else 1):
                 if context.friendly_war_party.owner.room_in_hand():
@@ -1500,7 +1500,7 @@ class YoHoOgre(MonsterCard):
     base_taunt = True
 
     def handle_event_powers(self, event: CardEvent, context: CombatPhaseContext):
-        if event.event is EVENTS.WAS_ATTACKED and event.card == self and not self.is_dying():
+        if event.event is EVENTS.AFTER_ATTACK_DEATHRATTLES and event.card == self and not self.is_dying():
             attacking_war_party = context.friendly_war_party
             defending_war_party = context.enemy_war_party
             attacker = self
@@ -1532,7 +1532,7 @@ class HangryDragon(MonsterCard):
     base_health = 4
 
     def handle_event_powers(self, event: CardEvent, context: BuyPhaseContext):
-        if event.event is EVENTS.BUY_START and context.owner.won_last_combat:
+        if event.event is EVENTS.END_COMBAT and event.won_combat:
             bonus = 4 if self.golden else 2
             self.attack += bonus
             self.health += bonus

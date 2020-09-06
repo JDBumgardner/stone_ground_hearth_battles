@@ -15,7 +15,7 @@ class EVENTS(enum.Enum):
     COMBAT_START = 5
     BUY_START = 6
     ON_ATTACK = 7
-    AFTER_ATTACK = 12
+    AFTER_ATTACK_DAMAGE = 12
     SELL = 8
     BUY = 9
     BUY_END = 10
@@ -23,7 +23,8 @@ class EVENTS(enum.Enum):
     DIVINE_SHIELD_LOST = 13
     PLAYER_DAMAGED = 14
     RETURN_TO_HAND = 15
-    WAS_ATTACKED = 16
+    AFTER_ATTACK_DEATHRATTLES = 16
+    END_COMBAT = 17
 
 
 class BuyPhaseContext:
