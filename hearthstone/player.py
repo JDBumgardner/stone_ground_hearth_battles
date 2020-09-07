@@ -104,7 +104,7 @@ class Player:
         if card.golden:
             self.triple_rewards.append(TripleRewardCard(min(self.tavern_tier + 1, 6)))
         target_cards = [self.in_play[target] for target in targets]
-        self.broadcast_buy_phase_event(CardEvent(card, EVENTS.SUMMON_BUY, target_cards))
+        self.broadcast_buy_phase_event(CardEvent(EVENTS.SUMMON_BUY, card, target_cards))
 
     def validate_summon_from_hand(self, index: HandIndex, targets: Optional[List[BoardIndex]] = None) -> bool:
         if targets is None:
@@ -168,7 +168,7 @@ class Player:
         if self.room_on_board():
             self.in_play.append(monster)
             self.check_golden(type(monster))
-            self.broadcast_buy_phase_event(CardEvent(monster, EVENTS.SUMMON_BUY))
+            self.broadcast_buy_phase_event(CardEvent(EVENTS.SUMMON_BUY, monster))
 
     def room_on_board(self):
         return len(self.in_play) < self.maximum_board_size
@@ -187,7 +187,7 @@ class Player:
         card = self.store.pop(index)
         self.coins -= self.minion_cost
         self.hand.append(card)
-        event = CardEvent(card, EVENTS.BUY)
+        event = CardEvent(EVENTS.BUY, card)
         self.broadcast_buy_phase_event(event)
         self.check_golden(type(card))
 
@@ -206,7 +206,7 @@ class Player:
         if len(cards) == 3:
             for card in cards:
                 if card in self.in_play:
-                    self.broadcast_buy_phase_event(CardEvent(card, EVENTS.RETURN_TO_HAND))
+                    self.broadcast_buy_phase_event(CardEvent(EVENTS.RETURN_TO_HAND, card))
                     self.in_play.remove(card)
                 if card in self.hand:
                     self.hand.remove(card)
@@ -232,7 +232,7 @@ class Player:
 
     def sell_minion(self, index: BoardIndex):
         assert self.validate_sell_minion(index)
-        self.broadcast_buy_phase_event(CardEvent(self.in_play[index], EVENTS.SELL))
+        self.broadcast_buy_phase_event(CardEvent(EVENTS.SELL, self.in_play[index]))
         card = self.in_play.pop(index)
         self.coins += card.redeem_rate
         self.tavern.deck.return_cards(card.dissolve())
@@ -278,7 +278,7 @@ class Player:
     def take_damage(self, damage: int):
         if not self.immune:
             self.health -= damage
-            self.broadcast_buy_phase_event(CardEvent(None, EVENTS.PLAYER_DAMAGED))
+            self.broadcast_buy_phase_event(CardEvent(EVENTS.PLAYER_DAMAGED))
 
     def redeem_gold_coin(self):
         if self.gold_coins >= 1:

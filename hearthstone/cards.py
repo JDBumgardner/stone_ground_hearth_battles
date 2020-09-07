@@ -31,12 +31,15 @@ class PrintingPress:
 
 
 class CardEvent:
-    def __init__(self, card: Optional['MonsterCard'], event: EVENTS, targets: Optional[List['MonsterCard']] = None, foe: Optional['MonsterCard'] = None, won_combat: Optional[bool] = False):
-        self.card = card
+    def __init__(self, event: EVENTS, card: Optional['MonsterCard'] = None, targets: Optional[List['MonsterCard']] = None, foe: Optional['MonsterCard'] = None, won_combat: Optional[bool] = None):
         self.event = EVENTS(event)
-        self.targets = targets
-        self.foe = foe  # for combat-related events
-        self.won_combat = won_combat
+        self.card = card
+        if targets is not None:
+            self.targets = targets
+        if foe is not None:
+            self.foe = foe  # for combat-related events
+        if won_combat is not None:
+            self.won_combat = won_combat
 
 
 CardType = make_metaclass(PrintingPress.add_card, ("Card", "MonsterCard"))
@@ -121,22 +124,22 @@ class MonsterCard(Card):
     def take_damage(self, damage: int, combat_phase_context: CombatPhaseContext, foe: Optional['MonsterCard'] = None, defending: Optional[bool] = True):
         if self.divine_shield and not damage <= 0:
             self.divine_shield = False
-            combat_phase_context.broadcast_combat_event(CardEvent(self, EVENTS.DIVINE_SHIELD_LOST, foe=foe))
+            combat_phase_context.broadcast_combat_event(CardEvent(EVENTS.DIVINE_SHIELD_LOST, self, foe=foe))
         else:
             self.health -= damage
             if foe is not None and foe.poisonous and self.health > 0:
                 self.health = 0
             if defending and foe is not None and self.health < 0:
                 foe.overkill(combat_phase_context)  # overkill doesn't trigger when the attacker takes damage, so the friendly war party is always the attacker's and the enemy war party is always the defender's
-            combat_phase_context.broadcast_combat_event(CardEvent(self, EVENTS.CARD_DAMAGED, foe=foe))
+            combat_phase_context.broadcast_combat_event(CardEvent(EVENTS.CARD_DAMAGED, self, foe=foe))
 
     def resolve_death(self, context: CombatPhaseContext, foe: Optional['MonsterCard'] = None):
         if self.health <= 0 and not self.dead:
             self.dead = True
-            card_death_event = CardEvent(self, EVENTS.DIES, foe=foe)
+            card_death_event = CardEvent(EVENTS.DIES, self, foe=foe)
             context.broadcast_combat_event(card_death_event)
 
-    def resolve_reborn(self, context: CombatPhaseContext):
+    def trigger_reborn(self, context: CombatPhaseContext):
         index = context.friendly_war_party.get_index(self)
         for i in range(context.summon_minion_multiplier()):
             reborn_self = type(self)()
@@ -145,8 +148,6 @@ class MonsterCard(Card):
             reborn_self.health = 1
             reborn_self.reborn = False
             context.friendly_war_party.summon_in_combat(reborn_self, context, index + i + 1)
-        # context.friendly_war_party.board.remove(self)
-        # context.friendly_war_party.board.insert(index, reborn_self)
 
     def change_state(self, new_state):
         self.tavern.run_callbacks(self, new_state)
@@ -159,7 +160,7 @@ class MonsterCard(Card):
                     for deathrattle in self.deathrattles:
                         deathrattle(self, context)
                 if self.reborn:
-                    self.resolve_reborn(context)
+                    self.trigger_reborn(context)
             elif event.event is EVENTS.SUMMON_BUY:
                 if self.magnetic:
                     self.magnetize(event.targets, context)
