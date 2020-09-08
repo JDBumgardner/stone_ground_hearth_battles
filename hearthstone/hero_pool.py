@@ -185,8 +185,8 @@ class TheRatKing(Hero):
 
     def handle_event(self, event: CardEvent, context: BuyPhaseContext):
         if event.event is EVENTS.BUY_START:
-            possible_types = [monster_type for monster_type in list(MONSTER_TYPES) if monster_type != self.current_type and monster_type != MONSTER_TYPES.ALL]
-            self.current_type = context.randomizer.select_monster_type(possible_types, context.owner.tavern.turn_count)
+            available_types = [monster_type for monster_type in MONSTER_TYPES.single_types() if monster_type != self.current_type]
+            self.current_type = context.randomizer.select_monster_type(available_types, context.owner.tavern.turn_count)
 
         if event.event is EVENTS.BUY and event.card.monster_type == self.current_type:
             event.card.attack += 1

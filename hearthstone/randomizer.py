@@ -20,7 +20,7 @@ class Randomizer:
     def select_attack_target(self, defenders: List['Card']) -> 'MonsterCard':
         raise NotImplementedError()
 
-    def select_friendly_minion(self, friendly_minions: List['Card']) -> 'Card':
+    def select_friendly_minion(self, friendly_minions: List['MonsterCard']) -> 'MonsterCard':
         raise NotImplementedError()
 
     def select_enemy_minion(self, enemy_minions: List['Card']) -> 'MonsterCard':
@@ -68,7 +68,7 @@ class DefaultRandomizer(Randomizer):
     def select_attack_target(self, defenders: List['Card']) -> 'Card':
         return self.rand.choice(defenders)
 
-    def select_friendly_minion(self, friendly_minions: List['Card']) -> 'Card':
+    def select_friendly_minion(self, friendly_minions: List['MonsterCard']) -> 'MonsterCard':
         return self.rand.choice(friendly_minions)
 
     def select_enemy_minion(self, enemy_minions: List['Card']) -> 'Card':
