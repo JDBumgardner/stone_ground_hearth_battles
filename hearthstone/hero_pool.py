@@ -1,6 +1,6 @@
 from typing import Union, Tuple
 
-from hearthstone.card_pool import Amalgam
+from hearthstone.card_pool import Amalgam, one_minion_per_type
 from hearthstone.cards import CardEvent, PrintingPress
 from hearthstone.events import BuyPhaseContext, CombatPhaseContext, EVENTS
 from hearthstone.hero import Hero
@@ -239,3 +239,11 @@ class CaptainEudora(Hero):
             random_minion.golden_transformation([])
             context.owner.gain_card(random_minion)
             self.digs_left = 5
+
+
+class QueenWagtoggle(Hero):
+    power_cost = 1
+
+    def hero_power_impl(self, context: BuyPhaseContext):
+        for card in one_minion_per_type(context):
+            card.attack += 2

@@ -1746,26 +1746,11 @@ class CardTests(unittest.TestCase):
         player_1 = tavern.add_player_with_hero("Joe", TheCurator())
         player_2 = tavern.add_player_with_hero("Donald")
         tavern.randomizer = self.TestLightfangEnforcerRandomizer()
-        tavern.buying_step()
-        player_1.purchase(StoreIndex(0))
-        player_1.summon_from_hand(HandIndex(0))
-        tavern.combat_step()
-        tavern.buying_step()
-        player_1.purchase(StoreIndex(0))
-        player_1.summon_from_hand(HandIndex(0))
-        tavern.combat_step()
-        tavern.buying_step()
-        player_1.purchase(StoreIndex(0))
-        player_1.summon_from_hand(HandIndex(0))
-        tavern.combat_step()
-        tavern.buying_step()
-        player_1.purchase(StoreIndex(0))
-        player_1.summon_from_hand(HandIndex(0))
-        tavern.combat_step()
-        tavern.buying_step()
-        player_1.purchase(StoreIndex(0))
-        player_1.summon_from_hand(HandIndex(0))
-        tavern.combat_step()
+        for _ in range(5):
+            tavern.buying_step()
+            player_1.purchase(StoreIndex(0))
+            player_1.summon_from_hand(HandIndex(0))
+            tavern.combat_step()
         self.upgrade_to_tier(tavern, 5)
         tavern.randomizer = RepeatedCardForcer([LightfangEnforcer, AlleyCat])
         tavern.buying_step()
@@ -1795,22 +1780,24 @@ class CardTests(unittest.TestCase):
             if round_number == 0:
                 return force_card(cards, MurlocTidehunter)
             elif round_number == 1:
-                return force_card(cards, ScavengingHyena)
+                return force_card(cards, FiendishServant)
             elif round_number == 2:
                 return force_card(cards, DragonspawnLieutenant)
             elif round_number == 3:
                 return force_card(cards, MechaRoo)
             else:
-                return cards[0]
+                return force_card(cards, AlleyCat)
 
         def select_friendly_minion(self, friendly_minions: List[Card]) -> Card:
             minion_types = [type(card) for card in friendly_minions]
             if MurlocTidehunter in minion_types:
                 return force_card(friendly_minions, MurlocTidehunter)
-            elif ScavengingHyena in minion_types:
-                return force_card(friendly_minions, ScavengingHyena)
+            elif FiendishServant in minion_types:
+                return force_card(friendly_minions, FiendishServant)
             elif DragonspawnLieutenant in minion_types:
                 return force_card(friendly_minions, DragonspawnLieutenant)
+            elif AlleyCat in minion_types:
+                return force_card(friendly_minions, AlleyCat)
             else:
                 return friendly_minions[0]
 
@@ -1819,22 +1806,11 @@ class CardTests(unittest.TestCase):
         player_1 = tavern.add_player_with_hero("Joe", TheCurator())
         player_2 = tavern.add_player_with_hero("Donald")
         tavern.randomizer = self.TestMenagerieRandomizer()
-        tavern.buying_step()
-        player_1.purchase(StoreIndex(0))
-        player_1.summon_from_hand(HandIndex(0))
-        tavern.combat_step()
-        tavern.buying_step()
-        player_1.purchase(StoreIndex(0))
-        player_1.summon_from_hand(HandIndex(0))
-        tavern.combat_step()
-        tavern.buying_step()
-        player_1.purchase(StoreIndex(0))
-        player_1.summon_from_hand(HandIndex(0))
-        tavern.combat_step()
-        tavern.buying_step()
-        player_1.purchase(StoreIndex(0))
-        player_1.summon_from_hand(HandIndex(0))
-        tavern.combat_step()
+        for _ in range(4):
+            tavern.buying_step()
+            player_1.purchase(StoreIndex(0))
+            player_1.summon_from_hand(HandIndex(0))
+            tavern.combat_step()
         self.upgrade_to_tier(tavern, 2)
         tavern.randomizer = RepeatedCardForcer([MenagerieMug])
         tavern.buying_step()
@@ -1842,7 +1818,7 @@ class CardTests(unittest.TestCase):
         player_1.purchase(StoreIndex(0))
         player_1.summon_from_hand(HandIndex(0))
         tavern.combat_step()
-        self.assertCardListEquals(player_1.in_play, [Amalgam, MurlocTidehunter, MurlocScout, ScavengingHyena,
+        self.assertCardListEquals(player_1.in_play, [Amalgam, MurlocTidehunter, MurlocScout, FiendishServant,
                                                      DragonspawnLieutenant, MechaRoo, MenagerieMug])
         self.assertEqual(player_1.in_play[0].attack, player_1.in_play[0].base_attack)
         self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health)
@@ -1864,22 +1840,11 @@ class CardTests(unittest.TestCase):
         player_1 = tavern.add_player_with_hero("Joe", TheCurator())
         player_2 = tavern.add_player_with_hero("Donald")
         tavern.randomizer = self.TestMenagerieRandomizer()
-        tavern.buying_step()
-        player_1.purchase(StoreIndex(0))
-        player_1.summon_from_hand(HandIndex(0))
-        tavern.combat_step()
-        tavern.buying_step()
-        player_1.purchase(StoreIndex(0))
-        player_1.summon_from_hand(HandIndex(0))
-        tavern.combat_step()
-        tavern.buying_step()
-        player_1.purchase(StoreIndex(0))
-        player_1.summon_from_hand(HandIndex(0))
-        tavern.combat_step()
-        tavern.buying_step()
-        player_1.purchase(StoreIndex(0))
-        player_1.summon_from_hand(HandIndex(0))
-        tavern.combat_step()
+        for _ in range(4):
+            tavern.buying_step()
+            player_1.purchase(StoreIndex(0))
+            player_1.summon_from_hand(HandIndex(0))
+            tavern.combat_step()
         self.upgrade_to_tier(tavern, 4)
         tavern.randomizer = RepeatedCardForcer([MenagerieJug])
         tavern.buying_step()
@@ -1887,7 +1852,7 @@ class CardTests(unittest.TestCase):
         player_1.purchase(StoreIndex(0))
         player_1.summon_from_hand(HandIndex(0))
         tavern.combat_step()
-        self.assertCardListEquals(player_1.in_play, [Amalgam, MurlocTidehunter, MurlocScout, ScavengingHyena,
+        self.assertCardListEquals(player_1.in_play, [Amalgam, MurlocTidehunter, MurlocScout, FiendishServant,
                                                      DragonspawnLieutenant, MechaRoo, MenagerieJug])
         self.assertEqual(player_1.in_play[0].attack, player_1.in_play[0].base_attack)
         self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health)
@@ -1900,6 +1865,35 @@ class CardTests(unittest.TestCase):
         self.assertEqual(player_1.in_play[4].attack, player_1.in_play[4].base_attack + 2)
         self.assertEqual(player_1.in_play[4].health, player_1.in_play[4].base_health + 2)
         self.assertEqual(player_1.in_play[5].attack, player_1.in_play[5].base_attack)
+        self.assertEqual(player_1.in_play[5].health, player_1.in_play[5].base_health)
+        self.assertEqual(player_1.in_play[6].attack, player_1.in_play[6].base_attack)
+        self.assertEqual(player_1.in_play[6].health, player_1.in_play[6].base_health)
+
+    def test_queen_wagtoggle(self):
+        tavern = Tavern()
+        player_1 = tavern.add_player_with_hero("Joe", QueenWagtoggle())
+        player_2 = tavern.add_player_with_hero("Donald")
+        tavern.randomizer = self.TestMenagerieRandomizer()
+        for _ in range(5):
+            tavern.buying_step()
+            player_1.purchase(StoreIndex(0))
+            player_1.summon_from_hand(HandIndex(0))
+            tavern.combat_step()
+        tavern.buying_step()
+        player_1.hero_power()
+        self.assertCardListEquals(player_1.in_play, [MurlocTidehunter, MurlocScout, FiendishServant,
+                                                     DragonspawnLieutenant, MechaRoo, AlleyCat, TabbyCat])
+        self.assertEqual(player_1.in_play[0].attack, player_1.in_play[0].base_attack + 2)
+        self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health)
+        self.assertEqual(player_1.in_play[1].attack, player_1.in_play[1].base_attack)
+        self.assertEqual(player_1.in_play[1].health, player_1.in_play[1].base_health)
+        self.assertEqual(player_1.in_play[2].attack, player_1.in_play[2].base_attack + 2)
+        self.assertEqual(player_1.in_play[2].health, player_1.in_play[2].base_health)
+        self.assertEqual(player_1.in_play[3].attack, player_1.in_play[3].base_attack + 2)
+        self.assertEqual(player_1.in_play[3].health, player_1.in_play[3].base_health)
+        self.assertEqual(player_1.in_play[4].attack, player_1.in_play[4].base_attack + 2)
+        self.assertEqual(player_1.in_play[4].health, player_1.in_play[4].base_health)
+        self.assertEqual(player_1.in_play[5].attack, player_1.in_play[5].base_attack + 2)
         self.assertEqual(player_1.in_play[5].health, player_1.in_play[5].base_health)
         self.assertEqual(player_1.in_play[6].attack, player_1.in_play[6].base_attack)
         self.assertEqual(player_1.in_play[6].health, player_1.in_play[6].base_health)

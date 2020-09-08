@@ -7,6 +7,21 @@ from hearthstone.events import BuyPhaseContext, CombatPhaseContext, EVENTS
 from hearthstone.monster_types import MONSTER_TYPES
 
 
+def one_minion_per_type(context: 'BuyPhaseContext') -> List['MonsterCard']:
+    minions = []
+    filler_minions = [card for card in context.owner.in_play if card.monster_type == MONSTER_TYPES.ALL]
+    for minion_type in MONSTER_TYPES.single_types():
+        minions_by_type = [card for card in context.owner.in_play if card.monster_type == minion_type]
+        if minions_by_type:
+            card = context.randomizer.select_friendly_minion(minions_by_type)
+            minions.append(card)
+        elif filler_minions:
+            card = context.randomizer.select_friendly_minion(filler_minions)
+            filler_minions.remove(card)
+            minions.append(card)
+    return minions
+
+
 class MamaBear(MonsterCard):
     tier = 5
     monster_type = MONSTER_TYPES.BEAST
@@ -1546,18 +1561,9 @@ class LightfangEnforcer(MonsterCard):
 
     def handle_event_powers(self, event: CardEvent, context: BuyPhaseContext):
         if event.event is EVENTS.BUY_END:
-            filler_minions = [card for card in context.owner.in_play if card.monster_type == MONSTER_TYPES.ALL]
-            for minion_type in MONSTER_TYPES.single_types():
-                minions_by_type = [card for card in context.owner.in_play if card.monster_type == minion_type]
-                if minions_by_type:
-                    card = context.randomizer.select_friendly_minion(minions_by_type)
-                    card.attack += 4 if self.golden else 2
-                    card.health += 2 if self.golden else 1
-                elif filler_minions:  # TODO: My understanding is that minions with ALL type fill in for missing types... is this correct?
-                    card = context.randomizer.select_friendly_minion(filler_minions)
-                    filler_minions.remove(card)
-                    card.attack += 4 if self.golden else 2
-                    card.health += 2 if self.golden else 1
+            for card in one_minion_per_type(context):
+                card.attack += 4 if self.golden else 2
+                card.health += 2 if self.golden else 1
 
 
 class MenagerieMug(MonsterCard):
@@ -1568,22 +1574,11 @@ class MenagerieMug(MonsterCard):
 
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
         bonus = 2 if self.golden else 1
-        one_minion_per_type = []
-        filler_minions = [card for card in context.owner.in_play if card.monster_type == MONSTER_TYPES.ALL]
-        for minion_type in MONSTER_TYPES.single_types():
-            minions_by_type = [card for card in context.owner.in_play if card.monster_type == minion_type]
-            if minions_by_type:
-                card = context.randomizer.select_friendly_minion(minions_by_type)
-                one_minion_per_type.append(card)
-            elif filler_minions:  # TODO: See lightfang note
-                card = context.randomizer.select_friendly_minion(filler_minions)
-                filler_minions.remove(card)
-                one_minion_per_type.append(card)
-
+        available_minions = one_minion_per_type(context)
         for _ in range(3):
-            if one_minion_per_type:
-                card = context.randomizer.select_friendly_minion(one_minion_per_type)
-                one_minion_per_type.remove(card)
+            if available_minions:
+                card = context.randomizer.select_friendly_minion(available_minions)
+                available_minions.remove(card)
                 card.attack += bonus
                 card.health += bonus
 
@@ -1596,21 +1591,10 @@ class MenagerieJug(MonsterCard):
 
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
         bonus = 4 if self.golden else 2
-        one_minion_per_type = []
-        filler_minions = [card for card in context.owner.in_play if card.monster_type == MONSTER_TYPES.ALL]
-        for minion_type in MONSTER_TYPES.single_types():
-            minions_by_type = [card for card in context.owner.in_play if card.monster_type == minion_type]
-            if minions_by_type:
-                card = context.randomizer.select_friendly_minion(minions_by_type)
-                one_minion_per_type.append(card)
-            elif filler_minions:  # TODO: See lightfang note
-                card = context.randomizer.select_friendly_minion(filler_minions)
-                filler_minions.remove(card)
-                one_minion_per_type.append(card)
-
+        available_minions = one_minion_per_type(context)
         for _ in range(3):
-            if one_minion_per_type:
-                card = context.randomizer.select_friendly_minion(one_minion_per_type)
-                one_minion_per_type.remove(card)
+            if available_minions:
+                card = context.randomizer.select_friendly_minion(available_minions)
+                available_minions.remove(card)
                 card.attack += bonus
                 card.health += bonus
