@@ -288,4 +288,5 @@ class CardList:
 
 class ZONES(enum.Enum):
     STORE = 1
-    BOARD = 2
+    HAND = 2
+    BOARD = 3

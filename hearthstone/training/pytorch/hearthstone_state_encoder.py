@@ -7,7 +7,7 @@ import torch
 
 from hearthstone.agent import TripleRewardsAction, TavernUpgradeAction, RerollAction, \
     EndPhaseAction, SummonAction, BuyAction, SellAction, Action
-from hearthstone.cards import Card
+from hearthstone.cards import Card, ZONES
 from hearthstone.monster_types import MONSTER_TYPES
 from hearthstone.player import Player, StoreIndex, HandIndex, BoardIndex
 
@@ -37,14 +37,8 @@ MAX_ENCODED_HAND = 10
 MAX_ENCODED_BOARD = 7
 
 
-class CardLocation(enum.Enum):
-    STORE = 1
-    HAND = 2
-    BOARD = 3
-
-
 class LocatedCard:
-    def __init__(self, card: Card, location: CardLocation):
+    def __init__(self, card: Card, location: ZONES):
         self.card = card
         self.location = location
 
@@ -186,7 +180,7 @@ def default_card_encoding() -> Feature:
         ScalarFeature(lambda card: float(card.card.taunt)),
         ScalarFeature(lambda card: float(card.card.divine_shield)),
         OnehotFeature(lambda card: enum_to_int(card.card.monster_type), len(MONSTER_TYPES) + 1),
-        OnehotFeature(lambda card: enum_to_int(card.location), len(CardLocation) + 1),
+        OnehotFeature(lambda card: enum_to_int(card.location), len(ZONES) + 1),
     ])
 
 
@@ -214,13 +208,13 @@ def default_cards_encoding() -> Feature:
     """
     return CombinedFeature([
         ListOfFeatures(
-            lambda player: [LocatedCard(card, CardLocation.STORE) for card in player.store],
+            lambda player: [LocatedCard(card, ZONES.STORE) for card in player.store],
             default_card_encoding(), MAX_ENCODED_STORE),
         ListOfFeatures(
-            lambda player: [LocatedCard(card, CardLocation.HAND) for card in player.hand],
+            lambda player: [LocatedCard(card, ZONES.HAND) for card in player.hand],
             default_card_encoding(), MAX_ENCODED_HAND),
         ListOfFeatures(
-            lambda player: [LocatedCard(card, CardLocation.BOARD) for card in player.in_play],
+            lambda player: [LocatedCard(card, ZONES.BOARD) for card in player.in_play],
             default_card_encoding(), MAX_ENCODED_BOARD)
     ])
 
