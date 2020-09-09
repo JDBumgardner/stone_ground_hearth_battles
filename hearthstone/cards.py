@@ -1,3 +1,4 @@
+import enum
 import itertools
 from collections import defaultdict
 from typing import Set, List, Optional, Callable, Type, Union, Iterator
@@ -283,3 +284,8 @@ class CardList:
 
     def __len__(self) -> int:
         return sum(len(value) for value in self.cards_by_tier.values())
+
+
+class ZONES(enum.Enum):
+    STORE = 1
+    BOARD = 2
