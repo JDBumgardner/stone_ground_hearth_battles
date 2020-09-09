@@ -1,5 +1,5 @@
 import typing
-from typing import List, Optional, Generator
+from typing import List, Optional, Generator, Union
 
 from hearthstone.player import StoreIndex, HandIndex, BoardIndex
 
@@ -103,14 +103,17 @@ class TavernUpgradeAction(Action):
 
 
 class HeroPowerAction(Action):
+    def __init__(self, target: Optional[Union['BoardIndex', 'StoreIndex']] = None):
+        self.target = target
+
     def __repr__(self):
         return f"HeroPower()"
 
     def apply(self, player: 'Player'):
-        player.hero_power()
+        player.hero_power(self.target)
 
     def valid(self, player: 'Player') -> bool:
-        return player.validate_hero_power()
+        return player.validate_hero_power(self.target)
 
 
 class TripleRewardsAction(Action):
@@ -193,15 +196,16 @@ def generate_valid_actions(player: 'Player') -> Generator[Action, None, None]:
 
 def generate_all_actions(player: 'Player') -> Generator[Action, None, None]:
     yield TripleRewardsAction()
-    yield HeroPowerAction()
     yield TavernUpgradeAction()
     yield RerollAction()
     yield EndPhaseAction(True)
     yield EndPhaseAction(False)
     for index in range(len(player.in_play)):
         yield SellAction(BoardIndex(index))
+        yield HeroPowerAction(BoardIndex(index))
     for index in range(len(player.store)):
         yield BuyAction(StoreIndex(index))
+        yield HeroPowerAction(StoreIndex(index))
     for index, card in enumerate(player.hand):
         valid_target_indices = [index for index, target in enumerate(player.in_play) if card.validate_battlecry_target(target)]
         num_battlecry_targets = min(card.num_battlecry_targets, len(valid_target_indices))

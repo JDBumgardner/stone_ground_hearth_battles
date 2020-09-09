@@ -3,6 +3,7 @@ from typing import List, Optional
 from hearthstone.agent import Agent, Action, BuyAction, SummonAction, EndPhaseAction, RerollAction, \
     SellAction, RedeemGoldCoinAction
 from hearthstone.agent import TavernUpgradeAction, HeroPowerAction, TripleRewardsAction
+from hearthstone.cards import ZONES
 from hearthstone.player import HandIndex, BoardIndex, StoreIndex
 
 if typing.TYPE_CHECKING:
@@ -131,7 +132,23 @@ class UserAgent(Agent):
         elif split_list[0] == "u":
             return TavernUpgradeAction()
         elif split_list[0] == "h":
-            return HeroPowerAction()
+            if not 0 < len(split_list) <= 2:
+                return None
+            try:
+                target = int(split_list[1])
+            except IndexError:
+                target = None
+            except ValueError:
+                return None
+            if player.hero.power_target_location == ZONES.BOARD and target is not None:
+                if not 0 <= target < len(player.in_play):
+                    return None
+                target = BoardIndex(target)
+            elif player.hero.power_target_location == ZONES.STORE and target is not None:
+                if not 0 <= target < len(player.store):
+                    return None
+                target = StoreIndex(target)
+            return HeroPowerAction(target)
         elif split_list[0] == "t":
             return TripleRewardsAction()
         elif split_list[0] == "c":

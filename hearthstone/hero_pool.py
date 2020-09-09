@@ -1,16 +1,17 @@
 from typing import Union, Tuple
 
 from hearthstone.card_pool import Amalgam
-from hearthstone.cards import PrintingPress, one_minion_per_type
+from hearthstone.cards import PrintingPress, one_minion_per_type, MonsterCard, ZONES
 from hearthstone.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
 from hearthstone.hero import Hero
 from hearthstone.monster_types import MONSTER_TYPES
+from hearthstone.player import BoardIndex, StoreIndex
 
 
 class Pyramad(Hero):
     power_cost = 1
 
-    def hero_power_impl(self, context: BuyPhaseContext):
+    def hero_power_impl(self, index: Union['BoardIndex', 'StoreIndex'], context: BuyPhaseContext):
         if context.owner.in_play:
             minion = context.randomizer.select_friendly_minion(context.owner.in_play)
             minion.health += 4
@@ -19,7 +20,7 @@ class Pyramad(Hero):
 class LordJaraxxus(Hero):
     power_cost = 1
 
-    def hero_power_impl(self, context: BuyPhaseContext):
+    def hero_power_impl(self, index: Union['BoardIndex', 'StoreIndex'], context: BuyPhaseContext):
         for minion in context.owner.in_play:
             if minion.check_type(MONSTER_TYPES.DEMON):
                 minion.attack += 1
@@ -75,7 +76,7 @@ class MillificentManastorm(Hero):
 class YoggSaron(Hero):
     power_cost = 2
 
-    def hero_power_impl(self, context: BuyPhaseContext):
+    def hero_power_impl(self, index: Union['BoardIndex', 'StoreIndex'], context: BuyPhaseContext):
         card = context.randomizer.select_from_store(context.owner.store)
         card.attack += 1
         card.health += 1
@@ -99,7 +100,7 @@ class PatchesThePirate(Hero):  # TODO: does this pull from the deck or does it a
         if event.event is EVENTS.BUY and event.card.check_type(MONSTER_TYPES.PIRATE):
             self.power_cost = max(0, self.power_cost - 1)
 
-    def hero_power_impl(self, context: BuyPhaseContext):
+    def hero_power_impl(self, index: Union['BoardIndex', 'StoreIndex'], context: BuyPhaseContext):
         pirates = [card for card in context.owner.tavern.deck.all_cards() if
                    card.check_type(MONSTER_TYPES.PIRATE) and card.tier <= context.owner.tavern_tier]
 
@@ -156,7 +157,7 @@ class LichBazhial(Hero):
     def hero_power_valid_impl(self, context: BuyPhaseContext):
         return context.owner.room_in_hand()
 
-    def hero_power_impl(self, context: BuyPhaseContext):
+    def hero_power_impl(self, index: Union['BoardIndex', 'StoreIndex'], context: BuyPhaseContext):
         context.owner.take_damage(2)
         context.owner.gold_coins += 1
 
@@ -164,7 +165,7 @@ class LichBazhial(Hero):
 class SkycapnKragg(Hero):
     power_cost = 0
 
-    def hero_power_impl(self, context: BuyPhaseContext):
+    def hero_power_impl(self, target: 'MonsterCard', context: BuyPhaseContext):
         if self.can_use_power:
             context.owner.coins += context.owner.tavern.turn_count + 1
             self.can_use_power = False
@@ -231,7 +232,7 @@ class MillhouseManastorm(Hero):
 class CaptainEudora(Hero):
     power_cost = 1
 
-    def hero_power_impl(self, context: BuyPhaseContext):
+    def hero_power_impl(self, index: Union['BoardIndex', 'StoreIndex'], context: BuyPhaseContext):
         self.digs_left -= 1
         if self.digs_left == 0:
             diggable_minions = [card for card in [minion() for minion in PrintingPress.all_types()] if card.tier <= context.owner.tavern_tier]
@@ -244,7 +245,7 @@ class CaptainEudora(Hero):
 class QueenWagtoggle(Hero):
     power_cost = 1
 
-    def hero_power_impl(self, context: 'BuyPhaseContext'):
+    def hero_power_impl(self, index: Union['BoardIndex', 'StoreIndex'], context: 'BuyPhaseContext'):
         for card in one_minion_per_type(context.owner.in_play, context.randomizer):
             card.attack += 2
 
@@ -256,3 +257,18 @@ class ForestWardenOmu(Hero):
     def handle_event(self, event: 'CardEvent', context: 'BuyPhaseContext'):
         if event.event is EVENTS.TAVERN_UPGRADE:
             context.owner.coins = min(context.owner.coins + 2, 10)
+
+
+class GeorgeTheFallen(Hero):
+    power_cost = 3
+    power_target_location = ZONES.BOARD
+
+    def hero_power_valid_impl(self, context: BuyPhaseContext):
+        if not len(context.owner.in_play) >= 1:
+            return False
+        if not [card for card in context.owner.in_play if not card.divine_shield]:
+            return False
+        return True
+
+    def hero_power_impl(self, index: 'BoardIndex', context: 'BuyPhaseContext'):
+        context.owner.in_play[index].divine_shield = True

@@ -1,11 +1,11 @@
 import itertools
 import typing
 from collections import defaultdict
-from typing import Optional, List, Callable, Type
+from typing import Optional, List, Callable, Type, Union
 
 from hearthstone import events
 from hearthstone.card_pool import DefenderOfArgus
-from hearthstone.cards import MonsterCard, Card
+from hearthstone.cards import MonsterCard, Card, ZONES
 from hearthstone.events import BuyPhaseContext, EVENTS, CardEvent
 from hearthstone.hero import EmptyHero
 from hearthstone.monster_types import MONSTER_TYPES
@@ -242,11 +242,11 @@ class Player:
     def validate_sell_minion(self, index: BoardIndex) -> bool:
         return index in range(len(self.in_play))
 
-    def hero_power(self):
-        self.hero.hero_power(BuyPhaseContext(self, self.tavern.randomizer))
+    def hero_power(self, index: Union['BoardIndex', 'StoreIndex']):
+        self.hero.hero_power(index, BuyPhaseContext(self, self.tavern.randomizer))
 
-    def validate_hero_power(self) -> bool:
-        return self.hero.hero_power_valid(BuyPhaseContext(self, self.tavern.randomizer))
+    def validate_hero_power(self, target: Union['BoardIndex', 'StoreIndex']) -> bool:
+        return self.hero.hero_power_valid(target, BuyPhaseContext(self, self.tavern.randomizer))
 
     def broadcast_buy_phase_event(self, event: CardEvent, randomizer: Optional['Randomizer'] = None):
         self.hero.handle_event(event, BuyPhaseContext(self, randomizer or self.tavern.randomizer))

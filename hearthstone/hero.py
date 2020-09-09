@@ -1,7 +1,13 @@
 from typing import Union, Tuple
 
+import typing
+
 from hearthstone.card_factory import make_metaclass
+from hearthstone.cards import MonsterCard, ZONES
 from hearthstone.events import BuyPhaseContext, CombatPhaseContext, CardEvent
+
+if typing.TYPE_CHECKING:
+    from hearthstone.player import BoardIndex, StoreIndex
 
 VALHALLA = []
 
@@ -15,6 +21,7 @@ class Hero(metaclass=HeroType):
     current_type = None
     buy_counter = 0
     digs_left = 5
+    power_target_location: 'ZONES' = None
 
     def __repr__(self):
         return str(type(self).__name__)
@@ -34,22 +41,32 @@ class Hero(metaclass=HeroType):
     def handle_event(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         pass
 
-    def hero_power(self, context: BuyPhaseContext):
-        assert self.hero_power_valid(context)
+    def hero_power(self, index: Union['BoardIndex', 'StoreIndex'], context: BuyPhaseContext):
+        assert self.hero_power_valid(index, context)
         context.owner.coins -= self.power_cost
         self.hero_power_used = True
-        self.hero_power_impl(context)
+        self.hero_power_impl(index, context)
 
-    def hero_power_impl(self, context: BuyPhaseContext):
+    def hero_power_impl(self, index: Union['BoardIndex', 'StoreIndex'], context: 'BuyPhaseContext'):
         pass
 
-    def hero_power_valid(self, context: BuyPhaseContext):
+    def hero_power_valid(self, index: Union['BoardIndex', 'StoreIndex'], context: 'BuyPhaseContext'):
         if context.owner.coins < self.power_cost:
             return False
         if self.hero_power_used:
             return False
         if not self.hero_power_valid_impl(context):
             return False
+        if index is None and self.power_target_location is not None:
+            return False
+        if index is not None:
+            if self.power_target_location is None:
+                return False
+            if self.power_target_location == ZONES.BOARD and index > len(context.owner.in_play):
+                return False
+            if self.power_target_location == ZONES.STORE and index > len(context.owner.store):
+                return False
+
         return True
 
     def hero_power_valid_impl(self, context: BuyPhaseContext):

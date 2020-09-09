@@ -1943,6 +1943,20 @@ class CardTests(unittest.TestCase):
         player_1.upgrade_tavern()
         self.assertEqual(player_1.coins, 2)
 
+    def test_george_the_fallen(self):
+        tavern = Tavern()
+        player_1 = tavern.add_player_with_hero("Dante_Kong", GeorgeTheFallen())
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.randomizer = RepeatedCardForcer([AlleyCat])
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        tavern.combat_step()
+        tavern.buying_step()
+        player_1.hero_power(BoardIndex(0))
+        self.assertTrue(player_1.in_play[0].divine_shield)
+        self.assertFalse(player_1.in_play[1].divine_shield)
+
 
 if __name__ == '__main__':
     unittest.main()
