@@ -3,8 +3,7 @@ import logging
 import typing
 from typing import Optional, List
 
-from hearthstone.cards import CardEvent
-from hearthstone.events import CombatPhaseContext, EVENTS
+from hearthstone.events import CombatPhaseContext, EVENTS, CardEvent
 
 if typing.TYPE_CHECKING:
     from hearthstone.player import Player

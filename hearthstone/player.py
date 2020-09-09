@@ -4,8 +4,8 @@ from collections import defaultdict
 from typing import Optional, List, Callable, Type
 
 from hearthstone.card_pool import DefenderOfArgus
-from hearthstone.cards import MonsterCard, CardEvent, Card
-from hearthstone.events import BuyPhaseContext, EVENTS
+from hearthstone.cards import MonsterCard, Card
+from hearthstone.events import BuyPhaseContext, EVENTS, CardEvent
 from hearthstone.hero import EmptyHero
 from hearthstone.monster_types import MONSTER_TYPES
 from hearthstone.triple_reward_card import TripleRewardCard

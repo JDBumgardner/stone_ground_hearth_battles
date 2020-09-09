@@ -1,10 +1,8 @@
 import itertools
 from collections import defaultdict
-from inspect import getmembers, isclass
 from typing import Set, List, Optional, Callable, Type, Union, Iterator
 
-from hearthstone import card_pool
-from hearthstone.events import BuyPhaseContext, CombatPhaseContext, EVENTS
+from hearthstone.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
 from hearthstone.card_factory import make_metaclass
 from hearthstone.monster_types import MONSTER_TYPES
 from hearthstone.randomizer import Randomizer
@@ -44,18 +42,6 @@ class PrintingPress:
     @classmethod
     def all_types(cls):
         return [card_type for card_type in cls.cards if not card_type.token]
-
-
-class CardEvent:
-    def __init__(self, event: EVENTS, card: Optional['MonsterCard'] = None, targets: Optional[List['MonsterCard']] = None, foe: Optional['MonsterCard'] = None, won_combat: Optional[bool] = None):
-        self.event = EVENTS(event)
-        self.card = card
-        if targets is not None:
-            self.targets = targets
-        if foe is not None:
-            self.foe = foe  # for combat-related events
-        if won_combat is not None:
-            self.won_combat = won_combat
 
 
 CardType = make_metaclass(PrintingPress.add_card, ("Card", "MonsterCard"))

@@ -1,8 +1,8 @@
 from typing import Union, Tuple
 
 from hearthstone.card_pool import Amalgam
-from hearthstone.cards import CardEvent, PrintingPress, one_minion_per_type
-from hearthstone.events import BuyPhaseContext, CombatPhaseContext, EVENTS
+from hearthstone.cards import PrintingPress, one_minion_per_type
+from hearthstone.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
 from hearthstone.hero import Hero
 from hearthstone.monster_types import MONSTER_TYPES
 

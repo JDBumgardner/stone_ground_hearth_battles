@@ -2,8 +2,8 @@ import enum
 from typing import Dict
 
 from hearthstone import combat, hero
-from hearthstone.events import EVENTS
-from hearthstone.cards import CardList, CardEvent, PrintingPress
+from hearthstone.events import EVENTS, CardEvent
+from hearthstone.cards import CardList, PrintingPress
 from hearthstone.combat import WarParty
 from hearthstone.hero import Hero, EmptyHero
 from hearthstone.player import Player

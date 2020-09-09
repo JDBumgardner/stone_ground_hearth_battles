@@ -2,8 +2,8 @@ import logging
 from typing import Union, List
 
 from hearthstone import combat
-from hearthstone.cards import MonsterCard, CardEvent, PrintingPress, one_minion_per_type
-from hearthstone.events import BuyPhaseContext, CombatPhaseContext, EVENTS
+from hearthstone.cards import MonsterCard, PrintingPress, one_minion_per_type
+from hearthstone.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
 from hearthstone.monster_types import MONSTER_TYPES
 
 
@@ -1572,6 +1572,7 @@ class MicroMummy(MonsterCard):
     def handle_event_powers(self, event: CardEvent, context: BuyPhaseContext):
         if event.event is EVENTS.BUY_END:
             other_minions = [card for card in context.owner.in_play if card != self]
-            card = context.randomizer.select_friendly_minion(other_minions)
-            bonus = 2 if self.golden else 1
-            card.attack += bonus
+            if other_minions:
+                card = context.randomizer.select_friendly_minion(other_minions)
+                bonus = 2 if self.golden else 1
+                card.attack += bonus

@@ -1,10 +1,12 @@
 import typing
 import enum
+
+from typing import Optional, List
+
 if typing.TYPE_CHECKING:
     from hearthstone.player import Player
     from hearthstone.randomizer import Randomizer
     from hearthstone.tavern import WarParty
-    from hearthstone.cards import CardEvent
 
 
 class EVENTS(enum.Enum):
@@ -77,3 +79,15 @@ class CombatPhaseContext:
         for card in self.friendly_war_party.board:
             deathrattle_multiplier *= card.deathrattle_multiplier()
         return deathrattle_multiplier
+
+
+class CardEvent:
+    def __init__(self, event: EVENTS, card: Optional['MonsterCard'] = None, targets: Optional[List['MonsterCard']] = None, foe: Optional['MonsterCard'] = None, won_combat: Optional[bool] = None):
+        self.event = EVENTS(event)
+        self.card = card
+        if targets is not None:
+            self.targets = targets
+        if foe is not None:
+            self.foe = foe  # for combat-related events
+        if won_combat is not None:
+            self.won_combat = won_combat

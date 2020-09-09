@@ -1,8 +1,7 @@
 from typing import Union, Tuple
 
-from hearthstone.cards import CardEvent
 from hearthstone.card_factory import make_metaclass
-from hearthstone.events import BuyPhaseContext, CombatPhaseContext
+from hearthstone.events import BuyPhaseContext, CombatPhaseContext, CardEvent
 
 VALHALLA = []
 

@@ -1,7 +1,7 @@
 from typing import Union, List
 
-from hearthstone.cards import MonsterCard, CardEvent, PrintingPress
-from hearthstone.events import EVENTS, BuyPhaseContext, CombatPhaseContext
+from hearthstone.cards import MonsterCard, PrintingPress
+from hearthstone.events import EVENTS, BuyPhaseContext, CombatPhaseContext, CardEvent
 from hearthstone.monster_types import MONSTER_TYPES
 
 
