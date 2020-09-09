@@ -103,17 +103,18 @@ class TavernUpgradeAction(Action):
 
 
 class HeroPowerAction(Action):
-    def __init__(self, target: Optional[Union['BoardIndex', 'StoreIndex']] = None):
-        self.target = target
+    def __init__(self, board_target: Optional['BoardIndex'] = None, store_target: Optional['StoreIndex'] = None):
+        self.board_target = board_target
+        self.store_target = store_target
 
     def __repr__(self):
         return f"HeroPower()"
 
     def apply(self, player: 'Player'):
-        player.hero_power(self.target)
+        player.hero_power(self.board_target, self.store_target)
 
     def valid(self, player: 'Player') -> bool:
-        return player.validate_hero_power(self.target)
+        return player.validate_hero_power(self.board_target, self.store_target)
 
 
 class TripleRewardsAction(Action):
@@ -200,6 +201,7 @@ def generate_all_actions(player: 'Player') -> Generator[Action, None, None]:
     yield RerollAction()
     yield EndPhaseAction(True)
     yield EndPhaseAction(False)
+    yield HeroPowerAction()
     for index in range(len(player.in_play)):
         yield SellAction(BoardIndex(index))
         yield HeroPowerAction(BoardIndex(index))

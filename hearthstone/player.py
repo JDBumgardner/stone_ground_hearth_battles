@@ -242,11 +242,11 @@ class Player:
     def validate_sell_minion(self, index: BoardIndex) -> bool:
         return index in range(len(self.in_play))
 
-    def hero_power(self, index: Union['BoardIndex', 'StoreIndex']):
-        self.hero.hero_power(index, BuyPhaseContext(self, self.tavern.randomizer))
+    def hero_power(self, board_index: Optional['BoardIndex'] = None, store_index: Optional['StoreIndex'] = None):
+        self.hero.hero_power(BuyPhaseContext(self, self.tavern.randomizer), board_index, store_index)
 
-    def validate_hero_power(self, target: Union['BoardIndex', 'StoreIndex']) -> bool:
-        return self.hero.hero_power_valid(target, BuyPhaseContext(self, self.tavern.randomizer))
+    def validate_hero_power(self, board_target: Optional['BoardIndex'] = None, store_target: Optional['StoreIndex'] = None) -> bool:
+        return self.hero.hero_power_valid(BuyPhaseContext(self, self.tavern.randomizer), board_target, store_target)
 
     def broadcast_buy_phase_event(self, event: CardEvent, randomizer: Optional['Randomizer'] = None):
         self.hero.handle_event(event, BuyPhaseContext(self, randomizer or self.tavern.randomizer))

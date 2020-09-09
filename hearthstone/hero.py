@@ -1,9 +1,9 @@
-from typing import Union, Tuple
+from typing import Union, Tuple, Optional
 
 import typing
 
 from hearthstone.card_factory import make_metaclass
-from hearthstone.cards import MonsterCard, ZONES
+from hearthstone.cards import ZONES
 from hearthstone.events import BuyPhaseContext, CombatPhaseContext, CardEvent
 
 if typing.TYPE_CHECKING:
@@ -21,7 +21,7 @@ class Hero(metaclass=HeroType):
     current_type = None
     buy_counter = 0
     digs_left = 5
-    power_target_location: 'ZONES' = None
+    power_target_location: Optional['ZONES'] = None
 
     def __repr__(self):
         return str(type(self).__name__)
@@ -41,32 +41,37 @@ class Hero(metaclass=HeroType):
     def handle_event(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         pass
 
-    def hero_power(self, index: Union['BoardIndex', 'StoreIndex'], context: BuyPhaseContext):
-        assert self.hero_power_valid(index, context)
+    def hero_power(self, context: BuyPhaseContext, board_index: Optional['BoardIndex'] = None,
+                   store_index: Optional['StoreIndex'] = None):
+        assert self.hero_power_valid(context, board_index, store_index)
         context.owner.coins -= self.power_cost
         self.hero_power_used = True
-        self.hero_power_impl(index, context)
+        self.hero_power_impl(context, board_index, store_index)
 
-    def hero_power_impl(self, index: Union['BoardIndex', 'StoreIndex'], context: 'BuyPhaseContext'):
+    def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                        store_index: Optional['StoreIndex'] = None):
         pass
 
-    def hero_power_valid(self, index: Union['BoardIndex', 'StoreIndex'], context: 'BuyPhaseContext'):
+    def hero_power_valid(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                         store_index: Optional['StoreIndex'] = None):
         if context.owner.coins < self.power_cost:
             return False
         if self.hero_power_used:
             return False
         if not self.hero_power_valid_impl(context):
             return False
-        if index is None and self.power_target_location is not None:
+        if board_index is None and store_index is None and self.power_target_location is not None:
             return False
-        if index is not None:
-            if self.power_target_location is None:
+        if board_index is not None:
+            if self.power_target_location is not ZONES.BOARD:
                 return False
-            if self.power_target_location == ZONES.BOARD and index > len(context.owner.in_play):
+            if self.power_target_location == ZONES.BOARD and board_index > len(context.owner.in_play):
                 return False
-            if self.power_target_location == ZONES.STORE and index > len(context.owner.store):
+        if store_index is not None:
+            if self.power_target_location is not ZONES.STORE:
                 return False
-
+            if self.power_target_location == ZONES.STORE and board_index > len(context.owner.store):
+                return False
         return True
 
     def hero_power_valid_impl(self, context: BuyPhaseContext):
