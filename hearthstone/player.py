@@ -85,6 +85,7 @@ class Player:
         self.tavern_tier += 1
         if self.tavern_tier < self.max_tier():
             self.tavern_upgrade_cost = self._tavern_upgrade_costs[self.tavern_tier]
+        self.broadcast_buy_phase_event(CardEvent(EVENTS.TAVERN_UPGRADE))
 
     def validate_upgrade_tavern(self) -> bool:
         if self.tavern_tier >= self.max_tier():

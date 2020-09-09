@@ -1,7 +1,7 @@
 import unittest
 from typing import Type
 
-from hearthstone.card_graveyard import Zoobot
+from hearthstone.card_graveyard import *
 from hearthstone.card_pool import *
 from hearthstone.cards import Card, CardType
 from hearthstone.hero_pool import *
@@ -1025,9 +1025,9 @@ class CardTests(unittest.TestCase):
         self.assertCardListEquals(player_1.in_play, [PackLeader])
         player_1.summon_from_hand(HandIndex(0))
         self.assertCardListEquals(player_1.in_play, [PackLeader, RabidSaurolisk])
-        self.assertEqual(player_1.in_play[0].attack, 3)
+        self.assertEqual(player_1.in_play[0].attack, 2)
         self.assertEqual(player_1.in_play[0].health, 3)
-        self.assertEqual(player_1.in_play[1].attack, 7)
+        self.assertEqual(player_1.in_play[1].attack, 6)
         self.assertEqual(player_1.in_play[1].health, 2)
 
     def test_salty_looter(self):
@@ -1897,6 +1897,51 @@ class CardTests(unittest.TestCase):
         self.assertEqual(player_1.in_play[5].health, player_1.in_play[5].base_health)
         self.assertEqual(player_1.in_play[6].attack, player_1.in_play[6].base_attack)
         self.assertEqual(player_1.in_play[6].health, player_1.in_play[6].base_health)
+
+    class TestMicroMummyRandomizer(DefaultRandomizer):
+        def select_draw_card(self, cards: List[Card], player_name: str, round_number: int) -> Card:
+            if round_number == 0:
+                return force_card(cards, AlleyCat)
+            else:
+                return force_card(cards, MicroMummy)
+
+        def select_friendly_minion(self, friendly_minions: List[Card]) -> Card:
+            minion_types = [type(card) for card in friendly_minions]
+            if AlleyCat in minion_types:
+                return force_card(friendly_minions, AlleyCat)
+            else:
+                return friendly_minions[0]
+
+    def test_micro_mummy(self):
+        tavern = Tavern()
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.randomizer = self.TestMicroMummyRandomizer()
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        tavern.combat_step()
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        tavern.combat_step()
+        self.assertCardListEquals(player_1.in_play, [AlleyCat, TabbyCat, MicroMummy])
+        self.assertEqual(player_1.in_play[0].attack, player_1.in_play[0].base_attack + 1)
+        self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health)
+        self.assertEqual(player_1.in_play[1].attack, player_1.in_play[1].base_attack)
+        self.assertEqual(player_1.in_play[1].health, player_1.in_play[1].base_health)
+        self.assertEqual(player_1.in_play[2].attack, player_1.in_play[2].base_attack)
+        self.assertEqual(player_1.in_play[2].health, player_1.in_play[2].base_health)
+
+    def test_forest_warden_omu(self):
+        tavern = Tavern()
+        player_1 = tavern.add_player_with_hero("Dante_Kong", ForestWardenOmu())
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.buying_step()
+        tavern.combat_step()
+        tavern.buying_step()
+        player_1.upgrade_tavern()
+        self.assertEqual(player_1.coins, 2)
 
 
 if __name__ == '__main__':

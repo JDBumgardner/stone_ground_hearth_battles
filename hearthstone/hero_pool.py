@@ -1,7 +1,7 @@
 from typing import Union, Tuple
 
-from hearthstone.card_pool import Amalgam, one_minion_per_type
-from hearthstone.cards import CardEvent, PrintingPress
+from hearthstone.card_pool import Amalgam
+from hearthstone.cards import CardEvent, PrintingPress, one_minion_per_type
 from hearthstone.events import BuyPhaseContext, CombatPhaseContext, EVENTS
 from hearthstone.hero import Hero
 from hearthstone.monster_types import MONSTER_TYPES
@@ -244,6 +244,15 @@ class CaptainEudora(Hero):
 class QueenWagtoggle(Hero):
     power_cost = 1
 
-    def hero_power_impl(self, context: BuyPhaseContext):
-        for card in one_minion_per_type(context):
+    def hero_power_impl(self, context: 'BuyPhaseContext'):
+        for card in one_minion_per_type(context.owner.in_play, context.randomizer):
             card.attack += 2
+
+
+class ForestWardenOmu(Hero):
+    def hero_power_valid_impl(self, context: 'BuyPhaseContext'):
+        return False
+
+    def handle_event(self, event: 'CardEvent', context: 'BuyPhaseContext'):
+        if event.event is EVENTS.TAVERN_UPGRADE:
+            context.owner.coins = min(context.owner.coins + 2, 10)

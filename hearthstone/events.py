@@ -25,6 +25,7 @@ class EVENTS(enum.Enum):
     RETURN_TO_HAND = 15
     AFTER_ATTACK_DEATHRATTLES = 16
     END_COMBAT = 17
+    TAVERN_UPGRADE = 18
 
 
 class BuyPhaseContext:

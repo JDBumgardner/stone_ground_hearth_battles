@@ -2,24 +2,9 @@ import logging
 from typing import Union, List
 
 from hearthstone import combat
-from hearthstone.cards import MonsterCard, CardEvent, PrintingPress
+from hearthstone.cards import MonsterCard, CardEvent, PrintingPress, one_minion_per_type
 from hearthstone.events import BuyPhaseContext, CombatPhaseContext, EVENTS
 from hearthstone.monster_types import MONSTER_TYPES
-
-
-def one_minion_per_type(context: 'BuyPhaseContext') -> List['MonsterCard']:
-    minions = []
-    filler_minions = [card for card in context.owner.in_play if card.monster_type == MONSTER_TYPES.ALL]
-    for minion_type in MONSTER_TYPES.single_types():
-        minions_by_type = [card for card in context.owner.in_play if card.monster_type == minion_type]
-        if minions_by_type:
-            card = context.randomizer.select_friendly_minion(minions_by_type)
-            minions.append(card)
-        elif filler_minions:
-            card = context.randomizer.select_friendly_minion(filler_minions)
-            filler_minions.remove(card)
-            minions.append(card)
-    return minions
 
 
 class MamaBear(MonsterCard):
@@ -162,29 +147,6 @@ class WrathWeaver(MonsterCard):
             context.owner.take_damage(1)
             self.attack += bonus
             self.health += bonus
-
-
-class MechaRoo(MonsterCard):
-    tier = 1
-    monster_type = MONSTER_TYPES.MECH
-    base_attack = 1
-    base_health = 1
-
-    def base_deathrattle(self, context: CombatPhaseContext):
-        summon_index = context.friendly_war_party.get_index(self)
-        for i in range(context.summon_minion_multiplier()):
-            joebot = JoEBot()
-            if self.golden:
-                joebot.golden_transformation([])
-            context.friendly_war_party.summon_in_combat(joebot, context, summon_index + i + 1)
-
-
-class JoEBot(MonsterCard):
-    token = True
-    tier = 1
-    monster_type = MONSTER_TYPES.MECH
-    base_attack = 1
-    base_health = 1
 
 
 class MicroMachine(MonsterCard):
@@ -831,7 +793,7 @@ class ScrewjankClunker(MonsterCard):
 
 class PackLeader(MonsterCard):
     tier = 2
-    base_attack = 3
+    base_attack = 2
     base_health = 3
     monster_type = None
 
@@ -839,7 +801,7 @@ class PackLeader(MonsterCard):
         friendly_summon = event.event is EVENTS.SUMMON_BUY or (
                 event.event is EVENTS.SUMMON_COMBAT and event.card in context.friendly_war_party.board)
         if friendly_summon and event.card.check_type(MONSTER_TYPES.BEAST) and event.card != self:
-            bonus = 6 if self.golden else 3
+            bonus = 4 if self.golden else 2
             event.card.attack += bonus
 
 
@@ -1561,7 +1523,7 @@ class LightfangEnforcer(MonsterCard):
 
     def handle_event_powers(self, event: CardEvent, context: BuyPhaseContext):
         if event.event is EVENTS.BUY_END:
-            for card in one_minion_per_type(context):
+            for card in one_minion_per_type(context.owner.in_play, context.randomizer):
                 card.attack += 4 if self.golden else 2
                 card.health += 2 if self.golden else 1
 
@@ -1574,7 +1536,7 @@ class MenagerieMug(MonsterCard):
 
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
         bonus = 2 if self.golden else 1
-        available_minions = one_minion_per_type(context)
+        available_minions = one_minion_per_type(context.owner.in_play, context.randomizer)
         for _ in range(3):
             if available_minions:
                 card = context.randomizer.select_friendly_minion(available_minions)
@@ -1591,10 +1553,25 @@ class MenagerieJug(MonsterCard):
 
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
         bonus = 4 if self.golden else 2
-        available_minions = one_minion_per_type(context)
+        available_minions = one_minion_per_type(context.owner.in_play, context.randomizer)
         for _ in range(3):
             if available_minions:
                 card = context.randomizer.select_friendly_minion(available_minions)
                 available_minions.remove(card)
                 card.attack += bonus
                 card.health += bonus
+
+
+class MicroMummy(MonsterCard):
+    tier = 1
+    monster_type = MONSTER_TYPES.MECH
+    base_attack = 1
+    base_health = 2
+    base_reborn = True
+
+    def handle_event_powers(self, event: CardEvent, context: BuyPhaseContext):
+        if event.event is EVENTS.BUY_END:
+            other_minions = [card for card in context.owner.in_play if card != self]
+            card = context.randomizer.select_friendly_minion(other_minions)
+            bonus = 2 if self.golden else 1
+            card.attack += bonus

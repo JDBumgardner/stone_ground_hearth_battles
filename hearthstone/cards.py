@@ -7,6 +7,22 @@ from hearthstone import card_pool
 from hearthstone.events import BuyPhaseContext, CombatPhaseContext, EVENTS
 from hearthstone.card_factory import make_metaclass
 from hearthstone.monster_types import MONSTER_TYPES
+from hearthstone.randomizer import Randomizer
+
+
+def one_minion_per_type(cards: List['MonsterCard'], randomizer: 'Randomizer') -> List['MonsterCard']:
+    minions = []
+    filler_minions = [card for card in cards if card.monster_type == MONSTER_TYPES.ALL]
+    for minion_type in MONSTER_TYPES.single_types():
+        minions_by_type = [card for card in cards if card.monster_type == minion_type]
+        if minions_by_type:
+            card = randomizer.select_friendly_minion(minions_by_type)
+            minions.append(card)
+        elif filler_minions:
+            card = randomizer.select_friendly_minion(filler_minions)
+            filler_minions.remove(card)
+            minions.append(card)
+    return minions
 
 
 class PrintingPress:

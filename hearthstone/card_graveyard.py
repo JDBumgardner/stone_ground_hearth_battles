@@ -62,3 +62,26 @@ class TreasureChest(MonsterCard):
                 random_minion.golden_transformation([])
                 context.friendly_war_party.summon_in_combat(random_minion, context, summon_index + i + 1)
                 i += 1
+
+
+class MechaRoo(MonsterCard):
+    tier = 1
+    monster_type = MONSTER_TYPES.MECH
+    base_attack = 1
+    base_health = 1
+
+    def base_deathrattle(self, context: CombatPhaseContext):
+        summon_index = context.friendly_war_party.get_index(self)
+        for i in range(context.summon_minion_multiplier()):
+            joebot = JoEBot()
+            if self.golden:
+                joebot.golden_transformation([])
+            context.friendly_war_party.summon_in_combat(joebot, context, summon_index + i + 1)
+
+
+class JoEBot(MonsterCard):
+    token = True
+    tier = 1
+    monster_type = MONSTER_TYPES.MECH
+    base_attack = 1
+    base_health = 1

@@ -1,6 +1,6 @@
 import unittest
 
-from hearthstone.card_graveyard import ArcaneCannon
+from hearthstone.card_graveyard import *
 from hearthstone.card_pool import *
 from hearthstone.cards import Card
 from hearthstone.combat import WarParty, fight_boards
@@ -383,7 +383,7 @@ class CombatTests(unittest.TestCase):
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [PilotedShredder()]
-        ethans_war_party.board = [PackLeader()]
+        ethans_war_party.board = [FreedealingGambler()]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertNotEqual(ethan.health, 40)
@@ -916,6 +916,17 @@ class CombatTests(unittest.TestCase):
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [SavannahHighmane(), MamaBear(), VulgarHomunculus()]
         ethans_war_party.board = [BloodsailCannoneer(), NadinaTheRed(), NadinaTheRed(), NadinaTheRed(), NadinaTheRed()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+
+    def test_micro_mummy(self):
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [MicroMummy()]
+        ethans_war_party.board = [BloodsailCannoneer()]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
