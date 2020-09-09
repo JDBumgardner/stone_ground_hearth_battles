@@ -3,6 +3,7 @@ import typing
 from collections import defaultdict
 from typing import Optional, List, Callable, Type
 
+from hearthstone import events
 from hearthstone.card_pool import DefenderOfArgus
 from hearthstone.cards import MonsterCard, Card
 from hearthstone.events import BuyPhaseContext, EVENTS, CardEvent
@@ -85,7 +86,7 @@ class Player:
         self.tavern_tier += 1
         if self.tavern_tier < self.max_tier():
             self.tavern_upgrade_cost = self._tavern_upgrade_costs[self.tavern_tier]
-        self.broadcast_buy_phase_event(CardEvent(EVENTS.TAVERN_UPGRADE))
+        self.broadcast_buy_phase_event(events.TavernUpgradeEvent())
 
     def validate_upgrade_tavern(self) -> bool:
         if self.tavern_tier >= self.max_tier():
@@ -105,7 +106,7 @@ class Player:
         if card.golden:
             self.triple_rewards.append(TripleRewardCard(min(self.tavern_tier + 1, 6)))
         target_cards = [self.in_play[target] for target in targets]
-        self.broadcast_buy_phase_event(CardEvent(EVENTS.SUMMON_BUY, card, target_cards))
+        self.broadcast_buy_phase_event(events.SummonBuyEvent(card, target_cards))
 
     def validate_summon_from_hand(self, index: HandIndex, targets: Optional[List[BoardIndex]] = None) -> bool:
         if targets is None:
@@ -169,7 +170,7 @@ class Player:
         if self.room_on_board():
             self.in_play.append(monster)
             self.check_golden(type(monster))
-            self.broadcast_buy_phase_event(CardEvent(EVENTS.SUMMON_BUY, monster))
+            self.broadcast_buy_phase_event(events.SummonBuyEvent(monster))
 
     def room_on_board(self):
         return len(self.in_play) < self.maximum_board_size
@@ -188,7 +189,7 @@ class Player:
         card = self.store.pop(index)
         self.coins -= self.minion_cost
         self.hand.append(card)
-        event = CardEvent(EVENTS.BUY, card)
+        event = events.BuyEvent(card)
         self.broadcast_buy_phase_event(event)
         self.check_golden(type(card))
 
@@ -207,7 +208,7 @@ class Player:
         if len(cards) == 3:
             for card in cards:
                 if card in self.in_play:
-                    self.broadcast_buy_phase_event(CardEvent(EVENTS.RETURN_TO_HAND, card))
+                    self.broadcast_buy_phase_event(events.ReturnToHandEvent(card))
                     self.in_play.remove(card)
                 if card in self.hand:
                     self.hand.remove(card)
@@ -233,7 +234,7 @@ class Player:
 
     def sell_minion(self, index: BoardIndex):
         assert self.validate_sell_minion(index)
-        self.broadcast_buy_phase_event(CardEvent(EVENTS.SELL, self.in_play[index]))
+        self.broadcast_buy_phase_event(events.SellEvent(self.in_play[index]))
         card = self.in_play.pop(index)
         self.coins += card.redeem_rate
         self.tavern.deck.return_cards(card.dissolve())
@@ -279,7 +280,7 @@ class Player:
     def take_damage(self, damage: int):
         if not self.immune:
             self.health -= damage
-            self.broadcast_buy_phase_event(CardEvent(EVENTS.PLAYER_DAMAGED))
+            self.broadcast_buy_phase_event(events.PlayerDamagedEvent())
 
     def redeem_gold_coin(self):
         if self.gold_coins >= 1:

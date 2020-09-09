@@ -1,235 +1,12 @@
 [
     [
-        "PriorityBot-racist_priority_bot-MURLOC",
-        {
-            "elo": 1423.8412984690458,
-            "trueskill.mu": 27.24478356916273,
-            "trueskill.sigma": 0.6301923654944969,
-            "games_played": 513,
-            "last_time_updated": "2020-08-12T23:49:54.749344",
-            "authors": [
-                "Jake Bumgardner",
-                "Adam Salwen",
-                "Ethan Saxenian"
-            ]
-        }
-    ],
-    [
-        "EarlyGameBot-attack_health_priority_bot",
-        {
-            "elo": 1317.8464117184778,
-            "trueskill.mu": 27.121838299370463,
-            "trueskill.sigma": 0.6295645069953407,
-            "games_played": 737,
-            "last_time_updated": "2020-08-12T23:49:54.749361",
-            "authors": [
-                "Jake Bumgardner",
-                "Adam Salwen",
-                "Ethan Saxenian"
-            ]
-        }
-    ],
-    [
-        "HeroBot-priority_adaptive_tripler_bot",
-        {
-            "elo": 1473.345865785906,
-            "trueskill.mu": 26.927027485869303,
-            "trueskill.sigma": 0.6280195913660909,
-            "games_played": 826,
-            "last_time_updated": "2020-08-12T23:49:54.749365",
-            "authors": [
-                "Jake Bumgardner",
-                "Adam Salwen",
-                "Ethan Saxenian"
-            ]
-        }
-    ],
-    [
-        "EarlyGameBot-racist_priority_bot-DRAGON",
-        {
-            "elo": 1406.6085953151155,
-            "trueskill.mu": 26.91170437886763,
-            "trueskill.sigma": 0.628067712709839,
-            "games_played": 514,
-            "last_time_updated": "2020-08-12T23:49:54.749369",
-            "authors": [
-                "Jake Bumgardner",
-                "Adam Salwen",
-                "Ethan Saxenian"
-            ]
-        }
-    ],
-    [
-        "PriorityBot-priority_adaptive_tripler_bot",
-        {
-            "elo": 1393.7956793130063,
-            "trueskill.mu": 26.772828637126807,
-            "trueskill.sigma": 0.6287766246680474,
-            "games_played": 811,
-            "last_time_updated": "2020-08-12T23:49:54.749373",
-            "authors": [
-                "Jake Bumgardner",
-                "Adam Salwen",
-                "Ethan Saxenian"
-            ]
-        }
-    ],
-    [
-        "PriorityBot-battlerattler_priority_bot",
-        {
-            "elo": 1296.4089046471133,
-            "trueskill.mu": 26.745076445030072,
-            "trueskill.sigma": 0.626903073785611,
-            "games_played": 829,
-            "last_time_updated": "2020-08-12T23:49:54.749377",
-            "authors": [
-                "Jake Bumgardner",
-                "Adam Salwen",
-                "Ethan Saxenian"
-            ]
-        }
-    ],
-    [
-        "HeroBot-priority_health_tripler_bot",
-        {
-            "elo": 1264.038401011524,
-            "trueskill.mu": 26.734512532589818,
-            "trueskill.sigma": 0.6267324955902547,
-            "games_played": 842,
-            "last_time_updated": "2020-08-12T23:49:54.749380",
-            "authors": [
-                "Jake Bumgardner",
-                "Adam Salwen",
-                "Ethan Saxenian"
-            ]
-        }
-    ],
-    [
-        "PriorityBot-racist_priority_bot-BEAST",
-        {
-            "elo": 1464.8148657297133,
-            "trueskill.mu": 26.68539136388726,
-            "trueskill.sigma": 0.6261626545703405,
-            "games_played": 495,
-            "last_time_updated": "2020-08-12T23:49:54.749384",
-            "authors": [
-                "Jake Bumgardner",
-                "Adam Salwen",
-                "Ethan Saxenian"
-            ]
-        }
-    ],
-    [
-        "HeroBot-racist_priority_bot-DEMON",
-        {
-            "elo": 1327.184179985461,
-            "trueskill.mu": 26.684547702629473,
-            "trueskill.sigma": 0.6280535044534612,
-            "games_played": 478,
-            "last_time_updated": "2020-08-12T23:49:54.749388",
-            "authors": [
-                "Jake Bumgardner",
-                "Adam Salwen",
-                "Ethan Saxenian"
-            ]
-        }
-    ],
-    [
-        "PriorityBot-racist_priority_bot-MECH",
-        {
-            "elo": 1421.6414981128614,
-            "trueskill.mu": 26.626555487725433,
-            "trueskill.sigma": 0.6277827141151682,
-            "games_played": 510,
-            "last_time_updated": "2020-08-12T23:49:54.749391",
-            "authors": [
-                "Jake Bumgardner",
-                "Adam Salwen",
-                "Ethan Saxenian"
-            ]
-        }
-    ],
-    [
-        "EarlyGameBot-priority_jessie_bot",
-        {
-            "elo": 1422.960774762492,
-            "trueskill.mu": 26.600717451228196,
-            "trueskill.sigma": 0.6310545371962258,
-            "games_played": 679,
-            "last_time_updated": "2020-08-12T23:49:54.749395",
-            "authors": [
-                "Jake Bumgardner",
-                "Adam Salwen",
-                "Ethan Saxenian"
-            ]
-        }
-    ],
-    [
-        "EarlyGameBot-priority_health_tripler_bot",
-        {
-            "elo": 1500.4633019096375,
-            "trueskill.mu": 26.588584769445095,
-            "trueskill.sigma": 0.6296861183587287,
-            "games_played": 773,
-            "last_time_updated": "2020-08-12T23:49:54.749398",
-            "authors": [
-                "Jake Bumgardner",
-                "Adam Salwen",
-                "Ethan Saxenian"
-            ]
-        }
-    ],
-    [
-        "EarlyGameBot-racist_priority_bot-MECH",
-        {
-            "elo": 1284.9030621780516,
-            "trueskill.mu": 26.537054528292398,
-            "trueskill.sigma": 0.6287242164469566,
-            "games_played": 494,
-            "last_time_updated": "2020-08-12T23:49:54.749402",
-            "authors": [
-                "Jake Bumgardner",
-                "Adam Salwen",
-                "Ethan Saxenian"
-            ]
-        }
-    ],
-    [
-        "EarlyGameBot-racist_priority_bot-BEAST",
-        {
-            "elo": 1327.6380259667267,
-            "trueskill.mu": 26.50819478964282,
-            "trueskill.sigma": 0.6267329314568858,
-            "games_played": 472,
-            "last_time_updated": "2020-08-12T23:49:54.749405",
-            "authors": [
-                "Jake Bumgardner",
-                "Adam Salwen",
-                "Ethan Saxenian"
-            ]
-        }
-    ],
-    [
-        "CheapoBot",
-        {
-            "elo": 1105.6295123106459,
-            "trueskill.mu": 26.42389376166255,
-            "trueskill.sigma": 0.6205821033471416,
-            "games_played": 317,
-            "last_time_updated": "2020-08-12T23:49:54.749408",
-            "authors": [
-                "Brian Kelly"
-            ]
-        }
-    ],
-    [
         "EarlyGameBot-priority_saurolisk_bot",
         {
-            "elo": 1402.8441613302534,
-            "trueskill.mu": 26.41703687317146,
-            "trueskill.sigma": 0.6263879799883462,
-            "games_played": 739,
-            "last_time_updated": "2020-08-12T23:49:54.749442",
+            "elo": 1336.7227736070713,
+            "trueskill.mu": 27.53037514606731,
+            "trueskill.sigma": 0.6294185364530569,
+            "games_played": 777,
+            "last_time_updated": "2020-09-09T02:49:48.884527",
             "authors": [
                 "Jake Bumgardner",
                 "Adam Salwen",
@@ -238,103 +15,13 @@
         }
     ],
     [
-        "HeroBot-attack_health_tripler_priority_bot",
+        "PriorityBot-racist_priority_bot-MURLOC",
         {
-            "elo": 1373.4114239301814,
-            "trueskill.mu": 26.38718907554125,
-            "trueskill.sigma": 0.6299671432832237,
-            "games_played": 881,
-            "last_time_updated": "2020-08-12T23:49:54.749446",
-            "authors": [
-                "Jake Bumgardner",
-                "Adam Salwen",
-                "Ethan Saxenian"
-            ]
-        }
-    ],
-    [
-        "PriorityBot-attack_health_tripler_priority_bot",
-        {
-            "elo": 1313.2410675956578,
-            "trueskill.mu": 26.36768682295356,
-            "trueskill.sigma": 0.6242544824449455,
-            "games_played": 856,
-            "last_time_updated": "2020-08-12T23:49:54.749449",
-            "authors": [
-                "Jake Bumgardner",
-                "Adam Salwen",
-                "Ethan Saxenian"
-            ]
-        }
-    ],
-    [
-        "HeroBot-priority_pogo_hopper_bot",
-        {
-            "elo": 1237.6329681625998,
-            "trueskill.mu": 26.360678180155638,
-            "trueskill.sigma": 0.6265917178905976,
-            "games_played": 807,
-            "last_time_updated": "2020-08-12T23:49:54.749453",
-            "authors": [
-                "Jake Bumgardner",
-                "Adam Salwen",
-                "Ethan Saxenian"
-            ]
-        }
-    ],
-    [
-        "EarlyGameBot-racist_priority_bot-MURLOC",
-        {
-            "elo": 1378.8716348568626,
-            "trueskill.mu": 26.359732202690928,
-            "trueskill.sigma": 0.6287695971561872,
-            "games_played": 492,
-            "last_time_updated": "2020-08-12T23:49:54.749456",
-            "authors": [
-                "Jake Bumgardner",
-                "Adam Salwen",
-                "Ethan Saxenian"
-            ]
-        }
-    ],
-    [
-        "PriorityBot-priority_pogo_hopper_bot",
-        {
-            "elo": 1401.9762645656913,
-            "trueskill.mu": 26.328897421362743,
-            "trueskill.sigma": 0.6290987562762029,
-            "games_played": 835,
-            "last_time_updated": "2020-08-12T23:49:54.749460",
-            "authors": [
-                "Jake Bumgardner",
-                "Adam Salwen",
-                "Ethan Saxenian"
-            ]
-        }
-    ],
-    [
-        "PriorityBot-racist_priority_bot-DEMON",
-        {
-            "elo": 1405.5789637206808,
-            "trueskill.mu": 26.323215009093005,
-            "trueskill.sigma": 0.6272461795233202,
-            "games_played": 480,
-            "last_time_updated": "2020-08-12T23:49:54.749463",
-            "authors": [
-                "Jake Bumgardner",
-                "Adam Salwen",
-                "Ethan Saxenian"
-            ]
-        }
-    ],
-    [
-        "EarlyGameBot-attack_health_tripler_priority_bot",
-        {
-            "elo": 1416.0056372262507,
-            "trueskill.mu": 26.24211399896166,
-            "trueskill.sigma": 0.6279858214751485,
-            "games_played": 695,
-            "last_time_updated": "2020-08-12T23:49:54.749468",
+            "elo": 1407.298870396564,
+            "trueskill.mu": 27.462374482833205,
+            "trueskill.sigma": 0.6308506914816422,
+            "games_played": 557,
+            "last_time_updated": "2020-09-09T02:49:48.884544",
             "authors": [
                 "Jake Bumgardner",
                 "Adam Salwen",
@@ -345,11 +32,11 @@
     [
         "EarlyGameBot-priority_adaptive_tripler_bot",
         {
-            "elo": 1331.8027524373495,
-            "trueskill.mu": 26.225414418846242,
-            "trueskill.sigma": 0.6282946285563008,
-            "games_played": 719,
-            "last_time_updated": "2020-08-12T23:49:54.749474",
+            "elo": 1583.4907122458321,
+            "trueskill.mu": 27.418864322161582,
+            "trueskill.sigma": 0.62885252417032,
+            "games_played": 765,
+            "last_time_updated": "2020-09-09T02:49:48.884549",
             "authors": [
                 "Jake Bumgardner",
                 "Adam Salwen",
@@ -358,13 +45,13 @@
         }
     ],
     [
-        "PriorityBot-priority_saurolisk_bot",
+        "EarlyGameBot-priority_health_tripler_bot",
         {
-            "elo": 1316.6708572796358,
-            "trueskill.mu": 26.211763935462177,
-            "trueskill.sigma": 0.6260155676172366,
-            "games_played": 855,
-            "last_time_updated": "2020-08-12T23:49:54.749479",
+            "elo": 1426.097450918755,
+            "trueskill.mu": 27.364978633528267,
+            "trueskill.sigma": 0.6274784525227896,
+            "games_played": 827,
+            "last_time_updated": "2020-09-09T02:49:48.884554",
             "authors": [
                 "Jake Bumgardner",
                 "Adam Salwen",
@@ -373,13 +60,13 @@
         }
     ],
     [
-        "PriorityBot-racist_priority_bot-DRAGON",
+        "EarlyGameBot-racist_priority_bot-MURLOC",
         {
-            "elo": 1334.7213912038,
-            "trueskill.mu": 26.138910484627118,
-            "trueskill.sigma": 0.6254283071042799,
-            "games_played": 513,
-            "last_time_updated": "2020-08-12T23:49:54.749485",
+            "elo": 1552.2268595460566,
+            "trueskill.mu": 27.293516977346805,
+            "trueskill.sigma": 0.6278472190257702,
+            "games_played": 532,
+            "last_time_updated": "2020-09-09T02:49:48.884559",
             "authors": [
                 "Jake Bumgardner",
                 "Adam Salwen",
@@ -388,13 +75,13 @@
         }
     ],
     [
-        "PriorityBot-attack_health_priority_bot",
+        "PriorityBot-racist_priority_bot-BEAST",
         {
-            "elo": 1340.664827736972,
-            "trueskill.mu": 26.125849072503424,
-            "trueskill.sigma": 0.6268130669801407,
-            "games_played": 807,
-            "last_time_updated": "2020-08-12T23:49:54.749491",
+            "elo": 1426.2636716303302,
+            "trueskill.mu": 27.246562691706337,
+            "trueskill.sigma": 0.6285829980376404,
+            "games_played": 537,
+            "last_time_updated": "2020-09-09T02:49:48.884564",
             "authors": [
                 "Jake Bumgardner",
                 "Adam Salwen",
@@ -403,58 +90,13 @@
         }
     ],
     [
-        "HeroBot-racist_priority_bot-PIRATE",
+        "EarlyGameBot-attack_health_tripler_priority_bot",
         {
-            "elo": 1284.3029531608026,
-            "trueskill.mu": 26.117538536923792,
-            "trueskill.sigma": 0.6265452482353142,
-            "games_played": 470,
-            "last_time_updated": "2020-08-12T23:49:54.749495",
-            "authors": [
-                "Jake Bumgardner",
-                "Adam Salwen",
-                "Ethan Saxenian"
-            ]
-        }
-    ],
-    [
-        "PriorityBot-priority_attack_tripler_bot",
-        {
-            "elo": 1271.3587922841698,
-            "trueskill.mu": 26.11508778456789,
-            "trueskill.sigma": 0.6272637301088655,
-            "games_played": 813,
-            "last_time_updated": "2020-08-12T23:49:54.749499",
-            "authors": [
-                "Jake Bumgardner",
-                "Adam Salwen",
-                "Ethan Saxenian"
-            ]
-        }
-    ],
-    [
-        "PriorityBot-racist_priority_bot-PIRATE",
-        {
-            "elo": 1315.401225846346,
-            "trueskill.mu": 26.08793549512154,
-            "trueskill.sigma": 0.6259946989308154,
-            "games_played": 513,
-            "last_time_updated": "2020-08-12T23:49:54.749502",
-            "authors": [
-                "Jake Bumgardner",
-                "Adam Salwen",
-                "Ethan Saxenian"
-            ]
-        }
-    ],
-    [
-        "EarlyGameBot-priority_attack_tripler_bot",
-        {
-            "elo": 1234.4745271584054,
-            "trueskill.mu": 26.057905251281426,
-            "trueskill.sigma": 0.626685427545173,
-            "games_played": 720,
-            "last_time_updated": "2020-08-12T23:49:54.749505",
+            "elo": 1375.6805401674296,
+            "trueskill.mu": 27.213196324181542,
+            "trueskill.sigma": 0.6296812901434964,
+            "games_played": 726,
+            "last_time_updated": "2020-09-09T02:49:48.884568",
             "authors": [
                 "Jake Bumgardner",
                 "Adam Salwen",
@@ -465,11 +107,11 @@
     [
         "PriorityBot-priority_health_tripler_bot",
         {
-            "elo": 1185.0679405803196,
-            "trueskill.mu": 26.020095240299593,
-            "trueskill.sigma": 0.6266743555386726,
-            "games_played": 829,
-            "last_time_updated": "2020-08-12T23:49:54.749508",
+            "elo": 1498.670324378938,
+            "trueskill.mu": 27.210510473987508,
+            "trueskill.sigma": 0.628599443442449,
+            "games_played": 862,
+            "last_time_updated": "2020-09-09T02:49:48.884572",
             "authors": [
                 "Jake Bumgardner",
                 "Adam Salwen",
@@ -478,13 +120,13 @@
         }
     ],
     [
-        "PriorityBot-priority_jessie_bot",
+        "PriorityBot-racist_priority_bot-DRAGON",
         {
-            "elo": 1168.6372031267983,
-            "trueskill.mu": 25.92185961599139,
-            "trueskill.sigma": 0.6262347145725549,
-            "games_played": 856,
-            "last_time_updated": "2020-08-12T23:49:54.749512",
+            "elo": 1266.7471559557928,
+            "trueskill.mu": 27.209749663614154,
+            "trueskill.sigma": 0.6307185661592992,
+            "games_played": 552,
+            "last_time_updated": "2020-09-09T02:49:48.884576",
             "authors": [
                 "Jake Bumgardner",
                 "Adam Salwen",
@@ -493,28 +135,13 @@
         }
     ],
     [
-        "HeroBot-priority_attack_tripler_bot",
+        "PriorityBot-priority_adaptive_tripler_bot",
         {
-            "elo": 1273.2457839374829,
-            "trueskill.mu": 25.89867380810321,
-            "trueskill.sigma": 0.6262781961410155,
-            "games_played": 834,
-            "last_time_updated": "2020-08-12T23:49:54.749515",
-            "authors": [
-                "Jake Bumgardner",
-                "Adam Salwen",
-                "Ethan Saxenian"
-            ]
-        }
-    ],
-    [
-        "HeroBot-battlerattler_priority_bot",
-        {
-            "elo": 1360.949470399742,
-            "trueskill.mu": 25.891928061223688,
-            "trueskill.sigma": 0.6285216509433199,
-            "games_played": 841,
-            "last_time_updated": "2020-08-12T23:49:54.749519",
+            "elo": 1308.6843742014948,
+            "trueskill.mu": 27.199010442057055,
+            "trueskill.sigma": 0.6301733770997726,
+            "games_played": 850,
+            "last_time_updated": "2020-09-09T02:49:48.884581",
             "authors": [
                 "Jake Bumgardner",
                 "Adam Salwen",
@@ -525,11 +152,11 @@
     [
         "HeroBot-priority_saurolisk_buff_bot",
         {
-            "elo": 1309.4082297336104,
-            "trueskill.mu": 25.860732059646292,
-            "trueskill.sigma": 0.627564475829711,
-            "games_played": 815,
-            "last_time_updated": "2020-08-12T23:49:54.749522",
+            "elo": 1488.1208696021029,
+            "trueskill.mu": 27.192844496259557,
+            "trueskill.sigma": 0.6283286032351992,
+            "games_played": 853,
+            "last_time_updated": "2020-09-09T02:49:48.884586",
             "authors": [
                 "Jake Bumgardner",
                 "Adam Salwen",
@@ -538,13 +165,13 @@
         }
     ],
     [
-        "HeroBot-priority_saurolisk_bot",
+        "PriorityBot-battlerattler_priority_bot",
         {
-            "elo": 1333.7885621122684,
-            "trueskill.mu": 25.77089835109726,
-            "trueskill.sigma": 0.6265262606680086,
-            "games_played": 832,
-            "last_time_updated": "2020-08-12T23:49:54.749526",
+            "elo": 1240.9534133387724,
+            "trueskill.mu": 27.18607098458399,
+            "trueskill.sigma": 0.6312202719362459,
+            "games_played": 870,
+            "last_time_updated": "2020-09-09T02:49:48.884590",
             "authors": [
                 "Jake Bumgardner",
                 "Adam Salwen",
@@ -553,13 +180,13 @@
         }
     ],
     [
-        "PriorityBot-priority_saurolisk_buff_bot",
+        "EarlyGameBot-priority_jessie_bot",
         {
-            "elo": 1563.1490328987775,
-            "trueskill.mu": 25.739597718066225,
-            "trueskill.sigma": 0.6284224244002995,
-            "games_played": 799,
-            "last_time_updated": "2020-08-12T23:49:54.749529",
+            "elo": 1409.2695662565163,
+            "trueskill.mu": 27.174694809534778,
+            "trueskill.sigma": 0.6296965778297126,
+            "games_played": 720,
+            "last_time_updated": "2020-09-09T02:49:48.884594",
             "authors": [
                 "Jake Bumgardner",
                 "Adam Salwen",
@@ -568,13 +195,13 @@
         }
     ],
     [
-        "EarlyGameBot-priority_pogo_hopper_bot",
+        "EarlyGameBot-attack_health_priority_bot",
         {
-            "elo": 1270.5026354314653,
-            "trueskill.mu": 25.623089032699966,
-            "trueskill.sigma": 0.6254801557642214,
-            "games_played": 749,
-            "last_time_updated": "2020-08-12T23:49:54.749533",
+            "elo": 1493.0805009689077,
+            "trueskill.mu": 27.158214446004195,
+            "trueskill.sigma": 0.6310379354061527,
+            "games_played": 771,
+            "last_time_updated": "2020-09-09T02:49:48.884599",
             "authors": [
                 "Jake Bumgardner",
                 "Adam Salwen",
@@ -583,13 +210,13 @@
         }
     ],
     [
-        "HeroBot-racist_priority_bot-BEAST",
+        "HeroBot-racist_priority_bot-PIRATE",
         {
-            "elo": 1411.1202998994434,
-            "trueskill.mu": 25.62186724799424,
-            "trueskill.sigma": 0.6259072887823497,
-            "games_played": 511,
-            "last_time_updated": "2020-08-12T23:49:54.749537",
+            "elo": 1498.1009038036862,
+            "trueskill.mu": 27.150191941353572,
+            "trueskill.sigma": 0.6280530860635706,
+            "games_played": 514,
+            "last_time_updated": "2020-09-09T02:49:48.884603",
             "authors": [
                 "Jake Bumgardner",
                 "Adam Salwen",
@@ -598,13 +225,13 @@
         }
     ],
     [
-        "EarlyGameBot-priority_saurolisk_buff_bot",
+        "EarlyGameBot-racist_priority_bot-DRAGON",
         {
-            "elo": 1267.3392298746712,
-            "trueskill.mu": 25.618902472925125,
-            "trueskill.sigma": 0.6274140157460381,
-            "games_played": 749,
-            "last_time_updated": "2020-08-12T23:49:54.749540",
+            "elo": 1270.5642220660047,
+            "trueskill.mu": 27.019983802624413,
+            "trueskill.sigma": 0.6248820093016867,
+            "games_played": 553,
+            "last_time_updated": "2020-09-09T02:49:48.884607",
             "authors": [
                 "Jake Bumgardner",
                 "Adam Salwen",
@@ -613,13 +240,13 @@
         }
     ],
     [
-        "HeroBot-priority_jessie_bot",
+        "PriorityBot-racist_priority_bot-DEMON",
         {
-            "elo": 1231.3748907406225,
-            "trueskill.mu": 25.599993414163237,
-            "trueskill.sigma": 0.6262243846539232,
-            "games_played": 841,
-            "last_time_updated": "2020-08-12T23:49:54.749544",
+            "elo": 1440.2549388098141,
+            "trueskill.mu": 27.017140978116768,
+            "trueskill.sigma": 0.6285070296661042,
+            "games_played": 515,
+            "last_time_updated": "2020-09-09T02:49:48.884612",
             "authors": [
                 "Jake Bumgardner",
                 "Adam Salwen",
@@ -628,43 +255,13 @@
         }
     ],
     [
-        "EarlyGameBot-battlerattler_priority_bot",
+        "HeroBot-priority_adaptive_tripler_bot",
         {
-            "elo": 1335.7007818454103,
-            "trueskill.mu": 25.536163238235577,
-            "trueskill.sigma": 0.6236111311005433,
-            "games_played": 754,
-            "last_time_updated": "2020-08-12T23:49:54.749547",
-            "authors": [
-                "Jake Bumgardner",
-                "Adam Salwen",
-                "Ethan Saxenian"
-            ]
-        }
-    ],
-    [
-        "HeroBot-racist_priority_bot-MECH",
-        {
-            "elo": 1297.1176580957458,
-            "trueskill.mu": 25.533663619900672,
-            "trueskill.sigma": 0.6239971129304472,
-            "games_played": 505,
-            "last_time_updated": "2020-08-12T23:49:54.749550",
-            "authors": [
-                "Jake Bumgardner",
-                "Adam Salwen",
-                "Ethan Saxenian"
-            ]
-        }
-    ],
-    [
-        "HeroBot-attack_health_priority_bot",
-        {
-            "elo": 1372.9169377886797,
-            "trueskill.mu": 25.516479965178426,
-            "trueskill.sigma": 0.6266273055228386,
-            "games_played": 822,
-            "last_time_updated": "2020-08-12T23:49:54.749554",
+            "elo": 1367.4145755138925,
+            "trueskill.mu": 26.935965901147565,
+            "trueskill.sigma": 0.6243453780011805,
+            "games_played": 860,
+            "last_time_updated": "2020-09-09T02:49:48.884616",
             "authors": [
                 "Jake Bumgardner",
                 "Adam Salwen",
@@ -675,11 +272,221 @@
     [
         "HeroBot-racist_priority_bot-DRAGON",
         {
-            "elo": 1277.2001086398143,
-            "trueskill.mu": 25.477133560931136,
-            "trueskill.sigma": 0.6263306948023881,
-            "games_played": 485,
-            "last_time_updated": "2020-08-12T23:49:54.749557",
+            "elo": 1414.738366203271,
+            "trueskill.mu": 26.909207818036275,
+            "trueskill.sigma": 0.6258039052026074,
+            "games_played": 524,
+            "last_time_updated": "2020-09-09T02:49:48.884621",
+            "authors": [
+                "Jake Bumgardner",
+                "Adam Salwen",
+                "Ethan Saxenian"
+            ]
+        }
+    ],
+    [
+        "HeroBot-racist_priority_bot-DEMON",
+        {
+            "elo": 1417.8371164240723,
+            "trueskill.mu": 26.868915461097025,
+            "trueskill.sigma": 0.629271298045256,
+            "games_played": 514,
+            "last_time_updated": "2020-09-09T02:49:48.884625",
+            "authors": [
+                "Jake Bumgardner",
+                "Adam Salwen",
+                "Ethan Saxenian"
+            ]
+        }
+    ],
+    [
+        "HeroBot-priority_pogo_hopper_bot",
+        {
+            "elo": 1432.6360674659659,
+            "trueskill.mu": 26.85953536471606,
+            "trueskill.sigma": 0.6273985084132665,
+            "games_played": 846,
+            "last_time_updated": "2020-09-09T02:49:48.884630",
+            "authors": [
+                "Jake Bumgardner",
+                "Adam Salwen",
+                "Ethan Saxenian"
+            ]
+        }
+    ],
+    [
+        "PriorityBot-priority_jessie_bot",
+        {
+            "elo": 1399.9562599986232,
+            "trueskill.mu": 26.773910807838963,
+            "trueskill.sigma": 0.6257729731014533,
+            "games_played": 884,
+            "last_time_updated": "2020-09-09T02:49:48.884634",
+            "authors": [
+                "Jake Bumgardner",
+                "Adam Salwen",
+                "Ethan Saxenian"
+            ]
+        }
+    ],
+    [
+        "HeroBot-attack_health_tripler_priority_bot",
+        {
+            "elo": 1333.7709826218795,
+            "trueskill.mu": 26.762932602633647,
+            "trueskill.sigma": 0.6298245252017246,
+            "games_played": 920,
+            "last_time_updated": "2020-09-09T02:49:48.884638",
+            "authors": [
+                "Jake Bumgardner",
+                "Adam Salwen",
+                "Ethan Saxenian"
+            ]
+        }
+    ],
+    [
+        "EarlyGameBot-priority_attack_tripler_bot",
+        {
+            "elo": 1346.2675190526288,
+            "trueskill.mu": 26.73481844463117,
+            "trueskill.sigma": 0.6276303956492361,
+            "games_played": 759,
+            "last_time_updated": "2020-09-09T02:49:48.884643",
+            "authors": [
+                "Jake Bumgardner",
+                "Adam Salwen",
+                "Ethan Saxenian"
+            ]
+        }
+    ],
+    [
+        "PriorityBot-priority_attack_tripler_bot",
+        {
+            "elo": 1515.2969458822256,
+            "trueskill.mu": 26.703004304648495,
+            "trueskill.sigma": 0.6274005061368562,
+            "games_played": 851,
+            "last_time_updated": "2020-09-09T02:49:48.884647",
+            "authors": [
+                "Jake Bumgardner",
+                "Adam Salwen",
+                "Ethan Saxenian"
+            ]
+        }
+    ],
+    [
+        "EarlyGameBot-priority_saurolisk_buff_bot",
+        {
+            "elo": 1528.7972038098421,
+            "trueskill.mu": 26.681869180511455,
+            "trueskill.sigma": 0.628616738209669,
+            "games_played": 783,
+            "last_time_updated": "2020-09-09T02:49:48.884651",
+            "authors": [
+                "Jake Bumgardner",
+                "Adam Salwen",
+                "Ethan Saxenian"
+            ]
+        }
+    ],
+    [
+        "EarlyGameBot-racist_priority_bot-MECH",
+        {
+            "elo": 1296.7763328372127,
+            "trueskill.mu": 26.641002276432108,
+            "trueskill.sigma": 0.6270025794240519,
+            "games_played": 527,
+            "last_time_updated": "2020-09-09T02:49:48.884656",
+            "authors": [
+                "Jake Bumgardner",
+                "Adam Salwen",
+                "Ethan Saxenian"
+            ]
+        }
+    ],
+    [
+        "PriorityBot-attack_health_priority_bot",
+        {
+            "elo": 1382.1964513957387,
+            "trueskill.mu": 26.63347267384265,
+            "trueskill.sigma": 0.626549032203534,
+            "games_played": 856,
+            "last_time_updated": "2020-09-09T02:49:48.884660",
+            "authors": [
+                "Jake Bumgardner",
+                "Adam Salwen",
+                "Ethan Saxenian"
+            ]
+        }
+    ],
+    [
+        "HeroBot-attack_health_priority_bot",
+        {
+            "elo": 1313.9605550104704,
+            "trueskill.mu": 26.630775033076766,
+            "trueskill.sigma": 0.6295411059522618,
+            "games_played": 872,
+            "last_time_updated": "2020-09-09T02:49:48.884664",
+            "authors": [
+                "Jake Bumgardner",
+                "Adam Salwen",
+                "Ethan Saxenian"
+            ]
+        }
+    ],
+    [
+        "PriorityBot-attack_health_tripler_priority_bot",
+        {
+            "elo": 1401.5082009171213,
+            "trueskill.mu": 26.601464363728798,
+            "trueskill.sigma": 0.6261265183032229,
+            "games_played": 883,
+            "last_time_updated": "2020-09-09T02:49:48.884669",
+            "authors": [
+                "Jake Bumgardner",
+                "Adam Salwen",
+                "Ethan Saxenian"
+            ]
+        }
+    ],
+    [
+        "PriorityBot-priority_saurolisk_bot",
+        {
+            "elo": 1378.2189369096532,
+            "trueskill.mu": 26.55207607191663,
+            "trueskill.sigma": 0.6265388830338241,
+            "games_played": 889,
+            "last_time_updated": "2020-09-09T02:49:48.884673",
+            "authors": [
+                "Jake Bumgardner",
+                "Adam Salwen",
+                "Ethan Saxenian"
+            ]
+        }
+    ],
+    [
+        "HeroBot-priority_health_tripler_bot",
+        {
+            "elo": 1213.4013547681734,
+            "trueskill.mu": 26.54972239036191,
+            "trueskill.sigma": 0.626989210237662,
+            "games_played": 878,
+            "last_time_updated": "2020-09-09T02:49:48.884677",
+            "authors": [
+                "Jake Bumgardner",
+                "Adam Salwen",
+                "Ethan Saxenian"
+            ]
+        }
+    ],
+    [
+        "EarlyGameBot-racist_priority_bot-BEAST",
+        {
+            "elo": 1225.6932800693412,
+            "trueskill.mu": 26.42017564480146,
+            "trueskill.sigma": 0.6265655429571932,
+            "games_played": 506,
+            "last_time_updated": "2020-09-09T02:49:48.884682",
             "authors": [
                 "Jake Bumgardner",
                 "Adam Salwen",
@@ -690,11 +497,11 @@
     [
         "HeroBot-racist_priority_bot-MURLOC",
         {
-            "elo": 1229.7328678812046,
-            "trueskill.mu": 25.195565018644512,
-            "trueskill.sigma": 0.6249920046437781,
-            "games_played": 476,
-            "last_time_updated": "2020-08-12T23:49:54.749561",
+            "elo": 1373.3654663438913,
+            "trueskill.mu": 26.405814712909326,
+            "trueskill.sigma": 0.6278747579307331,
+            "games_played": 512,
+            "last_time_updated": "2020-09-09T02:49:48.884686",
             "authors": [
                 "Jake Bumgardner",
                 "Adam Salwen",
@@ -703,13 +510,28 @@
         }
     ],
     [
-        "EarlyGameBot-racist_priority_bot-PIRATE",
+        "PriorityBot-priority_saurolisk_buff_bot",
         {
-            "elo": 1246.6548498594666,
-            "trueskill.mu": 24.9898104732956,
-            "trueskill.sigma": 0.6277111387534413,
-            "games_played": 495,
-            "last_time_updated": "2020-08-12T23:49:54.749565",
+            "elo": 1388.2313247174309,
+            "trueskill.mu": 26.374939863352576,
+            "trueskill.sigma": 0.6257295850561987,
+            "games_played": 839,
+            "last_time_updated": "2020-09-09T02:49:48.884691",
+            "authors": [
+                "Jake Bumgardner",
+                "Adam Salwen",
+                "Ethan Saxenian"
+            ]
+        }
+    ],
+    [
+        "HeroBot-priority_attack_tripler_bot",
+        {
+            "elo": 1239.337419917366,
+            "trueskill.mu": 26.24189962468856,
+            "trueskill.sigma": 0.6269727847622575,
+            "games_played": 873,
+            "last_time_updated": "2020-09-09T02:49:48.884695",
             "authors": [
                 "Jake Bumgardner",
                 "Adam Salwen",
@@ -720,11 +542,11 @@
     [
         "EarlyGameBot-racist_priority_bot-DEMON",
         {
-            "elo": 1236.1068221768287,
-            "trueskill.mu": 24.9836617460628,
-            "trueskill.sigma": 0.6254400745064782,
-            "games_played": 477,
-            "last_time_updated": "2020-08-12T23:49:54.749568",
+            "elo": 1416.4677347169932,
+            "trueskill.mu": 26.230473624363064,
+            "trueskill.sigma": 0.6262334572772574,
+            "games_played": 509,
+            "last_time_updated": "2020-09-09T02:49:48.884699",
             "authors": [
                 "Jake Bumgardner",
                 "Adam Salwen",
@@ -733,52 +555,204 @@
         }
     ],
     [
+        "PriorityBot-racist_priority_bot-MECH",
+        {
+            "elo": 1288.531606412522,
+            "trueskill.mu": 26.221671383079272,
+            "trueskill.sigma": 0.6278195789623637,
+            "games_played": 540,
+            "last_time_updated": "2020-09-09T02:49:48.884704",
+            "authors": [
+                "Jake Bumgardner",
+                "Adam Salwen",
+                "Ethan Saxenian"
+            ]
+        }
+    ],
+    [
+        "HeroBot-battlerattler_priority_bot",
+        {
+            "elo": 1262.6132720325274,
+            "trueskill.mu": 26.219538438061168,
+            "trueskill.sigma": 0.6247868829184157,
+            "games_played": 869,
+            "last_time_updated": "2020-09-09T02:49:48.884708",
+            "authors": [
+                "Jake Bumgardner",
+                "Adam Salwen",
+                "Ethan Saxenian"
+            ]
+        }
+    ],
+    [
+        "HeroBot-racist_priority_bot-MECH",
+        {
+            "elo": 1319.1019100811495,
+            "trueskill.mu": 26.20352755214931,
+            "trueskill.sigma": 0.6266168926595674,
+            "games_played": 544,
+            "last_time_updated": "2020-09-09T02:49:48.884713",
+            "authors": [
+                "Jake Bumgardner",
+                "Adam Salwen",
+                "Ethan Saxenian"
+            ]
+        }
+    ],
+    [
+        "HeroBot-priority_jessie_bot",
+        {
+            "elo": 1345.0121040951767,
+            "trueskill.mu": 26.19669935105346,
+            "trueskill.sigma": 0.6232486726737115,
+            "games_played": 883,
+            "last_time_updated": "2020-09-09T02:49:48.884717",
+            "authors": [
+                "Jake Bumgardner",
+                "Adam Salwen",
+                "Ethan Saxenian"
+            ]
+        }
+    ],
+    [
+        "PriorityBot-priority_pogo_hopper_bot",
+        {
+            "elo": 1309.061499196176,
+            "trueskill.mu": 26.16846755524093,
+            "trueskill.sigma": 0.6258390843663509,
+            "games_played": 869,
+            "last_time_updated": "2020-09-09T02:49:48.884721",
+            "authors": [
+                "Jake Bumgardner",
+                "Adam Salwen",
+                "Ethan Saxenian"
+            ]
+        }
+    ],
+    [
+        "HeroBot-racist_priority_bot-BEAST",
+        {
+            "elo": 1341.48690639586,
+            "trueskill.mu": 26.03884736893247,
+            "trueskill.sigma": 0.6262495592668422,
+            "games_played": 545,
+            "last_time_updated": "2020-09-09T02:49:48.884725",
+            "authors": [
+                "Jake Bumgardner",
+                "Adam Salwen",
+                "Ethan Saxenian"
+            ]
+        }
+    ],
+    [
+        "EarlyGameBot-priority_pogo_hopper_bot",
+        {
+            "elo": 1365.9440623351422,
+            "trueskill.mu": 25.947543579393873,
+            "trueskill.sigma": 0.6274674655554267,
+            "games_played": 793,
+            "last_time_updated": "2020-09-09T02:49:48.884732",
+            "authors": [
+                "Jake Bumgardner",
+                "Adam Salwen",
+                "Ethan Saxenian"
+            ]
+        }
+    ],
+    [
+        "HeroBot-priority_saurolisk_bot",
+        {
+            "elo": 1223.0343828836967,
+            "trueskill.mu": 25.932894548624986,
+            "trueskill.sigma": 0.6271903403285386,
+            "games_played": 871,
+            "last_time_updated": "2020-09-09T02:49:48.884738",
+            "authors": [
+                "Jake Bumgardner",
+                "Adam Salwen",
+                "Ethan Saxenian"
+            ]
+        }
+    ],
+    [
+        "EarlyGameBot-racist_priority_bot-PIRATE",
+        {
+            "elo": 1340.3563442964123,
+            "trueskill.mu": 25.784891788960074,
+            "trueskill.sigma": 0.6276720783855279,
+            "games_played": 535,
+            "last_time_updated": "2020-09-09T02:49:48.884744",
+            "authors": [
+                "Jake Bumgardner",
+                "Adam Salwen",
+                "Ethan Saxenian"
+            ]
+        }
+    ],
+    [
+        "PriorityBot-racist_priority_bot-PIRATE",
+        {
+            "elo": 1117.7179820903186,
+            "trueskill.mu": 25.665817346935153,
+            "trueskill.sigma": 0.6272821453315719,
+            "games_played": 548,
+            "last_time_updated": "2020-09-09T02:49:48.884749",
+            "authors": [
+                "Jake Bumgardner",
+                "Adam Salwen",
+                "Ethan Saxenian"
+            ]
+        }
+    ],
+    [
+        "EarlyGameBot-battlerattler_priority_bot",
+        {
+            "elo": 1281.7774420814048,
+            "trueskill.mu": 25.48475373026577,
+            "trueskill.sigma": 0.6228827959770484,
+            "games_played": 787,
+            "last_time_updated": "2020-09-09T02:49:48.884754",
+            "authors": [
+                "Jake Bumgardner",
+                "Adam Salwen",
+                "Ethan Saxenian"
+            ]
+        }
+    ],
+    [
+        "CheapoBot",
+        {
+            "elo": 1212.3032461909293,
+            "trueskill.mu": 24.397853708476195,
+            "trueskill.sigma": 0.6239539756899969,
+            "games_played": 354,
+            "last_time_updated": "2020-09-09T02:49:48.884758",
+            "authors": [
+                "Brian Kelly"
+            ]
+        }
+    ],
+    [
         "SauroliskBot",
         {
-            "elo": 1137.050066748041,
-            "trueskill.mu": 22.804772973515256,
-            "trueskill.sigma": 0.6250509894579934,
-            "games_played": 297,
-            "last_time_updated": "2020-08-12T23:49:54.749571",
+            "elo": 777.493501283225,
+            "trueskill.mu": 20.47753774523813,
+            "trueskill.sigma": 0.6382338705077878,
+            "games_played": 343,
+            "last_time_updated": "2020-09-09T02:49:48.884791",
             "authors": [
                 "Jake Bumgardner"
             ]
         }
     ],
     [
-        "SupremacyBot MONSTER_TYPES.PIRATE",
-        {
-            "elo": 909.4277148725408,
-            "trueskill.mu": 20.87872737018099,
-            "trueskill.sigma": 0.6307221671843272,
-            "games_played": 283,
-            "last_time_updated": "2020-08-12T23:49:54.749597",
-            "authors": [
-                "Jeremy Salwen"
-            ]
-        }
-    ],
-    [
         "SupremacyBot MONSTER_TYPES.MURLOC",
         {
-            "elo": 800.9850795312785,
-            "trueskill.mu": 20.69124439595595,
-            "trueskill.sigma": 0.6308886739999778,
-            "games_played": 311,
-            "last_time_updated": "2020-08-12T23:49:54.749623",
-            "authors": [
-                "Jeremy Salwen"
-            ]
-        }
-    ],
-    [
-        "SupremacyBot MONSTER_TYPES.MECH",
-        {
-            "elo": 845.6168462971688,
-            "trueskill.mu": 20.674461294015828,
-            "trueskill.sigma": 0.6305653233335768,
-            "games_played": 306,
-            "last_time_updated": "2020-08-12T23:49:54.749645",
+            "elo": 798.0289361908918,
+            "trueskill.mu": 19.50167756776636,
+            "trueskill.sigma": 0.6425293813121233,
+            "games_played": 335,
+            "last_time_updated": "2020-09-09T02:49:48.884818",
             "authors": [
                 "Jeremy Salwen"
             ]
@@ -787,11 +761,11 @@
     [
         "SupremacyBot MONSTER_TYPES.DEMON",
         {
-            "elo": 859.8071895630661,
-            "trueskill.mu": 20.58303557121739,
-            "trueskill.sigma": 0.6308159610637896,
-            "games_played": 317,
-            "last_time_updated": "2020-08-12T23:49:54.749667",
+            "elo": 750.3039999033442,
+            "trueskill.mu": 19.252155527840873,
+            "trueskill.sigma": 0.6413873781468359,
+            "games_played": 350,
+            "last_time_updated": "2020-09-09T02:49:48.884852",
             "authors": [
                 "Jeremy Salwen"
             ]
@@ -800,76 +774,37 @@
     [
         "SupremacyBot MONSTER_TYPES.DRAGON",
         {
-            "elo": 859.3296545127153,
-            "trueskill.mu": 20.26485666428971,
-            "trueskill.sigma": 0.6364300865634779,
-            "games_played": 325,
-            "last_time_updated": "2020-08-12T23:49:54.749689",
+            "elo": 803.935501426235,
+            "trueskill.mu": 19.142663615826052,
+            "trueskill.sigma": 0.6450687955317307,
+            "games_played": 351,
+            "last_time_updated": "2020-09-09T02:49:48.884877",
             "authors": [
                 "Jeremy Salwen"
             ]
         }
     ],
     [
-        "SupremacyUpgradeBot MONSTER_TYPES.BEAST",
+        "SupremacyBot MONSTER_TYPES.MECH",
         {
-            "elo": 836.5393927625493,
-            "trueskill.mu": 20.196360898287466,
-            "trueskill.sigma": 0.6350343522033858,
-            "games_played": 285,
-            "last_time_updated": "2020-08-12T23:49:54.749711",
+            "elo": 775.0328708664551,
+            "trueskill.mu": 19.123606332816333,
+            "trueskill.sigma": 0.6425097800558522,
+            "games_played": 344,
+            "last_time_updated": "2020-09-09T02:49:48.884901",
             "authors": [
                 "Jeremy Salwen"
             ]
         }
     ],
     [
-        "SupremacyUpgradeBot MONSTER_TYPES.MECH",
+        "SupremacyBot MONSTER_TYPES.PIRATE",
         {
-            "elo": 765.2942987418243,
-            "trueskill.mu": 20.091852406053242,
-            "trueskill.sigma": 0.6330069451051725,
-            "games_played": 305,
-            "last_time_updated": "2020-08-12T23:49:54.749733",
-            "authors": [
-                "Jeremy Salwen"
-            ]
-        }
-    ],
-    [
-        "RandomBot",
-        {
-            "elo": 879.3026705123251,
-            "trueskill.mu": 20.013552843627885,
-            "trueskill.sigma": 0.6328371633162646,
-            "games_played": 831,
-            "last_time_updated": "2020-08-12T23:49:54.749755",
-            "authors": [
-                "Jeremy Salwen"
-            ]
-        }
-    ],
-    [
-        "SupremacyBot MONSTER_TYPES.BEAST",
-        {
-            "elo": 860.658984403823,
-            "trueskill.mu": 19.952017745390258,
-            "trueskill.sigma": 0.6361724812883256,
-            "games_played": 335,
-            "last_time_updated": "2020-08-12T23:49:54.749779",
-            "authors": [
-                "Jeremy Salwen"
-            ]
-        }
-    ],
-    [
-        "SupremacyUpgradeBot MONSTER_TYPES.DEMON",
-        {
-            "elo": 847.0314032522783,
-            "trueskill.mu": 19.901043593743527,
-            "trueskill.sigma": 0.6368118532498028,
-            "games_played": 306,
-            "last_time_updated": "2020-08-12T23:49:54.749802",
+            "elo": 837.5414663641724,
+            "trueskill.mu": 18.970901573480987,
+            "trueskill.sigma": 0.645569687784704,
+            "games_played": 322,
+            "last_time_updated": "2020-09-09T02:49:48.884925",
             "authors": [
                 "Jeremy Salwen"
             ]
@@ -878,11 +813,37 @@
     [
         "SupremacyUpgradeBot MONSTER_TYPES.PIRATE",
         {
-            "elo": 804.2338176268343,
-            "trueskill.mu": 19.685195675051823,
-            "trueskill.sigma": 0.6381642538518819,
-            "games_played": 312,
-            "last_time_updated": "2020-08-12T23:49:54.749824",
+            "elo": 845.2328227182595,
+            "trueskill.mu": 18.916864678861792,
+            "trueskill.sigma": 0.6458190331722498,
+            "games_played": 346,
+            "last_time_updated": "2020-09-09T02:49:48.884949",
+            "authors": [
+                "Jeremy Salwen"
+            ]
+        }
+    ],
+    [
+        "SupremacyBot MONSTER_TYPES.BEAST",
+        {
+            "elo": 819.9704166378664,
+            "trueskill.mu": 18.75503256276383,
+            "trueskill.sigma": 0.647346673442349,
+            "games_played": 365,
+            "last_time_updated": "2020-09-09T02:49:48.884974",
+            "authors": [
+                "Jeremy Salwen"
+            ]
+        }
+    ],
+    [
+        "SupremacyUpgradeBot MONSTER_TYPES.BEAST",
+        {
+            "elo": 648.4821647603725,
+            "trueskill.mu": 18.356107614314507,
+            "trueskill.sigma": 0.6500935987930306,
+            "games_played": 315,
+            "last_time_updated": "2020-09-09T02:49:48.885021",
             "authors": [
                 "Jeremy Salwen"
             ]
@@ -891,11 +852,50 @@
     [
         "SupremacyUpgradeBot MONSTER_TYPES.DRAGON",
         {
-            "elo": 732.5289123640578,
-            "trueskill.mu": 19.551892860281075,
-            "trueskill.sigma": 0.6401467998212386,
-            "games_played": 312,
-            "last_time_updated": "2020-08-12T23:49:54.749846",
+            "elo": 768.771990797995,
+            "trueskill.mu": 18.049773422059022,
+            "trueskill.sigma": 0.65087638469035,
+            "games_played": 350,
+            "last_time_updated": "2020-09-09T02:49:48.885046",
+            "authors": [
+                "Jeremy Salwen"
+            ]
+        }
+    ],
+    [
+        "SupremacyUpgradeBot MONSTER_TYPES.MECH",
+        {
+            "elo": 741.5206707712348,
+            "trueskill.mu": 18.013836733589084,
+            "trueskill.sigma": 0.6519581208407517,
+            "games_played": 351,
+            "last_time_updated": "2020-09-09T02:49:48.885070",
+            "authors": [
+                "Jeremy Salwen"
+            ]
+        }
+    ],
+    [
+        "SupremacyUpgradeBot MONSTER_TYPES.DEMON",
+        {
+            "elo": 670.1922351048958,
+            "trueskill.mu": 17.76813341645239,
+            "trueskill.sigma": 0.6514961395690368,
+            "games_played": 349,
+            "last_time_updated": "2020-09-09T02:49:48.885095",
+            "authors": [
+                "Jeremy Salwen"
+            ]
+        }
+    ],
+    [
+        "RandomBot",
+        {
+            "elo": 612.1811715562433,
+            "trueskill.mu": 17.717005414273864,
+            "trueskill.sigma": 0.6583290267042987,
+            "games_played": 868,
+            "last_time_updated": "2020-09-09T02:49:48.885119",
             "authors": [
                 "Jeremy Salwen"
             ]
@@ -904,11 +904,11 @@
     [
         "SupremacyUpgradeBot MONSTER_TYPES.MURLOC",
         {
-            "elo": 872.0312954429659,
-            "trueskill.mu": 19.141346959953452,
-            "trueskill.sigma": 0.6426542742533506,
-            "games_played": 303,
-            "last_time_updated": "2020-08-12T23:49:54.749867",
+            "elo": 651.5612251116079,
+            "trueskill.mu": 17.435185562777892,
+            "trueskill.sigma": 0.6565227308021844,
+            "games_played": 347,
+            "last_time_updated": "2020-09-09T02:49:48.885144",
             "authors": [
                 "Jeremy Salwen"
             ]
@@ -917,11 +917,11 @@
     [
         "NoActionBot ",
         {
-            "elo": 661.8176355486703,
-            "trueskill.mu": 17.818777548086437,
-            "trueskill.sigma": 0.6517143974768673,
-            "games_played": 318,
-            "last_time_updated": "2020-08-12T23:49:54.749889",
+            "elo": 516.4591188599552,
+            "trueskill.mu": 15.59552434770531,
+            "trueskill.sigma": 0.6784986570186379,
+            "games_played": 361,
+            "last_time_updated": "2020-09-09T02:49:48.885168",
             "authors": [
                 "Brian Kelly"
             ]

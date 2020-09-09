@@ -3,6 +3,7 @@ import logging
 import typing
 from typing import Optional, List
 
+from hearthstone import events
 from hearthstone.events import CombatPhaseContext, EVENTS, CardEvent
 
 if typing.TYPE_CHECKING:
@@ -59,7 +60,7 @@ class WarParty:
         context.friendly_war_party.board.insert(index, monster)
         if index < context.friendly_war_party.next_attacker_idx:
             context.friendly_war_party.next_attacker_idx += 1
-        context.broadcast_combat_event(CardEvent(EVENTS.SUMMON_COMBAT, monster))
+        context.broadcast_combat_event(events.SummonCombatEvent(monster))
 
     def get_index(self, card):
         return self.board.index(card)
@@ -81,7 +82,7 @@ def fight_boards(war_party_1: 'WarParty', war_party_2: 'WarParty', randomizer: '
     if war_party_2.num_cards() > war_party_1.num_cards():
         attacking_war_party, defending_war_party = defending_war_party, attacking_war_party
 
-    start_combat_event = CardEvent(EVENTS.COMBAT_START)
+    start_combat_event = events.CombatStartEvent()
     # Friendly vs enemy warparty does not matter for broadcast_combat_event
     CombatPhaseContext(war_party_1, war_party_2, randomizer).broadcast_combat_event(start_combat_event)
 
@@ -105,42 +106,42 @@ def damage(half_board_1: 'WarParty', half_board_2: 'WarParty', randomizer: 'Rand
     # Handle case where both players have cards left on board.
     if monster_damage_1 > 0 and monster_damage_2 > 0:
         logger.debug('neither player won (both players have minions left)')
-        half_board_1.owner.broadcast_buy_phase_event(CardEvent(EVENTS.END_COMBAT, won_combat=False), randomizer)
-        half_board_2.owner.broadcast_buy_phase_event(CardEvent(EVENTS.END_COMBAT, won_combat=False), randomizer)
+        half_board_1.owner.broadcast_buy_phase_event(events.EndCombatEvent(won_combat=False), randomizer)
+        half_board_2.owner.broadcast_buy_phase_event(events.EndCombatEvent(won_combat=False), randomizer)
     elif monster_damage_1 > 0:
         logger.debug(f'{half_board_1.owner.name} has won the fight')
         logger.debug(f'{half_board_2.owner.name} took {monster_damage_1 + half_board_1.owner.tavern_tier} damage.')
         logger.debug(f"{half_board_1.owner.name}'s remaining board: {[card for card in half_board_1.board if not card.dead]}")
         half_board_2.owner.health -= monster_damage_1 + half_board_1.owner.tavern_tier
-        half_board_1.owner.broadcast_buy_phase_event(CardEvent(EVENTS.END_COMBAT, won_combat=True), randomizer)
-        half_board_2.owner.broadcast_buy_phase_event(CardEvent(EVENTS.END_COMBAT, won_combat=False), randomizer)
+        half_board_1.owner.broadcast_buy_phase_event(events.EndCombatEvent(won_combat=True), randomizer)
+        half_board_2.owner.broadcast_buy_phase_event(events.EndCombatEvent(won_combat=False), randomizer)
     elif monster_damage_2 > 0:
         logger.debug(f'{half_board_2.owner.name} has won the fight')
         logger.debug(f'{half_board_1.owner.name} took {monster_damage_2 + half_board_2.owner.tavern_tier} damage.')
         logger.debug(f"{half_board_2.owner.name}'s remaining board: {[card for card in half_board_2.board if not card.dead]}")
         half_board_1.owner.health -= monster_damage_2 + half_board_2.owner.tavern_tier
-        half_board_1.owner.broadcast_buy_phase_event(CardEvent(EVENTS.END_COMBAT, won_combat=False), randomizer)
-        half_board_2.owner.broadcast_buy_phase_event(CardEvent(EVENTS.END_COMBAT, won_combat=True), randomizer)
+        half_board_1.owner.broadcast_buy_phase_event(events.EndCombatEvent(won_combat=False), randomizer)
+        half_board_2.owner.broadcast_buy_phase_event(events.EndCombatEvent(won_combat=True), randomizer)
     else:
         logger.debug('neither player won (no minions left)')
-        half_board_1.owner.broadcast_buy_phase_event(CardEvent(EVENTS.END_COMBAT, won_combat=False), randomizer)
-        half_board_2.owner.broadcast_buy_phase_event(CardEvent(EVENTS.END_COMBAT, won_combat=False), randomizer)
+        half_board_1.owner.broadcast_buy_phase_event(events.EndCombatEvent(won_combat=False), randomizer)
+        half_board_2.owner.broadcast_buy_phase_event(events.EndCombatEvent(won_combat=False), randomizer)
 
 
 def start_attack(attacker: 'MonsterCard', defender: 'MonsterCard', attacking_war_party: 'WarParty', defending_war_party: 'WarParty',
                  randomizer: 'Randomizer'):
     logger.debug(f'{attacker} is attacking {defender}')
-    on_attack_event = CardEvent(EVENTS.ON_ATTACK, attacker)
+    on_attack_event = events.OnAttackEvent(attacker)
     combat_phase_context = CombatPhaseContext(attacking_war_party, defending_war_party, randomizer)
     combat_phase_context.broadcast_combat_event(on_attack_event)
     attacker.take_damage(defender.attack, combat_phase_context, defender, defending=False)
     defender.take_damage(attacker.attack, combat_phase_context, attacker)
     # handle "after combat" events here
-    combat_phase_context.broadcast_combat_event(CardEvent(EVENTS.AFTER_ATTACK_DAMAGE, attacker, foe=defender))
+    combat_phase_context.broadcast_combat_event(events.AfterAttackDamageEvent(attacker, foe=defender))
     # attacker.resolve_death(CombatPhaseContext(attacking_war_party, defending_war_party, randomizer), defender)
     # defender.resolve_death(CombatPhaseContext(defending_war_party, attacking_war_party, randomizer), attacker)
     resolve_combat_deaths(attacker, defender, attacking_war_party, defending_war_party, randomizer)
-    combat_phase_context.broadcast_combat_event(CardEvent(EVENTS.AFTER_ATTACK_DEATHRATTLES, defender, foe=attacker))
+    combat_phase_context.broadcast_combat_event(events.AfterAttackDeathrattleEvent(defender, foe=attacker))
     logger.debug(f'{attacker} has just attacked {defender}')
 
 
@@ -153,9 +154,9 @@ def resolve_combat_deaths(attacker: 'MonsterCard', defender: 'MonsterCard', atta
         defender.dead = True
     if attacker.dead:
         context = CombatPhaseContext(attacking_war_party, defending_war_party, randomizer)
-        card_death_event = CardEvent(EVENTS.DIES, attacker, foe=defender)
+        card_death_event = events.DiesEvent(attacker, foe=defender)
         context.broadcast_combat_event(card_death_event)
     if defender.dead:
         context = CombatPhaseContext(defending_war_party, attacking_war_party, randomizer)
-        card_death_event = CardEvent(EVENTS.DIES, defender, foe=attacker)
+        card_death_event = events.DiesEvent(defender, foe=attacker)
         context.broadcast_combat_event(card_death_event)

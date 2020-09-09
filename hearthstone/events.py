@@ -7,6 +7,7 @@ if typing.TYPE_CHECKING:
     from hearthstone.player import Player
     from hearthstone.randomizer import Randomizer
     from hearthstone.tavern import WarParty
+    from hearthstone.cards import MonsterCard
 
 
 class EVENTS(enum.Enum):
@@ -28,6 +29,115 @@ class EVENTS(enum.Enum):
     AFTER_ATTACK_DEATHRATTLES = 16
     END_COMBAT = 17
     TAVERN_UPGRADE = 18
+
+
+class CardEvent:
+    def __init__(self, eventid: EVENTS):
+        self.event = eventid
+        self.card = None
+
+
+class SummonBuyEvent(CardEvent):
+    def __init__(self, card: 'MonsterCard', targets: Optional[List['MonsterCard']] = None):
+        super().__init__(EVENTS.SUMMON_BUY)
+        self.card = card
+        self.targets = targets
+
+
+class SummonCombatEvent(CardEvent):
+    def __init__(self, card: 'MonsterCard'):
+        super().__init__(EVENTS.SUMMON_COMBAT)
+        self.card = card
+
+
+class DiesEvent(CardEvent):
+    def __init__(self, card: 'MonsterCard', foe: Optional['MonsterCard']):
+        super().__init__(EVENTS.DIES)
+        self.card = card
+        self.foe = foe
+
+
+class CombatStartEvent(CardEvent):
+    def __init__(self):
+        super().__init__(EVENTS.COMBAT_START)
+
+
+class BuyStartEvent(CardEvent):
+    def __init__(self):
+        super().__init__(EVENTS.BUY_START)
+
+
+class OnAttackEvent(CardEvent):
+    def __init__(self, card: 'MonsterCard'):
+        super().__init__(EVENTS.ON_ATTACK)
+        self.card = card
+
+
+class AfterAttackDamageEvent(CardEvent):
+    def __init__(self, card: 'MonsterCard', foe: 'MonsterCard'):
+        super().__init__(EVENTS.AFTER_ATTACK_DAMAGE)
+        self.card = card
+        self.foe = foe
+
+
+class SellEvent(CardEvent):
+    def __init__(self, card: 'MonsterCard'):
+        super().__init__(EVENTS.SELL)
+        self.card = card
+
+
+class BuyEvent(CardEvent):
+    def __init__(self, card: 'MonsterCard'):
+        super().__init__(EVENTS.BUY)
+        self.card = card
+
+
+class BuyEndEvent(CardEvent):
+    def __init__(self):
+        super().__init__(EVENTS.BUY_END)
+
+
+class CardDamagedEvent(CardEvent):
+    def __init__(self, card: 'MonsterCard', foe: 'MonsterCard'):
+        super().__init__(EVENTS.CARD_DAMAGED)
+        self.card = card
+        self.foe = foe
+
+
+class DivineShieldLostEvent(CardEvent):
+    def __init__(self, card: 'MonsterCard', foe: 'MonsterCard'):
+        super().__init__(EVENTS.DIVINE_SHIELD_LOST)
+        self.card = card
+        self.foe = foe
+
+
+class PlayerDamagedEvent(CardEvent):
+    def __init__(self):
+        super().__init__(EVENTS.PLAYER_DAMAGED)
+
+
+class ReturnToHandEvent(CardEvent):
+    def __init__(self, card: 'MonsterCard'):
+        super().__init__(EVENTS.RETURN_TO_HAND)
+        self.card = card
+
+
+class AfterAttackDeathrattleEvent(CardEvent):
+    def __init__(self, card: 'MonsterCard', foe: 'MonsterCard'):
+        super().__init__(EVENTS.AFTER_ATTACK_DEATHRATTLES)
+        self.card = card
+        self.foe = foe
+
+
+class EndCombatEvent(CardEvent):
+    def __init__(self, won_combat: bool):
+        super().__init__(EVENTS.END_COMBAT)
+        self.won_combat = won_combat
+
+
+class TavernUpgradeEvent(CardEvent):
+    def __init__(self):
+        super().__init__(EVENTS.TAVERN_UPGRADE)
 
 
 class BuyPhaseContext:
@@ -81,13 +191,3 @@ class CombatPhaseContext:
         return deathrattle_multiplier
 
 
-class CardEvent:
-    def __init__(self, event: EVENTS, card: Optional['MonsterCard'] = None, targets: Optional[List['MonsterCard']] = None, foe: Optional['MonsterCard'] = None, won_combat: Optional[bool] = None):
-        self.event = EVENTS(event)
-        self.card = card
-        if targets is not None:
-            self.targets = targets
-        if foe is not None:
-            self.foe = foe  # for combat-related events
-        if won_combat is not None:
-            self.won_combat = won_combat

@@ -1,7 +1,7 @@
 import enum
 from typing import Dict
 
-from hearthstone import combat, hero
+from hearthstone import combat, hero, events
 from hearthstone.events import EVENTS, CardEvent
 from hearthstone.cards import CardList, PrintingPress
 from hearthstone.combat import WarParty
@@ -50,14 +50,14 @@ class Tavern:
             player.apply_turn_start_income()
             player.draw()
             player.hero.on_buy_step()
-            player.broadcast_buy_phase_event(CardEvent(EVENTS.BUY_START))
+            player.broadcast_buy_phase_event(events.BuyStartEvent())
 
     def combat_step(self):
         assert self.game_state == GameState.BUY_PHASE
         self.game_state = GameState.COMBAT_PHASE
         for player_name, player in self.players.items():
             player.decrease_tavern_upgrade_cost()
-            player.broadcast_buy_phase_event(CardEvent(EVENTS.BUY_END))
+            player.broadcast_buy_phase_event(events.BuyEndEvent())
         for player_1, player_2 in self.current_player_pairings:
             combat.fight_boards(WarParty(player_1), WarParty(player_2), self.randomizer)
         self._update_losers()

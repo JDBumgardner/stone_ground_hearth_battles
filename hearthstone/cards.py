@@ -2,6 +2,7 @@ import itertools
 from collections import defaultdict
 from typing import Set, List, Optional, Callable, Type, Union, Iterator
 
+from hearthstone import events
 from hearthstone.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
 from hearthstone.card_factory import make_metaclass
 from hearthstone.monster_types import MONSTER_TYPES
@@ -126,19 +127,19 @@ class MonsterCard(Card):
     def take_damage(self, damage: int, combat_phase_context: CombatPhaseContext, foe: Optional['MonsterCard'] = None, defending: Optional[bool] = True):
         if self.divine_shield and not damage <= 0:
             self.divine_shield = False
-            combat_phase_context.broadcast_combat_event(CardEvent(EVENTS.DIVINE_SHIELD_LOST, self, foe=foe))
+            combat_phase_context.broadcast_combat_event(events.DivineShieldLostEvent(self, foe=foe))
         else:
             self.health -= damage
             if foe is not None and foe.poisonous and self.health > 0:
                 self.health = 0
             if defending and foe is not None and self.health < 0:
                 foe.overkill(combat_phase_context)  # overkill doesn't trigger when the attacker takes damage, so the friendly war party is always the attacker's and the enemy war party is always the defender's
-            combat_phase_context.broadcast_combat_event(CardEvent(EVENTS.CARD_DAMAGED, self, foe=foe))
+            combat_phase_context.broadcast_combat_event(events.CardDamagedEvent(self, foe=foe))
 
     def resolve_death(self, context: CombatPhaseContext, foe: Optional['MonsterCard'] = None):
         if self.health <= 0 and not self.dead:
             self.dead = True
-            card_death_event = CardEvent(EVENTS.DIES, self, foe=foe)
+            card_death_event = events.DiesEvent(self, foe=foe)
             context.broadcast_combat_event(card_death_event)
 
     def trigger_reborn(self, context: CombatPhaseContext):
