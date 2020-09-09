@@ -26,9 +26,9 @@
     "vega-lite": "^4.14.1"
   },
   "scripts": {
-      "build": "cross-env NODE_ENV=production webpack",
-      "build-dev": "cross-env webpack",
-      "dev": "webpack-dev-server --content-base public",
-      "validate": "svelte-check"
+    "build": "cross-env NODE_ENV=production webpack",
+    "build-dev": "cross-env webpack",
+    "dev": "webpack-dev-server --content-base public",
+    "validate": "svelte-check"
   }
 }

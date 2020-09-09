@@ -113,7 +113,7 @@ class MonsterCard(Card):
         self.reborn = self.base_reborn
         self.dead = False
         self.golden = False
-        self.battlecry: Optional[Callable[[CombatPhaseContext], None]] = self.base_battlecry
+        self.battlecry: Optional[Callable[[List[MonsterCard], CombatPhaseContext], None]] = self.base_battlecry
         self.bool_attribute_list = [
             "divine_shield", "magnetic", "poisonous", "taunt",
             "windfury", "cleave", "reborn"

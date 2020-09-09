@@ -8,7 +8,7 @@ from torch.utils.tensorboard import SummaryWriter
 from hearthstone.battlebots.cheapo_bot import CheapoBot
 from hearthstone.battlebots.no_action_bot import NoActionBot
 from hearthstone.battlebots.priority_bot import PriorityBot
-from hearthstone.battlebots.priority_functions import attack_health_priority_bot
+from hearthstone.battlebots.priority_functions import PriorityFunctions
 from hearthstone.battlebots.random_bot import RandomBot
 from hearthstone.battlebots.saurolisk_bot import SauroliskBot
 from hearthstone.battlebots.supremacy_bot import SupremacyBot
@@ -64,8 +64,9 @@ def easy_contestants():
                  enumerate([MONSTER_TYPES.MURLOC, MONSTER_TYPES.BEAST, MONSTER_TYPES.MECH, MONSTER_TYPES.DRAGON,
                             MONSTER_TYPES.DEMON, MONSTER_TYPES.PIRATE])]
     all_bots += [Contestant("SauroliskBot", lambda: SauroliskBot(5))]
-    all_bots += [Contestant("PriorityHealthAttackBot",lambda:  attack_health_priority_bot(10, PriorityBot))]
+    all_bots += [Contestant("PriorityHealthAttackBot", lambda:  PriorityFunctions.attack_health_priority_bot(10, PriorityBot))]
     return all_bots
+
 
 StateBatch = namedtuple('StateBatch', ('player_tensor', 'cards_tensor'))
 TransitionBatch = namedtuple('TransitionBatch', ('state', 'valid_actions', 'action', 'action_prob', 'value', 'next_state', 'reward', 'is_terminal'))
