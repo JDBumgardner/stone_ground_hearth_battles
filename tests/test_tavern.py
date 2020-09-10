@@ -1970,6 +1970,27 @@ class CardTests(unittest.TestCase):
         self.assertTrue(player_1.in_play[0].golden)
         self.assertFalse(player_1.in_play[1].golden)
 
+    class TestJandiceBarovRandomizer(DefaultRandomizer):
+        def select_from_store(self, store: List['Card']) -> 'Card':
+            minion_types = [type(card) for card in store]
+            if VulgarHomunculus in minion_types:
+                return force_card(store, VulgarHomunculus)
+            else:
+                return store[0]
+
+    def test_jandice_barov(self):
+        tavern = Tavern()
+        player_1 = tavern.add_player_with_hero("Dante_Kong", JandiceBarov())
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.randomizer = RepeatedCardForcer([AlleyCat, AlleyCat, VulgarHomunculus])
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        tavern.randomizer = self.TestJandiceBarovRandomizer()
+        player_1.hero_power(BoardIndex(1))
+        self.assertCardListEquals(player_1.in_play, [AlleyCat, VulgarHomunculus])
+        self.assertCardListEquals(player_1.store, [AlleyCat, TabbyCat])
+
 
 if __name__ == '__main__':
     unittest.main()

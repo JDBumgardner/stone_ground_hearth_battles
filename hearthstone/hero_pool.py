@@ -181,7 +181,7 @@ class SkycapnKragg(Hero):
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
-        context.owner.coins = min(context.owner.coins + context.owner.tavern.turn_count + 1, 10)
+        context.owner.plus_coins(context.owner.tavern.turn_count + 1)
         self.can_use_power = False
 
 
@@ -280,7 +280,7 @@ class ForestWardenOmu(Hero):
 
     def handle_event(self, event: 'CardEvent', context: 'BuyPhaseContext'):
         if event.event is EVENTS.TAVERN_UPGRADE:
-            context.owner.coins = min(context.owner.coins + 2, 10)
+            context.owner.plus_coins(2)
 
 
 class GeorgeTheFallen(Hero):
