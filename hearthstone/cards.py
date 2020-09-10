@@ -286,7 +286,7 @@ class CardList:
         return sum(len(value) for value in self.cards_by_tier.values())
 
 
-class ZONES(enum.Enum):
+class CardLocation(enum.Enum):
     STORE = 1
     HAND = 2
     BOARD = 3

@@ -3,7 +3,7 @@ from typing import List, Optional
 from hearthstone.agent import Agent, Action, BuyAction, SummonAction, EndPhaseAction, RerollAction, \
     SellAction, RedeemGoldCoinAction
 from hearthstone.agent import TavernUpgradeAction, HeroPowerAction, TripleRewardsAction
-from hearthstone.cards import ZONES
+from hearthstone.cards import CardLocation
 from hearthstone.player import HandIndex, BoardIndex, StoreIndex
 
 if typing.TYPE_CHECKING:
@@ -96,7 +96,7 @@ class UserAgent(Agent):
                 store_index = int(split_list[1])
             except ValueError:
                 return None
-            if not 0 <= store_index < len(player.store) or player.coins < player.minion_cost:
+            if not player.valid_store_index(store_index) or player.coins < player.minion_cost:
                 return None
             return BuyAction(StoreIndex(store_index))
         elif split_list[0] == "s":
@@ -106,12 +106,11 @@ class UserAgent(Agent):
                 targets = [int(target) for target in split_list[1:]]
             except ValueError:
                 return None
-            if not 0 <= targets[0] < len(player.hand):
+            if not player.valid_hand_index(targets[0]):
                 return None
             for target in targets[1:]:
                 if not 0 <= target < len(player.in_play) + 1:
                     return None
-            in_play = player.in_play + [player.hand[targets[0]]]
             return SummonAction(HandIndex(targets[0]), [BoardIndex(target) for target in targets[1:]])
         elif split_list[0] == "r":
             if not len(split_list) == 2:
@@ -120,7 +119,7 @@ class UserAgent(Agent):
                 sell_index = int(split_list[1])
             except ValueError:
                 return None
-            if not 0 <= sell_index < len(player.in_play):
+            if not player.valid_board_index(sell_index):
                 return None
             return SellAction(BoardIndex(sell_index))
         elif split_list == ["e"]:
@@ -135,20 +134,19 @@ class UserAgent(Agent):
             if not 0 < len(split_list) <= 2:
                 return None
             try:
-                target = int(split_list[1])
+                index = int(split_list[1])
             except IndexError:
-                target = None
+                return HeroPowerAction()
             except ValueError:
                 return None
-            if player.hero.power_target_location == ZONES.BOARD and target is not None:
-                if not 0 <= target < len(player.in_play):
+            if player.hero.power_target_location == CardLocation.BOARD and index is not None:
+                if not player.valid_board_index(index):
                     return None
-                target = BoardIndex(target)
-            elif player.hero.power_target_location == ZONES.STORE and target is not None:
-                if not 0 <= target < len(player.store):
+                return HeroPowerAction(board_target=BoardIndex(index))
+            elif player.hero.power_target_location == CardLocation.STORE and index is not None:
+                if not player.valid_store_index(index):
                     return None
-                target = StoreIndex(target)
-            return HeroPowerAction(target)
+                return HeroPowerAction(store_target=StoreIndex(index))
         elif split_list[0] == "t":
             return TripleRewardsAction()
         elif split_list[0] == "c":

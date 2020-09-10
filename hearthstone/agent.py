@@ -204,10 +204,10 @@ def generate_all_actions(player: 'Player') -> Generator[Action, None, None]:
     yield HeroPowerAction()
     for index in range(len(player.in_play)):
         yield SellAction(BoardIndex(index))
-        yield HeroPowerAction(BoardIndex(index))
+        yield HeroPowerAction(board_target=BoardIndex(index))
     for index in range(len(player.store)):
         yield BuyAction(StoreIndex(index))
-        yield HeroPowerAction(StoreIndex(index))
+        yield HeroPowerAction(store_target=StoreIndex(index))
     for index, card in enumerate(player.hand):
         valid_target_indices = [index for index, target in enumerate(player.in_play) if card.validate_battlecry_target(target)]
         num_battlecry_targets = min(card.num_battlecry_targets, len(valid_target_indices))

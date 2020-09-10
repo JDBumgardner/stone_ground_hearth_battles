@@ -5,7 +5,7 @@ from typing import Optional, List, Callable, Type, Union
 
 from hearthstone import events
 from hearthstone.card_pool import DefenderOfArgus
-from hearthstone.cards import MonsterCard, Card, ZONES
+from hearthstone.cards import MonsterCard, Card, CardLocation
 from hearthstone.events import BuyPhaseContext, EVENTS, CardEvent
 from hearthstone.hero import EmptyHero
 from hearthstone.monster_types import MONSTER_TYPES
@@ -112,7 +112,7 @@ class Player:
         if targets is None:
             targets = []
         #  TODO: Jack num_battlecry_targets should only accept 0,1,2
-        if index not in range(len(self.hand)):
+        if not self.valid_hand_index(index):
             return False
         card = self.hand[index]
         if not self.room_on_board():
@@ -193,8 +193,8 @@ class Player:
         self.broadcast_buy_phase_event(event)
         self.check_golden(type(card))
 
-    def validate_purchase(self, index: StoreIndex) -> bool:
-        if index not in range(len(self.store)):
+    def validate_purchase(self, index: 'StoreIndex') -> bool:
+        if not self.valid_store_index(index):
             return False
         if self.coins < self.minion_cost:
             return False
@@ -239,8 +239,8 @@ class Player:
         self.coins += card.redeem_rate
         self.tavern.deck.return_cards(card.dissolve())
 
-    def validate_sell_minion(self, index: BoardIndex) -> bool:
-        return index in range(len(self.in_play))
+    def validate_sell_minion(self, index: 'BoardIndex') -> bool:
+        return self.valid_board_index(index)
 
     def hero_power(self, board_index: Optional['BoardIndex'] = None, store_index: Optional['StoreIndex'] = None):
         self.hero.hero_power(BuyPhaseContext(self, self.tavern.randomizer), board_index, store_index)
@@ -290,3 +290,12 @@ class Player:
     def gain_card(self, card: 'MonsterCard'):
         self.hand.append(card)
         self.check_golden(type(card))
+
+    def valid_board_index(self, index: 'BoardIndex') -> bool:
+        return 0 <= index < len(self.in_play)
+
+    def valid_hand_index(self, index: 'HandIndex') -> bool:
+        return 0 <= index < len(self.hand)
+
+    def valid_store_index(self, index: 'StoreIndex') -> bool:
+        return 0 <= index < len(self.store)
