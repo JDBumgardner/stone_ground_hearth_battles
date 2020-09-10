@@ -1,7 +1,7 @@
 from typing import Union, Tuple, Optional
 
 from hearthstone.card_pool import Amalgam
-from hearthstone.cards import PrintingPress, one_minion_per_type, ZONES
+from hearthstone.cards import PrintingPress, one_minion_per_type, CardLocation
 from hearthstone.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
 from hearthstone.hero import Hero
 from hearthstone.monster_types import MONSTER_TYPES
@@ -33,7 +33,8 @@ class PatchWerk(Hero):
     def starting_health(self) -> int:
         return 50
 
-    def hero_power_valid_impl(self, context: BuyPhaseContext):
+    def hero_power_valid_impl(self, context: BuyPhaseContext, board_index: Optional['BoardIndex'] = None,
+                              store_index: Optional['StoreIndex'] = None):
         return False
 
 
@@ -51,7 +52,8 @@ class Nefarian(Hero):
 
 
 class Deathwing(Hero):
-    def hero_power_valid_impl(self, context: BuyPhaseContext):
+    def hero_power_valid_impl(self, context: BuyPhaseContext, board_index: Optional['BoardIndex'] = None,
+                              store_index: Optional['StoreIndex'] = None):
         return False
 
     def handle_event(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
@@ -65,7 +67,8 @@ class Deathwing(Hero):
 
 
 class MillificentManastorm(Hero):
-    def hero_power_valid_impl(self, context: BuyPhaseContext):
+    def hero_power_valid_impl(self, context: BuyPhaseContext, board_index: Optional['BoardIndex'] = None,
+                              store_index: Optional['StoreIndex'] = None):
         return False
 
     def handle_event(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
@@ -86,7 +89,8 @@ class YoggSaron(Hero):
         context.owner.store.remove(card)
         context.owner.gain_card(card)
 
-    def hero_power_valid_impl(self, context: BuyPhaseContext):
+    def hero_power_valid_impl(self, context: BuyPhaseContext, board_index: Optional['BoardIndex'] = None,
+                              store_index: Optional['StoreIndex'] = None):
         if not context.owner.room_in_hand():
             return False
 
@@ -113,12 +117,14 @@ class PatchesThePirate(Hero):  # TODO: does this pull from the deck or does it a
         context.owner.gain_card(card)
         self.power_cost = 4
 
-    def hero_power_valid_impl(self, context: BuyPhaseContext):
+    def hero_power_valid_impl(self, context: BuyPhaseContext, board_index: Optional['BoardIndex'] = None,
+                              store_index: Optional['StoreIndex'] = None):
         return context.owner.room_in_hand()
 
 
 class DancinDeryl(Hero):
-    def hero_power_valid_impl(self, context: BuyPhaseContext):
+    def hero_power_valid_impl(self, context: BuyPhaseContext, board_index: Optional['BoardIndex'] = None,
+                              store_index: Optional['StoreIndex'] = None):
         return False
 
     def handle_event(self, event: CardEvent, context: BuyPhaseContext):
@@ -130,7 +136,8 @@ class DancinDeryl(Hero):
 
 
 class FungalmancerFlurgl(Hero):
-    def hero_power_valid_impl(self, context: BuyPhaseContext):
+    def hero_power_valid_impl(self, context: BuyPhaseContext, board_index: Optional['BoardIndex'] = None,
+                              store_index: Optional['StoreIndex'] = None):
         return False
 
     def handle_event(self, event: CardEvent, context: BuyPhaseContext):
@@ -143,7 +150,8 @@ class FungalmancerFlurgl(Hero):
 
 
 class KaelthasSunstrider(Hero):
-    def hero_power_valid_impl(self, context: BuyPhaseContext):
+    def hero_power_valid_impl(self, context: BuyPhaseContext, board_index: Optional['BoardIndex'] = None,
+                              store_index: Optional['StoreIndex'] = None):
         return False
 
     def handle_event(self, event: CardEvent, context: BuyPhaseContext):
@@ -158,7 +166,8 @@ class KaelthasSunstrider(Hero):
 class LichBazhial(Hero):
     power_cost = 0
 
-    def hero_power_valid_impl(self, context: BuyPhaseContext):
+    def hero_power_valid_impl(self, context: BuyPhaseContext, board_index: Optional['BoardIndex'] = None,
+                              store_index: Optional['StoreIndex'] = None):
         return context.owner.room_in_hand()
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
@@ -172,13 +181,13 @@ class SkycapnKragg(Hero):
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
-        if self.can_use_power:
-            context.owner.coins += context.owner.tavern.turn_count + 1
-            self.can_use_power = False
+        context.owner.coins += context.owner.tavern.turn_count + 1
+        self.can_use_power = False
 
 
 class TheCurator(Hero):
-    def hero_power_valid_impl(self, context: BuyPhaseContext):
+    def hero_power_valid_impl(self, context: BuyPhaseContext, board_index: Optional['BoardIndex'] = None,
+                              store_index: Optional['StoreIndex'] = None):
         return False
 
     def handle_event(self, event: CardEvent, context: BuyPhaseContext):
@@ -187,7 +196,8 @@ class TheCurator(Hero):
 
 
 class TheRatKing(Hero):
-    def hero_power_valid_impl(self, context: BuyPhaseContext):
+    def hero_power_valid_impl(self, context: BuyPhaseContext, board_index: Optional['BoardIndex'] = None,
+                              store_index: Optional['StoreIndex'] = None):
         return False
 
     def handle_event(self, event: CardEvent, context: BuyPhaseContext):
@@ -202,7 +212,8 @@ class TheRatKing(Hero):
 
 
 class Ysera(Hero):
-    def hero_power_valid_impl(self, context: BuyPhaseContext):
+    def hero_power_valid_impl(self, context: BuyPhaseContext, board_index: Optional['BoardIndex'] = None,
+                              store_index: Optional['StoreIndex'] = None):
         return False
 
     def handle_event(self, event: CardEvent, context: BuyPhaseContext):
@@ -215,7 +226,8 @@ class Ysera(Hero):
 
 
 class Bartendotron(Hero):
-    def hero_power_valid_impl(self, context: BuyPhaseContext):
+    def hero_power_valid_impl(self, context: BuyPhaseContext, board_index: Optional['BoardIndex'] = None,
+                              store_index: Optional['StoreIndex'] = None):
         return False
 
     def tavern_upgrade_costs(self) -> Tuple[int, int, int, int, int, int]:
@@ -223,7 +235,8 @@ class Bartendotron(Hero):
 
 
 class MillhouseManastorm(Hero):
-    def hero_power_valid_impl(self, context: BuyPhaseContext):
+    def hero_power_valid_impl(self, context: BuyPhaseContext, board_index: Optional['BoardIndex'] = None,
+                              store_index: Optional['StoreIndex'] = None):
         return False
 
     def minion_cost(self) -> int:
@@ -261,7 +274,8 @@ class QueenWagtoggle(Hero):
 
 
 class ForestWardenOmu(Hero):
-    def hero_power_valid_impl(self, context: 'BuyPhaseContext'):
+    def hero_power_valid_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                              store_index: Optional['StoreIndex'] = None):
         return False
 
     def handle_event(self, event: 'CardEvent', context: 'BuyPhaseContext'):
@@ -271,10 +285,11 @@ class ForestWardenOmu(Hero):
 
 class GeorgeTheFallen(Hero):
     power_cost = 3
-    power_target_location = ZONES.BOARD
+    power_target_location = CardLocation.BOARD
 
-    def hero_power_valid_impl(self, context: BuyPhaseContext):
-        return len([card for card in context.owner.in_play if not card.divine_shield]) != 0
+    def hero_power_valid_impl(self, context: BuyPhaseContext, board_index: Optional['BoardIndex'] = None,
+                              store_index: Optional['StoreIndex'] = None):
+        return not context.owner.in_play[board_index].divine_shield
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
@@ -283,13 +298,13 @@ class GeorgeTheFallen(Hero):
 
 class RenoJackson(Hero):
     power_cost = 0
-    power_target_location = ZONES.BOARD
+    power_target_location = CardLocation.BOARD
 
-    def hero_power_valid_impl(self, context: BuyPhaseContext):
-        return len([card for card in context.owner.in_play if not card.golden]) != 0
+    def hero_power_valid_impl(self, context: BuyPhaseContext, board_index: Optional['BoardIndex'] = None,
+                              store_index: Optional['StoreIndex'] = None):
+        return not context.owner.in_play[board_index].golden
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
-        if self.can_use_power:
-            context.owner.in_play[board_index].golden_transformation([])
-            self.can_use_power = False
+        context.owner.in_play[board_index].golden_transformation([])
+        self.can_use_power = False

@@ -1,9 +1,8 @@
+import typing
 from typing import Union, Tuple, Optional
 
-import typing
-
 from hearthstone.card_factory import make_metaclass
-from hearthstone.cards import ZONES
+from hearthstone.cards import CardLocation
 from hearthstone.events import BuyPhaseContext, CombatPhaseContext, CardEvent
 
 if typing.TYPE_CHECKING:
@@ -21,7 +20,7 @@ class Hero(metaclass=HeroType):
     current_type = None
     buy_counter = 0
     digs_left = 5
-    power_target_location: Optional['ZONES'] = None
+    power_target_location: Optional['CardLocation'] = None
 
     def __repr__(self):
         return str(type(self).__name__)
@@ -58,23 +57,26 @@ class Hero(metaclass=HeroType):
             return False
         if self.hero_power_used:
             return False
-        if not self.hero_power_valid_impl(context):
+        if not self.can_use_power:
+            return False
+        if not self.hero_power_valid_impl(context, board_index, store_index):
             return False
         if board_index is None and store_index is None and self.power_target_location is not None:
             return False
         if board_index is not None:
-            if self.power_target_location is not ZONES.BOARD:
+            if self.power_target_location is not CardLocation.BOARD:
                 return False
-            if self.power_target_location == ZONES.BOARD and board_index > len(context.owner.in_play):
+            if self.power_target_location == CardLocation.BOARD and not context.owner.valid_board_index(board_index):
                 return False
         if store_index is not None:
-            if self.power_target_location is not ZONES.STORE:
+            if self.power_target_location is not CardLocation.STORE:
                 return False
-            if self.power_target_location == ZONES.STORE and board_index > len(context.owner.store):
+            if self.power_target_location == CardLocation.STORE and not context.owner.valid_store_index(store_index):
                 return False
         return True
 
-    def hero_power_valid_impl(self, context: BuyPhaseContext):
+    def hero_power_valid_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                              store_index: Optional['StoreIndex'] = None):
         return True
 
     def on_buy_step(self):

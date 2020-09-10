@@ -1195,6 +1195,7 @@ class CardTests(unittest.TestCase):
         tavern = Tavern()
         player_1 = tavern.add_player_with_hero("Dante_Kong", KaelthasSunstrider())
         player_2 = tavern.add_player_with_hero("lucy")
+        tavern.randomizer = RepeatedCardForcer([DragonspawnLieutenant, ScavengingHyena, Scallywag, VulgarHomunculus])
         tavern.buying_step()
         player_1.purchase(StoreIndex(0))
         tavern.combat_step()
