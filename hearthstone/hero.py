@@ -59,20 +59,16 @@ class Hero(metaclass=HeroType):
             return False
         if not self.can_use_power:
             return False
-        if not self.hero_power_valid_impl(context, board_index, store_index):
-            return False
         if board_index is None and store_index is None and self.power_target_location is not None:
             return False
         if board_index is not None:
-            if self.power_target_location is not CardLocation.BOARD:
-                return False
-            if self.power_target_location == CardLocation.BOARD and not context.owner.valid_board_index(board_index):
+            if self.power_target_location is not CardLocation.BOARD or not context.owner.valid_board_index(board_index):
                 return False
         if store_index is not None:
-            if self.power_target_location is not CardLocation.STORE:
+            if self.power_target_location is not CardLocation.STORE or not context.owner.valid_store_index(store_index):
                 return False
-            if self.power_target_location == CardLocation.STORE and not context.owner.valid_store_index(store_index):
-                return False
+        if not self.hero_power_valid_impl(context, board_index, store_index):
+            return False
         return True
 
     def hero_power_valid_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,

@@ -1150,7 +1150,7 @@ class CapnHoggarr(MonsterCard):
     def handle_event_powers(self, event: CardEvent, context: BuyPhaseContext):
         if event.event is EVENTS.BUY and event.card.check_type(MONSTER_TYPES.PIRATE):
             gold = 2 if self.golden else 1
-            context.owner.coins += gold
+            context.owner.coins = min(context.owner.coins + gold, 10)
 
 
 class KingBagurgle(MonsterCard):
