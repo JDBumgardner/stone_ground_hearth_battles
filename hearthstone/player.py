@@ -284,7 +284,7 @@ class Player:
         return self.hero is None and hero in self.hero_options
 
     def take_damage(self, damage: int):
-        if not bool([card for card in self.in_play if card.give_immunity]):
+        if not any(card.give_immunity for card in self.in_play):
             self.health -= damage
             self.broadcast_buy_phase_event(events.PlayerDamagedEvent())
 
