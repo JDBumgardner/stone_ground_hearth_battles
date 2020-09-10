@@ -763,7 +763,6 @@ class MonstrousMacaw(MonsterCard):
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         if event.event is EVENTS.AFTER_ATTACK_DAMAGE and self == event.card:
-            # self.resolve_death(context, event.foe)
             deathrattle_triggers = 2 if self.golden else 1
             for _ in range(deathrattle_triggers):
                 friendly_deathrattlers = [card for card in context.friendly_war_party.board if
