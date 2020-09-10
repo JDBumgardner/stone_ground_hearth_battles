@@ -181,7 +181,7 @@ class SkycapnKragg(Hero):
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
-        context.owner.coins += context.owner.tavern.turn_count + 1
+        context.owner.coins = min(context.owner.coins + context.owner.tavern.turn_count + 1, 10)
         self.can_use_power = False
 
 
@@ -308,3 +308,20 @@ class RenoJackson(Hero):
                         store_index: Optional['StoreIndex'] = None):
         context.owner.in_play[board_index].golden_transformation([])
         self.can_use_power = False
+
+
+class JandiceBarov(Hero):
+    power_cost = 0
+    power_target_location = CardLocation.BOARD
+
+    def hero_power_valid_impl(self, context: BuyPhaseContext, board_index: Optional['BoardIndex'] = None,
+                              store_index: Optional['StoreIndex'] = None):
+        return not context.owner.in_play[board_index].golden and len(context.owner.store) > 0
+
+    def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                        store_index: Optional['StoreIndex'] = None):
+        board_minion = context.owner.in_play.pop(board_index)
+        store_minion = context.randomizer.select_from_store(context.owner.store)
+        context.owner.store.remove(store_minion)
+        context.owner.in_play.append(store_minion)
+        context.owner.store.append(board_minion)
