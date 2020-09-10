@@ -27,7 +27,7 @@ def one_minion_per_type(cards: List['MonsterCard'], randomizer: 'Randomizer') ->
 
 class PrintingPress:
     cards: Set[Type['Card']] = set()
-    cards_per_tier = {1: 18, 2: 15, 3: 13, 4: 11, 5: 9, 6: 6}
+    cards_per_tier = {1: 16, 2: 15, 3: 13, 4: 11, 5: 9, 6: 7}
 
     @classmethod
     def make_cards(cls) -> 'CardList':
@@ -84,6 +84,7 @@ class MonsterCard(Card):
     cant_attack = False
     shifting = False
     attached_cards = []
+    give_immunity = False
 
     def __init__(self):
         super().__init__()
@@ -184,7 +185,7 @@ class MonsterCard(Card):
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         return
 
-    def validate_battlecry_target(self, card: 'MonsterCard') -> bool:
+    def valid_battlecry_target(self, card: 'MonsterCard') -> bool:
         return True
 
     def golden_transformation(self, base_cards: List['MonsterCard']):

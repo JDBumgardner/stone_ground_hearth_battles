@@ -62,10 +62,10 @@ class Hero(metaclass=HeroType):
         if board_index is None and store_index is None and self.power_target_location is not None:
             return False
         if board_index is not None:
-            if self.power_target_location is not CardLocation.BOARD or not context.owner.valid_board_index(board_index):
+            if self.power_target_location != CardLocation.BOARD or not context.owner.valid_board_index(board_index):
                 return False
         if store_index is not None:
-            if self.power_target_location is not CardLocation.STORE or not context.owner.valid_store_index(store_index):
+            if self.power_target_location != CardLocation.STORE or not context.owner.valid_store_index(store_index):
                 return False
         if not self.hero_power_valid_impl(context, board_index, store_index):
             return False

@@ -391,7 +391,7 @@ class MurlocWarleader(MonsterCard):
         elif event.event is EVENTS.SUMMON_COMBAT and event.card in context.friendly_war_party.board \
                 and event.card != self and event.card.check_type(MONSTER_TYPES.MURLOC):
             event.card.attack += bonus
-        elif event.event is EVENTS.DIES and event.card == self:  # TODO: Bug here, see combat test
+        elif event.event is EVENTS.DIES and event.card == self:
             murlocs = [card for card in context.friendly_war_party.board if
                        card != self and card.check_type(MONSTER_TYPES.MURLOC)]
             for murloc in murlocs:
@@ -490,7 +490,7 @@ class RockpoolHunter(MonsterCard):
             targets[0].attack += bonus
             targets[0].health += bonus
 
-    def validate_battlecry_target(self, card: MonsterCard) -> bool:
+    def valid_battlecry_target(self, card: MonsterCard) -> bool:
         return card.check_type(MONSTER_TYPES.MURLOC) and card != self
 
 
@@ -530,7 +530,7 @@ class NathrezimOverseer(MonsterCard):
             targets[0].attack += bonus
             targets[0].health += bonus
 
-    def validate_battlecry_target(self, card: MonsterCard) -> bool:
+    def valid_battlecry_target(self, card: MonsterCard) -> bool:
         return card.check_type(MONSTER_TYPES.DEMON) and card != self
 
 
@@ -712,7 +712,7 @@ class Houndmaster(MonsterCard):
             targets[0].health += bonus
             targets[0].taunt = True
 
-    def validate_battlecry_target(self, card: MonsterCard) -> bool:
+    def valid_battlecry_target(self, card: MonsterCard) -> bool:
         return card.check_type(MONSTER_TYPES.BEAST)
 
 
@@ -770,8 +770,9 @@ class MonstrousMacaw(MonsterCard):
                                           card != self and not card.dead and card.deathrattles]
                 if friendly_deathrattlers:
                     deathrattler = context.randomizer.select_friendly_minion(friendly_deathrattlers)
-                    for _ in range(context.deathrattle_multiplier()):
-                        deathrattler.base_deathrattle(context)
+                    for deathrattle in deathrattler.deathrattles:
+                        for _ in range(context.deathrattle_multiplier()):
+                            deathrattle(deathrattler, context)
 
 
 class ScrewjankClunker(MonsterCard):
@@ -787,7 +788,7 @@ class ScrewjankClunker(MonsterCard):
             targets[0].attack += bonus
             targets[0].health += bonus
 
-    def validate_battlecry_target(self, card: MonsterCard) -> bool:
+    def valid_battlecry_target(self, card: MonsterCard) -> bool:
         return card.check_type(MONSTER_TYPES.MECH)
 
 
@@ -870,7 +871,7 @@ class TwilightEmissary(MonsterCard):
             targets[0].attack += bonus
             targets[0].health += bonus
 
-    def validate_battlecry_target(self, card: MonsterCard) -> bool:
+    def valid_battlecry_target(self, card: MonsterCard) -> bool:
         return card.check_type(MONSTER_TYPES.DRAGON)
 
 
@@ -945,7 +946,7 @@ class VirmenSensei(MonsterCard):
             targets[0].attack += bonus
             targets[0].health += bonus
 
-    def validate_battlecry_target(self, card: MonsterCard) -> bool:
+    def valid_battlecry_target(self, card: MonsterCard) -> bool:
         return card.check_type(MONSTER_TYPES.BEAST)
 
 
@@ -1150,7 +1151,7 @@ class CapnHoggarr(MonsterCard):
     def handle_event_powers(self, event: CardEvent, context: BuyPhaseContext):
         if event.event is EVENTS.BUY and event.card.check_type(MONSTER_TYPES.PIRATE):
             gold = 2 if self.golden else 1
-            context.owner.plus_coins(gold)
+            context.owner.coins += gold
 
 
 class KingBagurgle(MonsterCard):
@@ -1317,7 +1318,7 @@ class Toxfin(MonsterCard):
         if targets:
             targets[0].poisonous = True
 
-    def validate_battlecry_target(self, card: MonsterCard) -> bool:
+    def valid_battlecry_target(self, card: MonsterCard) -> bool:
         return card.check_type(MONSTER_TYPES.MURLOC)
 
 
@@ -1404,6 +1405,7 @@ class MalGanis(MonsterCard):
     monster_type = MONSTER_TYPES.DEMON
     base_attack = 9
     base_health = 7
+    give_immunity = True
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         bonus = 4 if self.golden else 2
@@ -1417,12 +1419,6 @@ class MalGanis(MonsterCard):
                 and event.card != self and event.card.check_type(MONSTER_TYPES.DEMON):
             event.card.attack += bonus
             event.card.health += bonus
-        elif event.event is EVENTS.SUMMON_BUY and event.card == self:
-            context.owner.immune = True
-        elif (event.event is EVENTS.SELL or event.event is EVENTS.RETURN_TO_HAND) and event.card == self:
-            mal_ganis_on_board = [card for card in context.owner.in_play if isinstance(card, MalGanis) and card != self]
-            if not mal_ganis_on_board:
-                context.owner.immune = False
         elif event.event is EVENTS.DIES and event.card == self:
             demons = [card for card in context.friendly_war_party.board if
                       card != self and card.check_type(MONSTER_TYPES.DEMON)]

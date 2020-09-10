@@ -29,7 +29,7 @@ class BuyAction(Action):
         player.purchase(self.index)
 
     def valid(self, player: 'Player'):
-        return player.validate_purchase(self.index)
+        return player.valid_purchase(self.index)
 
 
 class SummonAction(Action):
@@ -46,7 +46,7 @@ class SummonAction(Action):
         player.summon_from_hand(self.index, self.targets)
 
     def valid(self, player: 'Player') -> bool:
-        return player.validate_summon_from_hand(self.index, self.targets)
+        return player.valid_summon_from_hand(self.index, self.targets)
 
 
 class SellAction(Action):
@@ -61,7 +61,7 @@ class SellAction(Action):
         player.sell_minion(self.index)
 
     def valid(self, player: 'Player') -> bool:
-        return player.validate_sell_minion(self.index)
+        return player.valid_sell_minion(self.index)
 
 
 class EndPhaseAction(Action):
@@ -88,7 +88,7 @@ class RerollAction(Action):
         player.reroll_store()
 
     def valid(self, player: 'Player') -> bool:
-        return player.validate_reroll()
+        return player.valid_reroll()
 
 
 class TavernUpgradeAction(Action):
@@ -99,7 +99,7 @@ class TavernUpgradeAction(Action):
         player.upgrade_tavern()
 
     def valid(self, player: 'Player') -> bool:
-        return player.validate_upgrade_tavern()
+        return player.valid_upgrade_tavern()
 
 
 class HeroPowerAction(Action):
@@ -114,7 +114,7 @@ class HeroPowerAction(Action):
         player.hero_power(self.board_target, self.store_target)
 
     def valid(self, player: 'Player') -> bool:
-        return player.validate_hero_power(self.board_target, self.store_target)
+        return player.valid_hero_power(self.board_target, self.store_target)
 
 
 class TripleRewardsAction(Action):
@@ -125,7 +125,7 @@ class TripleRewardsAction(Action):
         player.play_triple_rewards()
 
     def valid(self, player: 'Player') -> bool:
-        return player.validate_triple_rewards()
+        return player.valid_triple_rewards()
 
 
 class RedeemGoldCoinAction(Action):
@@ -209,7 +209,7 @@ def generate_all_actions(player: 'Player') -> Generator[Action, None, None]:
         yield BuyAction(StoreIndex(index))
         yield HeroPowerAction(store_target=StoreIndex(index))
     for index, card in enumerate(player.hand):
-        valid_target_indices = [index for index, target in enumerate(player.in_play) if card.validate_battlecry_target(target)]
+        valid_target_indices = [index for index, target in enumerate(player.in_play) if card.valid_battlecry_target(target)]
         num_battlecry_targets = min(card.num_battlecry_targets, len(valid_target_indices))
         if num_battlecry_targets == 0:
             yield SummonAction(index, [])

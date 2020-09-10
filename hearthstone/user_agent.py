@@ -58,7 +58,7 @@ class UserAgent(Agent):
         return check_list
 
     def buy_phase_action(self, player: 'Player') -> Action:
-        print(f"player {player.name} ({player.hero}), it is your buy phase.")
+        print(f"\n\nplayer {player.name} ({player.hero}), it is your buy phase.")
         self.print_player_card_list("store", player.store)
         self.print_player_card_list("board", player.in_play)
         self.print_player_card_list("hand", player.hand)
@@ -69,12 +69,12 @@ class UserAgent(Agent):
         print("available actions are: ")
         print('purchase: "p 0" purchases the 0th indexed monster from the store')
         print(
-            'summon: "s 0 1 2" summons the 0th indexed monster from your hand with ability targets index 1 and 2 in board card is placed at the end of the board')
+            'summon: "s 0 1 2" summons the 0th indexed monster from your hand with battlecry targets index 1 and 2 in board card is placed at the end of the board')
         print(
-            'redeem: "r h 1" sells the 1 indexed monster from hand "r b 2" sells the 2 indexed monster from the board ')
+            'redeem: "r 1" sells the 1 indexed monster from the board ')
         print('reroll store: "R" will reroll the store')
         print(f'upgrade tavern: "u" will upgrade the tavern (current upgrade cost: {player.tavern_upgrade_cost if player.tavern_tier < 6 else 0})')
-        print('hero power: "h" will activate your hero power')
+        print('hero power: "h 0" will activate your hero power with ability target index 0 on the board or in the store')
         print('triple rewards: "t" will use your highest tavern tier triple rewards')
         if player.gold_coins >= 1:
             print('coin tokens: "c" will use a coin token')
@@ -100,7 +100,7 @@ class UserAgent(Agent):
                 return None
             return BuyAction(StoreIndex(store_index))
         elif split_list[0] == "s":
-            if not 1 < len(split_list) <= 4:
+            if not 2 <= len(split_list) < 5:
                 return None
             try:
                 targets = [int(target) for target in split_list[1:]]
@@ -131,7 +131,7 @@ class UserAgent(Agent):
         elif split_list[0] == "u":
             return TavernUpgradeAction()
         elif split_list[0] == "h":
-            if not 0 < len(split_list) <= 2:
+            if not 1 <= len(split_list) < 3:
                 return None
             try:
                 index = int(split_list[1])

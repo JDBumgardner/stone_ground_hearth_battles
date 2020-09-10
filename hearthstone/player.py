@@ -33,7 +33,7 @@ class Player:
         self.hero_options = hero_options
         self.health = None
         self.tavern_tier = 1
-        self.coins = 0
+        self._coins = 0
         self.triple_rewards = []
         self.discovered_cards: List[MonsterCard] = []
         self.maximum_board_size = 7
@@ -47,9 +47,16 @@ class Player:
         self.frozen = False
         self.counted_cards = defaultdict(lambda: 0)
         self.minion_cost = 3
-        self.immune = False
         self.gold_coins = 0
         self.bananas = 0
+
+    @property
+    def coins(self):
+        return self._coins
+
+    @coins.setter
+    def coins(self, coins):
+        self._coins = min(coins, 10)
 
     @staticmethod
     def new_player_with_hero(tavern: 'Tavern', name: str, hero: Optional['Hero'] = None) -> 'Player':
@@ -81,14 +88,14 @@ class Player:
         self.tavern_upgrade_cost = max(0, self.tavern_upgrade_cost - 1)
 
     def upgrade_tavern(self):
-        assert self.validate_upgrade_tavern()
+        assert self.valid_upgrade_tavern()
         self.coins -= self.tavern_upgrade_cost
         self.tavern_tier += 1
         if self.tavern_tier < self.max_tier():
             self.tavern_upgrade_cost = self._tavern_upgrade_costs[self.tavern_tier]
         self.broadcast_buy_phase_event(events.TavernUpgradeEvent())
 
-    def validate_upgrade_tavern(self) -> bool:
+    def valid_upgrade_tavern(self) -> bool:
         if self.tavern_tier >= self.max_tier():
             return False
         if self.coins < self.tavern_upgrade_cost:
@@ -100,7 +107,7 @@ class Player:
         #  TODO: Jarett can monster be event target
         if targets is None:
             targets = []
-        assert self.validate_summon_from_hand(index, targets)
+        assert self.valid_summon_from_hand(index, targets)
         card = self.hand.pop(index)
         self.in_play.append(card)
         if card.golden:
@@ -108,7 +115,7 @@ class Player:
         target_cards = [self.in_play[target] for target in targets]
         self.broadcast_buy_phase_event(events.SummonBuyEvent(card, target_cards))
 
-    def validate_summon_from_hand(self, index: HandIndex, targets: Optional[List[BoardIndex]] = None) -> bool:
+    def valid_summon_from_hand(self, index: HandIndex, targets: Optional[List[BoardIndex]] = None) -> bool:
         if targets is None:
             targets = []
         #  TODO: Jack num_battlecry_targets should only accept 0,1,2
@@ -119,7 +126,7 @@ class Player:
             return False
         if card.battlecry:
             valid_targets = [target_index for target_index, target_card in enumerate(self.in_play) if
-                             card.validate_battlecry_target(target_card)]
+                             card.valid_battlecry_target(target_card)]
             num_possible_targets = min(len(valid_targets), card.num_battlecry_targets)
             if len(targets) != num_possible_targets:
                 if type(card) == DefenderOfArgus:
@@ -148,7 +155,7 @@ class Player:
         discover_tier = self.triple_rewards.pop(-1).level
         self.draw_discover(lambda card: card.tier == discover_tier)
 
-    def validate_triple_rewards(self) -> bool:
+    def valid_triple_rewards(self) -> bool:
         return bool(self.triple_rewards)
 
     def draw_discover(self, predicate: Callable[[Card], bool]): #TODO: Jarett help make discoverables unique are cards with more copies in the deck more likely to be discovered?
@@ -185,7 +192,7 @@ class Player:
 
     def purchase(self, index: StoreIndex):
         # check if the index is valid
-        assert self.validate_purchase(index)
+        assert self.valid_purchase(index)
         card = self.store.pop(index)
         self.coins -= self.minion_cost
         self.hand.append(card)
@@ -193,7 +200,7 @@ class Player:
         self.broadcast_buy_phase_event(event)
         self.check_golden(type(card))
 
-    def validate_purchase(self, index: 'StoreIndex') -> bool:
+    def valid_purchase(self, index: 'StoreIndex') -> bool:
         if not self.valid_store_index(index):
             return False
         if self.coins < self.minion_cost:
@@ -208,7 +215,6 @@ class Player:
         if len(cards) == 3:
             for card in cards:
                 if card in self.in_play:
-                    self.broadcast_buy_phase_event(events.ReturnToHandEvent(card))
                     self.in_play.remove(card)
                 if card in self.hand:
                     self.hand.remove(card)
@@ -217,12 +223,12 @@ class Player:
             self.hand.append(golden_card)
 
     def reroll_store(self):
-        assert self.validate_reroll()
+        assert self.valid_reroll()
         self.coins -= self.refresh_store_cost
         self.return_cards()
         self.draw()
 
-    def validate_reroll(self) -> bool:
+    def valid_reroll(self) -> bool:
         return self.coins >= self.refresh_store_cost
 
     def return_cards(self):
@@ -233,19 +239,19 @@ class Player:
         self.frozen = True
 
     def sell_minion(self, index: BoardIndex):
-        assert self.validate_sell_minion(index)
+        assert self.valid_sell_minion(index)
         self.broadcast_buy_phase_event(events.SellEvent(self.in_play[index]))
         card = self.in_play.pop(index)
-        self.plus_coins(card.redeem_rate)
+        self.coins += card.redeem_rate
         self.tavern.deck.return_cards(card.dissolve())
 
-    def validate_sell_minion(self, index: 'BoardIndex') -> bool:
+    def valid_sell_minion(self, index: 'BoardIndex') -> bool:
         return self.valid_board_index(index)
 
     def hero_power(self, board_index: Optional['BoardIndex'] = None, store_index: Optional['StoreIndex'] = None):
         self.hero.hero_power(BuyPhaseContext(self, self.tavern.randomizer), board_index, store_index)
 
-    def validate_hero_power(self, board_target: Optional['BoardIndex'] = None, store_target: Optional['StoreIndex'] = None) -> bool:
+    def valid_hero_power(self, board_target: Optional['BoardIndex'] = None, store_target: Optional['StoreIndex'] = None) -> bool:
         return self.hero.hero_power_valid(BuyPhaseContext(self, self.tavern.randomizer), board_target, store_target)
 
     def broadcast_buy_phase_event(self, event: CardEvent, randomizer: Optional['Randomizer'] = None):
@@ -265,7 +271,7 @@ class Player:
         return len(self._tavern_upgrade_costs)
 
     def choose_hero(self, hero: 'Hero'):
-        assert(self.validate_choose_hero(hero))
+        assert(self.valid_choose_hero(hero))
         self.hero = hero
         self.hero_options = []
         self.health = self.hero.starting_health()
@@ -274,18 +280,18 @@ class Player:
         self._tavern_upgrade_costs = self.hero.tavern_upgrade_costs()
         self.tavern_upgrade_cost = self.hero.tavern_upgrade_costs()[1]
 
-    def validate_choose_hero(self, hero: 'Hero'):
+    def valid_choose_hero(self, hero: 'Hero'):
         return self.hero is None and hero in self.hero_options
 
     def take_damage(self, damage: int):
-        if not self.immune:
+        if not bool([card for card in self.in_play if card.give_immunity]):
             self.health -= damage
             self.broadcast_buy_phase_event(events.PlayerDamagedEvent())
 
     def redeem_gold_coin(self):
         if self.gold_coins >= 1:
             self.gold_coins -= 1
-            self.plus_coins(1)
+            self.coins += 1
 
     def gain_card(self, card: 'MonsterCard'):
         self.hand.append(card)
