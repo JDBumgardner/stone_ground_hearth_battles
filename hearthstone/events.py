@@ -18,17 +18,16 @@ class EVENTS(enum.Enum):
     COMBAT_START = 5
     BUY_START = 6
     ON_ATTACK = 7
-    AFTER_ATTACK_DAMAGE = 12
     SELL = 8
     BUY = 9
     BUY_END = 10
     CARD_DAMAGED = 11
+    AFTER_ATTACK_DAMAGE = 12
     DIVINE_SHIELD_LOST = 13
     PLAYER_DAMAGED = 14
-    RETURN_TO_HAND = 15
-    AFTER_ATTACK_DEATHRATTLES = 16
-    END_COMBAT = 17
-    TAVERN_UPGRADE = 18
+    AFTER_ATTACK_DEATHRATTLES = 15
+    END_COMBAT = 16
+    TAVERN_UPGRADE = 17
 
 
 class CardEvent:
@@ -114,12 +113,6 @@ class DivineShieldLostEvent(CardEvent):
 class PlayerDamagedEvent(CardEvent):
     def __init__(self):
         super().__init__(EVENTS.PLAYER_DAMAGED)
-
-
-class ReturnToHandEvent(CardEvent):
-    def __init__(self, card: 'MonsterCard'):
-        super().__init__(EVENTS.RETURN_TO_HAND)
-        self.card = card
 
 
 class AfterAttackDeathrattleEvent(CardEvent):

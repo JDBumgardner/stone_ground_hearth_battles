@@ -111,10 +111,10 @@ class PatchesThePirate(Hero):  # TODO: does this pull from the deck or does it a
                         store_index: Optional['StoreIndex'] = None):
         pirates = [card for card in context.owner.tavern.deck.all_cards() if
                    card.check_type(MONSTER_TYPES.PIRATE) and card.tier <= context.owner.tavern_tier]
-
-        card = context.randomizer.select_gain_card(pirates)
-        context.owner.tavern.deck.remove_card(card)
-        context.owner.gain_card(card)
+        if pirates:
+            card = context.randomizer.select_gain_card(pirates)
+            context.owner.tavern.deck.remove_card(card)
+            context.owner.gain_card(card)
         self.power_cost = 4
 
     def hero_power_valid_impl(self, context: BuyPhaseContext, board_index: Optional['BoardIndex'] = None,
@@ -181,7 +181,7 @@ class SkycapnKragg(Hero):
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
-        context.owner.plus_coins(context.owner.tavern.turn_count + 1)
+        context.owner.coins += context.owner.tavern.turn_count + 1
         self.can_use_power = False
 
 
@@ -280,7 +280,7 @@ class ForestWardenOmu(Hero):
 
     def handle_event(self, event: 'CardEvent', context: 'BuyPhaseContext'):
         if event.event is EVENTS.TAVERN_UPGRADE:
-            context.owner.plus_coins(2)
+            context.owner.coins += 2
 
 
 class GeorgeTheFallen(Hero):
