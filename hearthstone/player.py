@@ -236,7 +236,7 @@ class Player:
         assert self.validate_sell_minion(index)
         self.broadcast_buy_phase_event(events.SellEvent(self.in_play[index]))
         card = self.in_play.pop(index)
-        self.coins = min(self.coins + card.redeem_rate, 10)
+        self.plus_coins(card.redeem_rate)
         self.tavern.deck.return_cards(card.dissolve())
 
     def validate_sell_minion(self, index: 'BoardIndex') -> bool:
@@ -285,7 +285,7 @@ class Player:
     def redeem_gold_coin(self):
         if self.gold_coins >= 1:
             self.gold_coins -= 1
-            self.coins = min(self.coins + 1, 10)
+            self.plus_coins(1)
 
     def gain_card(self, card: 'MonsterCard'):
         self.hand.append(card)
@@ -299,3 +299,6 @@ class Player:
 
     def valid_store_index(self, index: 'StoreIndex') -> bool:
         return 0 <= index < len(self.store)
+
+    def plus_coins(self, amt: int):
+        self.coins = min(self.coins + amt, 10)
