@@ -5,8 +5,6 @@
 /.idea
 /.tox
 **/__pycache__/
-*.html
-*.css
 index.txt
 venv/*
 /data/learning/pytorch/tensorboard/*
