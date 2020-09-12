@@ -2,7 +2,8 @@ from typing import Optional, List
 
 from hearthstone.agent import SummonAction, SellAction, EndPhaseAction, RerollAction, TavernUpgradeAction, \
     HeroPowerAction, TripleRewardsAction, RedeemGoldCoinAction, BuyAction, Action, Agent
-from hearthstone.player import HandIndex, BoardIndex, StoreIndex
+from hearthstone.cards import CardLocation
+from hearthstone.player import HandIndex, BoardIndex, StoreIndex, Player
 
 
 class TextAgentTransport:
@@ -78,12 +79,12 @@ class TextAgent(Agent):
         await self.transport.send("available actions are: \n")
         await self.transport.send('purchase: "p 0" purchases the 0th indexed monster from the store\n')
         await self.transport.send(
-            'summon: "s 0 1 2" summons the 0th indexed monster from your hand with ability targets index 1 and 2 in board card is placed at the end of the board\n')
+            'summon: "s 0 [1] [2]" summons the 0th indexed monster from your hand with battlecry targets index 1 and 2 in board card is placed at the end of the board\n')
         await self.transport.send(
             'redeem: "r h 1" sells the 1 indexed monster from hand "r b 2" sells the 2 indexed monster from the board \n')
         await self.transport.send('reroll store: "R" will reroll the store\n')
         await self.transport.send(f'upgrade tavern: "u" will upgrade the tavern (current upgrade cost: {player.tavern_upgrade_cost if player.tavern_tier < 6 else 0})\n')
-        await self.transport.send('hero power: "h" will activate your hero power\n')
+        await self.transport.send('hero power: "h [0]" will activate your hero power with ability target index 0 on the board or in the store\n')
         await self.transport.send('triple rewards: "t" will use your highest tavern tier triple rewards\n')
         if player.gold_coins >= 1:
             await self.transport.send('coin tokens: "c" will use a coin token\n')
@@ -143,7 +144,22 @@ class TextAgent(Agent):
         elif split_list[0] == "u":
             return TavernUpgradeAction()
         elif split_list[0] == "h":
-            return HeroPowerAction()
+            if not 1 <= len(split_list) < 3:
+                return None
+            try:
+                index = int(split_list[1])
+            except IndexError:
+                return HeroPowerAction()
+            except ValueError:
+                return None
+            if player.hero.power_target_location == CardLocation.BOARD and index is not None:
+                if not player.valid_board_index(index):
+                    return None
+                return HeroPowerAction(board_target=BoardIndex(index))
+            elif player.hero.power_target_location == CardLocation.STORE and index is not None:
+                if not player.valid_store_index(index):
+                    return None
+                return HeroPowerAction(store_target=StoreIndex(index))
         elif split_list[0] == "t":
             return TripleRewardsAction()
         elif split_list[0] == "c":
