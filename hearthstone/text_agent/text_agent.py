@@ -80,8 +80,7 @@ class TextAgent(Agent):
         await self.transport.send('purchase: "p 0" purchases the 0th indexed monster from the store\n')
         await self.transport.send(
             'summon: "s 0 [1] [2]" summons the 0th indexed monster from your hand with battlecry targets index 1 and 2 in board card is placed at the end of the board\n')
-        await self.transport.send(
-            'redeem: "r h 1" sells the 1 indexed monster from hand "r b 2" sells the 2 indexed monster from the board \n')
+        await self.transport.send('redeem: "r 1" sells the 1 indexed monster from the board\n')
         await self.transport.send('reroll store: "R" will reroll the store\n')
         await self.transport.send(f'upgrade tavern: "u" will upgrade the tavern (current upgrade cost: {player.tavern_upgrade_cost if player.tavern_tier < 6 else 0})\n')
         await self.transport.send('hero power: "h [0]" will activate your hero power with ability target index 0 on the board or in the store\n')
@@ -108,22 +107,21 @@ class TextAgent(Agent):
                 store_index = int(split_list[1])
             except ValueError:
                 return None
-            if not 0 <= store_index < len(player.store) or player.coins < player.minion_cost:
+            if not player.valid_store_index(store_index) or player.coins < player.minion_cost:
                 return None
             return BuyAction(StoreIndex(store_index))
         elif split_list[0] == "s":
-            if not 1 < len(split_list) <= 4:
+            if not 2 <= len(split_list) < 5:
                 return None
             try:
                 targets = [int(target) for target in split_list[1:]]
             except ValueError:
                 return None
-            if not 0 <= targets[0] < len(player.hand):
+            if not player.valid_hand_index(targets[0]):
                 return None
             for target in targets[1:]:
                 if not 0 <= target < len(player.in_play) + 1:
                     return None
-            in_play = player.in_play + [player.hand[targets[0]]]
             return SummonAction(HandIndex(targets[0]), [BoardIndex(target) for target in targets[1:]])
         elif split_list[0] == "r":
             if not len(split_list) == 2:
@@ -132,7 +130,7 @@ class TextAgent(Agent):
                 sell_index = int(split_list[1])
             except ValueError:
                 return None
-            if not 0 <= sell_index < len(player.in_play):
+            if not player.valid_board_index(sell_index):
                 return None
             return SellAction(BoardIndex(sell_index))
         elif split_list == ["e"]:
@@ -168,7 +166,7 @@ class TextAgent(Agent):
             return None
 
     async def discover_choice_action(self, player: 'Player') -> 'Card':
-        await self.transport.send(f"player {player.name}, you must choose a card to discover.")
+        await self.transport.send(f"player {player.name}, you must choose a card to discover.\n")
         await self.print_player_card_list("discovery choices", player.discovered_cards)
         await self.transport.send("input card number to discover here: ")
         user_input = await self.transport.receive_line()

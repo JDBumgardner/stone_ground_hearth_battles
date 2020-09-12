@@ -14,7 +14,6 @@ from hearthstone.host import RoundRobinHost, AsyncHost
 from hearthstone.text_agent.stdio import StdIOTransport
 from hearthstone.text_agent.tcp import TcpTransport
 from hearthstone.text_agent.text_agent import TextAgent
-from hearthstone.user_agent import UserAgent
 from hearthstone.monster_types import MONSTER_TYPES
 import logging
 
