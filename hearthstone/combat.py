@@ -88,13 +88,15 @@ def fight_boards(war_party_1: 'WarParty', war_party_2: 'WarParty', randomizer: '
 
     for _ in range(100):
         attacker = attacking_war_party.find_next()
-        defender = defending_war_party.get_random_monster(randomizer)
-        logger.debug(f'{attacking_war_party.owner.name} is attacking {defending_war_party.owner.name}')
-        if not defender:
-            break
-        if attacker:
-            start_attack(attacker, defender, attacking_war_party, defending_war_party, randomizer)
-        elif not defending_war_party.attackers():
+        num_attacks = 2 if (attacker is not None and attacker.windfury) else 1
+        for _ in range(num_attacks):
+            defender = defending_war_party.get_random_monster(randomizer)
+            logger.debug(f'{attacking_war_party.owner.name} is attacking {defending_war_party.owner.name}')
+            if defender is None:
+                break
+            if attacker and not attacker.dead:
+                start_attack(attacker, defender, attacking_war_party, defending_war_party, randomizer)
+        if not defending_war_party.attackers():
             break
         attacking_war_party, defending_war_party = defending_war_party, attacking_war_party
     damage(war_party_1, war_party_2, randomizer)

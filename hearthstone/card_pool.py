@@ -2,6 +2,7 @@ import logging
 from typing import Union, List
 
 from hearthstone import combat
+from hearthstone.adaptations import Adaptation
 from hearthstone.cards import MonsterCard, PrintingPress, one_minion_per_type
 from hearthstone.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
 from hearthstone.monster_types import MONSTER_TYPES
@@ -1571,3 +1572,17 @@ class MicroMummy(MonsterCard):
                 card = context.randomizer.select_friendly_minion(other_minions)
                 bonus = 2 if self.golden else 1
                 card.attack += bonus
+
+
+class Amalgadon(MonsterCard):
+    tier = 6
+    monster_type = MONSTER_TYPES.ALL
+    base_attack = 6
+    base_health = 6
+
+    def base_battlecry(self, targets: List['MonsterCard'], context: 'BuyPhaseContext'):
+        count = len(one_minion_per_type(context.owner.in_play, context.randomizer)) * (2 if self.golden else 1)
+        for _ in range(count):
+            valid_adaptations = [adaptation for adaptation in Adaptation.__subclasses__() if adaptation.valid(self)]
+            adaptation = context.randomizer.select_adaptation(valid_adaptations)
+            self.adapt(adaptation())
