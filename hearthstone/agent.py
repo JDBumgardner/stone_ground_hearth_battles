@@ -16,6 +16,9 @@ class Action:
     def valid(self, player: 'Player') -> bool:
         return False
 
+    def str_in_context(self, player: 'Player') -> str:
+        return str(self)
+
 
 class BuyAction(Action):
 
@@ -30,6 +33,9 @@ class BuyAction(Action):
 
     def valid(self, player: 'Player'):
         return player.valid_purchase(self.index)
+
+    def str_in_context(self, player: 'Player') -> str:
+        return f"Buy({player.store[self.index]})"
 
 
 class SummonAction(Action):
@@ -48,6 +54,9 @@ class SummonAction(Action):
     def valid(self, player: 'Player') -> bool:
         return player.valid_summon_from_hand(self.index, self.targets)
 
+    def str_in_context(self, player: 'Player') -> str:
+        return f"Summon({player.hand[self.index]},{self.targets})"
+
 
 class SellAction(Action):
 
@@ -62,6 +71,9 @@ class SellAction(Action):
 
     def valid(self, player: 'Player') -> bool:
         return player.valid_sell_minion(self.index)
+
+    def str_in_context(self, player: 'Player') -> str:
+        return f"Sell({player.in_play[self.index]})"
 
 
 class EndPhaseAction(Action):
@@ -101,6 +113,9 @@ class TavernUpgradeAction(Action):
     def valid(self, player: 'Player') -> bool:
         return player.valid_upgrade_tavern()
 
+    def str_in_context(self, player: 'Player') -> str:
+        return f"TavernUpgrade({player.tavern_tier}, {player.tavern_upgrade_cost})"
+
 
 class HeroPowerAction(Action):
     def __init__(self, board_target: Optional['BoardIndex'] = None, store_target: Optional['StoreIndex'] = None):
@@ -108,7 +123,7 @@ class HeroPowerAction(Action):
         self.store_target = store_target
 
     def __repr__(self):
-        return f"HeroPower()"
+        return f"HeroPower({self.board_target}, {self.store_target})"
 
     def apply(self, player: 'Player'):
         player.hero_power(self.board_target, self.store_target)
@@ -126,6 +141,9 @@ class TripleRewardsAction(Action):
 
     def valid(self, player: 'Player') -> bool:
         return player.valid_triple_rewards()
+
+    def str_in_context(self, player: 'Player') -> str:
+        return f"TripleRewards({player.triple_rewards[-1]})"
 
 
 class RedeemGoldCoinAction(Action):

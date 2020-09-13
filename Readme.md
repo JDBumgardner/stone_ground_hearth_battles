@@ -12,6 +12,7 @@ This repo also contains a Tensorboard plugin for displaying vega/vega-lite/altai
 to plot debug information about our pytorch bots, but this plugin works standalone.  
 
 ![Example Screenshot of Tensorboard_Vega_Embed plugin](doc/Tensorboard_Vega_Embed_example.png)
+
 To use it, run
 
 `$ python setup.py develop`
