@@ -1,4 +1,4 @@
-##Stone Ground Hearth Battles
+## Stone Ground Hearth Battles
 
 Hearthstone battlegrounds simulator is licensed under the Apache 2.0 License
 
