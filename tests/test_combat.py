@@ -1,6 +1,6 @@
 import unittest
 
-from hearthstone.adaptations import LivingSpores
+from hearthstone.adaptations import Adaptation
 from hearthstone.card_graveyard import *
 from hearthstone.card_pool import *
 from hearthstone.cards import Card
@@ -506,7 +506,7 @@ class CombatTests(unittest.TestCase):
         legendary_minions = [OldMurkeye, Khadgar, ShifterZerus, BolvarFireblood, RazorgoreTheUntamed, KingBagurgle,
                              CapnHoggarr, KalecgosArcaneAspect, NadinaTheRed, DreadAdmiralEliza, Maexxna,
                              NatPagleExtremeAngler, MalGanis, WaxriderTogwaggle, BaronRivendare, BrannBronzebeard,
-                             GoldrinnTheGreatWolf]
+                             GoldrinnTheGreatWolf, FoeReaper4000, ZappSlywick]
         self.assertIn(type(adams_war_party.board[1]), legendary_minions)
 
     def test_bolvar_fireblood(self):
@@ -936,7 +936,7 @@ class CombatTests(unittest.TestCase):
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         amalgadon = Amalgadon()
-        for adaptation in list(generate_valid_adaptations(amalgadon)):
+        for adaptation in valid_adaptations(amalgadon):
             amalgadon.adapt(adaptation())
         self.assertTrue(amalgadon.divine_shield)
         self.assertTrue(amalgadon.windfury)
@@ -993,14 +993,28 @@ class CombatTests(unittest.TestCase):
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         amalgadon = Amalgadon()
-        amalgadon.adapt(LivingSpores())
-        amalgadon.adapt(LivingSpores())
+        amalgadon.adapt(Adaptation.LivingSpores())
+        amalgadon.adapt(Adaptation.LivingSpores())
         adams_war_party.board = [MonstrousMacaw(), amalgadon]
         ethans_war_party.board = [RabidSaurolisk()]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(len(adams_war_party.board), 6)
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 29)
+
+    def test_golden_zapp(self):
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        zapp = ZappSlywick()
+        zapp.golden_transformation([])
+        adams_war_party.board = [zapp, VulgarHomunculus()]
+        ethans_war_party.board = [BloodsailCannoneer(), DeckSwabbie(), RabidSaurolisk(), CapnHoggarr(), NatPagleExtremeAngler()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+
 
 if __name__ == '__main__':
     unittest.main()

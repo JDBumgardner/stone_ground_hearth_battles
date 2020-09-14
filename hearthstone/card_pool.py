@@ -2,7 +2,7 @@ import logging
 from typing import Union, List
 
 from hearthstone import combat
-from hearthstone.adaptations import generate_valid_adaptations
+from hearthstone.adaptations import valid_adaptations
 from hearthstone.cards import MonsterCard, PrintingPress, one_minion_per_type
 from hearthstone.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
 from hearthstone.monster_types import MONSTER_TYPES
@@ -51,7 +51,8 @@ class SneedsOldShredder(MonsterCard):
                 legendary_minions = [OldMurkeye(), Khadgar(), ShifterZerus(), BolvarFireblood(), RazorgoreTheUntamed(),
                                      KingBagurgle(), CapnHoggarr(), KalecgosArcaneAspect(), NadinaTheRed(),
                                      DreadAdmiralEliza(), Maexxna(), NatPagleExtremeAngler(), MalGanis(),
-                                     WaxriderTogwaggle(), BaronRivendare(), BrannBronzebeard(), GoldrinnTheGreatWolf()]
+                                     WaxriderTogwaggle(), BaronRivendare(), BrannBronzebeard(), GoldrinnTheGreatWolf(),
+                                     FoeReaper4000(), ZappSlywick()]
                 random_minion = context.randomizer.select_summon_minion(legendary_minions)
                 context.friendly_war_party.summon_in_combat(random_minion, context, summon_index + i + 1)
                 i += 1
@@ -1599,6 +1600,24 @@ class ZappSlywick(MonsterCard):
     base_windfury = True
     targets_least_attack = True
 
+    def golden_transformation(self, base_cards: List['MonsterCard']):
+        self.attack += self.base_attack
+        self.health += self.base_health
+        self.golden = True
+        for card in base_cards:
+            self.health += card.health - card.base_health
+            self.attack += card.attack - card.base_attack
+            if card.base_deathrattle:
+                self.deathrattles.extend(card.deathrattles[1:])
+            else:
+                self.deathrattles.extend(card.deathrattles)
+            for attr in card.bool_attribute_list:
+                if getattr(card, attr):
+                    setattr(self, attr, True)
+        self.windfury = False
+        self.mega_windfury = True
+
+
 class SeaBreakerGoliath(MonsterCard):
     tier = 5
     monster_type = MONSTER_TYPES.PIRATE
@@ -1639,6 +1658,6 @@ class Amalgadon(MonsterCard):
     def base_battlecry(self, targets: List['MonsterCard'], context: 'BuyPhaseContext'):
         count = len(one_minion_per_type(context.owner.in_play, context.randomizer)) * (2 if self.golden else 1)
         for _ in range(count):
-            valid_adaptations = list(generate_valid_adaptations(self))
-            adaptation = context.randomizer.select_adaptation(valid_adaptations)
+            available_adaptations = valid_adaptations(self)
+            adaptation = context.randomizer.select_adaptation(available_adaptations)
             self.adapt(adaptation())

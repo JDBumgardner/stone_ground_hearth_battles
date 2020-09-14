@@ -95,7 +95,12 @@ def fight_boards(war_party_1: 'WarParty', war_party_2: 'WarParty', randomizer: '
 
     for _ in range(100):
         attacker = attacking_war_party.find_next()
-        num_attacks = 2 if (attacker is not None and attacker.windfury) else 1
+        if attacker is not None and attacker.mega_windfury:
+            num_attacks = 4
+        elif attacker is not None and attacker.windfury:
+            num_attacks = 2
+        else:
+            num_attacks = 1
         for _ in range(num_attacks):
             defender = defending_war_party.get_attack_target(randomizer, attacker)
             logger.debug(f'{attacking_war_party.owner.name} is attacking {defending_war_party.owner.name}')

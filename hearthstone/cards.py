@@ -114,6 +114,7 @@ class MonsterCard(Card):
             "windfury", "cleave", "reborn"
         ]
         self.attached_cards = []
+        self.mega_windfury = False
 
     def __repr__(self):
         rep = f"{type(self).__name__} {self.attack}/{self.health} (t{self.tier})" #  TODO: add a proper enum to the monster typing
@@ -262,7 +263,7 @@ class MonsterCard(Card):
     def is_dying(self) -> bool:
         return self.dead or self.health <= 0
 
-    def adapt(self, adaptation: 'Adaptation'):
+    def adapt(self, adaptation: 'Adaptation'):  # TODO: How do we type check for a nested class of Adaptation?
         assert adaptation.valid(self)
         adaptation.apply(self)
 
