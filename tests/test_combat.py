@@ -347,13 +347,11 @@ class CombatTests(unittest.TestCase):
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [ImpGangBoss()]
-        ethans_war_party.board = [ArcaneCannon(), ArcaneCannon()]
+        ethans_war_party.board = [BloodsailCannoneer(), Rat()]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
-        self.assertTrue(adams_war_party.board[0].dead)
-        self.assertTrue(adams_war_party.board[2].dead)
-        self.assertFalse(adams_war_party.board[1].dead)
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
         self.assertTrue(isinstance(adams_war_party.board[1], Imp))
-        self.assertTrue(isinstance(adams_war_party.board[2], Imp))
 
     def test_infested_wolf(self):
         adam = Player.new_player_with_hero(None, "Adam")
@@ -938,7 +936,7 @@ class CombatTests(unittest.TestCase):
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         amalgadon = Amalgadon()
-        for adaptation in Adaptation.__subclasses__():
+        for adaptation in list(generate_valid_adaptations(amalgadon)):
             amalgadon.adapt(adaptation())
         self.assertTrue(amalgadon.divine_shield)
         self.assertTrue(amalgadon.windfury)
@@ -988,6 +986,21 @@ class CombatTests(unittest.TestCase):
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 33)
+
+    def test_macaw_multiple_deathrattles(self):
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        amalgadon = Amalgadon()
+        amalgadon.adapt(LivingSpores())
+        amalgadon.adapt(LivingSpores())
+        adams_war_party.board = [MonstrousMacaw(), amalgadon]
+        ethans_war_party.board = [RabidSaurolisk()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(len(adams_war_party.board), 6)
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 29)
 
 if __name__ == '__main__':
     unittest.main()

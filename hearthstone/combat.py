@@ -22,6 +22,7 @@ class WarParty:
         self.owner = player
         self.board = [copy.copy(card) for card in player.in_play]
         self.next_attacker_idx = 0
+        self.dead_mechs: List[MonsterCard] = []
 
     def find_next(self) -> Optional['MonsterCard']:
         #  Sets the index for the next monster who will fight from your side.

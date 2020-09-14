@@ -3,12 +3,17 @@ import itertools
 from collections import defaultdict
 from typing import Set, List, Optional, Callable, Type, Union, Iterator
 
+import typing
+
 from hearthstone import events, monster_types
 from hearthstone.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
 from hearthstone.card_factory import make_metaclass
 from hearthstone.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
 from hearthstone.monster_types import MONSTER_TYPES
 from hearthstone.randomizer import Randomizer
+
+if typing.TYPE_CHECKING:
+    from hearthstone.adaptations import Adaptation
 
 
 def one_minion_per_type(cards: List['MonsterCard'], randomizer: 'Randomizer') -> List['MonsterCard']:
@@ -84,7 +89,6 @@ class MonsterCard(Card):
     token = False
     cant_attack = False
     shifting = False
-    attached_cards = []
     give_immunity = False
     targets_least_attack = False
 
@@ -109,6 +113,7 @@ class MonsterCard(Card):
             "divine_shield", "magnetic", "poisonous", "taunt",
             "windfury", "cleave", "reborn"
         ]
+        self.attached_cards = []
 
     def __repr__(self):
         rep = f"{type(self).__name__} {self.attack}/{self.health} (t{self.tier})" #  TODO: add a proper enum to the monster typing
@@ -216,8 +221,7 @@ class MonsterCard(Card):
             for attr in self.bool_attribute_list:
                 if getattr(self, attr):  # TODO: Does the target gain magnetic?
                     setattr(targets[0], attr, True)
-            targets[0].attached_cards.append(self)  # TODO: BUG!!!! Replicating Menace attaches to itself
-            self.attached_cards = []
+            targets[0].attached_cards.append(self)
             context.owner.in_play.remove(self)
 
     def overkill(self, context: CombatPhaseContext):

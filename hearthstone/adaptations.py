@@ -1,3 +1,5 @@
+from typing import Generator, Type
+
 from hearthstone.cards import MonsterCard
 from hearthstone.events import CombatPhaseContext
 
@@ -81,3 +83,18 @@ class PoisonSpit(Adaptation):
     @classmethod
     def valid(cls, card: 'MonsterCard') -> bool:
         return not card.poisonous
+
+
+def generate_valid_adaptations(card: 'MonsterCard') -> Generator['Type', None, None]:
+    return (adaptation for adaptation in generate_all_adaptations() if adaptation.valid(card))
+
+
+def generate_all_adaptations() -> Generator['Type', None, None]:
+    yield CracklingShield
+    yield FlamingClaws
+    yield LivingSpores
+    yield LightningSpeed
+    yield Massive
+    yield VolcanicMight
+    yield RockyCarapace
+    yield PoisonSpit

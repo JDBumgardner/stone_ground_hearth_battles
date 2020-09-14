@@ -2,6 +2,7 @@ import logging
 from typing import Union, List
 
 from hearthstone import combat
+from hearthstone.adaptations import generate_valid_adaptations
 from hearthstone.cards import MonsterCard, PrintingPress, one_minion_per_type
 from hearthstone.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
 from hearthstone.monster_types import MONSTER_TYPES
@@ -439,7 +440,7 @@ class SkyPirate(MonsterCard):
             attacking_war_party = context.friendly_war_party
             defending_war_party = context.enemy_war_party
             attacker = self
-            defender = defending_war_party.get_random_monster(context.randomizer)
+            defender = defending_war_party.get_attack_target(context.randomizer)
             if not defender:
                 return
             logging.debug(f'{attacking_war_party.owner.name} is attacking {defending_war_party.owner.name}')
@@ -1476,7 +1477,7 @@ class YoHoOgre(MonsterCard):
             attacking_war_party = context.friendly_war_party
             defending_war_party = context.enemy_war_party
             attacker = self
-            defender = defending_war_party.get_random_monster(context.randomizer)
+            defender = defending_war_party.get_attack_target(context.randomizer)
             if not defender:
                 return
             logging.debug(f'{attacking_war_party.owner.name} is attacking {defending_war_party.owner.name}')
@@ -1638,6 +1639,6 @@ class Amalgadon(MonsterCard):
     def base_battlecry(self, targets: List['MonsterCard'], context: 'BuyPhaseContext'):
         count = len(one_minion_per_type(context.owner.in_play, context.randomizer)) * (2 if self.golden else 1)
         for _ in range(count):
-            valid_adaptations = [adaptation for adaptation in Adaptation.__subclasses__() if adaptation.valid(self)]
+            valid_adaptations = list(generate_valid_adaptations(self))
             adaptation = context.randomizer.select_adaptation(valid_adaptations)
             self.adapt(adaptation())
