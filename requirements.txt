@@ -8,5 +8,5 @@ pandas~=1.0.5
 altair~=4.1.0
 six~=1.12.0
 Werkzeug~=1.0.1
-tensorboard~=2.2.2
-torchvision~=0.6.1
+tensorboard~=2.3.0
+torchvision~=0.7.0

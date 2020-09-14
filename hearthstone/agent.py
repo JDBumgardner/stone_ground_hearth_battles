@@ -16,6 +16,9 @@ class Action:
     def valid(self, player: 'Player') -> bool:
         return False
 
+    def str_in_context(self, player: 'Player') -> str:
+        return str(self)
+
 
 class BuyAction(Action):
 
@@ -30,6 +33,9 @@ class BuyAction(Action):
 
     def valid(self, player: 'Player'):
         return player.valid_purchase(self.index)
+
+    def str_in_context(self, player: 'Player') -> str:
+        return f"Buy({player.store[self.index]})"
 
 
 class SummonAction(Action):
@@ -48,6 +54,9 @@ class SummonAction(Action):
     def valid(self, player: 'Player') -> bool:
         return player.valid_summon_from_hand(self.index, self.targets)
 
+    def str_in_context(self, player: 'Player') -> str:
+        return f"Summon({player.hand[self.index]},{self.targets})"
+
 
 class SellAction(Action):
 
@@ -62,6 +71,9 @@ class SellAction(Action):
 
     def valid(self, player: 'Player') -> bool:
         return player.valid_sell_minion(self.index)
+
+    def str_in_context(self, player: 'Player') -> str:
+        return f"Sell({player.in_play[self.index]})"
 
 
 class EndPhaseAction(Action):
@@ -101,6 +113,9 @@ class TavernUpgradeAction(Action):
     def valid(self, player: 'Player') -> bool:
         return player.valid_upgrade_tavern()
 
+    def str_in_context(self, player: 'Player') -> str:
+        return f"TavernUpgrade({player.tavern_tier}, {player.tavern_upgrade_cost})"
+
 
 class HeroPowerAction(Action):
     def __init__(self, board_target: Optional['BoardIndex'] = None, store_target: Optional['StoreIndex'] = None):
@@ -108,7 +123,7 @@ class HeroPowerAction(Action):
         self.store_target = store_target
 
     def __repr__(self):
-        return f"HeroPower()"
+        return f"HeroPower({self.board_target}, {self.store_target})"
 
     def apply(self, player: 'Player'):
         player.hero_power(self.board_target, self.store_target)
@@ -127,6 +142,9 @@ class TripleRewardsAction(Action):
     def valid(self, player: 'Player') -> bool:
         return player.valid_triple_rewards()
 
+    def str_in_context(self, player: 'Player') -> str:
+        return f"TripleRewards({player.triple_rewards[-1]})"
+
 
 class RedeemGoldCoinAction(Action):
     def __repr__(self):
@@ -140,10 +158,10 @@ class RedeemGoldCoinAction(Action):
 
 
 class Agent:
-    def hero_choice_action(self, player: 'Player') -> 'Hero':
+    async def hero_choice_action(self, player: 'Player') -> 'Hero':
         return player.hero_options[0]
 
-    def rearrange_cards(self, player: 'Player') -> List['Card']:
+    async def rearrange_cards(self, player: 'Player') -> List['Card']:
         """
         here the player selects a card arangement one time per combat directly preceeding combat
 
@@ -155,7 +173,7 @@ class Agent:
         """
         pass
 
-    def buy_phase_action(self, player: 'Player') -> Action:
+    async def buy_phase_action(self, player: 'Player') -> Action:
         """
         here the player chooses a buy phase action including:
         purchasing a card from the store
@@ -172,7 +190,7 @@ class Agent:
         """
         pass
 
-    def discover_choice_action(self, player: 'Player') -> 'Card':
+    async def discover_choice_action(self, player: 'Player') -> 'Card':
         """
 
         Args:
@@ -183,7 +201,7 @@ class Agent:
         """
         pass
 
-    def game_over(self, player: 'Player', ranking: int):
+    async def game_over(self, player: 'Player', ranking: int):
         """
         Notifies the agent that the game is over and the agent has achieved a given rank
         :param ranking: Integer index 0 to 7 of where the agent placed

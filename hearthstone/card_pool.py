@@ -50,8 +50,7 @@ class SneedsOldShredder(MonsterCard):
                 legendary_minions = [OldMurkeye(), Khadgar(), ShifterZerus(), BolvarFireblood(), RazorgoreTheUntamed(),
                                      KingBagurgle(), CapnHoggarr(), KalecgosArcaneAspect(), NadinaTheRed(),
                                      DreadAdmiralEliza(), Maexxna(), NatPagleExtremeAngler(), MalGanis(),
-                                     WaxriderTogwaggle(), BaronRivendare(), BrannBronzebeard(), GoldrinnTheGreatWolf(),
-                                     KangorsApprentice()]
+                                     WaxriderTogwaggle(), BaronRivendare(), BrannBronzebeard(), GoldrinnTheGreatWolf()]
                 random_minion = context.randomizer.select_summon_minion(legendary_minions)
                 context.friendly_war_party.summon_in_combat(random_minion, context, summon_index + i + 1)
                 i += 1
@@ -440,7 +439,7 @@ class SkyPirate(MonsterCard):
             attacking_war_party = context.friendly_war_party
             defending_war_party = context.enemy_war_party
             attacker = self
-            defender = defending_war_party.get_attack_target(context.randomizer, self)
+            defender = defending_war_party.get_random_monster(context.randomizer)
             if not defender:
                 return
             logging.debug(f'{attacking_war_party.owner.name} is attacking {defending_war_party.owner.name}')
@@ -1477,7 +1476,7 @@ class YoHoOgre(MonsterCard):
             attacking_war_party = context.friendly_war_party
             defending_war_party = context.enemy_war_party
             attacker = self
-            defender = defending_war_party.get_attack_target(context.randomizer)
+            defender = defending_war_party.get_random_monster(context.randomizer)
             if not defender:
                 return
             logging.debug(f'{attacking_war_party.owner.name} is attacking {defending_war_party.owner.name}')
@@ -1628,3 +1627,17 @@ class FoeReaper4000(MonsterCard):
             for target in splash_damage_targets:
                 target.take_damage(self.attack, context, self)
                 target.resolve_death(context, self)
+
+
+class Amalgadon(MonsterCard):
+    tier = 6
+    monster_type = MONSTER_TYPES.ALL
+    base_attack = 6
+    base_health = 6
+
+    def base_battlecry(self, targets: List['MonsterCard'], context: 'BuyPhaseContext'):
+        count = len(one_minion_per_type(context.owner.in_play, context.randomizer)) * (2 if self.golden else 1)
+        for _ in range(count):
+            valid_adaptations = [adaptation for adaptation in Adaptation.__subclasses__() if adaptation.valid(self)]
+            adaptation = context.randomizer.select_adaptation(valid_adaptations)
+            self.adapt(adaptation())

@@ -50,6 +50,9 @@ class Randomizer:
     def select_random_minion(self, cards: List['Card'], round_number: int) -> 'Card':
         raise NotImplementedError()
 
+    def select_adaptation(self, adaptations: List['Type']) -> 'Type':
+        raise NotImplementedError()
+
 
 class DefaultRandomizer(Randomizer):
     def __init__(self, seed: Optional[int] = None):
@@ -97,3 +100,6 @@ class DefaultRandomizer(Randomizer):
 
     def select_random_minion(self, cards: List['Card'], round_number: int) -> 'Card':
         return self.rand.choice(cards)
+
+    def select_adaptation(self, adaptations: List['Type']) -> 'Type':
+        return self.rand.choice(adaptations)

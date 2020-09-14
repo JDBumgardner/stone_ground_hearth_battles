@@ -19,10 +19,9 @@ logger = logging.getLogger(__name__)
 class WarParty:
     #  (HalfBoard)
     def __init__(self, player: 'Player'):
-        self.owner: 'PLayer' = player
-        self.board: List[MonsterCard] = [copy.copy(card) for card in player.in_play]
-        self.next_attacker_idx: int = 0
-        self.dead_mechs: List[MonsterCard] = []
+        self.owner = player
+        self.board = [copy.copy(card) for card in player.in_play]
+        self.next_attacker_idx = 0
 
     def find_next(self) -> Optional['MonsterCard']:
         #  Sets the index for the next monster who will fight from your side.
@@ -95,13 +94,15 @@ def fight_boards(war_party_1: 'WarParty', war_party_2: 'WarParty', randomizer: '
 
     for _ in range(100):
         attacker = attacking_war_party.find_next()
-        defender = defending_war_party.get_attack_target(randomizer, attacker)
-        logger.debug(f'{attacking_war_party.owner.name} is attacking {defending_war_party.owner.name}')
-        if not defender:
-            break
-        if attacker:
-            start_attack(attacker, defender, attacking_war_party, defending_war_party, randomizer)
-        elif not defending_war_party.attackers():
+        num_attacks = 2 if (attacker is not None and attacker.windfury) else 1
+        for _ in range(num_attacks):
+            defender = defending_war_party.get_attack_target(randomizer, attacker)
+            logger.debug(f'{attacking_war_party.owner.name} is attacking {defending_war_party.owner.name}')
+            if defender is None:
+                break
+            if attacker and not attacker.dead:
+                start_attack(attacker, defender, attacking_war_party, defending_war_party, randomizer)
+        if not defending_war_party.attackers():
             break
         attacking_war_party, defending_war_party = defending_war_party, attacking_war_party
     damage(war_party_1, war_party_2, randomizer)

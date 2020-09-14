@@ -1,6 +1,7 @@
 import unittest
 from typing import Type
 
+from hearthstone.adaptations import *
 from hearthstone.card_graveyard import *
 from hearthstone.card_pool import *
 from hearthstone.cards import Card, CardType
@@ -1993,6 +1994,29 @@ class CardTests(unittest.TestCase):
         player_1.hero_power(BoardIndex(1))
         self.assertCardListEquals(player_1.in_play, [AlleyCat, VulgarHomunculus])
         self.assertCardListEquals(player_1.store, [AlleyCat, TabbyCat])
+
+    class TestAmalgadonRandomizer(DefaultRandomizer):
+        def select_adaptation(self, adaptation_types: List['Type']) -> 'Type':
+            if CracklingShield in adaptation_types:
+                return CracklingShield
+            if LivingSpores in adaptation_types:
+                return LivingSpores
+            else:
+                return adaptation_types[0]
+
+    def test_amalgadon(self):
+        tavern = Tavern()
+        player_1 = tavern.add_player_with_hero("Dante_Kong", TheCurator())
+        player_2 = tavern.add_player_with_hero("lucy")
+        self.upgrade_to_tier(tavern, 6)
+        tavern.randomizer = RepeatedCardForcer([Amalgadon, AlleyCat, AlleyCat])
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        tavern.randomizer = self.TestAmalgadonRandomizer()
+        player_1.summon_from_hand(HandIndex(0))
+        self.assertCardListEquals(player_1.in_play, [Amalgam, Amalgadon])
+        self.assertTrue(player_1.in_play[1].divine_shield)
+        self.assertEqual(len(player_1.in_play[1].deathrattles), 1)
 
 
 if __name__ == '__main__':

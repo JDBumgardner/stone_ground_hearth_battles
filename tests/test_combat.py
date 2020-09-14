@@ -1,5 +1,6 @@
 import unittest
 
+from hearthstone.adaptations import LivingSpores
 from hearthstone.card_graveyard import *
 from hearthstone.card_pool import *
 from hearthstone.cards import Card
@@ -927,6 +928,30 @@ class CombatTests(unittest.TestCase):
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [MicroMummy()]
         ethans_war_party.board = [BloodsailCannoneer()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+
+    def test_amalgadon(self):
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        amalgadon = Amalgadon()
+        for adaptation in Adaptation.__subclasses__():
+            amalgadon.adapt(adaptation())
+        self.assertTrue(amalgadon.divine_shield)
+        self.assertTrue(amalgadon.windfury)
+        self.assertTrue(amalgadon.taunt)
+        self.assertTrue(amalgadon.poisonous)
+        self.assertEqual(len(amalgadon.deathrattles), 1)
+        self.assertEqual(amalgadon.attack, amalgadon.base_attack + 4)
+        self.assertEqual(amalgadon.health, amalgadon.base_health + 4)
+        runt = IronhideRunt()
+        runt.golden_transformation([])
+        runt.taunt = True
+        adams_war_party.board = [amalgadon]
+        ethans_war_party.board = [InfestedWolf(), runt]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
