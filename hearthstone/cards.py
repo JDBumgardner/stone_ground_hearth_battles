@@ -3,7 +3,7 @@ import itertools
 from collections import defaultdict
 from typing import Set, List, Optional, Callable, Type, Union, Iterator
 
-from hearthstone import events
+from hearthstone import events, monster_types
 from hearthstone.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
 from hearthstone.card_factory import make_metaclass
 from hearthstone.monster_types import MONSTER_TYPES
@@ -85,6 +85,7 @@ class MonsterCard(Card):
     shifting = False
     attached_cards = []
     give_immunity = False
+    targets_least_attack = False
 
     def __init__(self):
         super().__init__()
@@ -166,6 +167,8 @@ class MonsterCard(Card):
                         deathrattle(self, context)
                 if self.reborn:
                     self.trigger_reborn(context)
+                if self.check_type(MONSTER_TYPES.MECH):
+                    context.friendly_war_party.dead_mechs.append(self)
             elif event.event is EVENTS.SUMMON_BUY:
                 if self.magnetic:
                     self.magnetize(event.targets, context)

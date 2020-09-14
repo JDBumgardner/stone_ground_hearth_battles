@@ -5,6 +5,7 @@ from typing import Optional, List
 
 from hearthstone import events
 from hearthstone.events import CombatPhaseContext, EVENTS, CardEvent
+from hearthstone.monster_types import MONSTER_TYPES
 
 if typing.TYPE_CHECKING:
     from hearthstone.player import Player
@@ -18,9 +19,10 @@ logger = logging.getLogger(__name__)
 class WarParty:
     #  (HalfBoard)
     def __init__(self, player: 'Player'):
-        self.owner = player
-        self.board = [copy.copy(card) for card in player.in_play]
-        self.next_attacker_idx = 0
+        self.owner: 'PLayer' = player
+        self.board: List[MonsterCard] = [copy.copy(card) for card in player.in_play]
+        self.next_attacker_idx: int = 0
+        self.dead_mechs: List[MonsterCard] = []
 
     def find_next(self) -> Optional['MonsterCard']:
         #  Sets the index for the next monster who will fight from your side.
@@ -38,7 +40,12 @@ class WarParty:
                 return self.board[index]
         return None
 
-    def get_random_monster(self, randomizer: 'Randomizer') -> Optional['MonsterCard']:
+    def get_attack_target(self, randomizer: 'Randomizer', attacker: Optional['MonsterCard'] = None) -> Optional['MonsterCard']:
+        if attacker:
+            if attacker.targets_least_attack:
+                least_attack_monster = min([card for card in self.board if not card.dead], key=lambda card: card.attack)
+                if least_attack_monster:
+                    return least_attack_monster
         taunt_monsters = [card for card in self.board if not card.dead and card.taunt]
         if taunt_monsters:
             return randomizer.select_attack_target(taunt_monsters)
@@ -88,7 +95,7 @@ def fight_boards(war_party_1: 'WarParty', war_party_2: 'WarParty', randomizer: '
 
     for _ in range(100):
         attacker = attacking_war_party.find_next()
-        defender = defending_war_party.get_random_monster(randomizer)
+        defender = defending_war_party.get_attack_target(randomizer, attacker)
         logger.debug(f'{attacking_war_party.owner.name} is attacking {defending_war_party.owner.name}')
         if not defender:
             break
@@ -131,7 +138,7 @@ def damage(half_board_1: 'WarParty', half_board_2: 'WarParty', randomizer: 'Rand
 def start_attack(attacker: 'MonsterCard', defender: 'MonsterCard', attacking_war_party: 'WarParty', defending_war_party: 'WarParty',
                  randomizer: 'Randomizer'):
     logger.debug(f'{attacker} is attacking {defender}')
-    on_attack_event = events.OnAttackEvent(attacker)
+    on_attack_event = events.OnAttackEvent(attacker, foe=defender)
     combat_phase_context = CombatPhaseContext(attacking_war_party, defending_war_party, randomizer)
     combat_phase_context.broadcast_combat_event(on_attack_event)
     attacker.take_damage(defender.attack, combat_phase_context, defender, defending=False)

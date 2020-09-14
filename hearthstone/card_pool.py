@@ -50,7 +50,8 @@ class SneedsOldShredder(MonsterCard):
                 legendary_minions = [OldMurkeye(), Khadgar(), ShifterZerus(), BolvarFireblood(), RazorgoreTheUntamed(),
                                      KingBagurgle(), CapnHoggarr(), KalecgosArcaneAspect(), NadinaTheRed(),
                                      DreadAdmiralEliza(), Maexxna(), NatPagleExtremeAngler(), MalGanis(),
-                                     WaxriderTogwaggle(), BaronRivendare(), BrannBronzebeard(), GoldrinnTheGreatWolf()]
+                                     WaxriderTogwaggle(), BaronRivendare(), BrannBronzebeard(), GoldrinnTheGreatWolf(),
+                                     KangorsApprentice()]
                 random_minion = context.randomizer.select_summon_minion(legendary_minions)
                 context.friendly_war_party.summon_in_combat(random_minion, context, summon_index + i + 1)
                 i += 1
@@ -439,7 +440,7 @@ class SkyPirate(MonsterCard):
             attacking_war_party = context.friendly_war_party
             defending_war_party = context.enemy_war_party
             attacker = self
-            defender = defending_war_party.get_random_monster(context.randomizer)
+            defender = defending_war_party.get_attack_target(context.randomizer, self)
             if not defender:
                 return
             logging.debug(f'{attacking_war_party.owner.name} is attacking {defending_war_party.owner.name}')
@@ -1476,7 +1477,7 @@ class YoHoOgre(MonsterCard):
             attacking_war_party = context.friendly_war_party
             defending_war_party = context.enemy_war_party
             attacker = self
-            defender = defending_war_party.get_random_monster(context.randomizer)
+            defender = defending_war_party.get_attack_target(context.randomizer)
             if not defender:
                 return
             logging.debug(f'{attacking_war_party.owner.name} is attacking {defending_war_party.owner.name}')
@@ -1571,3 +1572,59 @@ class MicroMummy(MonsterCard):
                 card = context.randomizer.select_friendly_minion(other_minions)
                 bonus = 2 if self.golden else 1
                 card.attack += bonus
+
+
+class KangorsApprentice(MonsterCard):
+    tier = 6
+    monster_type = None
+    base_attack = 3
+    base_health = 6
+
+    def base_deathrattle(self, context: CombatPhaseContext): #TODO does this get tokens?
+        count = 4 if self.golden else 2
+        summon_index = context.friendly_war_party.get_index(self)
+        summon_minions = [type(dead_mech)() for dead_mech in context.friendly_war_party.dead_mechs]
+        for minion_index in range(len(summon_minions)):
+            if context.friendly_war_party.dead_mechs[minion_index].golden:
+                summon_minions[minion_index].golden_transformation([])
+        for index in range(min(count, len(context.friendly_war_party.dead_mechs))):
+            context.friendly_war_party.summon_in_combat(summon_minions[index], context, summon_index + index + 1)
+
+
+class ZappSlywick(MonsterCard):
+    tier = 6
+    monster_type = None
+    base_attack = 7
+    base_health = 10
+    base_windfury = True
+    targets_least_attack = True
+
+class SeaBreakerGoliath(MonsterCard):
+    tier = 5
+    monster_type = MONSTER_TYPES.PIRATE
+    base_attack = 6
+    base_health = 7
+    base_windfury = True
+
+    def overkill(self, context: CombatPhaseContext):
+        bonus = 4 if self.golden else 2
+        pirates = [card for card in context.friendly_war_party.board if card.check_type(MONSTER_TYPES.PIRATE)]
+        for pirate in pirates:
+            pirate.attack += bonus
+            pirate.health += bonus
+
+
+class FoeReaper4000(MonsterCard):
+    tier = 6
+    monster_type = MONSTER_TYPES.MECH
+    base_attack = 6
+    base_health = 9
+
+    def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
+        if event.event == EVENTS.ON_ATTACK and event.card == self:
+            live_enemy_board = [card for card in context.enemy_war_party.board if not card.dead]
+            foe_index = live_enemy_board.index(event.foe)
+            splash_damage_targets = [card for i, card in enumerate(live_enemy_board) if abs(i - foe_index) == 1]
+            for target in splash_damage_targets:
+                target.take_damage(self.attack, context, self)
+                target.resolve_death(context, self)

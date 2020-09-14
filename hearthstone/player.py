@@ -59,7 +59,7 @@ class Player:
         self._coins = min(coins, 10)
 
     @staticmethod
-    def new_player_with_hero(tavern: 'Tavern', name: str, hero: Optional['Hero'] = None) -> 'Player':
+    def new_player_with_hero(tavern: Optional['Tavern'], name: str, hero: Optional['Hero'] = None) -> 'Player':
         if hero is None:
             hero = EmptyHero()
         player = Player(tavern, name, [hero])

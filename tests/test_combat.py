@@ -931,6 +931,38 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
 
+    def test_kangors_apprentice(self):
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [SecurityRover(), KangorsApprentice()]
+        ethans_war_party.board = [Maexxna()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 35)
+
+    def test_zapp_slywick(self): # TODO I don't think this actually tests everything about this card
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [ZappSlywick()]
+        ethans_war_party.board = [RighteousProtector(), MonstrousMacaw(), MechanoEgg()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 38)
+        self.assertEqual(ethan.health, 40)
+
+    def test_foe_reaper_4000(self):
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [FoeReaper4000()]
+        ethans_war_party.board = [AlleyCat(), MamaBear(), DragonspawnLieutenant(), MamaBear()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 33)
 
 if __name__ == '__main__':
     unittest.main()

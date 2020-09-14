@@ -67,9 +67,10 @@ class BuyStartEvent(CardEvent):
 
 
 class OnAttackEvent(CardEvent):
-    def __init__(self, card: 'MonsterCard'):
+    def __init__(self, card: 'MonsterCard', foe: 'MonsterCard'):
         super().__init__(EVENTS.ON_ATTACK)
         self.card = card
+        self.foe = foe
 
 
 class AfterAttackDamageEvent(CardEvent):
