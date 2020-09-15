@@ -765,8 +765,8 @@ class CombatTests(unittest.TestCase):
 
     def test_nat_pagle_extreme_angler(self):
         tavern = Tavern()
-        adam = Player.new_player_with_hero(tavern, "Adam")
-        ethan = Player.new_player_with_hero(tavern, "Ethan")
+        adam = tavern.add_player_with_hero("Adam")
+        ethan = tavern.add_player_with_hero("Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [NatPagleExtremeAngler()]

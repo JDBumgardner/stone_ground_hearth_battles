@@ -1394,7 +1394,7 @@ class NatPagleExtremeAngler(MonsterCard):
     base_health = 5
     legendary = True
 
-    def handle_event_powers(self, event: CardEvent, context: CombatPhaseContext):  # TODO: does this gain from the deck?
+    def handle_event_powers(self, event: CardEvent, context: CombatPhaseContext):
         if event.event is EVENTS.AFTER_ATTACK_DAMAGE and self == event.card and event.foe.is_dying():
             for _ in range(2 if self.golden else 1):
                 if context.friendly_war_party.owner.room_in_hand():
@@ -1603,12 +1603,13 @@ class KangorsApprentice(MonsterCard):
     def base_deathrattle(self, context: CombatPhaseContext): #TODO does this get tokens?
         count = 4 if self.golden else 2
         summon_index = context.friendly_war_party.get_index(self)
-        summon_minions = [type(dead_mech)() for dead_mech in context.friendly_war_party.dead_mechs]
-        for minion_index in range(len(summon_minions)):
-            if context.friendly_war_party.dead_mechs[minion_index].golden:
-                summon_minions[minion_index].golden_transformation([])
-        for index in range(min(count, len(context.friendly_war_party.dead_mechs))):
-            context.friendly_war_party.summon_in_combat(summon_minions[index], context, summon_index + index + 1)
+        dead_mechs = [dead_minion for dead_minion in context.friendly_war_party.dead_minions if
+                          dead_minion.check_type(MONSTER_TYPES.MECH)]
+        for index in range(min(count, len(dead_mechs))):
+            summon_minion = type(dead_mechs[index])()
+            if dead_mechs[index].golden:
+                summon_minion.golden_transformation([])
+            context.friendly_war_party.summon_in_combat(summon_minion, context, summon_index + index + 1)
 
 
 class ZappSlywick(MonsterCard):
@@ -1682,3 +1683,13 @@ class Amalgadon(MonsterCard):
             available_adaptations = valid_adaptations(self)
             adaptation = context.randomizer.select_adaptation(available_adaptations)
             self.adapt(adaptation())
+
+
+class AnnoyOModule(MonsterCard):
+    tier = 4
+    monster_type = MONSTER_TYPES.MECH
+    base_attack = 2
+    base_health = 4
+    base_divine_shield = True
+    base_taunt = True
+    base_magnetic = True

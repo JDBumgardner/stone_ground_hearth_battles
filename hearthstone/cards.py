@@ -57,7 +57,7 @@ CardType = make_metaclass(PrintingPress.add_card, ("Card", "MonsterCard"))
 
 class Card(metaclass=CardType):
     type_name = "card"
-    mana_cost: int
+    mana_cost: Optional[int]
     card_name: str
     coin_cost = 3
     redeem_rate = 1
@@ -72,7 +72,7 @@ class Card(metaclass=CardType):
 
 class MonsterCard(Card):
     type_name = "monster"
-    mana_cost = 0
+    mana_cost = None
     base_health: int
     base_attack: int
     monster_type = None
@@ -175,8 +175,7 @@ class MonsterCard(Card):
                         deathrattle(self, context)
                 if self.reborn:
                     self.trigger_reborn(context)
-                if self.check_type(MONSTER_TYPES.MECH):
-                    context.friendly_war_party.dead_mechs.append(self)
+                context.friendly_war_party.dead_minions.append(self)
             elif event.event is EVENTS.SUMMON_BUY:
                 if self.magnetic:
                     self.magnetize(event.targets, context)
@@ -221,7 +220,7 @@ class MonsterCard(Card):
             if self.deathrattles:
                 targets[0].deathrattles.extend(self.deathrattles)
             for attr in self.bool_attribute_list:
-                if getattr(self, attr):  # TODO: Does the target gain magnetic?
+                if getattr(self, attr) and attr != 'magnetic':
                     setattr(targets[0], attr, True)
             targets[0].attached_cards.append(self)
             context.owner.in_play.remove(self)
@@ -300,13 +299,9 @@ class CardList:
     def __len__(self) -> int:
         return sum(len(value) for value in self.cards_by_tier.values())
 
-    def unique_cards(self) -> List['MonsterCard']:  # TODO: can this be more efficient?
-        uniques = []
-        for minion in self.all_cards():
-            matches = [card for card in uniques if type(card) == type(minion)]
-            if not matches:
-                uniques.append(minion)
-        return uniques
+    def unique_cards(self) -> List['MonsterCard']:
+        cards_by_type = {type(card): card for card in self.all_cards()}
+        return list(cards_by_type.values())
 
 
 class CardLocation(enum.Enum):

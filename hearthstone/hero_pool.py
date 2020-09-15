@@ -316,7 +316,7 @@ class JandiceBarov(Hero):
     power_cost = 0
     power_target_location = CardLocation.BOARD
 
-    def hero_power_valid_impl(self, context: BuyPhaseContext, board_index: Optional['BoardIndex'] = None,
+    def hero_power_valid_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                               store_index: Optional['StoreIndex'] = None):
         return not context.owner.in_play[board_index].golden and len(context.owner.store) > 0
 
@@ -327,3 +327,13 @@ class JandiceBarov(Hero):
         context.owner.store.remove(store_minion)
         context.owner.in_play.append(store_minion)
         context.owner.store.append(board_minion)
+
+
+class ArchVillianRafaam(Hero):
+    power_cost = 1
+
+    def handle_event(self, event: 'CardEvent', context: 'CombatPhaseContext'):
+        if event.event is EVENTS.DIES and event.card in context.enemy_war_party.board and self.hero_power_used:
+            if len(context.enemy_war_party.dead_minions) == 1 and context.friendly_war_party.owner.room_in_hand():
+                context.friendly_war_party.owner.gain_card(type(event.card)())
+
