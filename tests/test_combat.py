@@ -387,9 +387,7 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(adam.health, 40)
         self.assertNotEqual(ethan.health, 40)
         self.assertNotEqual(len(adams_war_party.board), 1)
-        two_cost_minions = [VulgarHomunculus, MicroMachine, MurlocTidehunter, RockpoolHunter,
-                            DragonspawnLieutenant, KindlyGrandmother, ScavengingHyena, UnstableGhoul, Khadgar]
-        self.assertIn(type(adams_war_party.board[1]), two_cost_minions)
+        self.assertEqual(adams_war_party.board[1].mana_cost, 2)
 
     def test_soul_juggler(self):
         adam = Player.new_player_with_hero(None, "Adam")
@@ -427,8 +425,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 34)
 
     class PilotedShredderRandomizer(DefaultRandomizer):
-        def select_summon_minion(self, cards: List['Card']) -> 'Card':
-            khadgar = [card for card in cards if type(card) is Khadgar]
+        def select_summon_minion(self, card_types: List['Type']) -> 'Type':
+            khadgar = [card_type for card_type in card_types if card_type == Khadgar]
             return khadgar[0]
 
     def test_khadgar_piloted_shredder(self):
@@ -503,11 +501,7 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(adam.health, 40)
         self.assertNotEqual(ethan.health, 40)
         self.assertNotEqual(len(adams_war_party.board), 1)
-        legendary_minions = [OldMurkeye, Khadgar, ShifterZerus, BolvarFireblood, RazorgoreTheUntamed, KingBagurgle,
-                             CapnHoggarr, KalecgosArcaneAspect, NadinaTheRed, DreadAdmiralEliza, Maexxna,
-                             NatPagleExtremeAngler, MalGanis, WaxriderTogwaggle, BaronRivendare, BrannBronzebeard,
-                             GoldrinnTheGreatWolf, FoeReaper4000, ZappSlywick]
-        self.assertIn(type(adams_war_party.board[1]), legendary_minions)
+        self.assertTrue(adams_war_party.board[1].legendary)
 
     def test_bolvar_fireblood(self):
         adam = Player.new_player_with_hero(None, "Adam")
@@ -770,8 +764,9 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_nat_pagle_extreme_angler(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        tavern = Tavern()
+        adam = Player.new_player_with_hero(tavern, "Adam")
+        ethan = Player.new_player_with_hero(tavern, "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [NatPagleExtremeAngler()]

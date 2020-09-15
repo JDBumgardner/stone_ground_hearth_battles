@@ -1,7 +1,7 @@
 import unittest
 from typing import Type
 
-from hearthstone.adaptations import *
+from hearthstone.adaptations import Adaptation
 from hearthstone.card_graveyard import *
 from hearthstone.card_pool import *
 from hearthstone.cards import Card, CardType
@@ -1997,10 +1997,10 @@ class CardTests(unittest.TestCase):
 
     class TestAmalgadonRandomizer(DefaultRandomizer):
         def select_adaptation(self, adaptation_types: List['Type']) -> 'Type':
-            if CracklingShield in adaptation_types:
-                return CracklingShield
-            if LivingSpores in adaptation_types:
-                return LivingSpores
+            if Adaptation.CracklingShield in adaptation_types:
+                return Adaptation.CracklingShield
+            if Adaptation.LivingSpores in adaptation_types:
+                return Adaptation.LivingSpores
             else:
                 return adaptation_types[0]
 

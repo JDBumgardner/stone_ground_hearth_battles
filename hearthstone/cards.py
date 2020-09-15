@@ -91,6 +91,7 @@ class MonsterCard(Card):
     shifting = False
     give_immunity = False
     targets_least_attack = False
+    legendary = False
 
     def __init__(self):
         super().__init__()
@@ -298,6 +299,14 @@ class CardList:
 
     def __len__(self) -> int:
         return sum(len(value) for value in self.cards_by_tier.values())
+
+    def unique_cards(self) -> List['MonsterCard']:  # TODO: can this be more efficient?
+        uniques = []
+        for minion in self.all_cards():
+            matches = [card for card in uniques if type(card) == type(minion)]
+            if not matches:
+                uniques.append(minion)
+        return uniques
 
 
 class CardLocation(enum.Enum):

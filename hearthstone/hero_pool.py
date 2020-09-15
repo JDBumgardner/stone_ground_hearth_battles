@@ -1,7 +1,7 @@
 from typing import Union, Tuple, Optional
 
 from hearthstone.card_pool import Amalgam
-from hearthstone.cards import PrintingPress, one_minion_per_type, CardLocation
+from hearthstone.cards import one_minion_per_type, CardLocation
 from hearthstone.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
 from hearthstone.hero import Hero
 from hearthstone.monster_types import MONSTER_TYPES
@@ -220,9 +220,10 @@ class Ysera(Hero):
         if event.event is EVENTS.BUY_START and len(context.owner.store) < 7:
             dragons = [card for card in context.owner.tavern.deck.all_cards() if
                        card.check_type(MONSTER_TYPES.DRAGON) and card.tier <= context.owner.tavern_tier]
-            card = context.randomizer.select_add_to_store(dragons)
-            context.owner.tavern.deck.remove_card(card)
-            context.owner.store.append(card)
+            if dragons:
+                card = context.randomizer.select_add_to_store(dragons)
+                context.owner.tavern.deck.remove_card(card)
+                context.owner.store.append(card)
 
 
 class Bartendotron(Hero):
@@ -256,9 +257,10 @@ class CaptainEudora(Hero):
                         store_index: Optional['StoreIndex'] = None):
         self.digs_left -= 1
         if self.digs_left == 0:
-            diggable_minions = [card for card in [minion() for minion in PrintingPress.all_types()] if
+            diggable_minions = [card for card in context.owner.tavern.deck.all_cards() if
                                 card.tier <= context.owner.tavern_tier]
             random_minion = context.randomizer.select_gain_card(diggable_minions)
+            context.owner.tavern.deck.remove_card(random_minion)
             random_minion.golden_transformation([])
             context.owner.gain_card(random_minion)
             self.digs_left = 5

@@ -29,10 +29,10 @@ class Randomizer:
     def select_discover_card(self, discoverables: List['Card']) -> 'Card':
         raise NotImplementedError()
 
-    def select_from_store(self, store: List['Card']) -> 'Card':
+    def select_from_store(self, store: List['MonsterCard']) -> 'MonsterCard':
         raise NotImplementedError()
 
-    def select_gain_card(self, cards: List['MonsterCard']) -> 'Card':
+    def select_gain_card(self, cards: List['MonsterCard']) -> 'MonsterCard':
         raise NotImplementedError()
 
     def select_hero(self, hero_pool: List['Hero']) -> 'Hero':
@@ -41,13 +41,13 @@ class Randomizer:
     def select_summon_minion(self, cards: List['Type']) -> 'Type':
         raise NotImplementedError()
 
-    def select_add_to_store(self, cards: List['Card']) -> 'Card':
+    def select_add_to_store(self, cards: List['MonsterCard']) -> 'MonsterCard':
         raise NotImplementedError()
 
     def select_monster_type(self, monster_types: List['MONSTER_TYPES'], round_number: int) -> 'MONSTER_TYPES':
         raise NotImplementedError()
 
-    def select_random_minion(self, cards: List['Card'], round_number: int) -> 'Card':
+    def select_random_minion(self, cards: List['Type'], round_number: int) -> 'Type':
         raise NotImplementedError()
 
     def select_adaptation(self, adaptations: List['Type']) -> 'Type':
@@ -80,10 +80,10 @@ class DefaultRandomizer(Randomizer):
     def select_discover_card(self, discoverables: List['Card']) -> 'Card':
         return self.rand.choice(discoverables)
 
-    def select_from_store(self, store: List['Card']) -> 'Card':
+    def select_from_store(self, store: List['MonsterCard']) -> 'MonsterCard':
         return self.rand.choice(store)
 
-    def select_gain_card(self, cards: List['Card']) -> 'Card':
+    def select_gain_card(self, cards: List['MonsterCard']) -> 'MonsterCard':
         return self.rand.choice(cards)
 
     def select_hero(self, hero_pool: List['Hero']) -> 'Hero':
@@ -92,13 +92,13 @@ class DefaultRandomizer(Randomizer):
     def select_summon_minion(self, cards: List['Type']) -> 'Type':
         return self.rand.choice(cards)
 
-    def select_add_to_store(self, cards: List['Card']) -> 'Card':
+    def select_add_to_store(self, cards: List['MonsterCard']) -> 'MonsterCard':
         return self.rand.choice(cards)
 
     def select_monster_type(self, monster_types: List['MONSTER_TYPES'], round_number: int) -> 'MONSTER_TYPES':
         return self.rand.choice(monster_types)
 
-    def select_random_minion(self, cards: List['Card'], round_number: int) -> 'Card':
+    def select_random_minion(self, cards: List['Type'], round_number: int) -> 'Type':
         return self.rand.choice(cards)
 
     def select_adaptation(self, adaptations: List['Type']) -> 'Type':
