@@ -6,9 +6,6 @@
     
     export let name;
     let selectedRun;
-    $: {
-        console.log(selectedRun);
-    };
     
     let runToTags = {};
     onMount(async () => {
@@ -16,7 +13,7 @@
     });
 
     $: tags = Object.keys(runToTags[selectedRun] || {});
-    $: spec_promises = tags.map((tag) => ({tag, spec: fetch('./plot_specs?' + new URLSearchParams({selectedRun, tag})).then((response) => response.json())}));
+    $: spec_promises = tags.map((tag) => ({tag, spec: fetch('./plot_specs?' + new URLSearchParams({run: selectedRun, tag})).then((response) => response.json())}));
 </script>
 
 
