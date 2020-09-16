@@ -43,7 +43,7 @@ class Nefarian(Hero):
 
     # hero power is called nefarious fire
 
-    def handle_event(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
+    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event == EVENTS.COMBAT_START:
             if self.hero_power_used:
                 for card in context.enemy_war_party.board:
@@ -56,7 +56,7 @@ class Deathwing(Hero):
                               store_index: Optional['StoreIndex'] = None):
         return False
 
-    def handle_event(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
+    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.COMBAT_START:
             all_minions = context.friendly_war_party.board + context.enemy_war_party.board
             for minion in all_minions:
@@ -71,7 +71,7 @@ class MillificentManastorm(Hero):
                               store_index: Optional['StoreIndex'] = None):
         return False
 
-    def handle_event(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
+    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY:
             if event.card.check_type(MONSTER_TYPES.MECH):
                 event.card.attack += 1
@@ -103,7 +103,7 @@ class YoggSaron(Hero):
 class PatchesThePirate(Hero):  # TODO: does this pull from the deck or does it add to the available pool?
     power_cost = 4
 
-    def handle_event(self, event: CardEvent, context: BuyPhaseContext):
+    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY and event.card.check_type(MONSTER_TYPES.PIRATE):
             self.power_cost = max(0, self.power_cost - 1)
 
@@ -127,7 +127,7 @@ class DancinDeryl(Hero):
                               store_index: Optional['StoreIndex'] = None):
         return False
 
-    def handle_event(self, event: CardEvent, context: BuyPhaseContext):
+    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.SELL and context.owner.store:
             for _ in range(2):
                 card = context.randomizer.select_from_store(context.owner.store)
@@ -140,7 +140,7 @@ class FungalmancerFlurgl(Hero):
                               store_index: Optional['StoreIndex'] = None):
         return False
 
-    def handle_event(self, event: CardEvent, context: BuyPhaseContext):
+    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.SELL and event.card.check_type(MONSTER_TYPES.MURLOC):
             murlocs = [card for card in context.owner.tavern.deck.all_cards() if
                        card.check_type(MONSTER_TYPES.MURLOC) and card.tier <= context.owner.tavern_tier]
@@ -154,7 +154,7 @@ class KaelthasSunstrider(Hero):
                               store_index: Optional['StoreIndex'] = None):
         return False
 
-    def handle_event(self, event: CardEvent, context: BuyPhaseContext):
+    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY:
             self.buy_counter += 1
             if self.buy_counter == 3:
@@ -190,7 +190,7 @@ class TheCurator(Hero):
                               store_index: Optional['StoreIndex'] = None):
         return False
 
-    def handle_event(self, event: CardEvent, context: BuyPhaseContext):
+    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_START and context.owner.tavern.turn_count == 0:
             context.owner.in_play.append(Amalgam())
 
@@ -200,7 +200,7 @@ class TheRatKing(Hero):
                               store_index: Optional['StoreIndex'] = None):
         return False
 
-    def handle_event(self, event: CardEvent, context: BuyPhaseContext):
+    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_START:
             available_types = [monster_type for monster_type in MONSTER_TYPES.single_types() if
                                monster_type != self.current_type]
@@ -216,7 +216,7 @@ class Ysera(Hero):
                               store_index: Optional['StoreIndex'] = None):
         return False
 
-    def handle_event(self, event: CardEvent, context: BuyPhaseContext):
+    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_START and len(context.owner.store) < 7:
             dragons = [card for card in context.owner.tavern.deck.all_cards() if
                        card.check_type(MONSTER_TYPES.DRAGON) and card.tier <= context.owner.tavern_tier]
@@ -280,7 +280,7 @@ class ForestWardenOmu(Hero):
                               store_index: Optional['StoreIndex'] = None):
         return False
 
-    def handle_event(self, event: 'CardEvent', context: 'BuyPhaseContext'):
+    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.TAVERN_UPGRADE:
             context.owner.coins += 2
 
@@ -332,7 +332,7 @@ class JandiceBarov(Hero):
 class ArchVillianRafaam(Hero):
     power_cost = 1
 
-    def handle_event(self, event: 'CardEvent', context: 'CombatPhaseContext'):
+    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.DIES and event.card in context.enemy_war_party.board and self.hero_power_used:
             if len(context.enemy_war_party.dead_minions) == 1 and context.friendly_war_party.owner.room_in_hand():
                 context.friendly_war_party.owner.gain_card(type(event.card)())

@@ -37,8 +37,6 @@ class Adaptation:
                 summon_index = context.friendly_war_party.get_index(self)
                 for i in range(2 * context.summon_minion_multiplier()):
                     plant = Plant()
-                    if self.golden:
-                        plant.golden_transformation([])
                     context.friendly_war_party.summon_in_combat(plant, context, summon_index + i + 1)
             card.deathrattles.append(deathrattle)
 

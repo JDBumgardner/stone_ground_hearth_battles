@@ -140,13 +140,10 @@ class Player:
                 if target not in valid_targets:
                     return False
         if card.magnetic:
-            valid_mechs = [target_index for target_index, target_card in enumerate(self.in_play) if
-                           card.check_type(MONSTER_TYPES.MECH)]
             if len(targets) > 1:
                 return False
-            for target in targets:
-                if target not in valid_mechs:
-                    return False
+            if len(targets) > 0 and not self.in_play[targets[0]].check_type(MONSTER_TYPES.MECH):
+                return False
         return True
 
     def play_triple_rewards(self):

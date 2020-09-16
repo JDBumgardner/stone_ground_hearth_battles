@@ -150,15 +150,14 @@ class MonsterCard(Card):
     def resolve_death(self, context: CombatPhaseContext, foe: Optional['MonsterCard'] = None):
         if self.health <= 0 and not self.dead:
             self.dead = True
+            context.friendly_war_party.dead_minions.append(self)
             card_death_event = events.DiesEvent(self, foe=foe)
             context.broadcast_combat_event(card_death_event)
 
     def trigger_reborn(self, context: CombatPhaseContext):
         index = context.friendly_war_party.get_index(self)
         for i in range(context.summon_minion_multiplier()):
-            reborn_self = type(self)()
-            if self.golden:
-                reborn_self.golden_transformation([])
+            reborn_self = self.unbuffed_copy()
             reborn_self.health = 1
             reborn_self.reborn = False
             context.friendly_war_party.summon_in_combat(reborn_self, context, index + i + 1)
@@ -167,7 +166,7 @@ class MonsterCard(Card):
         self.tavern.run_callbacks(self, new_state)
         self.state = new_state
 
-    def handle_event(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
+    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if self == event.card:
             if event.event is EVENTS.DIES:
                 for _ in range(context.deathrattle_multiplier()):
@@ -175,7 +174,6 @@ class MonsterCard(Card):
                         deathrattle(self, context)
                 if self.reborn:
                     self.trigger_reborn(context)
-                context.friendly_war_party.dead_minions.append(self)
             elif event.event is EVENTS.SUMMON_BUY:
                 if self.magnetic:
                     self.magnetize(event.targets, context)
@@ -205,10 +203,11 @@ class MonsterCard(Card):
         for card in base_cards:
             self.health += card.health - card.base_health
             self.attack += card.attack - card.base_attack
-            if card.base_deathrattle:
+            self.attached_cards.extend(card.attached_cards)
+            if card.base_deathrattle:  # TODO: This doesn't work properly with Replicating Menace as it no longer has a independent base_deathrattle function
                 self.deathrattles.extend(card.deathrattles[1:])
             else:
-                self.deathrattles.extend(card.deathrattles)
+                self.deathrattles.extend(card.deathrattles)  # TODO: golden Replicating Menace ends up with 4 deathrattles instead of just 1
             for attr in card.bool_attribute_list:
                 if getattr(card, attr):
                     setattr(self, attr, True)
@@ -228,7 +227,7 @@ class MonsterCard(Card):
     def overkill(self, context: CombatPhaseContext):
         return
 
-    def dissolve(self) -> List['MonsterCard']:
+    def dissolve(self) -> List['MonsterCard']:  # TODO: somehow recursively dissolve attached_cards
         if self.token:
             return [] + [type(card)() for card in self.attached_cards]
         elif self.golden:
@@ -263,9 +262,15 @@ class MonsterCard(Card):
     def is_dying(self) -> bool:
         return self.dead or self.health <= 0
 
-    def adapt(self, adaptation: 'Adaptation'):  # TODO: How do we type check for a nested class of Adaptation?
+    def adapt(self, adaptation: 'Adaptation'): # TODO: How do we type check for a nested class of Adaptation?
         assert adaptation.valid(self)
         adaptation.apply(self)
+
+    def unbuffed_copy(self) -> 'MonsterCard':
+        copy = type(self)()
+        if self.golden:
+            copy.golden_transformation([])
+        return copy
 
 
 class CardList:

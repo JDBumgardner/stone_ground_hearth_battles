@@ -438,7 +438,7 @@ class SkyPirate(MonsterCard):
     base_attack = 1
     base_health = 1
 
-    def handle_event_powers(self, event: CardEvent, context: CombatPhaseContext):
+    def handle_event_powers(self, event: CardEvent, context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.SUMMON_COMBAT and event.card == self:
             attacking_war_party = context.friendly_war_party
             defending_war_party = context.enemy_war_party
@@ -698,7 +698,7 @@ class FelfinNavigator(MonsterCard):
     base_attack = 4
     base_health = 4
 
-    def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
+    def base_battlecry(self, targets: List[MonsterCard], context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         bonus = 2 if self.golden else 1
         for card in context.owner.in_play:
             if card.check_type(MONSTER_TYPES.MURLOC) and card != self:
@@ -836,7 +836,7 @@ class SaltyLooter(MonsterCard):
     base_health = 3
     monster_type = MONSTER_TYPES.PIRATE
 
-    def handle_event_powers(self, event: CardEvent, context: BuyPhaseContext):
+    def handle_event_powers(self, event: CardEvent, context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.SUMMON_BUY and event.card.check_type(MONSTER_TYPES.PIRATE) and event.card != self:
             bonus = 2 if self.golden else 1
             self.attack += bonus
@@ -849,7 +849,7 @@ class SoulJuggler(MonsterCard):
     base_health = 3
     monster_type = None
 
-    def handle_event_powers(self, event: CardEvent, context: CombatPhaseContext):
+    def handle_event_powers(self, event: CardEvent, context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.DIES and event.card.check_type(
                 MONSTER_TYPES.DEMON) and event.card in context.friendly_war_party.board:
             count = 2 if self.golden else 1
@@ -1021,7 +1021,7 @@ class BolvarFireblood(MonsterCard):
     base_divine_shield = True
     legendary = True
 
-    def handle_event_powers(self, event: CardEvent, context: CombatPhaseContext):
+    def handle_event_powers(self, event: CardEvent, context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.DIVINE_SHIELD_LOST and event.card in context.friendly_war_party.board:
             bonus = 4 if self.golden else 2
             self.attack += bonus
@@ -1033,7 +1033,7 @@ class DrakonidEnforcer(MonsterCard):
     base_attack = 3
     base_health = 6
 
-    def handle_event_powers(self, event: CardEvent, context: CombatPhaseContext):
+    def handle_event_powers(self, event: CardEvent, context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.DIVINE_SHIELD_LOST and event.card in context.friendly_war_party.board:
             bonus = 4 if self.golden else 2
             self.attack += bonus
@@ -1066,14 +1066,16 @@ class ReplicatingMenace(MonsterCard):
     base_health = 1
     base_magnetic = True
 
-    def base_deathrattle(self, context: CombatPhaseContext):
-        summon_index = context.friendly_war_party.get_index(self)
-        for i in range(3 * context.summon_minion_multiplier()):
-            microbot = Microbot()
-            # TODO: do you get 2/2s if a golden Menace is magnetized? Or, alternatively, does a golden minion summon 2/2s even if the Menace wasn't golden?
-            if self.golden:
-                microbot.golden_transformation([])
-            context.friendly_war_party.summon_in_combat(microbot, context, summon_index + i + 1)
+    def __init__(self):
+        def base_deathrattle(unused, context: 'CombatPhaseContext'):
+            summon_index = context.friendly_war_party.get_index(unused)
+            for i in range(3 * context.summon_minion_multiplier()):
+                microbot = Microbot()
+                if unused.golden:
+                    microbot.golden_transformation([])
+                context.friendly_war_party.summon_in_combat(microbot, context, summon_index + i + 1)
+        super().__init__()
+        self.deathrattles.append(base_deathrattle)
 
 
 class Microbot(MonsterCard):
@@ -1090,7 +1092,7 @@ class Junkbot(MonsterCard):
     base_attack = 1
     base_health = 5
 
-    def handle_event_powers(self, event: CardEvent, context: CombatPhaseContext):
+    def handle_event_powers(self, event: CardEvent, context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.DIES and event.card in context.friendly_war_party.board and event.card.check_type(
                 MONSTER_TYPES.MECH):
             bonus = 4 if self.golden else 2
@@ -1156,7 +1158,7 @@ class CapnHoggarr(MonsterCard):
     base_health = 6
     legendary = True
 
-    def handle_event_powers(self, event: CardEvent, context: BuyPhaseContext):
+    def handle_event_powers(self, event: CardEvent, context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY and event.card.check_type(MONSTER_TYPES.PIRATE):
             gold = 2 if self.golden else 1
             context.owner.coins += gold
@@ -1191,7 +1193,7 @@ class RazorgoreTheUntamed(MonsterCard):
     base_health = 4
     legendary = True
 
-    def handle_event_powers(self, event: CardEvent, context: BuyPhaseContext):
+    def handle_event_powers(self, event: CardEvent, context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_END:
             bonus = 2 if self.golden else 1
             for card in context.owner.in_play:
@@ -1226,7 +1228,7 @@ class DreadAdmiralEliza(MonsterCard):
     base_health = 7
     legendary = True
 
-    def handle_event_powers(self, event: CardEvent, context: CombatPhaseContext):
+    def handle_event_powers(self, event: CardEvent, context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.ON_ATTACK and event.card in context.friendly_war_party.board and event.card.check_type(
                 MONSTER_TYPES.PIRATE):
             bonus = 2 if self.golden else 1
@@ -1256,7 +1258,7 @@ class ImpMama(MonsterCard):
     base_attack = 6
     base_health = 10
 
-    def handle_event_powers(self, event: CardEvent, context: CombatPhaseContext):
+    def handle_event_powers(self, event: CardEvent, context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.CARD_DAMAGED and event.card == self:
             count = 2 if self.golden else 1
             summon_index = context.friendly_war_party.get_index(self)
@@ -1280,7 +1282,7 @@ class KalecgosArcaneAspect(MonsterCard):
     base_health = 12
     legendary = True
 
-    def handle_event_powers(self, event: CardEvent, context: BuyPhaseContext):
+    def handle_event_powers(self, event: CardEvent, context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.SUMMON_BUY and event.card.battlecry:
             for card in context.owner.in_play:
                 if card.check_type(MONSTER_TYPES.DRAGON):
@@ -1394,7 +1396,7 @@ class NatPagleExtremeAngler(MonsterCard):
     base_health = 5
     legendary = True
 
-    def handle_event_powers(self, event: CardEvent, context: CombatPhaseContext):
+    def handle_event_powers(self, event: CardEvent, context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.AFTER_ATTACK_DAMAGE and self == event.card and event.foe.is_dying():
             for _ in range(2 if self.golden else 1):
                 if context.friendly_war_party.owner.room_in_hand():
@@ -1409,7 +1411,7 @@ class FloatingWatcher(MonsterCard):
     base_attack = 4
     base_health = 4
 
-    def handle_event_powers(self, event: CardEvent, context: BuyPhaseContext):
+    def handle_event_powers(self, event: CardEvent, context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.PLAYER_DAMAGED:
             bonus = 4 if self.golden else 2
             self.attack += bonus
@@ -1473,7 +1475,7 @@ class IronSensei(MonsterCard):
     base_attack = 2
     base_health = 2
 
-    def handle_event_powers(self, event: CardEvent, context: BuyPhaseContext):
+    def handle_event_powers(self, event: CardEvent, context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_END:
             friendly_mechs = [card for card in context.owner.in_play if
                               card.check_type(MONSTER_TYPES.MECH) and card != self]
@@ -1491,7 +1493,7 @@ class YoHoOgre(MonsterCard):
     base_health = 8
     base_taunt = True
 
-    def handle_event_powers(self, event: CardEvent, context: CombatPhaseContext):
+    def handle_event_powers(self, event: CardEvent, context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.AFTER_ATTACK_DEATHRATTLES and event.card == self and not self.is_dying():
             attacking_war_party = context.friendly_war_party
             defending_war_party = context.enemy_war_party
@@ -1510,7 +1512,7 @@ class WaxriderTogwaggle(MonsterCard):
     base_health = 2
     legendary = True
 
-    def handle_event_powers(self, event: CardEvent, context: CombatPhaseContext):
+    def handle_event_powers(self, event: CardEvent, context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.DIES and event.card in context.enemy_war_party.board and event.foe in context.friendly_war_party.board and event.foe.check_type(
                 MONSTER_TYPES.DRAGON):
             bonus = 4 if self.golden else 2
@@ -1524,7 +1526,7 @@ class HangryDragon(MonsterCard):
     base_attack = 4
     base_health = 4
 
-    def handle_event_powers(self, event: CardEvent, context: BuyPhaseContext):
+    def handle_event_powers(self, event: CardEvent, context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.END_COMBAT and event.won_combat:
             bonus = 4 if self.golden else 2
             self.attack += bonus
@@ -1537,7 +1539,7 @@ class LightfangEnforcer(MonsterCard):
     base_attack = 2
     base_health = 2
 
-    def handle_event_powers(self, event: CardEvent, context: BuyPhaseContext):
+    def handle_event_powers(self, event: CardEvent, context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_END:
             for card in one_minion_per_type(context.owner.in_play, context.randomizer):
                 card.attack += 4 if self.golden else 2
@@ -1585,7 +1587,7 @@ class MicroMummy(MonsterCard):
     base_health = 2
     base_reborn = True
 
-    def handle_event_powers(self, event: CardEvent, context: BuyPhaseContext):
+    def handle_event_powers(self, event: CardEvent, context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_END:
             other_minions = [card for card in context.owner.in_play if card != self]
             if other_minions:
@@ -1605,10 +1607,8 @@ class KangorsApprentice(MonsterCard):
         summon_index = context.friendly_war_party.get_index(self)
         dead_mechs = [dead_minion for dead_minion in context.friendly_war_party.dead_minions if
                           dead_minion.check_type(MONSTER_TYPES.MECH)]
-        for index in range(min(count, len(dead_mechs))):
-            summon_minion = type(dead_mechs[index])()
-            if dead_mechs[index].golden:
-                summon_minion.golden_transformation([])
+        for index, mech in enumerate(dead_mechs[:count]):
+            summon_minion = mech.unbuffed_copy()
             context.friendly_war_party.summon_in_combat(summon_minion, context, summon_index + index + 1)
 
 
@@ -1622,24 +1622,12 @@ class ZappSlywick(MonsterCard):
     legendary = True
 
     def golden_transformation(self, base_cards: List['MonsterCard']):
-        self.attack += self.base_attack
-        self.health += self.base_health
-        self.golden = True
-        for card in base_cards:
-            self.health += card.health - card.base_health
-            self.attack += card.attack - card.base_attack
-            if card.base_deathrattle:
-                self.deathrattles.extend(card.deathrattles[1:])
-            else:
-                self.deathrattles.extend(card.deathrattles)
-            for attr in card.bool_attribute_list:
-                if getattr(card, attr):
-                    setattr(self, attr, True)
+        super().golden_transformation(base_cards)
         self.windfury = False
         self.mega_windfury = True
 
 
-class SeaBreakerGoliath(MonsterCard):
+class SeabreakerGoliath(MonsterCard):
     tier = 5
     monster_type = MONSTER_TYPES.PIRATE
     base_attack = 6
@@ -1648,7 +1636,7 @@ class SeaBreakerGoliath(MonsterCard):
 
     def overkill(self, context: CombatPhaseContext):
         bonus = 4 if self.golden else 2
-        pirates = [card for card in context.friendly_war_party.board if card.check_type(MONSTER_TYPES.PIRATE)]
+        pirates = [card for card in context.friendly_war_party.board if card.check_type(MONSTER_TYPES.PIRATE) and card != self]
         for pirate in pirates:
             pirate.attack += bonus
             pirate.health += bonus
