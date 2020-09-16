@@ -1579,7 +1579,7 @@ class KangorsApprentice(MonsterCard):
     base_attack = 3
     base_health = 6
 
-    def base_deathrattle(self, context: CombatPhaseContext): #TODO does this get tokens?
+    def base_deathrattle(self, context: CombatPhaseContext):
         count = 4 if self.golden else 2
         summon_index = context.friendly_war_party.get_index(self)
         summon_minions = [type(dead_mech)() for dead_mech in context.friendly_war_party.dead_mechs]
