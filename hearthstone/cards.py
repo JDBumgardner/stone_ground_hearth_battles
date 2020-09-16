@@ -3,12 +3,17 @@ import itertools
 from collections import defaultdict
 from typing import Set, List, Optional, Callable, Type, Union, Iterator
 
+import typing
+
 from hearthstone import events, monster_types
 from hearthstone.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
 from hearthstone.card_factory import make_metaclass
 from hearthstone.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
 from hearthstone.monster_types import MONSTER_TYPES
 from hearthstone.randomizer import Randomizer
+
+if typing.TYPE_CHECKING:
+    from hearthstone.adaptations import Adaptation
 
 
 def one_minion_per_type(cards: List['MonsterCard'], randomizer: 'Randomizer') -> List['MonsterCard']:
@@ -52,7 +57,7 @@ CardType = make_metaclass(PrintingPress.add_card, ("Card", "MonsterCard"))
 
 class Card(metaclass=CardType):
     type_name = "card"
-    mana_cost: int
+    mana_cost: Optional[int]
     card_name: str
     coin_cost = 3
     redeem_rate = 1
@@ -67,7 +72,7 @@ class Card(metaclass=CardType):
 
 class MonsterCard(Card):
     type_name = "monster"
-    mana_cost = 0
+    mana_cost = None
     base_health: int
     base_attack: int
     monster_type = None
@@ -84,9 +89,9 @@ class MonsterCard(Card):
     token = False
     cant_attack = False
     shifting = False
-    attached_cards = []
     give_immunity = False
     targets_least_attack = False
+    legendary = False
 
     def __init__(self):
         super().__init__()
@@ -109,6 +114,8 @@ class MonsterCard(Card):
             "divine_shield", "magnetic", "poisonous", "taunt",
             "windfury", "cleave", "reborn"
         ]
+        self.attached_cards = []
+        self.mega_windfury = False
 
     def __repr__(self):
         rep = f"{type(self).__name__} {self.attack}/{self.health} (t{self.tier})" #  TODO: add a proper enum to the monster typing
@@ -168,8 +175,7 @@ class MonsterCard(Card):
                         deathrattle(self, context)
                 if self.reborn:
                     self.trigger_reborn(context)
-                if self.check_type(MONSTER_TYPES.MECH):
-                    context.friendly_war_party.dead_mechs.append(self)
+                context.friendly_war_party.dead_minions.append(self)
             elif event.event is EVENTS.SUMMON_BUY:
                 if self.magnetic:
                     self.magnetize(event.targets, context)
@@ -214,10 +220,9 @@ class MonsterCard(Card):
             if self.deathrattles:
                 targets[0].deathrattles.extend(self.deathrattles)
             for attr in self.bool_attribute_list:
-                if getattr(self, attr):  # TODO: Does the target gain magnetic?
+                if getattr(self, attr) and attr != 'magnetic':
                     setattr(targets[0], attr, True)
-            targets[0].attached_cards.append(self)  # TODO: BUG!!!! Replicating Menace attaches to itself
-            self.attached_cards = []
+            targets[0].attached_cards.append(self)
             context.owner.in_play.remove(self)
 
     def overkill(self, context: CombatPhaseContext):
@@ -258,7 +263,7 @@ class MonsterCard(Card):
     def is_dying(self) -> bool:
         return self.dead or self.health <= 0
 
-    def adapt(self, adaptation: 'Adaptation'):
+    def adapt(self, adaptation: 'Adaptation'):  # TODO: How do we type check for a nested class of Adaptation?
         assert adaptation.valid(self)
         adaptation.apply(self)
 
@@ -293,6 +298,10 @@ class CardList:
 
     def __len__(self) -> int:
         return sum(len(value) for value in self.cards_by_tier.values())
+
+    def unique_cards(self) -> List['MonsterCard']:
+        cards_by_type = {type(card): card for card in self.all_cards()}
+        return list(cards_by_type.values())
 
 
 class CardLocation(enum.Enum):

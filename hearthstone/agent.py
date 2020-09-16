@@ -220,6 +220,7 @@ def generate_all_actions(player: 'Player') -> Generator[Action, None, None]:
     yield EndPhaseAction(True)
     yield EndPhaseAction(False)
     yield HeroPowerAction()
+    yield RedeemGoldCoinAction()
     for index in range(len(player.in_play)):
         yield SellAction(BoardIndex(index))
         yield HeroPowerAction(board_target=BoardIndex(index))

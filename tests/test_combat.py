@@ -1,6 +1,6 @@
 import unittest
 
-from hearthstone.adaptations import LivingSpores
+from hearthstone.adaptations import Adaptation
 from hearthstone.card_graveyard import *
 from hearthstone.card_pool import *
 from hearthstone.cards import Card
@@ -347,13 +347,11 @@ class CombatTests(unittest.TestCase):
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [ImpGangBoss()]
-        ethans_war_party.board = [ArcaneCannon(), ArcaneCannon()]
+        ethans_war_party.board = [BloodsailCannoneer(), Rat()]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
-        self.assertTrue(adams_war_party.board[0].dead)
-        self.assertTrue(adams_war_party.board[2].dead)
-        self.assertFalse(adams_war_party.board[1].dead)
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
         self.assertTrue(isinstance(adams_war_party.board[1], Imp))
-        self.assertTrue(isinstance(adams_war_party.board[2], Imp))
 
     def test_infested_wolf(self):
         adam = Player.new_player_with_hero(None, "Adam")
@@ -389,9 +387,7 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(adam.health, 40)
         self.assertNotEqual(ethan.health, 40)
         self.assertNotEqual(len(adams_war_party.board), 1)
-        two_cost_minions = [VulgarHomunculus, MicroMachine, MurlocTidehunter, RockpoolHunter,
-                            DragonspawnLieutenant, KindlyGrandmother, ScavengingHyena, UnstableGhoul, Khadgar]
-        self.assertIn(type(adams_war_party.board[1]), two_cost_minions)
+        self.assertEqual(adams_war_party.board[1].mana_cost, 2)
 
     def test_soul_juggler(self):
         adam = Player.new_player_with_hero(None, "Adam")
@@ -429,8 +425,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 34)
 
     class PilotedShredderRandomizer(DefaultRandomizer):
-        def select_summon_minion(self, cards: List['Card']) -> 'Card':
-            khadgar = [card for card in cards if type(card) is Khadgar]
+        def select_summon_minion(self, card_types: List['Type']) -> 'Type':
+            khadgar = [card_type for card_type in card_types if card_type == Khadgar]
             return khadgar[0]
 
     def test_khadgar_piloted_shredder(self):
@@ -505,11 +501,7 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(adam.health, 40)
         self.assertNotEqual(ethan.health, 40)
         self.assertNotEqual(len(adams_war_party.board), 1)
-        legendary_minions = [OldMurkeye, Khadgar, ShifterZerus, BolvarFireblood, RazorgoreTheUntamed, KingBagurgle,
-                             CapnHoggarr, KalecgosArcaneAspect, NadinaTheRed, DreadAdmiralEliza, Maexxna,
-                             NatPagleExtremeAngler, MalGanis, WaxriderTogwaggle, BaronRivendare, BrannBronzebeard,
-                             GoldrinnTheGreatWolf]
-        self.assertIn(type(adams_war_party.board[1]), legendary_minions)
+        self.assertTrue(adams_war_party.board[1].legendary)
 
     def test_bolvar_fireblood(self):
         adam = Player.new_player_with_hero(None, "Adam")
@@ -772,8 +764,9 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_nat_pagle_extreme_angler(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        tavern = Tavern()
+        adam = tavern.add_player_with_hero("Adam")
+        ethan = tavern.add_player_with_hero("Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [NatPagleExtremeAngler()]
@@ -938,7 +931,7 @@ class CombatTests(unittest.TestCase):
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         amalgadon = Amalgadon()
-        for adaptation in Adaptation.__subclasses__():
+        for adaptation in valid_adaptations(amalgadon):
             amalgadon.adapt(adaptation())
         self.assertTrue(amalgadon.divine_shield)
         self.assertTrue(amalgadon.windfury)
@@ -988,6 +981,35 @@ class CombatTests(unittest.TestCase):
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 33)
+
+    def test_macaw_multiple_deathrattles(self):
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        amalgadon = Amalgadon()
+        amalgadon.adapt(Adaptation.LivingSpores())
+        amalgadon.adapt(Adaptation.LivingSpores())
+        adams_war_party.board = [MonstrousMacaw(), amalgadon]
+        ethans_war_party.board = [RabidSaurolisk()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(len(adams_war_party.board), 6)
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 29)
+
+    def test_golden_zapp(self):
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        zapp = ZappSlywick()
+        zapp.golden_transformation([])
+        adams_war_party.board = [zapp, VulgarHomunculus()]
+        ethans_war_party.board = [BloodsailCannoneer(), DeckSwabbie(), RabidSaurolisk(), CapnHoggarr(), NatPagleExtremeAngler()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+
 
 if __name__ == '__main__':
     unittest.main()

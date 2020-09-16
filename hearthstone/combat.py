@@ -22,6 +22,7 @@ class WarParty:
         self.owner = player
         self.board = [copy.copy(card) for card in player.in_play]
         self.next_attacker_idx = 0
+        self.dead_minions: List[MonsterCard] = []
 
     def find_next(self) -> Optional['MonsterCard']:
         #  Sets the index for the next monster who will fight from your side.
@@ -40,11 +41,10 @@ class WarParty:
         return None
 
     def get_attack_target(self, randomizer: 'Randomizer', attacker: Optional['MonsterCard'] = None) -> Optional['MonsterCard']:
-        if attacker:
-            if attacker.targets_least_attack:
-                least_attack_monster = min([card for card in self.board if not card.dead], key=lambda card: card.attack)
-                if least_attack_monster:
-                    return least_attack_monster
+        if attacker and attacker.targets_least_attack:
+            live_monsters = [card for card in self.board if not card.dead]
+            if live_monsters:
+                return min(live_monsters, key=lambda card: card.attack)
         taunt_monsters = [card for card in self.board if not card.dead and card.taunt]
         if taunt_monsters:
             return randomizer.select_attack_target(taunt_monsters)
@@ -94,7 +94,12 @@ def fight_boards(war_party_1: 'WarParty', war_party_2: 'WarParty', randomizer: '
 
     for _ in range(100):
         attacker = attacking_war_party.find_next()
-        num_attacks = 2 if (attacker is not None and attacker.windfury) else 1
+        if attacker and attacker.mega_windfury:
+            num_attacks = 4
+        elif attacker and attacker.windfury:
+            num_attacks = 2
+        else:
+            num_attacks = 1
         for _ in range(num_attacks):
             defender = defending_war_party.get_attack_target(randomizer, attacker)
             logger.debug(f'{attacking_war_party.owner.name} is attacking {defending_war_party.owner.name}')

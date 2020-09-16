@@ -1,7 +1,7 @@
 import unittest
 from typing import Type
 
-from hearthstone.adaptations import *
+from hearthstone.adaptations import Adaptation
 from hearthstone.card_graveyard import *
 from hearthstone.card_pool import *
 from hearthstone.cards import Card, CardType
@@ -1997,10 +1997,10 @@ class CardTests(unittest.TestCase):
 
     class TestAmalgadonRandomizer(DefaultRandomizer):
         def select_adaptation(self, adaptation_types: List['Type']) -> 'Type':
-            if CracklingShield in adaptation_types:
-                return CracklingShield
-            if LivingSpores in adaptation_types:
-                return LivingSpores
+            if Adaptation.CracklingShield in adaptation_types:
+                return Adaptation.CracklingShield
+            if Adaptation.LivingSpores in adaptation_types:
+                return Adaptation.LivingSpores
             else:
                 return adaptation_types[0]
 
@@ -2017,6 +2017,41 @@ class CardTests(unittest.TestCase):
         self.assertCardListEquals(player_1.in_play, [Amalgam, Amalgadon])
         self.assertTrue(player_1.in_play[1].divine_shield)
         self.assertEqual(len(player_1.in_play[1].deathrattles), 1)
+
+    def test_arch_villain_rafaam(self):
+        tavern = Tavern()
+        player_1 = tavern.add_player_with_hero("Dante_Kong", ArchVillianRafaam())
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.randomizer = RepeatedCardForcer([DeckSwabbie, ScavengingHyena, ScavengingHyena])
+        tavern.buying_step()
+        tavern.combat_step()
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        player_2.purchase(StoreIndex(1))
+        player_2.summon_from_hand(HandIndex(0))
+        player_1.hero_power()
+        self.assertCardListEquals(player_1.in_play, [DeckSwabbie])
+        self.assertCardListEquals(player_2.in_play, [ScavengingHyena])
+        tavern.combat_step()
+        self.assertCardListEquals(player_1.hand, [ScavengingHyena])
+
+    def test_annoy_o_module(self):
+        tavern = Tavern()
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        self.upgrade_to_tier(tavern, 4)
+        tavern.randomizer = RepeatedCardForcer([RabidSaurolisk, AnnoyOModule, AnnoyOModule])
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0), [BoardIndex(0)])
+        self.assertCardListEquals(player_1.in_play, [RabidSaurolisk])
+        self.assertEqual(player_1.in_play[0].attack, player_1.in_play[0].base_attack + 2)
+        self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health + 4)
+        self.assertTrue(player_1.in_play[0].taunt)
+        self.assertTrue(player_1.in_play[0].divine_shield)
 
 
 if __name__ == '__main__':
