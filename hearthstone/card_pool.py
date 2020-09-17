@@ -1,4 +1,5 @@
 import logging
+import types
 from typing import Union, List
 
 from hearthstone import combat
@@ -442,12 +443,11 @@ class SkyPirate(MonsterCard):
         if event.event is EVENTS.SUMMON_COMBAT and event.card == self:
             attacking_war_party = context.friendly_war_party
             defending_war_party = context.enemy_war_party
-            attacker = self
-            defender = defending_war_party.get_attack_target(context.randomizer)
+            defender = defending_war_party.get_attack_target(context.randomizer, self)
             if not defender:
                 return
             logging.debug(f'{attacking_war_party.owner.name} is attacking {defending_war_party.owner.name}')
-            combat.start_attack(attacker, defender, attacking_war_party, defending_war_party, context.randomizer)
+            combat.start_attack(self, defender, attacking_war_party, defending_war_party, context.randomizer)
 
 
 class DeckSwabbie(MonsterCard):
@@ -487,7 +487,7 @@ class RockpoolHunter(MonsterCard):
     monster_type = MONSTER_TYPES.MURLOC
     base_attack = 2
     base_health = 3
-    num_battlecry_targets = 1
+    num_battlecry_targets = [1]
     mana_cost = 2
 
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
@@ -528,7 +528,7 @@ class NathrezimOverseer(MonsterCard):
     monster_type = MONSTER_TYPES.DEMON
     base_attack = 2
     base_health = 3
-    num_battlecry_targets = 1
+    num_battlecry_targets = [1]
 
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
         bonus = 4 if self.golden else 2
@@ -710,7 +710,7 @@ class Houndmaster(MonsterCard):
     tier = 3
     base_attack = 4
     base_health = 3
-    num_battlecry_targets = 1
+    num_battlecry_targets = [1]
 
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
         bonus = 4 if self.golden else 2
@@ -786,7 +786,7 @@ class ScrewjankClunker(MonsterCard):
     base_attack = 2
     base_health = 5
     monster_type = MONSTER_TYPES.MECH
-    num_battlecry_targets = 1
+    num_battlecry_targets = [1]
 
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
         bonus = 4 if self.golden else 2
@@ -867,7 +867,7 @@ class TwilightEmissary(MonsterCard):
     base_health = 4
     monster_type = MONSTER_TYPES.DRAGON
     base_taunt = True
-    num_battlecry_targets = 1
+    num_battlecry_targets = [1]
 
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
         bonus = 4 if self.golden else 2
@@ -944,7 +944,7 @@ class VirmenSensei(MonsterCard):
     base_attack = 4
     base_health = 5
     monster_type = None
-    num_battlecry_targets = 1
+    num_battlecry_targets = [1]
 
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
         bonus = 4 if self.golden else 2
@@ -975,7 +975,7 @@ class DefenderOfArgus(MonsterCard):
     base_attack = 2
     base_health = 3
     monster_type = None
-    num_battlecry_targets = 2  # TODO: this can be either 1 or 2
+    num_battlecry_targets = [1, 2]
 
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
         if targets:
@@ -1067,15 +1067,15 @@ class ReplicatingMenace(MonsterCard):
     base_magnetic = True
 
     def __init__(self):
-        def base_deathrattle(unused, context: 'CombatPhaseContext'):
-            summon_index = context.friendly_war_party.get_index(unused)
+        def base_deathrattle(card, context: 'CombatPhaseContext'):
+            summon_index = context.friendly_war_party.get_index(card)
             for i in range(3 * context.summon_minion_multiplier()):
                 microbot = Microbot()
-                if unused.golden:
+                if self.golden:
                     microbot.golden_transformation([])
                 context.friendly_war_party.summon_in_combat(microbot, context, summon_index + i + 1)
+        self.base_deathrattle = types.MethodType(base_deathrattle, self)
         super().__init__()
-        self.deathrattles.append(base_deathrattle)
 
 
 class Microbot(MonsterCard):
@@ -1328,7 +1328,7 @@ class Toxfin(MonsterCard):
     monster_type = MONSTER_TYPES.MURLOC
     base_attack = 1
     base_health = 2
-    num_battlecry_targets = 1
+    num_battlecry_targets = [1]
 
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
         if targets:
@@ -1497,12 +1497,11 @@ class YoHoOgre(MonsterCard):
         if event.event is EVENTS.AFTER_ATTACK_DEATHRATTLES and event.card == self and not self.is_dying():
             attacking_war_party = context.friendly_war_party
             defending_war_party = context.enemy_war_party
-            attacker = self
-            defender = defending_war_party.get_attack_target(context.randomizer)
+            defender = defending_war_party.get_attack_target(context.randomizer, self)
             if not defender:
                 return
             logging.debug(f'{attacking_war_party.owner.name} is attacking {defending_war_party.owner.name}')
-            combat.start_attack(attacker, defender, attacking_war_party, defending_war_party, context.randomizer)
+            combat.start_attack(self, defender, attacking_war_party, defending_war_party, context.randomizer)
 
 
 class WaxriderTogwaggle(MonsterCard):
@@ -1618,13 +1617,19 @@ class ZappSlywick(MonsterCard):
     base_attack = 7
     base_health = 10
     base_windfury = True
-    targets_least_attack = True
     legendary = True
 
     def golden_transformation(self, base_cards: List['MonsterCard']):
         super().golden_transformation(base_cards)
         self.windfury = False
         self.mega_windfury = True
+
+    def valid_attack_targets(self, live_enemies: List['MonsterCard']) -> List['MonsterCard']:
+        try:
+            min_attack = min(card.attack for card in live_enemies if not card.dead)
+            return [card for card in live_enemies if card.attack == min_attack]
+        except ValueError:
+            return []
 
 
 class SeabreakerGoliath(MonsterCard):

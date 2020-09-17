@@ -84,13 +84,12 @@ class MonsterCard(Card):
     base_cleave = False
     base_deathrattle = None
     base_battlecry = None
-    num_battlecry_targets = 0
+    num_battlecry_targets = [0]
     base_reborn = False
     token = False
     cant_attack = False
     shifting = False
     give_immunity = False
-    targets_least_attack = False
     legendary = False
 
     def __init__(self):
@@ -204,10 +203,10 @@ class MonsterCard(Card):
             self.health += card.health - card.base_health
             self.attack += card.attack - card.base_attack
             self.attached_cards.extend(card.attached_cards)
-            if card.base_deathrattle:  # TODO: This doesn't work properly with Replicating Menace as it no longer has a independent base_deathrattle function
+            if card.base_deathrattle:
                 self.deathrattles.extend(card.deathrattles[1:])
             else:
-                self.deathrattles.extend(card.deathrattles)  # TODO: golden Replicating Menace ends up with 4 deathrattles instead of just 1
+                self.deathrattles.extend(card.deathrattles)
             for attr in card.bool_attribute_list:
                 if getattr(card, attr):
                     setattr(self, attr, True)
@@ -227,13 +226,14 @@ class MonsterCard(Card):
     def overkill(self, context: CombatPhaseContext):
         return
 
-    def dissolve(self) -> List['MonsterCard']:  # TODO: somehow recursively dissolve attached_cards
+    def dissolve(self) -> List['MonsterCard']:
+        itertools.chain(card.dissolve() for card in self.attached_cards)
         if self.token:
-            return [] + [type(card)() for card in self.attached_cards]
+            return []
         elif self.golden:
-            return [type(self)()]*3 + [type(card)() for card in self.attached_cards]
+            return [type(self)()]*3
         else:
-            return [type(self)()] + [type(card)() for card in self.attached_cards]
+            return [type(self)()]
 
     def summon_minion_multiplier(self) -> int:
         return 1
@@ -262,7 +262,7 @@ class MonsterCard(Card):
     def is_dying(self) -> bool:
         return self.dead or self.health <= 0
 
-    def adapt(self, adaptation: 'Adaptation'): # TODO: How do we type check for a nested class of Adaptation?
+    def adapt(self, adaptation: 'Adaptation'):
         assert adaptation.valid(self)
         adaptation.apply(self)
 
@@ -271,6 +271,13 @@ class MonsterCard(Card):
         if self.golden:
             copy.golden_transformation([])
         return copy
+
+    def valid_attack_targets(self, live_enemies: List['MonsterCard']) -> List['MonsterCard']:
+        taunt_monsters = [card for card in live_enemies if card.taunt]
+        if taunt_monsters:
+            return taunt_monsters
+        else:
+            return live_enemies
 
 
 class CardList:

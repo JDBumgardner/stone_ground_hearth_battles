@@ -41,27 +41,15 @@ class WarParty:
         return None
 
     def get_attack_target(self, randomizer: 'Randomizer', attacker: Optional['MonsterCard'] = None) -> Optional['MonsterCard']:
+        if attacker is None:
+            return None
         try:
-            return randomizer.select_attack_target(self.valid_attack_targets(attacker))
+            return randomizer.select_attack_target(attacker.valid_attack_targets(self.live_minions()))
         except IndexError:
             return None
 
-    def valid_attack_targets(self, attacker: 'MonsterCard') -> List['MonsterCard']:
-        if attacker and attacker.targets_least_attack:
-            return self.min_attack_minions()
-        taunt_monsters = [card for card in self.board if not card.dead and card.taunt]
-        if taunt_monsters:
-            return taunt_monsters
+    def live_minions(self) -> List['MonsterCard']:
         return [card for card in self.board if not card.dead]
-
-    def min_attack_minions(self) -> Optional[List['MonsterCard']]:
-        min_attack = 0
-        while min_attack >= 0:
-            minions = [card for card in self.board if not card.dead and card.attack == min_attack]
-            if minions:
-                return minions
-            min_attack += 1
-        return None
 
     def num_cards(self):
         return len(self.board)

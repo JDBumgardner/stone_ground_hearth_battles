@@ -1,6 +1,6 @@
 import unittest
 
-from hearthstone.adaptations import Adaptation
+from hearthstone.adaptations import AdaptBuff
 from hearthstone.card_graveyard import *
 from hearthstone.card_pool import *
 from hearthstone.cards import Card
@@ -573,6 +573,20 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
         self.assertEqual(len(adams_war_party.board), 4)
 
+    def test_golden_menace(self):
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        menace = ReplicatingMenace()
+        menace.golden_transformation([])
+        adams_war_party.board = [menace]
+        ethans_war_party.board = [KalecgosArcaneAspect()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+        self.assertEqual(len(adams_war_party.board), 4)
+
     def test_junkbot(self):
         adam = Player.new_player_with_hero(None, "Adam")
         ethan = Player.new_player_with_hero(None, "Ethan")
@@ -988,8 +1002,8 @@ class CombatTests(unittest.TestCase):
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         amalgadon = Amalgadon()
-        amalgadon.adapt(Adaptation.LivingSpores())
-        amalgadon.adapt(Adaptation.LivingSpores())
+        amalgadon.adapt(AdaptBuff.LivingSpores())
+        amalgadon.adapt(AdaptBuff.LivingSpores())
         adams_war_party.board = [MonstrousMacaw(), amalgadon]
         ethans_war_party.board = [RabidSaurolisk()]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())

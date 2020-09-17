@@ -100,7 +100,7 @@ class YoggSaron(Hero):
         return True
 
 
-class PatchesThePirate(Hero):  # TODO: does this pull from the deck or does it add to the available pool?
+class PatchesThePirate(Hero):
     power_cost = 4
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):

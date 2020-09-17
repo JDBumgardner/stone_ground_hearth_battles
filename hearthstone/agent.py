@@ -229,7 +229,7 @@ def generate_all_actions(player: 'Player') -> Generator[Action, None, None]:
         yield HeroPowerAction(store_target=StoreIndex(index))
     for index, card in enumerate(player.hand):
         valid_target_indices = [index for index, target in enumerate(player.in_play) if card.valid_battlecry_target(target)]
-        num_battlecry_targets = min(card.num_battlecry_targets, len(valid_target_indices))
+        num_battlecry_targets = min(card.num_battlecry_targets[-1], len(valid_target_indices))
         if num_battlecry_targets == 0:
             yield SummonAction(index, [])
         for target_index in valid_target_indices:

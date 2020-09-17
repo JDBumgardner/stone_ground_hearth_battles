@@ -127,13 +127,9 @@ class Player:
         if card.battlecry:
             valid_targets = [target_index for target_index, target_card in enumerate(self.in_play) if
                              card.valid_battlecry_target(target_card)]
-            num_possible_targets = min(len(valid_targets), card.num_battlecry_targets)
-            if len(targets) != num_possible_targets:
-                if type(card) == DefenderOfArgus:
-                    if len(targets) == 0 and valid_targets or len(targets) > 2:
-                        return False
-                else:
-                    return False
+            num_possible_targets = min(len(valid_targets), card.num_battlecry_targets[-1])
+            if len(targets) > num_possible_targets:
+                return False
             if len(set(targets)) != len(targets):
                 return False
             for target in targets:
