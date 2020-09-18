@@ -231,15 +231,15 @@ def generate_all_actions(player: 'Player') -> Generator[Action, None, None]:
         yield BuyAction(StoreIndex(index))
         yield HeroPowerAction(store_target=StoreIndex(index))
     for index, card in enumerate(player.hand):
-        valid_target_indices = [index for index, target in enumerate(player.in_play) if
+        valid_battlecry_target_indices = [index for index, target in enumerate(player.in_play) if
                                 card.valid_battlecry_target(target)]
-        possible_num_targets = [num_targets for num_targets in card.num_battlecry_targets if
-                                num_targets <= len(valid_target_indices)]
-        if not possible_num_targets:
-            possible_num_targets = [len(valid_target_indices)]
-        for num_targets in possible_num_targets:
-            for targets in itertools.combinations(valid_target_indices, num_targets):
-                yield SummonAction(index, list(targets))
+        possible_num_battlecry_targets = [num_targets for num_targets in card.num_battlecry_targets if
+                                num_targets <= len(valid_battlecry_target_indices)]
+        if not possible_num_battlecry_targets:
+            possible_num_battlecry_targets = [len(valid_battlecry_target_indices)]
+        for num_battlecry_targets in possible_num_battlecry_targets:
+            for battlecry_targets in itertools.combinations(valid_battlecry_target_indices, num_battlecry_targets):
+                yield SummonAction(index, list(battlecry_targets))
         if card.magnetic:
             for target_index, target_card in enumerate(player.in_play):
                 if target_card.check_type(MONSTER_TYPES.MECH):
