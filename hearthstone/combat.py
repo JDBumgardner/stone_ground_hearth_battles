@@ -41,17 +41,13 @@ class WarParty:
         return None
 
     def get_attack_target(self, randomizer: 'Randomizer', attacker: Optional['MonsterCard'] = None) -> Optional['MonsterCard']:
-        if attacker and attacker.targets_least_attack:
-            live_monsters = [card for card in self.board if not card.dead]
-            if live_monsters:
-                return min(live_monsters, key=lambda card: card.attack)
-        taunt_monsters = [card for card in self.board if not card.dead and card.taunt]
-        if taunt_monsters:
-            return randomizer.select_attack_target(taunt_monsters)
-        all_monsters = [card for card in self.board if not card.dead]
-        if all_monsters:
-            return randomizer.select_attack_target(all_monsters)
-        return None
+        if attacker is None or not self.live_minions():
+            return None
+        else:
+            return randomizer.select_attack_target(attacker.valid_attack_targets(self.live_minions()))
+
+    def live_minions(self) -> List['MonsterCard']:
+        return [card for card in self.board if not card.dead]
 
     def num_cards(self):
         return len(self.board)
@@ -72,7 +68,7 @@ class WarParty:
         return self.board.index(card)
 
     def attackers(self) -> List['Card']:
-        return [board_member for board_member in self.board if not board_member.dead and not board_member.cant_attack]
+        return [board_member for board_member in self.board if not board_member.dead and not board_member.cant_attack and board_member.attack > 0]
 
 
 def fight_boards(war_party_1: 'WarParty', war_party_2: 'WarParty', randomizer: 'Randomizer'):
@@ -166,10 +162,12 @@ def resolve_combat_deaths(attacker: 'MonsterCard', defender: 'MonsterCard', atta
     if defender.health <= 0 and not defender.dead:
         defender.dead = True
     if attacker.dead:
+        attacking_war_party.dead_minions.append(attacker)
         context = CombatPhaseContext(attacking_war_party, defending_war_party, randomizer)
         card_death_event = events.DiesEvent(attacker, foe=defender)
         context.broadcast_combat_event(card_death_event)
     if defender.dead:
+        defending_war_party.dead_minions.append(defender)
         context = CombatPhaseContext(defending_war_party, attacking_war_party, randomizer)
         card_death_event = events.DiesEvent(defender, foe=attacker)
         context.broadcast_combat_event(card_death_event)

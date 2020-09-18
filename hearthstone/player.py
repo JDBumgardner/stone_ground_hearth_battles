@@ -25,6 +25,7 @@ StoreIndex = typing.NewType("StoreIndex", int)
 HandIndex = typing.NewType("HandIndex", int)
 BoardIndex = typing.NewType("BoardIndex", int)
 
+
 class Player:
     def __init__(self, tavern: 'Tavern', name: str, hero_options: List['Hero']):
         self.name = name
@@ -127,26 +128,18 @@ class Player:
         if card.battlecry:
             valid_targets = [target_index for target_index, target_card in enumerate(self.in_play) if
                              card.valid_battlecry_target(target_card)]
-            num_possible_targets = min(len(valid_targets), card.num_battlecry_targets)
-            if len(targets) != num_possible_targets:
-                if type(card) == DefenderOfArgus:
-                    if len(targets) == 0 and valid_targets or len(targets) > 2:
-                        return False
-                else:
-                    return False
+            if len(valid_targets) > 0 and len(targets) not in card.num_battlecry_targets:
+                return False
             if len(set(targets)) != len(targets):
                 return False
             for target in targets:
                 if target not in valid_targets:
                     return False
         if card.magnetic:
-            valid_mechs = [target_index for target_index, target_card in enumerate(self.in_play) if
-                           card.check_type(MONSTER_TYPES.MECH)]
             if len(targets) > 1:
                 return False
-            for target in targets:
-                if target not in valid_mechs:
-                    return False
+            if len(targets) == 1 and not self.in_play[targets[0]].check_type(MONSTER_TYPES.MECH):
+                return False
         return True
 
     def play_triple_rewards(self):

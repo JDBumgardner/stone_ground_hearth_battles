@@ -1,11 +1,11 @@
 from inspect import isclass
-from typing import Generator, Type, List
+from typing import Type, List
 
 from hearthstone.cards import MonsterCard
 from hearthstone.events import CombatPhaseContext
 
 
-class Plant(MonsterCard):  # TODO: This was the only way I could find to get around circular imports. Any ideas for a better implementation?
+class Plant(MonsterCard):
     tier = 1
     monster_type = None
     base_attack = 1
@@ -14,8 +14,17 @@ class Plant(MonsterCard):  # TODO: This was the only way I could find to get aro
 
 
 class Adaptation:
+    def apply(self, card: 'MonsterCard'):
+        pass
 
-    class CracklingShield:
+    @classmethod
+    def valid(cls, card: 'MonsterCard') -> bool:
+        pass
+
+
+class AdaptBuffs:
+
+    class CracklingShield(Adaptation):
         def apply(self, card: 'MonsterCard'):
             card.divine_shield = True
 
@@ -23,7 +32,7 @@ class Adaptation:
         def valid(cls, card: 'MonsterCard') -> bool:
             return not card.divine_shield
 
-    class FlamingClaws:
+    class FlamingClaws(Adaptation):
         def apply(self, card: 'MonsterCard'):
             card.attack += 3
 
@@ -31,14 +40,12 @@ class Adaptation:
         def valid(cls, card: 'MonsterCard') -> bool:
             return True
 
-    class LivingSpores:
+    class LivingSpores(Adaptation):
         def apply(self, card: 'MonsterCard'):
             def deathrattle(self, context: 'CombatPhaseContext'):
                 summon_index = context.friendly_war_party.get_index(self)
                 for i in range(2 * context.summon_minion_multiplier()):
                     plant = Plant()
-                    if self.golden:
-                        plant.golden_transformation([])
                     context.friendly_war_party.summon_in_combat(plant, context, summon_index + i + 1)
             card.deathrattles.append(deathrattle)
 
@@ -46,7 +53,7 @@ class Adaptation:
         def valid(cls, card: 'MonsterCard') -> bool:
             return True
 
-    class LightningSpeed:
+    class LightningSpeed(Adaptation):
         def apply(self, card: 'MonsterCard'):
             card.windfury = True
 
@@ -54,7 +61,7 @@ class Adaptation:
         def valid(cls, card: 'MonsterCard') -> bool:
             return not card.windfury
 
-    class Massive:
+    class Massive(Adaptation):
         def apply(self, card: 'MonsterCard'):
             card.taunt = True
 
@@ -62,7 +69,7 @@ class Adaptation:
         def valid(cls, card: 'MonsterCard') -> bool:
             return not card.taunt
 
-    class VolcanicMight:
+    class VolcanicMight(Adaptation):
         def apply(self, card: 'MonsterCard'):
             card.attack += 1
             card.health += 1
@@ -71,7 +78,7 @@ class Adaptation:
         def valid(cls, card: 'MonsterCard') -> bool:
             return True
 
-    class RockyCarapace:
+    class RockyCarapace(Adaptation):
         def apply(self, card: 'MonsterCard'):
             card.health += 3
 
@@ -79,7 +86,7 @@ class Adaptation:
         def valid(cls, card: 'MonsterCard') -> bool:
             return True
 
-    class PoisonSpit:
+    class PoisonSpit(Adaptation):
         def apply(self, card: 'MonsterCard'):
             card.poisonous = True
 
@@ -93,7 +100,7 @@ def valid_adaptations(card: 'MonsterCard') -> List['Type']:
 
 
 def all_adaptations() -> List['Type']:
-    return [adaptation for adaptation in Adaptation.__dict__.values() if isclass(adaptation)]
+    return [adaptation for adaptation in AdaptBuffs.__dict__.values() if isclass(adaptation)]
 
 
 

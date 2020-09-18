@@ -1,4 +1,5 @@
 import logging
+import types
 from typing import Union, List
 
 from hearthstone import combat
@@ -1600,13 +1601,15 @@ class KangorsApprentice(MonsterCard):
     base_attack = 3
     base_health = 6
 
-    def base_deathrattle(self, context: CombatPhaseContext):
+    def base_deathrattle(self, context: CombatPhaseContext): #TODO does this get tokens?
         count = 4 if self.golden else 2
         summon_index = context.friendly_war_party.get_index(self)
         dead_mechs = [dead_minion for dead_minion in context.friendly_war_party.dead_minions if
                           dead_minion.check_type(MONSTER_TYPES.MECH)]
         for index in range(min(count, len(dead_mechs))):
-            summon_minion = self.duplicate_with_golden()
+            summon_minion = type(dead_mechs[index])()
+            if dead_mechs[index].golden:
+                summon_minion.golden_transformation([])
             context.friendly_war_party.summon_in_combat(summon_minion, context, summon_index + index + 1)
 
 
@@ -1658,7 +1661,6 @@ class FoeReaper4000(MonsterCard):
     base_attack = 6
     base_health = 9
     legendary = True
-    cleave = True
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         if event.event == EVENTS.ON_ATTACK and event.card == self:

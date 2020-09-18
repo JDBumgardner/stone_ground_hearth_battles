@@ -84,13 +84,12 @@ class MonsterCard(Card):
     base_cleave = False
     base_deathrattle = None
     base_battlecry = None
-    num_battlecry_targets = 0
+    num_battlecry_targets = [0]
     base_reborn = False
     token = False
     cant_attack = False
     shifting = False
     give_immunity = False
-    targets_least_attack = False
     legendary = False
     cleave = False
 
@@ -151,28 +150,26 @@ class MonsterCard(Card):
     def resolve_death(self, context: CombatPhaseContext, foe: Optional['MonsterCard'] = None):
         if self.health <= 0 and not self.dead:
             self.dead = True
+            if self in context.friendly_war_party.board:
+                context.friendly_war_party.dead_minions.append(self)
+            elif self in context.enemy_war_party.board:
+                context.enemy_war_party.dead_minions.append(self)
             card_death_event = events.DiesEvent(self, foe=foe)
             context.broadcast_combat_event(card_death_event)
 
     def trigger_reborn(self, context: CombatPhaseContext):
         index = context.friendly_war_party.get_index(self)
         for i in range(context.summon_minion_multiplier()):
-            reborn_self = self.duplicate_with_golden()
+            reborn_self = self.unbuffed_copy()
             reborn_self.health = 1
             reborn_self.reborn = False
             context.friendly_war_party.summon_in_combat(reborn_self, context, index + i + 1)
-
-    def duplicate_with_golden(self):
-        duplicate = type(self)()
-        if self.golden:
-            duplicate.golden_transformation()
-        return duplicate
 
     def change_state(self, new_state):
         self.tavern.run_callbacks(self, new_state)
         self.state = new_state
 
-    def handle_event(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
+    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if self == event.card:
             if event.event is EVENTS.DIES:
                 for _ in range(context.deathrattle_multiplier()):
@@ -210,6 +207,7 @@ class MonsterCard(Card):
         for card in base_cards:
             self.health += card.health - card.base_health
             self.attack += card.attack - card.base_attack
+            self.attached_cards.extend(card.attached_cards)
             if card.base_deathrattle:
                 self.deathrattles.extend(card.deathrattles[1:])
             else:
@@ -223,7 +221,7 @@ class MonsterCard(Card):
             targets[0].attack += self.attack
             targets[0].health += self.health
             if self.deathrattles:
-                targets[0].deathrattles.extend([self.deathrattles])
+                targets[0].deathrattles.extend(self.deathrattles)
             for attr in self.bool_attribute_list:
                 if getattr(self, attr) and attr != 'magnetic':
                     setattr(targets[0], attr, True)
@@ -234,12 +232,13 @@ class MonsterCard(Card):
         return
 
     def dissolve(self) -> List['MonsterCard']:
+        attached_cards = list(itertools.chain(card.dissolve() for card in self.attached_cards))
         if self.token:
-            return [] + [type(card)() for card in self.attached_cards]
+            return [] + attached_cards
         elif self.golden:
-            return [type(self)()]*3 + [type(card)() for card in self.attached_cards]
+            return [type(self)()]*3 + attached_cards
         else:
-            return [type(self)()] + [type(card)() for card in self.attached_cards]
+            return [type(self)()] + attached_cards
 
     def summon_minion_multiplier(self) -> int:
         return 1
@@ -268,9 +267,24 @@ class MonsterCard(Card):
     def is_dying(self) -> bool:
         return self.dead or self.health <= 0
 
-    def adapt(self, adaptation: 'Adaptation'):  # TODO: How do we type check for a nested class of Adaptation?
+    def adapt(self, adaptation: 'Adaptation'):
         assert adaptation.valid(self)
         adaptation.apply(self)
+
+    def unbuffed_copy(self) -> 'MonsterCard':
+        copy = type(self)()
+        if self.golden:
+            copy.golden_transformation([])
+        return copy
+
+    def valid_attack_targets(self, live_enemies: List['MonsterCard']) -> List['MonsterCard']:
+        if self.attack <= 0:
+            return []
+        taunt_monsters = [card for card in live_enemies if card.taunt]
+        if taunt_monsters:
+            return taunt_monsters
+        else:
+            return live_enemies
 
 
 class CardList:

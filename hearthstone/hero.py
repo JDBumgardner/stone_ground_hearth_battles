@@ -37,7 +37,7 @@ class Hero(metaclass=HeroType):
     def tavern_upgrade_costs(self) -> Tuple[int, int, int, int, int, int]:
         return (0, 5, 7, 8, 9, 10)
 
-    def handle_event(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
+    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         pass
 
     def hero_power(self, context: BuyPhaseContext, board_index: Optional['BoardIndex'] = None,
