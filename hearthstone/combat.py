@@ -41,12 +41,10 @@ class WarParty:
         return None
 
     def get_attack_target(self, randomizer: 'Randomizer', attacker: Optional['MonsterCard'] = None) -> Optional['MonsterCard']:
-        if attacker is None:
+        if attacker is None or not self.live_minions():
             return None
-        try:
+        else:
             return randomizer.select_attack_target(attacker.valid_attack_targets(self.live_minions()))
-        except IndexError:
-            return None
 
     def live_minions(self) -> List['MonsterCard']:
         return [card for card in self.board if not card.dead]
@@ -70,7 +68,7 @@ class WarParty:
         return self.board.index(card)
 
     def attackers(self) -> List['Card']:
-        return [board_member for board_member in self.board if not board_member.dead and not board_member.cant_attack]
+        return [board_member for board_member in self.board if not board_member.dead and not board_member.cant_attack and board_member.attack > 0]
 
 
 def fight_boards(war_party_1: 'WarParty', war_party_2: 'WarParty', randomizer: 'Randomizer'):

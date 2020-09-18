@@ -1,6 +1,6 @@
 import unittest
 
-from hearthstone.adaptations import AdaptBuff
+from hearthstone.adaptations import AdaptBuffs
 from hearthstone.card_graveyard import *
 from hearthstone.card_pool import *
 from hearthstone.cards import Card
@@ -1002,8 +1002,8 @@ class CombatTests(unittest.TestCase):
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         amalgadon = Amalgadon()
-        amalgadon.adapt(AdaptBuff.LivingSpores())
-        amalgadon.adapt(AdaptBuff.LivingSpores())
+        amalgadon.adapt(AdaptBuffs.LivingSpores())
+        amalgadon.adapt(AdaptBuffs.LivingSpores())
         adams_war_party.board = [MonstrousMacaw(), amalgadon]
         ethans_war_party.board = [RabidSaurolisk()]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())

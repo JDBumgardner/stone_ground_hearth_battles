@@ -1,7 +1,7 @@
 import unittest
 from typing import Type
 
-from hearthstone.adaptations import Adaptation
+from hearthstone.adaptations import AdaptBuffs
 from hearthstone.card_graveyard import *
 from hearthstone.card_pool import *
 from hearthstone.cards import Card, CardType
@@ -1153,6 +1153,9 @@ class CardTests(unittest.TestCase):
         self.assertEqual(player_1.in_play[1].health, player_1.in_play[1].base_health + 1)
         self.assertEqual(player_1.in_play[2].attack, player_1.in_play[2].base_attack)
         self.assertEqual(player_1.in_play[2].health, player_1.in_play[2].base_health)
+        self.assertTrue(player_1.in_play[0].taunt)
+        self.assertTrue(player_1.in_play[1].taunt)
+
 
     def test_argus_one_target(self):
         tavern = Tavern()
@@ -1172,6 +1175,8 @@ class CardTests(unittest.TestCase):
         self.assertEqual(player_1.in_play[1].health, player_1.in_play[1].base_health)
         self.assertEqual(player_1.in_play[2].attack, player_1.in_play[2].base_attack)
         self.assertEqual(player_1.in_play[2].health, player_1.in_play[2].base_health)
+        self.assertTrue(player_1.in_play[0].taunt)
+
 
     class TestDancinDerylRandomizer(DefaultRandomizer):
         def select_from_store(self, store: List['Card']) -> 'Card':
@@ -2016,10 +2021,10 @@ class CardTests(unittest.TestCase):
 
     class TestAmalgadonRandomizer(DefaultRandomizer):
         def select_adaptation(self, adaptation_types: List['Type']) -> 'Type':
-            if Adaptation.CracklingShield in adaptation_types:
-                return Adaptation.CracklingShield
-            if Adaptation.LivingSpores in adaptation_types:
-                return Adaptation.LivingSpores
+            if AdaptBuffs.CracklingShield in adaptation_types:
+                return AdaptBuffs.CracklingShield
+            if AdaptBuffs.LivingSpores in adaptation_types:
+                return AdaptBuffs.LivingSpores
             else:
                 return adaptation_types[0]
 
@@ -2142,6 +2147,48 @@ class CardTests(unittest.TestCase):
         tavern.combat_step()
         self.assertEqual(player_1.health, 40)
         self.assertEqual(player_2.health, 40)
+
+    def test_magnetized_menace_wont_turn_golden(self):
+        tavern = Tavern()
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        self.upgrade_to_tier(tavern, 3)
+        tavern.randomizer = RepeatedCardForcer([PogoHopper, ReplicatingMenace])
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        player_1.summon_from_hand(HandIndex(0), [BoardIndex(0)])
+        self.assertCardListEquals(player_1.in_play, [PogoHopper])
+        self.assertCardListEquals(player_1.in_play[0].attached_cards, [ReplicatingMenace])
+        tavern.combat_step()
+        tavern.randomizer = RepeatedCardForcer([ReplicatingMenace])
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(1))
+        player_1.purchase(StoreIndex(1))
+        self.assertCardListEquals(player_1.hand, [ReplicatingMenace, ReplicatingMenace])
+        self.assertCardListEquals(player_1.in_play[0].attached_cards, [ReplicatingMenace])
+
+
+    def test_rafaam_whelp(self):
+        tavern = Tavern()
+        player_1 = tavern.add_player_with_hero("Dante_Kong", ArchVillianRafaam())
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.randomizer = RepeatedCardForcer([RedWhelp, RedWhelp, WrathWeaver])
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        player_2.purchase(StoreIndex(2))
+        player_2.summon_from_hand(HandIndex(0))
+        tavern.combat_step()
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        player_1.hero_power()
+        self.assertCardListEquals(player_1.in_play, [RedWhelp, RedWhelp])
+        self.assertCardListEquals(player_2.in_play, [WrathWeaver])
+        tavern.combat_step()
+        self.assertCardListEquals(player_1.hand, [WrathWeaver])
 
 
 if __name__ == '__main__':

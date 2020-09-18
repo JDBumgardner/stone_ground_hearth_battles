@@ -472,14 +472,16 @@ class UnstableGhoul(MonsterCard):
     def base_deathrattle(self, context: CombatPhaseContext):
         all_minions = [card for card in context.friendly_war_party.board + context.enemy_war_party.board if
                        not card.dead]
-
         count = 2 if self.golden else 1
         for _ in range(count):
             for minion in all_minions:
                 if minion.is_dying():
                     continue
                 minion.take_damage(1, context, self)
-                minion.resolve_death(context, self)  # TODO: Order of death resolution?
+                if minion in context.friendly_war_party.board:
+                    minion.resolve_death(context, self)  # TODO: Order of death resolution?
+                elif minion in context.enemy_war_party.board:
+                    minion.resolve_death(context, self)
 
 
 class RockpoolHunter(MonsterCard):
@@ -1500,7 +1502,7 @@ class YoHoOgre(MonsterCard):
             defender = defending_war_party.get_attack_target(context.randomizer, self)
             if not defender:
                 return
-            logging.debug(f'{attacking_war_party.owner.name} is attacking {defending_war_party.owner.name}')
+            logging.debug(f'{self} triggers after surviving an attack')
             combat.start_attack(self, defender, attacking_war_party, defending_war_party, context.randomizer)
 
 
@@ -1625,11 +1627,11 @@ class ZappSlywick(MonsterCard):
         self.mega_windfury = True
 
     def valid_attack_targets(self, live_enemies: List['MonsterCard']) -> List['MonsterCard']:
-        try:
-            min_attack = min(card.attack for card in live_enemies if not card.dead)
-            return [card for card in live_enemies if card.attack == min_attack]
-        except ValueError:
+        if self.attack <= 0 or not live_enemies:
             return []
+        else:
+            min_attack = min(card.attack for card in live_enemies)
+            return [card for card in live_enemies if card.attack == min_attack]
 
 
 class SeabreakerGoliath(MonsterCard):

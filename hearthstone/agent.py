@@ -1,6 +1,8 @@
+import itertools
 import typing
-from typing import List, Optional, Generator, Union
+from typing import List, Optional, Generator
 
+from hearthstone.monster_types import MONSTER_TYPES
 from hearthstone.player import StoreIndex, HandIndex, BoardIndex
 
 if typing.TYPE_CHECKING:
@@ -209,6 +211,7 @@ class Agent:
         """
         pass
 
+
 def generate_valid_actions(player: 'Player') -> Generator[Action, None, None]:
     return (action for action in generate_all_actions(player) if action.valid(player))
 
@@ -228,15 +231,16 @@ def generate_all_actions(player: 'Player') -> Generator[Action, None, None]:
         yield BuyAction(StoreIndex(index))
         yield HeroPowerAction(store_target=StoreIndex(index))
     for index, card in enumerate(player.hand):
-        valid_target_indices = [index for index, target in enumerate(player.in_play) if card.valid_battlecry_target(target)]
-        num_battlecry_targets = min(card.num_battlecry_targets[-1], len(valid_target_indices))
-        if num_battlecry_targets == 0:
-            yield SummonAction(index, [])
-        for target_index in valid_target_indices:
-            if num_battlecry_targets == 1:
-                yield SummonAction(index, [target_index])
-            else:
-                # Order of targets doesn't matter
-                for other_target_index in valid_target_indices:
-                    if other_target_index != target_index:
-                        yield SummonAction(index, [target_index, other_target_index])
+        valid_target_indices = [index for index, target in enumerate(player.in_play) if
+                                card.valid_battlecry_target(target)]
+        possible_num_targets = [num_targets for num_targets in card.num_battlecry_targets if
+                                num_targets <= len(valid_target_indices)]
+        if not possible_num_targets:
+            possible_num_targets = [len(valid_target_indices)]
+        for num_targets in possible_num_targets:
+            for targets in itertools.combinations(valid_target_indices, num_targets):
+                yield SummonAction(index, list(targets))
+        if card.magnetic:
+            for target_index, target_card in enumerate(player.in_play):
+                if target_card.check_type(MONSTER_TYPES.MECH):
+                    yield SummonAction(index, [target_index])

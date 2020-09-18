@@ -22,7 +22,7 @@ class Adaptation:
         pass
 
 
-class AdaptBuff:
+class AdaptBuffs:
 
     class CracklingShield(Adaptation):
         def apply(self, card: 'MonsterCard'):
@@ -100,7 +100,7 @@ def valid_adaptations(card: 'MonsterCard') -> List['Type']:
 
 
 def all_adaptations() -> List['Type']:
-    return [adaptation for adaptation in AdaptBuff.__dict__.values() if isclass(adaptation)]
+    return [adaptation for adaptation in AdaptBuffs.__dict__.values() if isclass(adaptation)]
 
 
 

@@ -149,7 +149,10 @@ class MonsterCard(Card):
     def resolve_death(self, context: CombatPhaseContext, foe: Optional['MonsterCard'] = None):
         if self.health <= 0 and not self.dead:
             self.dead = True
-            context.friendly_war_party.dead_minions.append(self)
+            if self in context.friendly_war_party.board:
+                context.friendly_war_party.dead_minions.append(self)
+            elif self in context.enemy_war_party.board:
+                context.enemy_war_party.dead_minions.append(self)
             card_death_event = events.DiesEvent(self, foe=foe)
             context.broadcast_combat_event(card_death_event)
 
@@ -227,13 +230,13 @@ class MonsterCard(Card):
         return
 
     def dissolve(self) -> List['MonsterCard']:
-        itertools.chain(card.dissolve() for card in self.attached_cards)
+        attached_cards = list(itertools.chain(card.dissolve() for card in self.attached_cards))
         if self.token:
-            return []
+            return [] + attached_cards
         elif self.golden:
-            return [type(self)()]*3
+            return [type(self)()]*3 + attached_cards
         else:
-            return [type(self)()]
+            return [type(self)()] + attached_cards
 
     def summon_minion_multiplier(self) -> int:
         return 1
@@ -273,6 +276,8 @@ class MonsterCard(Card):
         return copy
 
     def valid_attack_targets(self, live_enemies: List['MonsterCard']) -> List['MonsterCard']:
+        if self.attack <= 0:
+            return []
         taunt_monsters = [card for card in live_enemies if card.taunt]
         if taunt_monsters:
             return taunt_monsters
