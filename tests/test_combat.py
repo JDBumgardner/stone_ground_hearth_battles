@@ -1010,6 +1010,20 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
 
+    def test_sea_breaker_goliath(self):
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [SeaBreakerGoliath(), DeckSwabbie(), DeckSwabbie()]
+        ethans_war_party.board = [AlleyCat(), AlleyCat()]
+        fight_boards(adams_war_party,ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 32)
+        self.assertEqual(adams_war_party.board[1].health, 6)
+        self.assertEqual(adams_war_party.board[1].attack, 6)
+        self.assertEqual(adams_war_party.board[2].health, 6)
+        self.assertEqual(adams_war_party.board[2].attack, 6)
 
 if __name__ == '__main__':
     unittest.main()

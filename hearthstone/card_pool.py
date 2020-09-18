@@ -1606,9 +1606,7 @@ class KangorsApprentice(MonsterCard):
         dead_mechs = [dead_minion for dead_minion in context.friendly_war_party.dead_minions if
                           dead_minion.check_type(MONSTER_TYPES.MECH)]
         for index in range(min(count, len(dead_mechs))):
-            summon_minion = type(dead_mechs[index])()
-            if dead_mechs[index].golden:
-                summon_minion.golden_transformation([])
+            summon_minion = self.duplicate_with_golden()
             context.friendly_war_party.summon_in_combat(summon_minion, context, summon_index + index + 1)
 
 
@@ -1660,6 +1658,7 @@ class FoeReaper4000(MonsterCard):
     base_attack = 6
     base_health = 9
     legendary = True
+    cleave = True
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         if event.event == EVENTS.ON_ATTACK and event.card == self:

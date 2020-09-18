@@ -92,6 +92,7 @@ class MonsterCard(Card):
     give_immunity = False
     targets_least_attack = False
     legendary = False
+    cleave = False
 
     def __init__(self):
         super().__init__()
@@ -156,12 +157,16 @@ class MonsterCard(Card):
     def trigger_reborn(self, context: CombatPhaseContext):
         index = context.friendly_war_party.get_index(self)
         for i in range(context.summon_minion_multiplier()):
-            reborn_self = type(self)()
-            if self.golden:
-                reborn_self.golden_transformation([])
+            reborn_self = self.duplicate_with_golden()
             reborn_self.health = 1
             reborn_self.reborn = False
             context.friendly_war_party.summon_in_combat(reborn_self, context, index + i + 1)
+
+    def duplicate_with_golden(self):
+        duplicate = type(self)()
+        if self.golden:
+            duplicate.golden_transformation()
+        return duplicate
 
     def change_state(self, new_state):
         self.tavern.run_callbacks(self, new_state)
@@ -218,7 +223,7 @@ class MonsterCard(Card):
             targets[0].attack += self.attack
             targets[0].health += self.health
             if self.deathrattles:
-                targets[0].deathrattles.extend(self.deathrattles)
+                targets[0].deathrattles.extend([self.deathrattles])
             for attr in self.bool_attribute_list:
                 if getattr(self, attr) and attr != 'magnetic':
                     setattr(targets[0], attr, True)
