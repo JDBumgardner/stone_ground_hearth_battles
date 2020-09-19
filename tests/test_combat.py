@@ -1051,12 +1051,14 @@ class CombatTests(unittest.TestCase):
         ethans_war_party = WarParty(ethan)
         twilight_emissary = TwilightEmissary()
         twilight_emissary.golden_transformation([])
-        adams_war_party.board = [TheBeast(), RabidSaurolisk(), RabidSaurolisk(), RabidSaurolisk()]
-        ethans_war_party.board = [twilight_emissary, Khadgar()]
+        khadgar = Khadgar()
+        khadgar.attack += 1
+        adams_war_party.board = [TheBeast(), khadgar, RabidSaurolisk()]
+        ethans_war_party.board = [twilight_emissary]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
-        self.assertEqual(len(adams_war_party.board), 4)
+        self.assertEqual(len(adams_war_party.board), 3)
 
 
 if __name__ == '__main__':

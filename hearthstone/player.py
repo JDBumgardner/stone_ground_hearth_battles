@@ -130,7 +130,7 @@ class Player:
             possible_num_targets = [num_targets for num_targets in card.num_battlecry_targets if num_targets <= len(valid_targets)]
             if not possible_num_targets:
                 possible_num_targets = [len(valid_targets)]
-            if len(targets) not in possible_num_targets:  # not sure this is correct
+            if len(targets) not in possible_num_targets:
                 return False
             if len(set(targets)) != len(targets):
                 return False

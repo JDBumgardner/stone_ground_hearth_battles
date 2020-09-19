@@ -1739,7 +1739,7 @@ class TheBeast(MonsterCard):
     legendary = True
 
     def base_deathrattle(self, context: 'CombatPhaseContext'):
-        for _ in range(context.enemy_context().summon_minion_multiplier()):
+        for _ in range(context.summon_minion_multiplier()):
             context.enemy_war_party.summon_in_combat(FinkleEinhorn(), context.enemy_context())
 
 
