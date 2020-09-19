@@ -91,7 +91,6 @@ class MonsterCard(Card):
     shifting = False
     give_immunity = False
     legendary = False
-    cleave = False
 
     def __init__(self):
         super().__init__()
