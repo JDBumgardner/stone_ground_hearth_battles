@@ -14,6 +14,7 @@ class TensorboardAltairPlotter(Parasite):
     def __init__(self, tensorboard: SummaryWriter, global_step_context: GlobalStepContext):
         self.tensorboard = tensorboard
         self.healths = []
+        self.coins = []
         self.dead_players = []
         self.avg_enemy_healths = []
         self.values = []
@@ -34,6 +35,7 @@ class TensorboardAltairPlotter(Parasite):
     def update_gamestate(self, player: 'Player', value, reward):
         self.turn_counts.append(player.tavern.turn_count)
         self.healths.append(player.health)
+        self.coins.append(player.coins)
         self.avg_enemy_healths.append(
             (sum(max(p.health, 0) for name, p in player.tavern.players.items()) - player.health) / 7.0)
         self.dead_players.append(len(player.tavern.losers) - 3.5)
@@ -74,6 +76,7 @@ class TensorboardAltairPlotter(Parasite):
         df = pd.DataFrame({
             "turn_count": self.turn_counts,
             "health": self.healths,
+            "coins": self.coins,
             "dead_players": self.dead_players,
             "avg_enemy_health": self.avg_enemy_healths,
             "critic_value": self.values,
@@ -143,7 +146,7 @@ class TensorboardAltairPlotter(Parasite):
 
         board_chart = self._card_list_chart('board', self.boards, selection).properties(title='On Board', width=400)
         hand_chart = self._card_list_chart('hand', self.hands, selection).properties(title='In Hand', width=400)
-        store_chart = self._card_list_chart('store', self.hands, selection).properties(title='In Store', width=400)
+        store_chart = self._card_list_chart('store', self.stores, selection).properties(title='In Store', width=400)
 
         left_chart = alt.vconcat(game_progression_chart, action_chart).resolve_legend('independent')
         full_chart = alt.hconcat(left_chart, board_chart, hand_chart, store_chart)

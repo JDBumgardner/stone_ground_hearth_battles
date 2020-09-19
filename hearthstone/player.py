@@ -104,8 +104,6 @@ class Player:
         return True
 
     def summon_from_hand(self, index: HandIndex, targets: Optional[List[BoardIndex]] = None):
-        #  TODO: make sure that the ordering of monster in hand and monster.battlecry are correct
-        #  TODO: Jarett can monster be event target
         if targets is None:
             targets = []
         assert self.valid_summon_from_hand(index, targets)
@@ -120,6 +118,9 @@ class Player:
         if targets is None:
             targets = []
         #  TODO: Jack num_battlecry_targets should only accept 0,1,2
+        for target in targets:
+            if not self.valid_board_index(target):
+                return False
         if not self.valid_hand_index(index):
             return False
         card = self.hand[index]
@@ -238,7 +239,9 @@ class Player:
         self.broadcast_buy_phase_event(events.SellEvent(self.in_play[index]))
         card = self.in_play.pop(index)
         self.coins += card.redeem_rate
-        self.tavern.deck.return_cards(card.dissolve())
+        returned_cards = card.dissolve()
+        print(returned_cards)
+        self.tavern.deck.return_cards(returned_cards)
 
     def valid_sell_minion(self, index: 'BoardIndex') -> bool:
         return self.valid_board_index(index)

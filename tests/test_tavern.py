@@ -2190,6 +2190,21 @@ class CardTests(unittest.TestCase):
         tavern.combat_step()
         self.assertCardListEquals(player_1.hand, [WrathWeaver])
 
+    def test_dissolve_magnetic(self):
+        tavern = Tavern()
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        self.upgrade_to_tier(tavern, 3)
+        tavern.randomizer = RepeatedCardForcer([PogoHopper, ReplicatingMenace])
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        player_1.summon_from_hand(HandIndex(0), [BoardIndex(0)])
+        print(player_1.in_play[0].attached_cards)
+        player_1.sell_minion(BoardIndex(0))
+
+
 
 if __name__ == '__main__':
     unittest.main()

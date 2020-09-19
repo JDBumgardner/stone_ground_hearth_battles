@@ -229,13 +229,17 @@ class MonsterCard(Card):
         return
 
     def dissolve(self) -> List['MonsterCard']:
-        attached_cards = list(itertools.chain(card.dissolve() for card in self.attached_cards))
+        golden_modifier = 3 if self.golden else 1
+        attached_cards = []
+        for card in self.attached_cards:
+            attached_cards.extend(card.dissolve())
         if self.token:
-            return [] + attached_cards
-        elif self.golden:
-            return [type(self)()]*3 + attached_cards
+            return attached_cards
         else:
-            return [type(self)()] + attached_cards
+            dissolving_cards = [type(self)()]*golden_modifier
+            dissolving_cards.extend(attached_cards)
+            return dissolving_cards
+
 
     def summon_minion_multiplier(self) -> int:
         return 1
