@@ -1655,6 +1655,7 @@ class FoeReaper4000(MonsterCard):
     monster_type = MONSTER_TYPES.MECH
     base_attack = 6
     base_health = 9
+    base_cleave = True
     legendary = True
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
@@ -1689,3 +1690,62 @@ class AnnoyOModule(MonsterCard):
     base_divine_shield = True
     base_taunt = True
     base_magnetic = True
+
+
+class Siegebreaker(MonsterCard):
+    tier = 4
+    monster_type = MONSTER_TYPES.DEMON
+    base_attack = 5
+    base_health = 8
+    base_taunt = True
+
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        bonus = 2 if self.golden else 1
+        if event.event is EVENTS.COMBAT_START or (event.event is EVENTS.SUMMON_COMBAT and event.card == self):
+            demons = [card for card in context.friendly_war_party.board if
+                      card != self and card.check_type(MONSTER_TYPES.DEMON)]
+            for demon in demons:
+                demon.attack += bonus
+        elif event.event is EVENTS.SUMMON_COMBAT and event.card in context.friendly_war_party.board \
+                and event.card != self and event.card.check_type(MONSTER_TYPES.DEMON):
+            event.card.attack += bonus
+        elif event.event is EVENTS.DIES and event.card == self:
+            demons = [card for card in context.friendly_war_party.board if
+                      card != self and card.check_type(MONSTER_TYPES.DEMON)]
+            for demon in demons:
+                demon.attack -= bonus
+
+
+class CobaltScalebane(MonsterCard):
+    tier = 4
+    monster_type = MONSTER_TYPES.DRAGON
+    base_attack = 5
+    base_health = 5
+
+    def handle_event_powers(self, event: 'CardEvent', context: 'BuyPhaseContext'):
+        if event.event is EVENTS.BUY_END:
+            other_minions = [card for card in context.owner.in_play if card != self]
+            if other_minions:
+                card = context.randomizer.select_friendly_minion(other_minions)
+                bonus = 6 if self.golden else 3
+                card.attack += bonus
+
+
+class TheBeast(MonsterCard):
+    tier = 3
+    monster_type = MONSTER_TYPES.BEAST
+    base_attack = 9
+    base_health = 7
+    legendary = True
+
+    def base_deathrattle(self, context: 'CombatPhaseContext'):
+        for _ in range(context.enemy_context().summon_minion_multiplier()):
+            context.enemy_war_party.summon_in_combat(FinkleEinhorn(), context.enemy_context())
+
+
+class FinkleEinhorn(MonsterCard):
+    tier = 1
+    monster_type = MONSTER_TYPES.BEAST
+    base_attack = 3
+    base_health = 3
+    token = True

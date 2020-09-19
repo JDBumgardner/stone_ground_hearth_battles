@@ -1010,6 +1010,54 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
 
+    def test_seabreaker_goliath(self):
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [SeabreakerGoliath(), DeckSwabbie(), DeckSwabbie(), VulgarHomunculus()]
+        ethans_war_party.board = [BloodsailCannoneer(), CapnHoggarr(), CapnHoggarr(), TwilightEmissary(),
+                                  TwilightEmissary()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+
+    def test_siege_breaker(self):
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [VulgarHomunculus(), Siegebreaker()]
+        ethans_war_party.board = [Robosaur()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+
+    def test_the_beast(self):
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [TheBeast(), RabidSaurolisk()]
+        ethans_war_party.board = [NadinaTheRed()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+
+    def test_khadgar_the_beast(self):
+        adam = Player.new_player_with_hero(None, "Adam")
+        ethan = Player.new_player_with_hero(None, "Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        twilight_emissary = TwilightEmissary()
+        twilight_emissary.golden_transformation([])
+        adams_war_party.board = [TheBeast(), RabidSaurolisk(), RabidSaurolisk(), RabidSaurolisk()]
+        ethans_war_party.board = [twilight_emissary, Khadgar()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+        self.assertEqual(len(adams_war_party.board), 4)
+
 
 if __name__ == '__main__':
     unittest.main()
