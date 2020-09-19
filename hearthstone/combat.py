@@ -41,10 +41,12 @@ class WarParty:
         return None
 
     def get_attack_target(self, randomizer: 'Randomizer', attacker: Optional['MonsterCard'] = None) -> Optional['MonsterCard']:
-        if attacker is None or not self.live_minions():
+        if attacker is None:
             return None
-        else:
-            return randomizer.select_attack_target(attacker.valid_attack_targets(self.live_minions()))
+        attack_targets = attacker.valid_attack_targets(self.live_minions())
+        if attack_targets:
+            return randomizer.select_attack_target(attack_targets)
+        return None
 
     def live_minions(self) -> List['MonsterCard']:
         return [card for card in self.board if not card.dead]
@@ -144,7 +146,7 @@ def start_attack(attacker: 'MonsterCard', defender: 'MonsterCard', attacking_war
     combat_phase_context = CombatPhaseContext(attacking_war_party, defending_war_party, randomizer)
     combat_phase_context.broadcast_combat_event(on_attack_event)
     attacker.take_damage(defender.attack, combat_phase_context, defender, defending=False)
-    defender.take_damage(attacker.attack, combat_phase_context, attacker)
+    defender.take_damage(attacker.attack, combat_phase_context.enemy_context(), attacker)
     # handle "after combat" events here
     combat_phase_context.broadcast_combat_event(events.AfterAttackDamageEvent(attacker, foe=defender))
     # attacker.resolve_death(CombatPhaseContext(attacking_war_party, defending_war_party, randomizer), defender)

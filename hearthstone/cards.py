@@ -144,16 +144,13 @@ class MonsterCard(Card):
             if foe is not None and foe.poisonous and self.health > 0:
                 self.health = 0
             if defending and foe is not None and self.health < 0:
-                foe.overkill(combat_phase_context)  # overkill doesn't trigger when the attacker takes damage, so the friendly war party is always the attacker's and the enemy war party is always the defender's
+                foe.overkill(combat_phase_context.enemy_context())
             combat_phase_context.broadcast_combat_event(events.CardDamagedEvent(self, foe=foe))
 
     def resolve_death(self, context: CombatPhaseContext, foe: Optional['MonsterCard'] = None):
         if self.health <= 0 and not self.dead:
             self.dead = True
-            if self in context.friendly_war_party.board:
-                context.friendly_war_party.dead_minions.append(self)
-            elif self in context.enemy_war_party.board:
-                context.enemy_war_party.dead_minions.append(self)
+            context.friendly_war_party.dead_minions.append(self)
             card_death_event = events.DiesEvent(self, foe=foe)
             context.broadcast_combat_event(card_death_event)
 

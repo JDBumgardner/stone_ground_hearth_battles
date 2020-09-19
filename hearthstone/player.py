@@ -126,9 +126,11 @@ class Player:
         if not self.room_on_board():
             return False
         if card.battlecry:
-            valid_targets = [target_index for target_index, target_card in enumerate(self.in_play) if
-                             card.valid_battlecry_target(target_card)]
-            if len(valid_targets) > 0 and len(targets) not in card.num_battlecry_targets:
+            valid_targets = [target_index for target_index, target_card in enumerate(self.in_play) if card.valid_battlecry_target(target_card)]
+            possible_num_targets = [num_targets for num_targets in card.num_battlecry_targets if num_targets <= len(valid_targets)]
+            if not possible_num_targets:
+                possible_num_targets = [len(valid_targets)]
+            if len(targets) not in possible_num_targets:  # not sure this is correct
                 return False
             if len(set(targets)) != len(targets):
                 return False
