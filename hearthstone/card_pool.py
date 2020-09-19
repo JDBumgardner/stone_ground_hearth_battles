@@ -288,8 +288,8 @@ class KaboomBot(MonsterCard):
             if not targets:
                 break
             target = context.randomizer.select_enemy_minion(targets)
-            target.take_damage(4, context, self)
-            target.resolve_death(context, self)  # TODO: Order of death resolution?
+            target.take_damage(4, context.enemy_context(), self)
+            target.resolve_death(context.enemy_context(), self)  # TODO: Order of death resolution?
 
 
 class KindlyGrandmother(MonsterCard):
@@ -860,8 +860,8 @@ class SoulJuggler(MonsterCard):
                 targets = [card for card in context.enemy_war_party.board if not card.is_dying()]
                 if targets:
                     target = context.randomizer.select_enemy_minion(targets)
-                    target.take_damage(3, context, self)
-                    target.resolve_death(context, self)  # TODO: Order of death resolution?
+                    target.take_damage(3, context.enemy_context(), self)
+                    target.resolve_death(context.enemy_context(), self)  # TODO: Order of death resolution?
 
 
 class TwilightEmissary(MonsterCard):
@@ -1365,8 +1365,8 @@ class HeraldOfFlame(MonsterCard):
             leftmost_index += 1
             if leftmost_index >= len(context.enemy_war_party.board):
                 return
-        context.enemy_war_party.board[leftmost_index].take_damage(damage, context, self)
-        context.enemy_war_party.board[leftmost_index].resolve_death(context, self)
+        context.enemy_war_party.board[leftmost_index].take_damage(damage, context.enemy_context(), self)
+        context.enemy_war_party.board[leftmost_index].resolve_death(context.enemy_context(), self)
 
 
 class IronhideDirehorn(MonsterCard):
@@ -1664,8 +1664,8 @@ class FoeReaper4000(MonsterCard):
             foe_index = live_enemy_board.index(event.foe)
             splash_damage_targets = [card for i, card in enumerate(live_enemy_board) if abs(i - foe_index) == 1]
             for target in splash_damage_targets:
-                target.take_damage(self.attack, context, self)
-                target.resolve_death(context, self)
+                target.take_damage(self.attack, context.enemy_context(), self)
+                target.resolve_death(context.enemy_context(), self)
 
 
 class Amalgadon(MonsterCard):

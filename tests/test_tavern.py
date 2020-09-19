@@ -2169,7 +2169,6 @@ class CardTests(unittest.TestCase):
         self.assertCardListEquals(player_1.hand, [ReplicatingMenace, ReplicatingMenace])
         self.assertCardListEquals(player_1.in_play[0].attached_cards, [ReplicatingMenace])
 
-
     def test_rafaam_whelp(self):
         tavern = Tavern()
         player_1 = tavern.add_player_with_hero("Dante_Kong", ArchVillianRafaam())
@@ -2232,7 +2231,6 @@ class CardTests(unittest.TestCase):
         player_1.summon_from_hand(HandIndex(0), [BoardIndex(0)])
         print(player_1.in_play[0].attached_cards)
         player_1.sell_minion(BoardIndex(0))
-
 
 
 if __name__ == '__main__':

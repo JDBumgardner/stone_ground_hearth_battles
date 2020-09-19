@@ -173,7 +173,6 @@ class MonsterCard(Card):
                         deathrattle(self, context)
                 if self.reborn:
                     self.trigger_reborn(context)
-                context.friendly_war_party.dead_minions.append(self)
             elif event.event is EVENTS.SUMMON_BUY:
                 if self.magnetic:
                     self.magnetize(event.targets, context)

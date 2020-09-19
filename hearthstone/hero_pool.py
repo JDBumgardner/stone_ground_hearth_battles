@@ -47,8 +47,8 @@ class Nefarian(Hero):
         if event.event == EVENTS.COMBAT_START:
             if self.hero_power_used:
                 for card in context.enemy_war_party.board:
-                    card.take_damage(1, context)
-                    card.resolve_death(context)
+                    card.take_damage(1, context.enemy_context())
+                    card.resolve_death(context.enemy_context())
 
 
 class Deathwing(Hero):

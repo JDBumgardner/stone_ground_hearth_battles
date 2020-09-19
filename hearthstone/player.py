@@ -240,7 +240,6 @@ class Player:
         card = self.in_play.pop(index)
         self.coins += card.redeem_rate
         returned_cards = card.dissolve()
-        print(returned_cards)
         self.tavern.deck.return_cards(returned_cards)
 
     def valid_sell_minion(self, index: 'BoardIndex') -> bool:
