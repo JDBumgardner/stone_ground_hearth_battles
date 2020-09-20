@@ -6,7 +6,9 @@ import tensorboard_vega_embed.summary
 import torch
 from torch.utils.tensorboard import SummaryWriter
 
-from hearthstone.agent import Action
+from hearthstone.agent import Action, SellAction, SummonAction, BuyAction
+from hearthstone.player import BoardIndex, StoreIndex, HandIndex
+from hearthstone.training.pytorch import hearthstone_state_encoder
 from hearthstone.training.pytorch.surveillance import Parasite, GlobalStepContext
 
 
@@ -26,11 +28,24 @@ class TensorboardAltairPlotter(Parasite):
         self.boards = []
         self.hands = []
         self.stores = []
+        self.sell_probs = []
+        self.summon_probs = []
+        self.buy_probs = []
 
     def on_buy_phase_action(self, player: 'Player', action: Action, policy: torch.Tensor, value: torch.Tensor):
         self.update_gamestate(player, value, None)
         self.actions.append(action.str_in_context(player))
         self.action_types.append(type(action).__name__)
+        policy = policy.detach().squeeze().exp()
+        self.sell_probs.append(
+            [float(policy[hearthstone_state_encoder.get_action_index(SellAction(BoardIndex(i)))]) for i, _ in
+             enumerate(player.in_play)])
+        self.summon_probs.append(
+            [float(policy[hearthstone_state_encoder.get_action_index(SummonAction(HandIndex(i)))]) for i, _ in
+             enumerate(player.hand)])
+        self.buy_probs.append(
+            [float(policy[hearthstone_state_encoder.get_action_index(BuyAction(StoreIndex(i)))]) for i, _ in
+             enumerate(player.store)])
 
     def update_gamestate(self, player: 'Player', value, reward):
         self.turn_counts.append(player.tavern.turn_count)
@@ -49,14 +64,15 @@ class TensorboardAltairPlotter(Parasite):
         self.stores.append([str(card) for card in player.store])
 
     @staticmethod
-    def _card_list_chart(name: str, cards_list: List[List[str]], selection):
+    def _card_list_chart(name: str, cards_list: List[List[str]], action_probs: List[List[str]], selection):
         df = pd.DataFrame({
             name: cards_list,
+            "prob": action_probs
         })
-        df = df.reset_index().rename(columns={'index': 'step_in_game'}).explode(name).dropna()
-
+        df = df.apply(pd.Series.explode).reset_index().rename(columns={'index': 'step_in_game'}).dropna()
         ranked_text = alt.Chart(df).mark_text().encode(
-            y=alt.Y('row_number:O', axis=None)
+            y=alt.Y('row_number:O', axis=None),
+            color=alt.Color('prob', scale=alt.Scale(domain=[0,1], scheme="bluegreen")),
         ).transform_lookup(lookup="step_in_game",
                            from_=alt.LookupSelection(key="step_in_game",
                                                      selection="gamestep_hover",
@@ -73,6 +89,10 @@ class TensorboardAltairPlotter(Parasite):
         self.update_gamestate(player, None, 3.5 - ranking)
         self.actions.append(None)
         self.action_types.append(None)
+        self.sell_probs.append([None for _ in player.in_play])
+        self.summon_probs.append([None for _ in player.hand])
+        self.buy_probs.append([None for _ in player.store])
+
         df = pd.DataFrame({
             "turn_count": self.turn_counts,
             "health": self.healths,
@@ -144,12 +164,13 @@ class TensorboardAltairPlotter(Parasite):
             opacity=alt.condition((alt.datum.step_in_game == alt.datum.looked_up_step), alt.value(1), alt.value(0.4))
         ).properties(width=999)
 
-        board_chart = self._card_list_chart('board', self.boards, selection).properties(title='On Board', width=400)
-        hand_chart = self._card_list_chart('hand', self.hands, selection).properties(title='In Hand', width=400)
-        store_chart = self._card_list_chart('store', self.stores, selection).properties(title='In Store', width=400)
+        board_chart = self._card_list_chart('board', self.boards, self.sell_probs, selection).properties(title='On Board', width=400)
+        hand_chart = self._card_list_chart('hand', self.hands, self.summon_probs, selection).properties(title='In Hand', width=400)
+        store_chart = self._card_list_chart('store', self.stores, self.buy_probs, selection).properties(title='In Store', width=400)
 
         left_chart = alt.vconcat(game_progression_chart, action_chart).resolve_legend('independent')
-        full_chart = alt.hconcat(left_chart, board_chart, hand_chart, store_chart)
+        right_chart = alt.vconcat(board_chart, hand_chart, store_chart).resolve_legend('shared')
+        full_chart = alt.hconcat(left_chart, right_chart)
         json = full_chart.to_json()
 
         tensorboard_vega_embed.summary.vega_embed(self.tensorboard, "GameSummary", json,
