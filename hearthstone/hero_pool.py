@@ -109,7 +109,7 @@ class PatchesThePirate(Hero):
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
-        pirates = [card for card in context.owner.tavern.deck.all_cards() if
+        pirates = [card for card in context.owner.tavern.deck.unique_cards() if
                    card.check_type(MONSTER_TYPES.PIRATE) and card.tier <= context.owner.tavern_tier]
         if pirates:
             card = context.randomizer.select_gain_card(pirates)
@@ -142,7 +142,7 @@ class FungalmancerFlurgl(Hero):
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.SELL and event.card.check_type(MONSTER_TYPES.MURLOC):
-            murlocs = [card for card in context.owner.tavern.deck.all_cards() if
+            murlocs = [card for card in context.owner.tavern.deck.unique_cards() if
                        card.check_type(MONSTER_TYPES.MURLOC) and card.tier <= context.owner.tavern_tier]
             card = context.randomizer.select_add_to_store(murlocs)
             context.owner.tavern.deck.remove_card(card)
@@ -218,7 +218,7 @@ class Ysera(Hero):
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_START and len(context.owner.store) < 7:
-            dragons = [card for card in context.owner.tavern.deck.all_cards() if
+            dragons = [card for card in context.owner.tavern.deck.unique_cards() if
                        card.check_type(MONSTER_TYPES.DRAGON) and card.tier <= context.owner.tavern_tier]
             if dragons:
                 card = context.randomizer.select_add_to_store(dragons)
@@ -257,7 +257,7 @@ class CaptainEudora(Hero):
                         store_index: Optional['StoreIndex'] = None):
         self.digs_left -= 1
         if self.digs_left == 0:
-            diggable_minions = [card for card in context.owner.tavern.deck.all_cards() if
+            diggable_minions = [card for card in context.owner.tavern.deck.unique_cards() if
                                 card.tier <= context.owner.tavern_tier]
             random_minion = context.randomizer.select_gain_card(diggable_minions)
             context.owner.tavern.deck.remove_card(random_minion)
@@ -337,3 +337,35 @@ class ArchVillianRafaam(Hero):
             if len(context.enemy_war_party.dead_minions) == 1 and context.friendly_war_party.owner.room_in_hand():
                 context.friendly_war_party.owner.gain_card(type(event.card)())
 
+
+class CaptainHooktusk(Hero):
+    power_cost = 0
+    power_target_location = CardLocation.BOARD
+
+    def hero_power_valid_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                              store_index: Optional['StoreIndex'] = None):
+        return context.owner.room_in_hand()
+
+    def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                        store_index: Optional['StoreIndex'] = None):
+        board_minion = context.owner.in_play.pop(board_index)
+        board_minion.dissolve()
+        predicate = lambda card: card.tier < board_minion.tier if board_minion.tier > 1 else card.tier == 1
+        lower_tier_minions = [card for card in context.owner.tavern.deck.unique_cards() if predicate(card)]
+        random_minion = context.randomizer.select_gain_card(lower_tier_minions)
+        context.owner.tavern.deck.remove_card(random_minion)
+        context.owner.gain_card(random_minion)
+
+
+class Malygos(Hero):
+    power_cost = 0
+    power_target_location = CardLocation.BOARD
+
+    def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                        store_index: Optional['StoreIndex'] = None):
+        board_minion = context.owner.in_play.pop(board_index)
+        board_minion.dissolve()
+        same_tier_minions = [card for card in context.owner.tavern.deck.unique_cards() if card.tier == board_minion.tier]
+        random_minion = context.randomizer.select_gain_card(same_tier_minions)
+        context.owner.tavern.deck.remove_card(random_minion)
+        context.owner.in_play.insert(board_index, random_minion)

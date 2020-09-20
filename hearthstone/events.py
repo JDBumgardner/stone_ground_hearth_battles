@@ -183,5 +183,3 @@ class CombatPhaseContext:
         for card in self.friendly_war_party.board:
             deathrattle_multiplier *= card.deathrattle_multiplier()
         return deathrattle_multiplier
-
-
