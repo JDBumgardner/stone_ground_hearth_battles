@@ -1,12 +1,10 @@
 import enum
 import itertools
+import typing
 from collections import defaultdict
 from typing import Set, List, Optional, Callable, Type, Union, Iterator
 
-import typing
-
-from hearthstone import events, monster_types
-from hearthstone.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
+from hearthstone import events
 from hearthstone.card_factory import make_metaclass
 from hearthstone.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
 from hearthstone.monster_types import MONSTER_TYPES
@@ -237,7 +235,6 @@ class MonsterCard(Card):
             dissolving_cards = [type(self)()]*golden_modifier
             dissolving_cards.extend(attached_cards)
             return dissolving_cards
-
 
     def summon_minion_multiplier(self) -> int:
         return 1

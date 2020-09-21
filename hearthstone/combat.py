@@ -4,8 +4,7 @@ import typing
 from typing import Optional, List
 
 from hearthstone import events
-from hearthstone.events import CombatPhaseContext, EVENTS, CardEvent
-from hearthstone.monster_types import MONSTER_TYPES
+from hearthstone.events import CombatPhaseContext
 
 if typing.TYPE_CHECKING:
     from hearthstone.player import Player

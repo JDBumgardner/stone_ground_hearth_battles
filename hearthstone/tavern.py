@@ -89,4 +89,3 @@ class GameState(enum.Enum):
     HERO_SELECTION = 1
     BUY_PHASE = 2
     COMBAT_PHASE = 3
-

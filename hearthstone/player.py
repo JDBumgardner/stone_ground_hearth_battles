@@ -1,18 +1,17 @@
 import itertools
 import typing
 from collections import defaultdict
-from typing import Optional, List, Callable, Type, Union
+from typing import Optional, List, Callable, Type
 
 from hearthstone import events
-from hearthstone.card_pool import DefenderOfArgus
-from hearthstone.cards import MonsterCard, Card, CardLocation
-from hearthstone.events import BuyPhaseContext, EVENTS, CardEvent
+from hearthstone.cards import MonsterCard, Card
+from hearthstone.events import BuyPhaseContext, CardEvent
 from hearthstone.hero import EmptyHero
 from hearthstone.monster_types import MONSTER_TYPES
 from hearthstone.triple_reward_card import TripleRewardCard
 
 if typing.TYPE_CHECKING:
-    from hearthstone.tavern import Tavern, GameState
+    from hearthstone.tavern import Tavern
     from hearthstone.hero import Hero
     from hearthstone.randomizer import Randomizer
 
