@@ -1,3 +1,4 @@
+from collections import defaultdict
 from typing import List
 
 import altair as alt
@@ -6,8 +7,7 @@ import tensorboard_vega_embed.summary
 import torch
 from torch.utils.tensorboard import SummaryWriter
 
-from hearthstone.agent import Action, SellAction, SummonAction, BuyAction
-from hearthstone.player import BoardIndex, StoreIndex, HandIndex
+from hearthstone.agent import Action, SellAction, SummonAction, BuyAction, generate_valid_actions
 from hearthstone.training.pytorch import hearthstone_state_encoder
 from hearthstone.training.pytorch.surveillance import Parasite, GlobalStepContext
 
@@ -28,24 +28,39 @@ class TensorboardAltairPlotter(Parasite):
         self.boards = []
         self.hands = []
         self.stores = []
+        self.basic_action_probs = []
         self.sell_probs = []
         self.summon_probs = []
         self.buy_probs = []
+
+    def populate_action_probs(self, player: 'player', policy:torch.Tensor):
+        policy = policy.detach().squeeze().exp()
+        self.basic_action_probs.append([float(policy[hearthstone_state_encoder.get_action_index(action)]) for action in
+                                        hearthstone_state_encoder.ALL_ACTIONS.player_action_set])
+
+        action_probs = defaultdict(lambda: 0.0)
+        for action in generate_valid_actions(player):
+            if str(action) in hearthstone_state_encoder.ALL_ACTIONS_DICT:
+                if isinstance(action, SellAction):
+                    card = player.in_play[action.index]
+                elif isinstance(action, SummonAction):
+                    card = player.hand[action.index]
+                elif isinstance(action,BuyAction):
+                    card = player.store[action.index]
+                else:
+                    continue
+
+                action_probs[card] += float(policy[hearthstone_state_encoder.get_action_index(action)])
+
+        self.sell_probs.append([action_probs[card] for card in player.in_play])
+        self.summon_probs.append([action_probs[card] for card in player.hand])
+        self.buy_probs.append([action_probs[card] for card in player.store])
 
     def on_buy_phase_action(self, player: 'Player', action: Action, policy: torch.Tensor, value: torch.Tensor):
         self.update_gamestate(player, value, None)
         self.actions.append(action.str_in_context(player))
         self.action_types.append(type(action).__name__)
-        policy = policy.detach().squeeze().exp()
-        self.sell_probs.append(
-            [float(policy[hearthstone_state_encoder.get_action_index(SellAction(BoardIndex(i)))]) for i, _ in
-             enumerate(player.in_play)])
-        self.summon_probs.append(
-            [float(policy[hearthstone_state_encoder.get_action_index(SummonAction(HandIndex(i)))]) for i, _ in
-             enumerate(player.hand)])
-        self.buy_probs.append(
-            [float(policy[hearthstone_state_encoder.get_action_index(BuyAction(StoreIndex(i)))]) for i, _ in
-             enumerate(player.store)])
+        self.populate_action_probs(player, policy)
 
     def update_gamestate(self, player: 'Player', value, reward):
         self.turn_counts.append(player.tavern.turn_count)
@@ -64,15 +79,11 @@ class TensorboardAltairPlotter(Parasite):
         self.stores.append([str(card) for card in player.store])
 
     @staticmethod
-    def _card_list_chart(name: str, cards_list: List[List[str]], action_probs: List[List[str]], selection):
-        df = pd.DataFrame({
-            name: cards_list,
-            "prob": action_probs
-        })
-        df = df.apply(pd.Series.explode).reset_index().rename(columns={'index': 'step_in_game'}).dropna()
+    def _action_chart(df: pd.DataFrame, name: str, max_size: int):
         ranked_text = alt.Chart(df).mark_text().encode(
-            y=alt.Y('row_number:O', axis=None),
-            color=alt.Color('prob', scale=alt.Scale(domain=[0,1], scheme="bluegreen")),
+            y=alt.Y('row_number:O', axis=None, scale=alt.Scale(domain=list(range(1, max_size+1)))),
+            color=alt.Color("action_probability", scale=alt.Scale(domain=[0, 1], scheme="bluegreen")),
+            tooltip=["action_probability"]
         ).transform_lookup(lookup="step_in_game",
                            from_=alt.LookupSelection(key="step_in_game",
                                                      selection="gamestep_hover",
@@ -84,6 +95,28 @@ class TensorboardAltairPlotter(Parasite):
             row_number='row_number()'
         )
         return ranked_text.encode(text=f'{name}:N')
+
+    @staticmethod
+    def _card_list_chart(name: str, cards_list: List[List[str]], action_probs: List[List[str]], max_size:int):
+        df = pd.DataFrame({
+            name: cards_list,
+            "action_probability": action_probs
+        })
+        df = df.apply(pd.Series.explode).reset_index().rename(columns={'index': 'step_in_game'}).dropna()
+        return TensorboardAltairPlotter._action_chart(df, name, max_size)
+
+    @staticmethod
+    def _player_action_chart(action_probs: List[List[str]], max_size: int):
+        basic_actions = [str(action) for action in hearthstone_state_encoder.ALL_ACTIONS.player_action_set]
+        df = pd.DataFrame(
+            {
+                "basic_actions": [basic_actions] * len(action_probs),
+                "action_probability": action_probs,
+            }
+        )
+        df = df.apply(pd.Series.explode).reset_index().rename(columns={'index': 'step_in_game'})
+        return TensorboardAltairPlotter._action_chart(df, "basic_actions", max_size)
+
 
     def on_game_over(self, player: 'Player', ranking: int):
         self.update_gamestate(player, None, 3.5 - ranking)
@@ -104,28 +137,32 @@ class TensorboardAltairPlotter(Parasite):
             "action": self.actions,
             "action_type": self.action_types,
         })
-        selection = alt.selection_single(name="gamestep_hover", fields=['step_in_game'], encodings=['x'], empty="none",
+        hover_selection = alt.selection_single(name="gamestep_hover", fields=['step_in_game'], encodings=['x'], empty="none",
                                          on="mousemove", nearest=True)
+        legend_selection = alt.selection_multi(name="scalar_legend", fields=['variable'], bind="legend")
 
         df = df.reset_index().rename(columns={'index': 'step_in_game'})
         melted = df.melt(id_vars=['step_in_game', 'action', 'action_type', 'turn_count'], value_name='value')
         base = alt.Chart(melted)
 
-        rule = base.transform_filter(selection).mark_rule().encode(alt.X('step_in_game'))
+        rule = base.transform_filter(hover_selection).mark_rule().encode(alt.X('step_in_game'))
         value_base = base.encode(
             alt.X('step_in_game:Q'),
-            tooltip=['step_in_game', 'action', 'variable', 'value'],
             color=alt.Color('variable'),
+            opacity=alt.condition(legend_selection, alt.value(1), alt.value(0.2)),
         ).properties(width=1000)
 
         point_chart = value_base.mark_point(
-        ).encode(alt.Y('value'), opacity=alt.condition(selection, alt.value(1),
-                                                       alt.value(0)
-                                                       )).add_selection(
-            selection)
+
+        ).encode(
+            alt.Y('value'),
+            opacity=alt.condition(hover_selection, alt.value(1), alt.value(0)),
+            tooltip=['step_in_game', 'action', 'variable', 'value']
+        ).add_selection(
+            hover_selection).add_selection(legend_selection)
         text_chart = value_base.mark_text(align='left', dx=5, dy=-7
                                           ).encode(alt.Y('value'),
-                                                   text=alt.condition(selection,
+                                                   text=alt.condition(hover_selection,
                                                                       alt.Text('value:Q',
                                                                                format='.3'),
                                                                       alt.value('')))
@@ -164,12 +201,13 @@ class TensorboardAltairPlotter(Parasite):
             opacity=alt.condition((alt.datum.step_in_game == alt.datum.looked_up_step), alt.value(1), alt.value(0.4))
         ).properties(width=999)
 
-        board_chart = self._card_list_chart('board', self.boards, self.sell_probs, selection).properties(title='On Board', width=400)
-        hand_chart = self._card_list_chart('hand', self.hands, self.summon_probs, selection).properties(title='In Hand', width=400)
-        store_chart = self._card_list_chart('store', self.stores, self.buy_probs, selection).properties(title='In Store', width=400)
+        basic_action_chart = self._player_action_chart(self.basic_action_probs, len(hearthstone_state_encoder.ALL_ACTIONS.player_action_set)).properties(title='Basic Actions', width=400)
+        board_chart = self._card_list_chart('board', self.boards, self.sell_probs, 7).properties(title='On Board', width=400)
+        hand_chart = self._card_list_chart('hand', self.hands, self.summon_probs, 10).properties(title='In Hand', width=400)
+        store_chart = self._card_list_chart('store', self.stores, self.buy_probs, 7).properties(title='In Store', width=400)
 
-        left_chart = alt.vconcat(game_progression_chart, action_chart).resolve_legend('independent')
-        right_chart = alt.vconcat(board_chart, hand_chart, store_chart).resolve_legend('shared')
+        left_chart = alt.vconcat(game_progression_chart, action_chart).resolve_scale(color='independent')
+        right_chart = alt.vconcat(basic_action_chart, board_chart, hand_chart, store_chart).resolve_legend('shared')
         full_chart = alt.hconcat(left_chart, right_chart)
         json = full_chart.to_json()
 
