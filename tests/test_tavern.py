@@ -2267,6 +2267,23 @@ class CardTests(unittest.TestCase):
         player_1.hero_power(board_index=BoardIndex(0))
         self.assertEqual(player_1.in_play[0].tier, noted_tier)
 
+    def test_AFKay(self):
+        tavern = Tavern()
+        player_1 = tavern.add_player_with_hero("Dante_Kong", AFKay())
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.buying_step()
+        self.assertEqual(player_1.coins, 0)
+        self.assertEqual(len(player_1.triple_rewards), 0)
+        tavern.combat_step()
+        tavern.buying_step()
+        self.assertEqual(player_1.coins, 0)
+        self.assertEqual(len(player_1.triple_rewards), 0)
+        tavern.combat_step()
+        tavern.buying_step()
+        self.assertEqual(len(player_1.triple_rewards), 2)
+        for reward in player_1.triple_rewards:
+            self.assertEqual(reward.level, 3)
+
 
 if __name__ == '__main__':
     unittest.main()

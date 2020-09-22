@@ -14,7 +14,7 @@ HeroType = make_metaclass(VALHALLA.append, ("Hero", "EmptyHero"))
 
 
 class Hero(metaclass=HeroType):
-    power_cost: Optional[int] = None
+    power_cost = 0
     hero_power_used = False
     can_use_power = True
     current_type = None

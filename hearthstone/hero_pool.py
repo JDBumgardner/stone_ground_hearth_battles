@@ -6,6 +6,7 @@ from hearthstone.events import BuyPhaseContext, CombatPhaseContext, EVENTS, Card
 from hearthstone.hero import Hero
 from hearthstone.monster_types import MONSTER_TYPES
 from hearthstone.player import BoardIndex, StoreIndex
+from hearthstone.triple_reward_card import TripleRewardCard
 
 
 class Pyramad(Hero):
@@ -369,3 +370,18 @@ class Malygos(Hero):
         random_minion = context.randomizer.select_gain_card(same_tier_minions)
         context.owner.tavern.deck.remove_card(random_minion)
         context.owner.in_play.insert(board_index, random_minion)
+
+
+class AFKay(Hero):
+    def hero_power_valid_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                              store_index: Optional['StoreIndex'] = None):
+        return False
+
+    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.BUY_START:
+            if context.owner.tavern.turn_count in (0, 1):
+                context.owner.coins = 0
+            elif context.owner.tavern.turn_count == 2:
+                for _ in range(2):
+                    context.owner.triple_rewards.append(TripleRewardCard(3))
+
