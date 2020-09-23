@@ -1,11 +1,12 @@
 from typing import Union, Tuple, Optional
 
 from hearthstone.card_pool import Amalgam
-from hearthstone.cards import one_minion_per_type, CardLocation
+from hearthstone.cards import one_minion_per_type, CardLocation, PrintingPress
 from hearthstone.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
 from hearthstone.hero import Hero
 from hearthstone.monster_types import MONSTER_TYPES
 from hearthstone.player import BoardIndex, StoreIndex
+from hearthstone.triple_reward_card import TripleRewardCard
 
 
 class Pyramad(Hero):
@@ -336,4 +337,17 @@ class ArchVillianRafaam(Hero):
         if event.event is EVENTS.DIES and event.card in context.enemy_war_party.board and self.hero_power_used:
             if len(context.enemy_war_party.dead_minions) == 1 and context.friendly_war_party.owner.room_in_hand():
                 context.friendly_war_party.owner.gain_card(type(event.card)())
+
+
+class AFKay(Hero):
+
+    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.BUY_START:
+            if context.owner.tavern.turn_count <= 2:
+                context.owner.coins = 0
+            if context.owner.tavern.turn_count == 2:
+                tier_three_monsters = [card_type for card_type in PrintingPress.all_types() if card_type.tier == 3]
+                for _ in range(2):
+                    context.owner.triple_rewards.append(TripleRewardCard(3))
+
 
