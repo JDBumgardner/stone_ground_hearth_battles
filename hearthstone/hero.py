@@ -14,7 +14,7 @@ HeroType = make_metaclass(VALHALLA.append, ("Hero", "EmptyHero"))
 
 
 class Hero(metaclass=HeroType):
-    power_cost = 2
+    power_cost: Optional[int] = None
     hero_power_used = False
     can_use_power = True
     current_type = None
@@ -53,6 +53,8 @@ class Hero(metaclass=HeroType):
 
     def hero_power_valid(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                          store_index: Optional['StoreIndex'] = None):
+        if self.power_cost is None:
+            return False
         if context.owner.coins < self.power_cost:
             return False
         if self.hero_power_used:

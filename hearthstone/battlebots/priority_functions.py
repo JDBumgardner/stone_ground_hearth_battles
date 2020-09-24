@@ -171,3 +171,33 @@ class PriorityFunctions:
             return score
 
         return priority_function_bot(["Adam Salwen"], priority, seed)
+
+    @staticmethod
+    def priority_pack_leader_bot(seed: int, priority_function_bot: Callable, monster_type: str = None):
+        def priority(player: 'Player', card: 'MonsterCard'):
+            if type(card) is PackLeader:
+                return 20
+
+            score = card.health + card.attack + card.tier
+            pack_leader_on_board = [card for card in player.in_play if type(card) is PackLeader]
+            if pack_leader_on_board and card.monster_type is MONSTER_TYPES.BEAST:
+                score += 10
+                if card.deathrattles:
+                    score += 5
+            return score
+
+        return priority_function_bot(["Ethan Saxenian"], priority, seed)
+
+    @staticmethod
+    def priority_togwaggle_bot(seed: int, priority_function_bot: Callable, monster_type: str = None):
+        def priority(player: 'Player', card: 'MonsterCard'):
+            if type(card) is WaxriderTogwaggle:
+                return 20
+
+            score = card.health + card.attack + card.tier
+            togwaggle_on_board = [card for card in player.in_play if type(card) is WaxriderTogwaggle]
+            if togwaggle_on_board and card.monster_type is MONSTER_TYPES.DRAGON:
+                score += 10
+            return score
+
+        return priority_function_bot(["Ethan Saxenian"], priority, seed)

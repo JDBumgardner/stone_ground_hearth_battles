@@ -31,8 +31,6 @@ class RoundRobinHost(Host):
         self.agents = agents
         for player_name in agents.keys():
             self.tavern.add_player(player_name)
-
-
         for player_name, player in self.tavern.players.items():
             player.choose_hero(trio.run(self.agents[player_name].hero_choice_action, player))
 
