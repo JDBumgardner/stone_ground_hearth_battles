@@ -7,7 +7,8 @@ import trueskill
 
 from hearthstone.agent import Agent
 from hearthstone.battlebots.cheapo_bot import CheapoBot
-from hearthstone.battlebots.get_bot_contestants import get_priority_bot_contestant_tuples
+from hearthstone.battlebots.get_bot_contestants import get_priority_bot_contestant_tuples, \
+    get_priority_heuristics_bot_contestant_tuples
 from hearthstone.battlebots.no_action_bot import NoActionBot
 from hearthstone.battlebots.random_bot import RandomBot
 from hearthstone.battlebots.saurolisk_bot import SauroliskBot
@@ -79,6 +80,7 @@ def all_contestants():
                  enumerate([MONSTER_TYPES.MURLOC, MONSTER_TYPES.BEAST, MONSTER_TYPES.MECH, MONSTER_TYPES.DRAGON, MONSTER_TYPES.DEMON, MONSTER_TYPES.PIRATE])]
     all_bots += [Contestant("SauroliskBot", lambda: SauroliskBot(5))]
     all_bots += [Contestant(name, lambda: bot) for name, bot in get_priority_bot_contestant_tuples()]
+    all_bots += [Contestant(name, lambda: bot) for name, bot in get_priority_heuristics_bot_contestant_tuples()]
     return all_bots
 
 
