@@ -78,23 +78,6 @@ def all_contestants():
     all_bots += [Contestant(f"SupremacyUpgradeBot {t}", lambda: SupremacyBot(t, True, i)) for i, t in
                  enumerate([MONSTER_TYPES.MURLOC, MONSTER_TYPES.BEAST, MONSTER_TYPES.MECH, MONSTER_TYPES.DRAGON, MONSTER_TYPES.DEMON, MONSTER_TYPES.PIRATE])]
     all_bots += [Contestant("SauroliskBot", lambda: SauroliskBot(5))]
-    # all_bots += [Contestant("PriorityHealthAttackBot", attack_health_priority_bot(6))]
-    # all_bots += [Contestant(f"PriorityRacistBot {t}", racist_priority_bot(t, i)) for i, t in
-    #              enumerate([MONSTER_TYPES.MURLOC, MONSTER_TYPES.BEAST, MONSTER_TYPES.MECH, MONSTER_TYPES.DRAGON, MONSTER_TYPES.DEMON, MONSTER_TYPES.PIRATE])]
-    # all_bots += [Contestant("PrioritySauroliskBot", priority_saurolisk_bot(8))]
-    # # all_bots += [Contestant("PriorityHealthAttackTriplerBot", attack_health_tripler_priority_bot(9))]
-    # all_bots += [Contestant("PriorityAdaptiveTriplerBot", priority_adaptive_tripler_bot(10))]
-    # all_bots += [Contestant("PriorityHeathTriplerBot", priority_health_tripler_bot(11))]
-    # all_bots += [Contestant("PriorityAttackTriplerBot", priority_attack_tripler_bot(12))]
-    # all_bots += [Contestant("BattleRattlerPriorityBot", battlerattler_priority_bot(13))]
-    # all_bots += [Contestant("PogoHopperPriorityBot", priority_pogo_hopper_bot(14))]
-    # learned_bot_1 = LearnedPriorityBot(None, 0, 15)
-    # learned_bot_1.read_from_file("../../data/learning/priority_bot.1.json")
-    # all_bots += [Contestant("LearnedPriorityBot1", learned_bot_1)]
-    # all_bots += [Contestant("priority_st_ad_tr_bot", priority_st_ad_tr_bot(16))]
-    # all_bots += [Contestant("PriorityBuffSauroliskBot", priority_saurolisk_buff_bot(17))]
-    # all_bots += [Contestant("PriorityBuffSauroliskBot", priority_saurolisk_buff_bot(18))]
-    #
     all_bots += [Contestant(name, lambda: bot) for name, bot in get_priority_bot_contestant_tuples()]
     return all_bots
 

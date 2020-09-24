@@ -201,3 +201,15 @@ class PriorityFunctions:
             return score
 
         return priority_function_bot(["Ethan Saxenian"], priority, seed)
+
+    @staticmethod
+    def priority_callables_bot(seed: int, priority_function_bot: Callable, monster_type: str = None,
+                               modifiers_list: List[Callable] = None):
+        def priority(player: 'Player', card: 'MonsterCard'):
+            modifier = 0
+            for modifier_function in modifiers_list:
+                modifier += modifier_function.get_modification(player, card)
+            score = card.health + card.attack + card.tier + modifier
+            return score
+
+        return priority_function_bot(["Jacob Bumgardner"], priority, seed)
