@@ -49,6 +49,8 @@ class Player:
         self.minion_cost = 3
         self.gold_coins = 0
         self.bananas = 0
+        self.purchased_minions: List['Type'] = []
+        self.last_opponent_warband: List['MonsterCard'] = []
 
     @property
     def coins(self):
@@ -80,6 +82,9 @@ class Player:
         #  refresh the store
         #  sell monsters
         #  set fight ready
+
+    def reset_purchase_minions_list(self):
+        self.purchased_minions = []
 
     def apply_turn_start_income(self):
         self.coins = self.coin_income_rate
@@ -194,6 +199,7 @@ class Player:
         event = events.BuyEvent(card)
         self.broadcast_buy_phase_event(event)
         self.check_golden(type(card))
+        self.purchased_minions.append(type(card))
 
     def valid_purchase(self, index: 'StoreIndex') -> bool:
         if not self.valid_store_index(index):

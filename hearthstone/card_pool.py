@@ -1655,7 +1655,7 @@ class FoeReaper4000(MonsterCard):
     monster_type = MONSTER_TYPES.MECH
     base_attack = 6
     base_health = 9
-    base_cleave = True
+    base_cleave = True  # TODO: need to implement cleave as an on-damage effect
     legendary = True
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
@@ -1749,3 +1749,63 @@ class FinkleEinhorn(MonsterCard):
     base_attack = 3
     base_health = 3
     token = True
+
+
+class SouthseaStrongarm(MonsterCard):
+    tier = 4
+    monster_type = MONSTER_TYPES.PIRATE
+    base_attack = 5
+    base_health = 4
+    num_battlecry_targets = [1]
+
+    def base_battlecry(self, targets: List['MonsterCard'], context: 'BuyPhaseContext'):
+        if targets:
+            num_purchased_pirates = len([card_type for card_type in context.owner.purchased_minions if
+                                         card_type.check_type(MONSTER_TYPES.PIRATE)])
+            bonus = num_purchased_pirates * (2 if self.golden else 1)
+            targets[0].attack += bonus
+            targets[0].health += bonus
+
+    def valid_battlecry_target(self, card: 'MonsterCard') -> bool:
+        return card.check_type(MONSTER_TYPES.PIRATE)
+
+
+class CaveHydra(MonsterCard):
+    tier = 4
+    monster_type = MONSTER_TYPES.BEAST
+    base_attack = 2
+    base_health = 4
+    base_cleave = True  # TODO: need to implement cleave as an on-damage effect
+
+    # TODO: combat test
+
+
+class PrimalfinLookout(MonsterCard):
+    tier = 4
+    monster_type = MONSTER_TYPES.MURLOC
+    base_attack = 3
+    base_health = 2
+
+    def base_battlecry(self, targets: List['MonsterCard'], context: 'BuyPhaseContext'):
+        murloc_in_play = [card for card in context.owner.in_play if card.check_type(MONSTER_TYPES.MURLOC)]
+        if murloc_in_play:
+            num_discovers = 2 if self.golden else 1
+            for _ in range(num_discovers):
+                context.owner.draw_discover(lambda card: card.check_type(MONSTER_TYPES.MURLOC))
+                # TODO: currently a golden primalfin will add 6 cards to the discovered cards list instead of two separate discovers
+                # TODO: need to trigger a discover choice action every time draw_discover is called
+
+
+class Murozond(MonsterCard):
+    tier = 5
+    monster_type = MONSTER_TYPES.DRAGON
+    base_attack = 5
+    base_health = 5
+
+    def base_battlecry(self, targets: List['MonsterCard'], context: 'BuyPhaseContext'):
+        if context.owner.last_opponent_warband:
+            card = context.randomizer.select_gain_card(context.owner.last_opponent_warband)
+            plain_copy = type(card)()
+            if self.golden:
+                plain_copy.golden_transformation([])
+            context.owner.gain_card(plain_copy)

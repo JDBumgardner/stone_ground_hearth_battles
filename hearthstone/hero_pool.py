@@ -333,3 +333,14 @@ class AFKay(Hero):
                 for _ in range(2):
                     context.owner.triple_rewards.append(TripleRewardCard(3))
 
+
+class EdwinVanCleef(Hero):
+    power_cost = 1
+    power_target_location = CardLocation.BOARD
+
+    def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                        store_index: Optional['StoreIndex'] = None):
+        bonus = len(context.owner.purchased_minions)
+        context.owner.in_play[board_index].attack += bonus
+        context.owner.in_play[board_index].health += bonus
+

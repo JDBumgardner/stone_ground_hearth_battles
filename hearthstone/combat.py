@@ -108,6 +108,8 @@ def fight_boards(war_party_1: 'WarParty', war_party_2: 'WarParty', randomizer: '
             break
         attacking_war_party, defending_war_party = defending_war_party, attacking_war_party
     damage(war_party_1, war_party_2, randomizer)
+    war_party_1.owner.last_opponent_warband = war_party_2.owner.in_play
+    war_party_2.owner.last_opponent_warband = war_party_1.owner.in_play
 
 
 def damage(half_board_1: 'WarParty', half_board_2: 'WarParty', randomizer: 'Randomizer'):
