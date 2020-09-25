@@ -49,6 +49,8 @@ class Player:
         self.minion_cost = 3
         self.gold_coins = 0
         self.bananas = 0
+        self.purchased_minions: List['Type'] = []
+        self.last_opponent_warband: List['MonsterCard'] = []
 
     @property
     def coins(self):
@@ -80,6 +82,9 @@ class Player:
         #  refresh the store
         #  sell monsters
         #  set fight ready
+
+    def reset_purchase_minions_list(self):
+        self.purchased_minions = []
 
     def apply_turn_start_income(self):
         self.coins = self.coin_income_rate
@@ -182,7 +187,8 @@ class Player:
             self.frozen = False
         else:
             self.return_cards()
-        number_of_cards = 3 + self.tavern_tier // 2 - len(self.store)
+        number_of_cards = self.hero.minions_in_tavern if self.hero.minions_in_tavern is not None \
+            else 3 + self.tavern_tier // 2 - len(self.store)
         self.store.extend([self.tavern.deck.draw(self) for _ in range(number_of_cards)])
 
     def purchase(self, index: StoreIndex):
@@ -194,6 +200,7 @@ class Player:
         event = events.BuyEvent(card)
         self.broadcast_buy_phase_event(event)
         self.check_golden(type(card))
+        self.purchased_minions.append(type(card))
 
     def valid_purchase(self, index: 'StoreIndex') -> bool:
         if not self.valid_store_index(index):
@@ -220,8 +227,9 @@ class Player:
     def reroll_store(self):
         assert self.valid_reroll()
         self.coins -= self.refresh_store_cost
-        self.return_cards()
         self.draw()
+        self.broadcast_buy_phase_event(events.RefreshStoreEvent())
+
 
     def valid_reroll(self) -> bool:
         return self.coins >= self.refresh_store_cost

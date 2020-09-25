@@ -8,7 +8,7 @@ from hearthstone import events
 from hearthstone.card_factory import make_metaclass
 from hearthstone.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
 from hearthstone.monster_types import MONSTER_TYPES
-from hearthstone.randomizer import Randomizer
+from hearthstone.randomizer import Randomizer, DefaultRandomizer
 
 if typing.TYPE_CHECKING:
     from hearthstone.adaptations import Adaptation
@@ -318,6 +318,11 @@ class CardList:
         cards_by_type = {type(card): card for card in self.all_cards()}
         return list(cards_by_type.values())
 
+    def cards_of_monstertype(self, monster_type: 'MONSTER_TYPES'):
+        return [card for card in self.all_cards() if card.check_type(monster_type)]
+
+    def cards_with_battlecry(self):
+        return [card for card in self.all_cards() if card.base_battlecry]
 
 class CardLocation(enum.Enum):
     STORE = 1

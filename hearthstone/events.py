@@ -28,6 +28,7 @@ class EVENTS(enum.Enum):
     AFTER_ATTACK_DEATHRATTLES = 15
     END_COMBAT = 16
     TAVERN_UPGRADE = 17
+    REFRESHED_STORE = 18
 
 
 class CardEvent:
@@ -91,6 +92,9 @@ class BuyEvent(CardEvent):
         super().__init__(EVENTS.BUY)
         self.card = card
 
+class RefreshStoreEvent(CardEvent):
+    def __init__(self):
+        super().__init__(EVENTS.REFRESHED_STORE)
 
 class BuyEndEvent(CardEvent):
     def __init__(self):
