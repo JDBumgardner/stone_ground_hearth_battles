@@ -35,7 +35,7 @@ class Player:
         self.tavern_tier = 1
         self._coins = 0
         self.triple_rewards = []
-        self.discovered_cards: List[MonsterCard] = []
+        self.discover_queue: List[List['MonsterCard']] = []
         self.maximum_board_size = 7
         self.maximum_hand_size = 10
         self.refresh_store_cost = 1
@@ -160,18 +160,20 @@ class Player:
 
     def draw_discover(self, predicate: Callable[[Card], bool]): #TODO: Jarett help make discoverables unique are cards with more copies in the deck more likely to be discovered?
         discoverables = [card for card in self.tavern.deck.all_cards() if predicate(card)]
+        discovered_cards = []
         for _ in range(3):
-            self.discovered_cards.append(self.tavern.randomizer.select_discover_card(discoverables))
-            discoverables.remove(self.discovered_cards[-1])
-            self.tavern.deck.remove_card(self.discovered_cards[-1])
+            discovered_cards.append(self.tavern.randomizer.select_discover_card(discoverables))
+            discoverables.remove(discovered_cards[-1])
+            self.tavern.deck.remove_card(discovered_cards[-1])
+        self.discover_queue.append(discovered_cards)
 
-    def select_discover(self, card: Card):
-        assert (card in self.discovered_cards)
+    def select_discover(self, card: 'Card'):
+        assert (card in self.discover_queue[0])
         assert (isinstance(card, MonsterCard))
-        self.discovered_cards.remove(card)
+        self.discover_queue[0].remove(card)
         self.gain_card(card)
-        self.tavern.deck.return_cards(itertools.chain.from_iterable([card.dissolve() for card in self.discovered_cards]))
-        self.discovered_cards = []
+        self.tavern.deck.return_cards(itertools.chain.from_iterable([card.dissolve() for card in self.discover_queue[0]]))
+        self.discover_queue.pop(0)
 
     def summon_from_void(self, monster: MonsterCard):
         if self.room_on_board():

@@ -406,10 +406,10 @@ class CardTests(unittest.TestCase):
         player_1.summon_from_hand(HandIndex(0))
         self.assertEqual([card.level for card in player_1.triple_rewards], [2])
         player_1.play_triple_rewards()
-        player_1.select_discover(player_1.discovered_cards[0])
+        player_1.select_discover(player_1.discover_queue[0][0])
         print(f"Player 1's hand is: {player_1.hand}")
         self.assertCardListEquals(player_1.hand, [FreedealingGambler])
-        self.assertCardListEquals(player_1.discovered_cards, [])
+        self.assertCardListEquals(player_1.discover_queue, [])
 
     class TestDiscoverGoldenRandomizer(DefaultRandomizer):
         def select_draw_card(self, cards: List[Card], player_name: str, round_number: int) -> Card:
@@ -440,7 +440,7 @@ class CardTests(unittest.TestCase):
         player_1.purchase(StoreIndex(0))
         player_1.purchase(StoreIndex(0))
         player_1.play_triple_rewards()
-        player_1.select_discover(player_1.discovered_cards[0])
+        player_1.select_discover(player_1.discover_queue[0][0])
         print(player_1.hand)
         self.assertCardListEquals(player_1.hand, [FreedealingGambler])
         self.assertEqual(player_1.hand[0].golden, True)
@@ -2331,8 +2331,8 @@ class CardTests(unittest.TestCase):
         player_1.purchase(StoreIndex(0))
         player_1.summon_from_hand(HandIndex(0))
         self.assertCardListEquals(player_1.in_play, [MurlocTidecaller, PrimalfinLookout])
-        self.assertEqual(len(player_1.discovered_cards), 3)
-        for card in player_1.discovered_cards:
+        self.assertEqual(len(player_1.discover_queue[0]), 3)
+        for card in player_1.discover_queue[0]:
             self.assertTrue(card.check_type(MONSTER_TYPES.MURLOC))
 
     def test_golden_primalfin(self):
@@ -2353,7 +2353,7 @@ class CardTests(unittest.TestCase):
         player_1.summon_from_hand(HandIndex(0))
         self.assertCardListEquals(player_1.in_play, [MurlocTidecaller, PrimalfinLookout])
         self.assertTrue(player_1.in_play[1].golden)
-        print(len(player_1.discovered_cards))  # TODO: prints 6... should be two separate discovers
+        self.assertEqual(len(player_1.discover_queue), 2)
 
     def test_murozond(self):
         tavern = Tavern()

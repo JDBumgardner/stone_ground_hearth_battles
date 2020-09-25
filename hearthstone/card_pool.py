@@ -1791,9 +1791,7 @@ class PrimalfinLookout(MonsterCard):
         if murloc_in_play:
             num_discovers = 2 if self.golden else 1
             for _ in range(num_discovers):
-                context.owner.draw_discover(lambda card: card.check_type(MONSTER_TYPES.MURLOC))
-                # TODO: currently a golden primalfin will add 6 cards to the discovered cards list instead of two separate discovers
-                # TODO: need to trigger a discover choice action every time draw_discover is called
+                context.owner.draw_discover(lambda card: card.check_type(MONSTER_TYPES.MURLOC) and card.tier <= context.owner.tavern_tier)
 
 
 class Murozond(MonsterCard):

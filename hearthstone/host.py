@@ -44,7 +44,7 @@ class RoundRobinHost(Host):
                 action = trio.run(agent.buy_phase_action, player)
                 yield
                 action.apply(player)
-                if player.discovered_cards:
+                if player.discover_queue:
                     discovered_card = trio.run(agent.discover_choice_action, player)
                     player.select_discover(discovered_card)
 
@@ -106,7 +106,7 @@ class AsyncHost(Host):
 
         async def perform_player_actions(agent, player):
             for _ in range(20):
-                if player.discovered_cards:
+                if player.discover_queue:
                     discovered_card = await agent.discover_choice_action(player)
                     player.select_discover(discovered_card)
                 else:

@@ -23,4 +23,4 @@ class RandomBot(Agent):
         return self.local_random.choice(all_actions)
 
     async def discover_choice_action(self, player: 'Player') -> 'Card':
-        return self.local_random.choice(player.discovered_cards)
+        return self.local_random.choice(player.discover_queue[0])

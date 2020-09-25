@@ -38,5 +38,5 @@ class PytorchBot(Agent):
         return player.in_play
 
     async def discover_choice_action(self, player: 'Player') -> 'Card':
-        return random.choice(player.discovered_cards)
+        return random.choice(player.discover_queue[0])
 

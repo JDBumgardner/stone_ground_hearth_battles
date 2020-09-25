@@ -16,4 +16,4 @@ class NoActionBot(Agent):
         return EndPhaseAction(True)
 
     async def discover_choice_action(self, player: 'Player') -> 'Card':
-        return player.discovered_cards[0]
+        return player.discover_queue[0][0]

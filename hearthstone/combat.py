@@ -19,7 +19,7 @@ class WarParty:
     #  (HalfBoard)
     def __init__(self, player: 'Player'):
         self.owner = player
-        self.board = [copy.copy(card) for card in player.in_play]
+        self.board = copy.deepcopy(player.in_play)
         self.next_attacker_idx = 0
         self.dead_minions: List[MonsterCard] = []
 
@@ -108,8 +108,8 @@ def fight_boards(war_party_1: 'WarParty', war_party_2: 'WarParty', randomizer: '
             break
         attacking_war_party, defending_war_party = defending_war_party, attacking_war_party
     damage(war_party_1, war_party_2, randomizer)
-    war_party_1.owner.last_opponent_warband = war_party_2.owner.in_play
-    war_party_2.owner.last_opponent_warband = war_party_1.owner.in_play
+    war_party_1.owner.last_opponent_warband = copy.deepcopy(war_party_2.owner.in_play)
+    war_party_2.owner.last_opponent_warband = copy.deepcopy(war_party_1.owner.in_play)
 
 
 def damage(half_board_1: 'WarParty', half_board_2: 'WarParty', randomizer: 'Randomizer'):

@@ -34,6 +34,6 @@ class CheapoBot(Agent):
         return EndPhaseAction(False)
 
     async def discover_choice_action(self, player: 'Player') -> 'Card':
-        discover_cards = player.discovered_cards
+        discover_cards = player.discover_queue[0]
         discover_cards = sorted(discover_cards, key=lambda card: card.tier)
         return discover_cards[0]
