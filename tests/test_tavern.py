@@ -2398,5 +2398,34 @@ class CardTests(unittest.TestCase):
         self.assertTrue(player_1.hand[0].golden)
 
 
+    def test_aranna_starseeker(self):
+        tavern = Tavern()
+        player_1 = tavern.add_player_with_hero("Dante_Kong", ArannaStarseeker())
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.buying_step()
+        for _ in range(3):
+            player_1.reroll_store()
+        tavern.combat_step()
+        tavern.buying_step()
+        for _ in range(2):
+            player_1.reroll_store()
+        self.assertEqual(7, len(player_1.store))
+
+    class DinotamerBrannRandomizer(DefaultRandomizer):
+
+        def select_draw_card(self, cards: List['Card'], player_name: str, round_number: int) -> 'Card':
+            for card in cards:
+                assert card.base_battlecry
+            return self.rand.choice(cards)
+
+    def test_dinotamer_brann(self):
+        tavern = Tavern()
+        player_1 = tavern.add_player_with_hero("Dante_Kong", DinotamerBrann())
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.buying_step()
+        tavern.randomizer = self.DinotamerBrannRandomizer()
+        player_1.hero_power()
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -344,3 +344,22 @@ class EdwinVanCleef(Hero):
         context.owner.in_play[board_index].attack += bonus
         context.owner.in_play[board_index].health += bonus
 
+
+class ArannaStarseeker(Hero):
+
+    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.REFRESHED_STORE:
+            self.total_rerolls += 1
+            if self.total_rerolls == 4:
+                self.minions_in_tavern = 7
+
+
+class DinotamerBrann(Hero):
+    power_cost = 1
+
+    def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                        store_index: Optional['StoreIndex'] = None):
+        context.owner.return_cards()
+        number_of_cards = 3 + context.owner.tavern_tier // 2 - len(context.owner.store)
+        battlecry_monsters = context.owner.tavern.deck.cards_with_battlecry()
+        context.owner.store.extend([context.randomizer.select_add_to_store(battlecry_monsters) for _ in range(number_of_cards)])

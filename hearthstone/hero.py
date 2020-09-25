@@ -20,6 +20,8 @@ class Hero(metaclass=HeroType):
     current_type = None
     buy_counter = 0
     digs_left = 5
+    minions_in_tavern = None
+    total_rerolls = 0
     power_target_location: Optional['CardLocation'] = None
 
     def __repr__(self):
