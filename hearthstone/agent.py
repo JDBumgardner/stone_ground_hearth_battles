@@ -159,6 +159,32 @@ class RedeemGoldCoinAction(Action):
         return player.gold_coins >= 1
 
 
+class BananaAction(Action):
+    def __init__(self, board_target: Optional['BoardIndex'] = None, store_target: Optional['StoreIndex'] = None):
+        self.board_target = board_target
+        self.store_target = store_target
+
+    def __repr__(self):
+        return f"Banana({self.board_target}, {self.store_target})"
+
+    def apply(self, player: 'Player'):
+        player.use_banana(self.board_target, self.store_target)
+
+    def valid(self, player: 'Player') -> bool:
+        return player.valid_use_banana(self.board_target, self.store_target)
+
+
+class RecruitmentMapAction(Action):
+    def __repr__(self):
+        return f"RecruitmentMap()"
+
+    def apply(self, player: 'Player'):
+        player.play_recruitment_map()
+
+    def valid(self, player: 'Player') -> bool:
+        return player.valid_play_recruitment_map()
+
+
 class Agent:
     async def hero_choice_action(self, player: 'Player') -> 'Hero':
         return player.hero_options[0]

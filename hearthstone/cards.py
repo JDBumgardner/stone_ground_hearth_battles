@@ -324,6 +324,7 @@ class CardList:
     def cards_with_battlecry(self):
         return [card for card in self.all_cards() if card.base_battlecry]
 
+
 class CardLocation(enum.Enum):
     STORE = 1
     HAND = 2

@@ -6,7 +6,7 @@ from hearthstone.events import BuyPhaseContext, CombatPhaseContext, EVENTS, Card
 from hearthstone.hero import Hero
 from hearthstone.monster_types import MONSTER_TYPES
 from hearthstone.player import BoardIndex, StoreIndex
-from hearthstone.triple_reward_card import TripleRewardCard
+from hearthstone.special_cards import TripleRewardCard, RecruitmentMap
 
 
 class Pyramad(Hero):
@@ -363,3 +363,36 @@ class DinotamerBrann(Hero):
         number_of_cards = 3 + context.owner.tavern_tier // 2 - len(context.owner.store)
         battlecry_monsters = context.owner.tavern.deck.cards_with_battlecry()
         context.owner.store.extend([context.randomizer.select_add_to_store(battlecry_monsters) for _ in range(number_of_cards)])
+
+
+class Alexstrasza(Hero):
+    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.TAVERN_UPGRADE and context.owner.tavern_tier == 5:
+            for _ in range(2):
+                context.owner.draw_discover(lambda card: card.check_type(MONSTER_TYPES.DRAGON))
+
+
+class KingMukla(Hero):
+    power_cost = 1
+
+    def hero_power_valid_impl(self, context: BuyPhaseContext, board_index: Optional['BoardIndex'] = None,
+                              store_index: Optional['StoreIndex'] = None):
+        return context.owner.room_in_hand()
+
+    def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                        store_index: Optional['StoreIndex'] = None):
+        for _ in range(2):
+            if context.owner.room_in_hand():
+                context.owner.bananas += 1
+
+    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.BUY_END and self.hero_power_used:
+            for player in context.owner.tavern.players.values():
+                if player != context.owner and player.room_in_hand():
+                    player.bananas += 1
+
+
+class EliseStarseeker(Hero):
+    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.TAVERN_UPGRADE and context.owner.room_in_hand():
+            context.owner.recruitment_maps.append(RecruitmentMap(context.owner.tavern_tier))

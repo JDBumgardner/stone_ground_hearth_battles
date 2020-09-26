@@ -2,10 +2,9 @@ import enum
 from typing import Dict
 
 from hearthstone import combat, hero, events
-from hearthstone.events import EVENTS, CardEvent
 from hearthstone.cards import CardList, PrintingPress
 from hearthstone.combat import WarParty
-from hearthstone.hero import Hero, EmptyHero
+from hearthstone.hero import Hero
 from hearthstone.player import Player
 from hearthstone.randomizer import DefaultRandomizer
 
@@ -14,7 +13,7 @@ class Tavern:
     def __init__(self):
         self.players: Dict[str, Player] = {}
         self.deck: CardList = PrintingPress.make_cards()
-        self.hero_pool = [hero_type() for hero_type in hero.VALHALLA * 3]
+        self.hero_pool = [hero_type() for hero_type in hero.VALHALLA]
         self.turn_count = 0
         self.current_player_pairings = []
         self.randomizer = DefaultRandomizer()

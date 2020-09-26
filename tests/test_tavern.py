@@ -2354,6 +2354,12 @@ class CardTests(unittest.TestCase):
         self.assertCardListEquals(player_1.in_play, [MurlocTidecaller, PrimalfinLookout])
         self.assertTrue(player_1.in_play[1].golden)
         self.assertEqual(len(player_1.discover_queue), 2)
+        player_1.play_triple_rewards()
+        self.assertEqual(len(player_1.discover_queue), 3)
+        for _ in range(3):
+            player_1.select_discover(player_1.discover_queue[0][0])
+        self.assertEqual(len(player_1.hand), 3)
+        self.assertEqual(len(player_1.discover_queue), 0)
 
     def test_murozond(self):
         tavern = Tavern()
@@ -2397,7 +2403,6 @@ class CardTests(unittest.TestCase):
         self.assertCardListEquals(player_1.hand, [Goldgrubber])
         self.assertTrue(player_1.hand[0].golden)
 
-
     def test_aranna_starseeker(self):
         tavern = Tavern()
         player_1 = tavern.add_player_with_hero("Dante_Kong", ArannaStarseeker())
@@ -2425,6 +2430,55 @@ class CardTests(unittest.TestCase):
         tavern.buying_step()
         tavern.randomizer = self.DinotamerBrannRandomizer()
         player_1.hero_power()
+
+    def test_alexstrasza(self):
+        tavern = Tavern()
+        player_1 = tavern.add_player_with_hero("Dante_Kong", Alexstrasza())
+        player_2 = tavern.add_player_with_hero("lucy")
+        self.upgrade_to_tier(tavern, 5)
+        self.assertEqual(len(player_1.discover_queue), 2)
+        for _ in range(2):
+            self.assertTrue(card.check_type(MONSTER_TYPES.DRAGON) for card in player_1.discover_queue[0])
+            player_1.select_discover(player_1.discover_queue[0][0])
+        self.assertEqual(len(player_1.hand), 2)
+        self.assertEqual(len(player_1.discover_queue), 0)
+
+    def test_king_mukla(self):
+        tavern = Tavern()
+        player_1 = tavern.add_player_with_hero("Dante_Kong", KingMukla())
+        player_2 = tavern.add_player_with_hero("lucy")
+        player_3 = tavern.add_player_with_hero("thing_1")
+        player_4 = tavern.add_player_with_hero("thing_2")
+        tavern.buying_step()
+        player_1.hero_power()
+        self.assertEqual(player_1.bananas, 2)
+        self.assertEqual(player_2.bananas, 0)
+        self.assertEqual(player_3.bananas, 0)
+        self.assertEqual(player_4.bananas, 0)
+        tavern.combat_step()
+        self.assertEqual(player_1.bananas, 2)
+        self.assertEqual(player_2.bananas, 1)
+        self.assertEqual(player_3.bananas, 1)
+        self.assertEqual(player_4.bananas, 1)
+        tavern.buying_step()
+        player_1.use_banana(store_index=StoreIndex(0))
+        player_1.use_banana(store_index=StoreIndex(0))
+        self.assertEqual(player_1.store[0].attack, player_1.store[0].base_attack + 2)
+        self.assertEqual(player_1.store[0].health, player_1.store[0].base_health + 2)
+
+    def test_elise_starseeker(self):
+        tavern = Tavern()
+        player_1 = tavern.add_player_with_hero("Dante_Kong", EliseStarseeker())
+        player_2 = tavern.add_player_with_hero("lucy")
+        self.upgrade_to_tier(tavern, 2)
+        self.assertEqual(len(player_1.recruitment_maps), 1)
+        self.assertEqual(player_1.recruitment_maps[0].level, 2)
+        tavern.buying_step()
+        player_1.play_recruitment_map()
+        self.assertEqual(len(player_1.discover_queue), 1)
+        player_1.select_discover(player_1.discover_queue[0][0])
+        self.assertEqual(len(player_1.hand), 1)
+        self.assertEqual(len(player_1.discover_queue), 0)
 
 
 if __name__ == '__main__':

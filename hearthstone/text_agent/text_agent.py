@@ -1,7 +1,8 @@
 from typing import Optional, List
 
 from hearthstone.agent import SummonAction, SellAction, EndPhaseAction, RerollAction, TavernUpgradeAction, \
-    HeroPowerAction, TripleRewardsAction, RedeemGoldCoinAction, BuyAction, Action, Agent
+    HeroPowerAction, TripleRewardsAction, RedeemGoldCoinAction, BuyAction, Action, Agent, BananaAction, \
+    RecruitmentMapAction
 from hearthstone.cards import CardLocation
 from hearthstone.hero import Hero
 from hearthstone.player import HandIndex, BoardIndex, StoreIndex, Player
@@ -74,9 +75,13 @@ class TextAgent(Agent):
         await self.print_player_card_list("board", player.in_play)
         await self.print_player_card_list("hand", player.hand)
         await self.transport.send(f"Your current triple rewards are {player.triple_rewards}\n")
+        if player.recruitment_maps:
+            await self.transport.send(f"Your current recruitment maps are {player.recruitment_maps}\n")
         await self.transport.send(f"you have {player.coins} coins and {player.health} health and your tavern is level {player.tavern_tier}\n")
         if player.gold_coins >= 1:
             await self.transport.send(f"you have {player.gold_coins} gold coins\n")
+        if player.bananas >= 1:
+            await self.transport.send(f"you have {player.bananas} bananas\n")
         await self.transport.send("available actions are: \n")
         await self.transport.send('purchase: "p 0" purchases the 0th indexed monster from the store\n')
         await self.transport.send(
@@ -86,8 +91,12 @@ class TextAgent(Agent):
         await self.transport.send(f'upgrade tavern: "u" will upgrade the tavern (current upgrade cost: {player.tavern_upgrade_cost if player.tavern_tier < 6 else 0})\n')
         await self.transport.send('hero power: "h [0]" will activate your hero power with ability target index 0 on the board or in the store\n')
         await self.transport.send('triple rewards: "t" will use your highest tavern tier triple rewards\n')
+        if player.recruitment_maps:
+            await self.transport.send(f'recruitment maps: "m" will use your highest tier recruitment map (3 coins)\n')
         if player.gold_coins >= 1:
             await self.transport.send('coin tokens: "c" will use a coin token\n')
+        if player.bananas >= 1:
+            await self.transport.send('bananas: "b b 0" will use a banana on the 0 index board minion, "b s 0" will use a banana on the 0 index store minion\n')
         await self.transport.send('end turn: "e f" ends the turn and freezes the shop, "e" ends the turn without freezing the shop\n')
         await self.transport.send("input action here: ")
         user_input = await self.transport.receive_line()
@@ -163,6 +172,20 @@ class TextAgent(Agent):
             return TripleRewardsAction()
         elif split_list[0] == "c":
             return RedeemGoldCoinAction()
+        elif split_list[0] == "b":
+            if len(split_list) != 3:
+                return None
+            index = int(split_list[2])
+            if split_list[1] == "b":
+                if not player.valid_board_index(index):
+                    return None
+                return BananaAction(board_target=BoardIndex(index))
+            elif split_list[1] == "s":
+                if not player.valid_store_index(index):
+                    return None
+                return BananaAction(store_target=StoreIndex(index))
+        elif split_list[0] == "m":
+            return RecruitmentMapAction()
         else:
             return None
 

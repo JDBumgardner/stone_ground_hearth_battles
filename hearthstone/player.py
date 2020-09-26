@@ -8,7 +8,7 @@ from hearthstone.cards import MonsterCard, Card
 from hearthstone.events import BuyPhaseContext, CardEvent
 from hearthstone.hero import EmptyHero
 from hearthstone.monster_types import MONSTER_TYPES
-from hearthstone.triple_reward_card import TripleRewardCard
+from hearthstone.special_cards import TripleRewardCard
 
 if typing.TYPE_CHECKING:
     from hearthstone.tavern import Tavern
@@ -51,6 +51,7 @@ class Player:
         self.bananas = 0
         self.purchased_minions: List['Type'] = []
         self.last_opponent_warband: List['MonsterCard'] = []
+        self.recruitment_maps = []
 
     @property
     def coins(self):
@@ -158,8 +159,8 @@ class Player:
     def valid_triple_rewards(self) -> bool:
         return bool(self.triple_rewards)
 
-    def draw_discover(self, predicate: Callable[[Card], bool]): #TODO: Jarett help make discoverables unique are cards with more copies in the deck more likely to be discovered?
-        discoverables = [card for card in self.tavern.deck.all_cards() if predicate(card)]
+    def draw_discover(self, predicate: Callable[['Card'], bool]): #TODO: Jarett help make discoverables unique are cards with more copies in the deck more likely to be discovered?
+        discoverables = [card for card in self.tavern.deck.unique_cards() if predicate(card)]
         discovered_cards = []
         for _ in range(3):
             discovered_cards.append(self.tavern.randomizer.select_discover_card(discoverables))
@@ -268,7 +269,7 @@ class Player:
             card.handle_event_in_hand(event, BuyPhaseContext(self, randomizer or self.tavern.randomizer))
 
     def hand_size(self):
-        return len(self.hand) + len(self.triple_rewards) + self.gold_coins + self.bananas
+        return len(self.hand) + len(self.triple_rewards) + self.gold_coins + self.bananas + len(self.recruitment_maps)
 
     def room_in_hand(self):
         return self.hand_size() < self.maximum_hand_size
@@ -314,3 +315,30 @@ class Player:
 
     def plus_coins(self, amt: int):
         self.coins = min(self.coins + amt, 10)
+
+    def use_banana(self, board_index: Optional['BoardIndex'] = None, store_index: Optional['StoreIndex'] = None):
+        assert self.valid_use_banana(board_index, store_index)
+        self.bananas -= 1
+        if board_index is not None:
+            self.in_play[board_index].attack += 1
+            self.in_play[board_index].health += 1
+        if store_index is not None:
+            self.store[store_index].attack += 1
+            self.store[store_index].health += 1
+
+    def valid_use_banana(self, board_index: Optional['BoardIndex'] = None, store_index: Optional['StoreIndex'] = None):
+        if board_index is not None and not self.in_play:
+            return False
+        if store_index is not None and not self.store:
+            return False
+        return True
+
+    def play_recruitment_map(self):
+        assert self.valid_play_recruitment_map()
+        map = self.recruitment_maps.pop()
+        self.coins -= map.cost
+        discover_tier = map.level
+        self.draw_discover(lambda card: card.tier == discover_tier)
+
+    def valid_play_recruitment_map(self):
+        return bool(self.recruitment_maps) and self.coins >= self.recruitment_maps[-1].cost
