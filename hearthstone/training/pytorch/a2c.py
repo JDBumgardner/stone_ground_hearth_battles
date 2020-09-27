@@ -9,11 +9,10 @@ from torch.utils.tensorboard import SummaryWriter
 
 from hearthstone.host import RoundRobinHost
 from hearthstone.ladder.ladder import Contestant, update_ratings, print_standings, save_ratings
-from hearthstone.training.pytorch.feedforward_net import HearthstoneFFNet
+from hearthstone.training.pytorch.networks.feedforward_net import HearthstoneFFNet
 from hearthstone.training.pytorch.hearthstone_state_encoder import Transition, get_indexed_action, \
     DEFAULT_PLAYER_ENCODING, DEFAULT_CARDS_ENCODING
 from hearthstone.training.pytorch.policy_gradient import easier_contestants, tensorize_batch
-from hearthstone.training.pytorch.pytorch_bot import PytorchBot
 from hearthstone.training.pytorch.replay_buffer import ReplayBuffer
 from hearthstone.training.pytorch.surveillance import SurveiledPytorchBot, ReplayBufferSaver
 

@@ -11,13 +11,13 @@ from torch.utils.tensorboard import SummaryWriter
 
 from hearthstone.host import RoundRobinHost
 from hearthstone.ladder.ladder import Contestant, update_ratings, load_ratings, print_standings
-from hearthstone.training.pytorch.feedforward_net import HearthstoneFFNet
+from hearthstone.training.pytorch.networks.feedforward_net import HearthstoneFFNet
 from hearthstone.training.pytorch.hearthstone_state_encoder import Transition, get_indexed_action, \
     DEFAULT_PLAYER_ENCODING, DEFAULT_CARDS_ENCODING
-from hearthstone.training.pytorch.policy_gradient import tensorize_batch, easy_contestants
+from hearthstone.training.pytorch.networks.transformer_net import HearthstoneTransformerNet
+from hearthstone.training.pytorch.policy_gradient import tensorize_batch, easy_contestants, easiest_contestants
 from hearthstone.training.pytorch.replay_buffer import ReplayBuffer, NormalizingReplayBuffer
-from hearthstone.training.pytorch.surveillance import SurveiledPytorchBot, ReplayBufferSaver, TensorboardGamePlotter, \
-    GlobalStepContext
+from hearthstone.training.pytorch.surveillance import SurveiledPytorchBot, ReplayBufferSaver, GlobalStepContext
 from hearthstone.training.pytorch.tensorboard_altair import TensorboardAltairPlotter
 
 PPOHyperparameters = NewType('PPOHyperparameters', Dict[str, Union[str, int, float]])
@@ -130,8 +130,8 @@ class PPOLearner(GlobalStepContext):
         # TODO turn off gradient here
         # Note transition_batch.valid_actions is not the set of valid actions from the next state, but we are ignoring the
         # policy network here so it doesn't matter
-        next_policy_, next_value = learning_net(transition_batch.next_state, transition_batch.valid_actions)
-        next_value = next_value.detach()
+        with torch.no_grad():
+            next_policy_, next_value = learning_net(transition_batch.next_state, transition_batch.valid_actions)
 
         policy, value = learning_net(transition_batch.state, transition_batch.valid_actions)
         value_target = transition_batch.reward.unsqueeze(-1) + next_value.masked_fill(
@@ -210,11 +210,18 @@ class PPOLearner(GlobalStepContext):
         tensorboard = SummaryWriter(f"../../../data/learning/pytorch/tensorboard/{datetime.now().isoformat()}")
         logging.getLogger().setLevel(logging.INFO)
 
-        learning_net = HearthstoneFFNet(DEFAULT_PLAYER_ENCODING, DEFAULT_CARDS_ENCODING,
-                                        self.hparams["nn_hidden_layers"],
-                                        self.hparams.get("nn_hidden_size") or 0,
-                                        self.hparams.get("nn_shared") or False,
-                                        self.hparams.get("nn_activation") or "")
+        if self.hparams["nn_architecture"] == "feedforward":
+            learning_net = HearthstoneFFNet(DEFAULT_PLAYER_ENCODING, DEFAULT_CARDS_ENCODING,
+                                            self.hparams["nn_hidden_layers"],
+                                            self.hparams.get("nn_hidden_size") or 0,
+                                            self.hparams.get("nn_shared") or False,
+                                            self.hparams.get("nn_activation") or "")
+        elif self.hparams["nn_architecture"] == "transformer":
+            learning_net = HearthstoneTransformerNet(DEFAULT_PLAYER_ENCODING, DEFAULT_CARDS_ENCODING,
+                                            self.hparams["nn_hidden_layers"],
+                                            self.hparams.get("nn_hidden_size") or 0,
+                                            self.hparams.get("nn_shared") or False,
+                                            self.hparams.get("nn_activation") or "")
 
         # Set gradient descent algorithm
         if self.hparams["optimizer"] == "adam":
@@ -241,7 +248,7 @@ class PPOLearner(GlobalStepContext):
         # Rating starts a 14, which is how the randomly initialized pytorch bot performs.
         learning_bot_contestant.trueskill = trueskill.Rating(14)
         # Reuse standings from the current leaderboard.
-        other_contestants = easy_contestants()
+        other_contestants = easiest_contestants()
         load_ratings(other_contestants, "../../../data/standings.json")
 
         workers = [Worker(learning_bot_contestant, other_contestants, replay_buffer) for _ in
@@ -279,21 +286,24 @@ class PPOLearner(GlobalStepContext):
 
 
 def main():
-    ppo_learner = PPOLearner(PPOHyperparameters({'adam_lr': 0.000698178899316577,
+    ppo_learner = PPOLearner(PPOHyperparameters({'adam_lr': 0.0000698178899316577,
                                                  'batch_size': 269,
                                                  'entropy_weight': 3.20049705838473e-05,
-                                                 'gradient_clipping': 0.5,
+                                                 'gradient_clipping': 100,
+                                                 'nn_architecture': 'transformer',
                                                  'nn_hidden_layers': 1,
-                                                 'nn_hidden_size': 256,
+                                                 'nn_hidden_size': 16,
                                                  'nn_activation': 'gelu',
                                                  'nn_shared': 'false',
                                                  'normalize_advantage': True,
                                                  'normalize_observations': False,
                                                  'num_workers': 1,
-                                                 'optimizer': 'adam',
+                                                 'optimizer': 'sgd',
+                                                 'sgd_lr': 0.00006,
+                                                 'sgd_momentum': 0.1,
                                                  'policy_weight': 0.581166675499831,
                                                  'ppo_epochs': 8,
-                                                 'ppo_epsilon': 0.160450364515127}))
+                                                 'ppo_epsilon': 100}))
     ppo_learner.run()
 
 

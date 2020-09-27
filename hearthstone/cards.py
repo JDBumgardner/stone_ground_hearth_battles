@@ -254,7 +254,7 @@ class MonsterCard(Card):
         random_minion.health += self.health - self.base_health * (2 if self.golden else 1)
         random_minion.shifting = True
         context.owner.hand.remove(self)
-        context.owner.hand.append(random_minion)
+        context.owner.gain_card(random_minion)
 
     @classmethod
     def check_type(cls, desired_type: 'MONSTER_TYPES') -> bool:

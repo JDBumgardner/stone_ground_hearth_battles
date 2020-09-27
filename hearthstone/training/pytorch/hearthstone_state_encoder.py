@@ -200,7 +200,6 @@ def default_player_encoding() -> Feature:
     ])
 
 
-
 def default_cards_encoding() -> Feature:
     """
     Default encoder for the card-level features.
