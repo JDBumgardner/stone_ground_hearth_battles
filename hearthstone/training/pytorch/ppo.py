@@ -229,8 +229,7 @@ class PPOLearner(GlobalStepContext):
         else:
             replay_buffer = ReplayBuffer(replay_buffer_size)
         learning_bot_contestant = Contestant("LearningBot", lambda: SurveiledPytorchBot(learning_net, [
-            ReplayBufferSaver(replay_buffer), TensorboardGamePlotter(tensorboard, self),
-            TensorboardAltairPlotter(tensorboard, self)]))
+            ReplayBufferSaver(replay_buffer), TensorboardAltairPlotter(tensorboard, self)]))
         # Rating starts a 14, which is how the randomly initialized pytorch bot performs.
         learning_bot_contestant.trueskill = trueskill.Rating(14)
         # Reuse standings from the current leaderboard.

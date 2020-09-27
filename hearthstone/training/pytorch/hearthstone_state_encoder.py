@@ -1,9 +1,10 @@
 import copy
 import enum
 from collections import namedtuple
-from typing import Callable, List, Any, Optional, Dict, NamedTuple
+from typing import Callable, List, Any, Optional, Dict, NamedTuple, Tuple
 
 import torch
+import numpy as np
 
 from hearthstone.agent import TripleRewardsAction, TavernUpgradeAction, RerollAction, \
     EndPhaseAction, SummonAction, BuyAction, SellAction, Action
@@ -45,17 +46,17 @@ class LocatedCard:
 
 class Feature:
 
-    def fill_tensor(self, obj: Any, view: torch.Tensor):
+    def fill_tensor(self, obj: Any, view: np.ndarray):
         pass
 
-    def size(self) -> torch.Size:
+    def size(self) -> Tuple:
         pass
 
-    def dtype(self) -> torch.dtype:
+    def dtype(self) -> np.dtype:
         pass
 
-    def encode(self, obj: Any) -> torch.Tensor:
-        tensor = torch.zeros(self.size(), dtype=self.dtype())
+    def encode(self, obj: Any) -> np.ndarray:
+        tensor = np.zeros(self.size(), dtype=self.dtype())
         self.fill_tensor(obj, tensor)
         return tensor
 
@@ -68,48 +69,48 @@ class Feature:
 
 class ScalarFeature(Feature):
     def __init__(self, feat: Callable[[Any], Any], dtype=None):
-        self._dtype = dtype or torch.float
+        self._dtype = dtype or np.float32
         self.feat = feat
 
-    def fill_tensor(self, obj: Any, view: torch.Tensor):
+    def fill_tensor(self, obj: Any, view: np.ndarray):
         view.data[0] = self.feat(obj)
 
-    def size(self) -> torch.Size:
-        return torch.Size([1])
+    def size(self) -> Tuple:
+        return (1,)
 
-    def dtype(self) -> torch.dtype:
+    def dtype(self) -> np.dtype:
         return self._dtype
 
 
 class OnehotFeature(Feature):
     def __init__(self, extractor: Callable[[Any], Any], num_classes: int, dtype=None):
-        self._dtype = dtype or torch.float
+        self._dtype = dtype or np.float32
         self.extractor = extractor
         self.num_classes = num_classes
 
-    def fill_tensor(self, obj: Any, view: torch.Tensor):
+    def fill_tensor(self, obj: Any, view: np.ndarray):
         view[self.extractor(obj)] = 1.0
 
-    def size(self) -> torch.Size:
-        return torch.Size([self.num_classes])
+    def size(self) -> Tuple:
+        return (self.num_classes,)
 
-    def dtype(self) -> torch.dtype:
+    def dtype(self) -> np.dtype:
         return self._dtype
 
 
 class CombinedFeature(Feature):
     def __init__(self, features: List[Feature], dtype=None):
         self.features = features
-        self._dtype = dtype or torch.float
+        self._dtype = dtype or np.float32
 
-    def fill_tensor(self, obj: Any, view: torch.Tensor):
+    def fill_tensor(self, obj: Any, view: np.ndarray):
         start = 0
         for feature in self.features:
             size = feature.size()
-            feature.fill_tensor(obj, view.narrow(0, start, size[0]))
+            feature.fill_tensor(obj, view[start: start + size[0]])
             start += size[0]
 
-    def size(self) -> torch.Size:
+    def size(self) -> Tuple:
         sizes = [feature.size() for feature in self.features]
         dimension_sum = 0
         for size in sizes:
@@ -117,7 +118,7 @@ class CombinedFeature(Feature):
             dimension_sum += size[0]
         return (dimension_sum,) + sizes[0][1:]
 
-    def dtype(self) -> torch.dtype:
+    def dtype(self) -> np.dtype:
         return self._dtype
 
 
@@ -126,16 +127,16 @@ class ListOfFeatures(Feature):
         self.extractor = extractor
         self.feature = feature
         self.width = width
-        self._dtype = dtype or torch.float
+        self._dtype = dtype or np.float32
 
-    def fill_tensor(self, obj: Any, view: torch.Tensor):
+    def fill_tensor(self, obj: Any, view: np.ndarray):
         values_to_encode = self.extractor(obj)
         assert (len(values_to_encode) <= self.width)
         for i, value in enumerate(values_to_encode):
-            self.feature.fill_tensor(value, view.narrow(0, i, 1).squeeze(0))
+            self.feature.fill_tensor(value, view[i])
 
     def size(self):
-        return torch.Size((self.width,) + self.feature.size())
+        return (self.width,) + self.feature.size()
 
     def dtype(self):
         return self._dtype
@@ -145,9 +146,9 @@ class SortedByValueFeature(Feature):
     def __init__(self, extractor: Callable[[Any], List[Any]], width: int, dtype=None):
         self.extractor = extractor
         self.width = width
-        self._dtype = dtype or torch.float
+        self._dtype = dtype or np.float32
 
-    def fill_tensor(self, obj: Any, view: torch.Tensor):
+    def fill_tensor(self, obj: Any, view: np.ndarray):
         values_to_encode = self.extractor(obj)
         sorted_values = sorted(values_to_encode)
         assert (len(values_to_encode) <= self.width)
@@ -155,7 +156,7 @@ class SortedByValueFeature(Feature):
             view[i] = value
 
     def size(self):
-        return torch.Size((self.width,))
+        return (self.width,)
 
     def dtype(self):
         return self._dtype
@@ -224,8 +225,8 @@ DEFAULT_CARDS_ENCODING = default_cards_encoding()
 
 
 def encode_player(player: Player) -> State:
-    player_tensor = DEFAULT_PLAYER_ENCODING.encode(player)
-    cards_tensor = DEFAULT_CARDS_ENCODING.encode(player)
+    player_tensor = torch.from_numpy(DEFAULT_PLAYER_ENCODING.encode(player))
+    cards_tensor = torch.from_numpy(DEFAULT_CARDS_ENCODING.encode(player))
     return State(player_tensor, cards_tensor)
 
 
