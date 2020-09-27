@@ -91,12 +91,19 @@ class PPOLearner(GlobalStepContext):
         self.early_stopper = early_stopper
 
         self.expensive_tensorboard = False
+        self.histogram_tensorboard = False
         # Total number of gradient descent steps we've taken. (for reporting to tensorboard)
         self.global_step = 0
-
+        # Number of games we have plotted
+        self.games_plotted = 0
 
     def get_global_step(self) -> int:
         return self.global_step
+
+    def should_plot(self) -> bool:
+        do_plot = self.games_plotted % 10 == 0
+        self.games_plotted += 1
+        return do_plot
 
     def learn(self, tensorboard: SummaryWriter, optimizer: optim.Optimizer, learning_net: nn.Module,
               replay_buffer: ReplayBuffer,
@@ -156,21 +163,22 @@ class PPOLearner(GlobalStepContext):
         masked_policy = policy.masked_select(valid_action_tensor)
         entropy_loss = entropy_weight * torch.sum(masked_policy * torch.exp(masked_policy))
 
-        tensorboard.add_histogram("policy", torch.exp(masked_policy), self.global_step)
-        masked_reward = transition_batch.reward.masked_select(transition_batch.is_terminal)
-        if masked_reward.size()[0]:
-            tensorboard.add_histogram("reward",
-                                      transition_batch.reward.masked_select(transition_batch.is_terminal),
-                                      self.global_step)
-        tensorboard.add_histogram("value/current", value, self.global_step)
-        tensorboard.add_histogram("value/next", next_value, self.global_step)
-        tensorboard.add_histogram("advantage/unclipped", advantage, self.global_step)
-        tensorboard.add_histogram("advantage/clipped", clipped_advantage, self.global_step)
-        tensorboard.add_histogram("advantage/normalized", normalized_advantage, self.global_step)
-        tensorboard.add_histogram("policy_loss/unclipped", unclipped_policy_loss, self.global_step)
-        tensorboard.add_histogram("policy_loss/clipped", clipped_policy_loss, self.global_step)
-        tensorboard.add_histogram("policy_ratio/unclipped", ratio, self.global_step)
-        tensorboard.add_histogram("policy_ratio/clipped", clipped_ratio, self.global_step)
+        if self.histogram_tensorboard:
+            tensorboard.add_histogram("policy", torch.exp(masked_policy), self.global_step)
+            masked_reward = transition_batch.reward.masked_select(transition_batch.is_terminal)
+            if masked_reward.size()[0]:
+                tensorboard.add_histogram("reward",
+                                          transition_batch.reward.masked_select(transition_batch.is_terminal),
+                                          self.global_step)
+            tensorboard.add_histogram("value/current", value, self.global_step)
+            tensorboard.add_histogram("value/next", next_value, self.global_step)
+            tensorboard.add_histogram("advantage/unclipped", advantage, self.global_step)
+            tensorboard.add_histogram("advantage/clipped", clipped_advantage, self.global_step)
+            tensorboard.add_histogram("advantage/normalized", normalized_advantage, self.global_step)
+            tensorboard.add_histogram("policy_loss/unclipped", unclipped_policy_loss, self.global_step)
+            tensorboard.add_histogram("policy_loss/clipped", clipped_policy_loss, self.global_step)
+            tensorboard.add_histogram("policy_ratio/unclipped", ratio, self.global_step)
+            tensorboard.add_histogram("policy_ratio/clipped", clipped_ratio, self.global_step)
         tensorboard.add_text("action/train", str(get_indexed_action(int(transition_batch.action[0]))), self.global_step)
         tensorboard.add_scalar("avg_reward",
                                transition_batch.reward.masked_select(transition_batch.is_terminal).float().mean(),

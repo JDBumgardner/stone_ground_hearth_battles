@@ -187,7 +187,7 @@ class Player:
         else:
             self.return_cards()
         number_of_cards = 3 + self.tavern_tier // 2 - len(self.store)
-        self.store.extend([self.tavern.deck.draw(self) for _ in range(number_of_cards)])
+        self.store.extend(self.tavern.deck.draw(self, number_of_cards))
 
     def purchase(self, index: StoreIndex):
         # check if the index is valid

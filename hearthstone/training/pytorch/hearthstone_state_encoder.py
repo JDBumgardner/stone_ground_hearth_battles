@@ -290,9 +290,13 @@ ALL_ACTIONS_DICT: Dict[str, int] = _all_actions_dict()
 
 def encode_valid_actions(player: Player) -> EncodedActionSet:
     actions = ALL_ACTIONS
+
     player_action_tensor = torch.tensor([action.valid(player) for action in actions.player_action_set])
-    cards_action_tensor = torch.tensor(
-        [[action.valid(player) for action in card_actions] for card_actions in actions.card_action_set])
+    cards_action_array = np.ndarray((len(actions.card_action_set), len(actions.card_action_set[0])), dtype=bool)
+    for i, card_actions in enumerate(actions.card_action_set):
+        for j, action in enumerate(card_actions):
+            cards_action_array[i, j] = action.valid(player)
+    cards_action_tensor = torch.from_numpy(cards_action_array)
     return EncodedActionSet(player_action_tensor, cards_action_tensor)
 
 

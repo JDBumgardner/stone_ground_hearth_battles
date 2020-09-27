@@ -105,6 +105,9 @@ class GlobalStepContext:
     def get_global_step(self) -> int:
         raise NotImplemented("Not Implemented")
 
+    def should_plot(self) -> bool:
+        raise NotImplemented("Note Implemented")
+
 
 class TensorboardGamePlotter(Parasite):
     def __init__(self, tensorboard: SummaryWriter, global_step_context: GlobalStepContext):

@@ -355,7 +355,7 @@ class ArannaStarseeker(Hero):
         if event.event is EVENTS.REFRESHED_STORE:
             self.total_rerolls += 1
             if self.total_rerolls >= 4:
-                context.owner.store.extend([context.owner.tavern.deck.draw(context.owner) for _ in range(7 - len(context.owner.store))])
+                context.owner.store.extend(context.owner.tavern.deck.draw(context.owner, 7-len(context.owner.store)))
 
 
 class DinotamerBrann(Hero):

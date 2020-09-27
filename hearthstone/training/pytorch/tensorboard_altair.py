@@ -14,6 +14,10 @@ from hearthstone.training.pytorch.surveillance import Parasite, GlobalStepContex
 
 class TensorboardAltairPlotter(Parasite):
     def __init__(self, tensorboard: SummaryWriter, global_step_context: GlobalStepContext):
+        if not global_step_context.should_plot():
+            self.dont_plot = True
+            return
+        self.dont_plot = False
         self.tensorboard = tensorboard
         self.healths = []
         self.coins = []
@@ -57,6 +61,8 @@ class TensorboardAltairPlotter(Parasite):
         self.buy_probs.append([action_probs[card] for card in player.store])
 
     def on_buy_phase_action(self, player: 'Player', action: Action, policy: torch.Tensor, value: torch.Tensor):
+        if self.dont_plot:
+            return
         self.update_gamestate(player, value, None)
         self.actions.append(action.str_in_context(player))
         self.action_types.append(type(action).__name__)
@@ -82,8 +88,8 @@ class TensorboardAltairPlotter(Parasite):
     def _action_chart(df: pd.DataFrame, name: str, max_size: int):
         ranked_text = alt.Chart(df).mark_text().encode(
             y=alt.Y('row_number:O', axis=None, scale=alt.Scale(domain=list(range(1, max_size+1)))),
-            color=alt.Color("action_probability", scale=alt.Scale(domain=[0, 1], scheme="bluegreen")),
-            tooltip=["action_probability"]
+            color=alt.Color("action_probability:Q", scale=alt.Scale(domain=[0, 1], scheme="bluegreen")),
+            tooltip=["action_probability:Q"]
         ).transform_lookup(lookup="step_in_game",
                            from_=alt.LookupSelection(key="step_in_game",
                                                      selection="gamestep_hover",
@@ -117,8 +123,9 @@ class TensorboardAltairPlotter(Parasite):
         df = df.apply(pd.Series.explode).reset_index().rename(columns={'index': 'step_in_game'})
         return TensorboardAltairPlotter._action_chart(df, "basic_actions", max_size)
 
-
     def on_game_over(self, player: 'Player', ranking: int):
+        if self.dont_plot:
+            return
         self.update_gamestate(player, None, 3.5 - ranking)
         self.actions.append(None)
         self.action_types.append(None)
@@ -145,23 +152,23 @@ class TensorboardAltairPlotter(Parasite):
         melted = df.melt(id_vars=['step_in_game', 'action', 'action_type', 'turn_count'], value_name='value')
         base = alt.Chart(melted)
 
-        rule = base.transform_filter(hover_selection).mark_rule().encode(alt.X('step_in_game'))
+        rule = base.transform_filter(hover_selection).mark_rule().encode(alt.X('step_in_game:Q'))
         value_base = base.encode(
             alt.X('step_in_game:Q'),
-            color=alt.Color('variable'),
+            color=alt.Color('variable:N'),
             opacity=alt.condition(legend_selection, alt.value(1), alt.value(0.2)),
         ).properties(width=1000)
 
         point_chart = value_base.mark_point(
 
         ).encode(
-            alt.Y('value'),
+            alt.Y('value:Q'),
             opacity=alt.condition(hover_selection, alt.value(1), alt.value(0)),
-            tooltip=['step_in_game', 'action', 'variable', 'value']
+            tooltip=['step_in_game:Q', 'action:N', 'variable:N', 'value:Q']
         ).add_selection(
             hover_selection).add_selection(legend_selection)
         text_chart = value_base.mark_text(align='left', dx=5, dy=-7
-                                          ).encode(alt.Y('value'),
+                                          ).encode(alt.Y('value:Q'),
                                                    text=alt.condition(hover_selection,
                                                                       alt.Text('value:Q',
                                                                                format='.3'),
@@ -169,19 +176,19 @@ class TensorboardAltairPlotter(Parasite):
         line_chart = value_base.transform_filter(
             (alt.datum.variable != "reward")
         ).mark_line().encode(
-            alt.Y('value'),
+            alt.Y('value:Q'),
         )
         reward_chart = value_base.transform_filter(
             (alt.datum.variable == "reward")
         ).mark_point(size=100, shape="diamond", filled=True).encode(
-            alt.Y('value'),
-            tooltip=['step_in_game', 'variable', 'value'],
+            alt.Y('value:Q'),
+            tooltip=['step_in_game:Q', 'variable:N', 'value:Q'],
         )
 
         turn_chart = value_base.transform_filter(
             (alt.datum.action_type == "EndPhaseAction")
         ).mark_rule().encode(
-            x='step_in_game'
+            alt.X('step_in_game:Q')
         )
 
         game_progression_chart = alt.layer(rule, point_chart, text_chart, line_chart, reward_chart, turn_chart)
@@ -196,8 +203,8 @@ class TensorboardAltairPlotter(Parasite):
                                                                   ).encode(
             alt.X('step_in_game:Q'),
             y=alt.value(0),
-            text='action',
-            color='action_type',
+            text='action:N',
+            color='action_type:N',
             opacity=alt.condition((alt.datum.step_in_game == alt.datum.looked_up_step), alt.value(1), alt.value(0.4))
         ).properties(width=999)
 
