@@ -190,8 +190,7 @@ class Player:
             self.frozen = False
         else:
             self.return_cards()
-        number_of_cards = self.hero.minions_in_tavern if self.hero.minions_in_tavern is not None \
-            else 3 + self.tavern_tier // 2 - len(self.store)
+        number_of_cards = 3 + self.tavern_tier // 2 - len(self.store)
         self.store.extend([self.tavern.deck.draw(self) for _ in range(number_of_cards)])
 
     def purchase(self, index: StoreIndex):

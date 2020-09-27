@@ -17,11 +17,7 @@ class Hero(metaclass=HeroType):
     power_cost: Optional[int] = None  # default value is for heroes with passive hero powers
     hero_power_used = False
     can_use_power = True
-    current_type = None
     buy_counter = 0
-    digs_left = 5
-    minions_in_tavern = None
-    total_rerolls = 0
     power_target_location: Optional['CardLocation'] = None
 
     def __repr__(self):

@@ -169,6 +169,8 @@ class TheCurator(Hero):
 
 
 class TheRatKing(Hero):
+    current_type = None
+
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_START:
             available_types = [monster_type for monster_type in MONSTER_TYPES.single_types() if
@@ -209,6 +211,7 @@ class MillhouseManastorm(Hero):
 
 class CaptainEudora(Hero):
     power_cost = 1
+    digs_left = 5
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
@@ -346,12 +349,13 @@ class EdwinVanCleef(Hero):
 
 
 class ArannaStarseeker(Hero):
+    total_rerolls = 0
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.REFRESHED_STORE:
             self.total_rerolls += 1
-            if self.total_rerolls == 4:
-                self.minions_in_tavern = 7
+            if self.total_rerolls >= 4:
+                context.owner.store.extend([context.owner.tavern.deck.draw(context.owner) for _ in range(7 - len(context.owner.store))])
 
 
 class DinotamerBrann(Hero):
@@ -361,8 +365,8 @@ class DinotamerBrann(Hero):
                         store_index: Optional['StoreIndex'] = None):
         context.owner.return_cards()
         number_of_cards = 3 + context.owner.tavern_tier // 2 - len(context.owner.store)
-        battlecry_monsters = context.owner.tavern.deck.cards_with_battlecry()
-        context.owner.store.extend([context.randomizer.select_add_to_store(battlecry_monsters) for _ in range(number_of_cards)])
+        predicate = lambda card: card.base_battlecry
+        context.owner.store.extend([context.owner.tavern.deck.draw_with_predicate(context.owner, predicate) for _ in range(number_of_cards)])
 
 
 class Alexstrasza(Hero):
