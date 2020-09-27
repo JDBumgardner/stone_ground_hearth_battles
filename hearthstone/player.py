@@ -73,16 +73,12 @@ class Player:
     def coin_income_rate(self):
         return min(self.tavern.turn_count + 3, 10)
 
-    def player_main_step(self):
+    def buying_step(self):
+        self.reset_purchase_minions_list()
+        self.apply_turn_start_income()
         self.draw()
-        #  player can:
-        #  rearrange monsters
-        #  summon monsters
-        #  buy from the store
-        #  freeze the store
-        #  refresh the store
-        #  sell monsters
-        #  set fight ready
+        self.hero.on_buy_step()
+        self.broadcast_buy_phase_event(events.BuyStartEvent())
 
     def reset_purchase_minions_list(self):
         self.purchased_minions = []

@@ -47,11 +47,7 @@ class Tavern:
         self.game_state = GameState.BUY_PHASE
         self._generate_pairings()
         for player_name, player in self.players.items():
-            player.reset_purchase_minions_list()
-            player.apply_turn_start_income()
-            player.draw()
-            player.hero.on_buy_step()
-            player.broadcast_buy_phase_event(events.BuyStartEvent())
+            player.buying_step()
 
     def combat_step(self):
         assert self.game_state == GameState.BUY_PHASE
