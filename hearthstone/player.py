@@ -74,13 +74,13 @@ class Player:
         return min(self.tavern.turn_count + 3, 10)
 
     def buying_step(self):
-        self.reset_purchase_minions_list()
+        self.reset_purchased_minions_list()
         self.apply_turn_start_income()
         self.draw()
         self.hero.on_buy_step()
         self.broadcast_buy_phase_event(events.BuyStartEvent())
 
-    def reset_purchase_minions_list(self):
+    def reset_purchased_minions_list(self):
         self.purchased_minions = []
 
     def apply_turn_start_income(self):
@@ -228,7 +228,6 @@ class Player:
         self.draw()
         self.broadcast_buy_phase_event(events.RefreshStoreEvent())
 
-
     def valid_reroll(self) -> bool:
         return self.coins >= self.refresh_store_cost
 
@@ -322,6 +321,8 @@ class Player:
             self.store[store_index].health += 1
 
     def valid_use_banana(self, board_index: Optional['BoardIndex'] = None, store_index: Optional['StoreIndex'] = None):
+        if board_index == store_index:
+            return False
         if board_index is not None and not self.in_play:
             return False
         if store_index is not None and not self.store:

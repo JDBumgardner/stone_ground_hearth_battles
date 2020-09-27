@@ -390,7 +390,11 @@ class CardTests(unittest.TestCase):
             return force_card(cards, WrathWeaver)
 
         def select_discover_card(self, discoverables: List[Card]) -> Card:
-            return force_card(discoverables, FreedealingGambler)
+            minion_types = [type(card) for card in discoverables]
+            if FreedealingGambler in minion_types:
+                return force_card(discoverables, FreedealingGambler)
+            else:
+                return discoverables[0]
 
     def test_discover_card(self):
         tavern = Tavern()
@@ -419,7 +423,11 @@ class CardTests(unittest.TestCase):
                 return force_card(cards, FreedealingGambler)
 
         def select_discover_card(self, discoverables: List[Card]) -> Card:
-            return force_card(discoverables, FreedealingGambler)
+            minion_types = [type(card) for card in discoverables]
+            if FreedealingGambler in minion_types:
+                return force_card(discoverables, FreedealingGambler)
+            else:
+                return discoverables[0]
 
     def test_discover_golden_trigger(self):
         tavern = Tavern()
