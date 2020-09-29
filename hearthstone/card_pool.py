@@ -1807,3 +1807,81 @@ class Murozond(MonsterCard):
             if self.golden:
                 plain_copy.golden_transformation([])
             context.owner.gain_card(plain_copy)
+
+
+class PartyElemental(MonsterCard):
+    tier = 2
+    monster_type = MONSTER_TYPES.ELEMENTAL
+    base_attack = 2
+    base_health = 2
+
+    def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
+        if event.event is EVENTS.SUMMON_BUY and event.card.check_type(MONSTER_TYPES.ELEMENTAL) and event.card != self:
+            other_elementals = [card for card in context.owner.in_play if card.check_type(MONSTER_TYPES.ELEMENTAL) and card != self]
+            num_buffs = 2 if self.golden else 1
+            for _ in range(num_buffs):
+                random_elemental = context.randomizer.select_friendly_minion(other_elementals)
+                random_elemental.attack += 1
+                random_elemental.health += 1
+
+
+class MoltenRock(MonsterCard):
+    tier = 2
+    monster_type = MONSTER_TYPES.ELEMENTAL
+    base_attack = 2
+    base_health = 3
+    base_taunt = True
+
+    def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
+        if event.event is EVENTS.SUMMON_BUY and event.card.check_type(MONSTER_TYPES.ELEMENTAL) and event.card != self:
+            self.health += 2 if self.golden else 1
+
+
+class ArcaneAssistant(MonsterCard):
+    tier = 3
+    monster_type = MONSTER_TYPES.ELEMENTAL
+    base_attack = 3
+    base_health = 2
+
+    def base_battlecry(self, targets: List['MonsterCard'], context: 'BuyPhaseContext'):
+        bonus = 2 if self.golden else 1
+        for card in context.owner.in_play:
+            if card.check_type(MONSTER_TYPES.ELEMENTAL) and card != self:
+                card.attack += bonus
+                card.health += bonus
+
+
+class CracklingCyclone(MonsterCard):
+    tier = 3
+    monster_type = MONSTER_TYPES.ELEMENTAL
+    base_attack = 4
+    base_health = 1
+    base_divine_shield = True
+    base_windfury = True
+
+    def golden_transformation(self, base_cards: List['MonsterCard']):
+        super().golden_transformation(base_cards)
+        self.windfury = False
+        self.mega_windfury = True
+
+
+class DeadlySpore(MonsterCard):
+    tier = 4
+    monster_type = None
+    base_attack = 1
+    base_health = 1
+    base_poisonous = True
+
+
+class LieutenantGarr(MonsterCard):
+    tier = 6
+    monster_type = MONSTER_TYPES.ELEMENTAL
+    base_attack = 8
+    base_health = 1
+    base_taunt = True
+
+    def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
+        if event.event is EVENTS.SUMMON_BUY and event.card.check_type(MONSTER_TYPES.ELEMENTAL) and event.card != self:
+            num_elementals = len([card for card in context.owner.in_play if card.check_type(MONSTER_TYPES.ELEMENTAL)])
+            multiplier = 2 if self.golden else 1
+            self.health += num_elementals * multiplier

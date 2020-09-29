@@ -8,7 +8,8 @@ class MONSTER_TYPES(enum.Enum):
     DRAGON = 4
     DEMON = 5
     MURLOC = 6
-    ALL = 7
+    ELEMENTAL = 7
+    ALL = 8
 
     @classmethod
     def single_types(cls):
