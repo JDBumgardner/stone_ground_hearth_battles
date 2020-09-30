@@ -189,7 +189,7 @@ class TextAgent(Agent):
         else:
             return None
 
-    async def discover_choice_action(self, player: 'Player') -> 'Card':
+    async def discover_choice_action(self, player: 'Player') -> 'MonsterCard':
         await self.transport.send(f"player {player.name}, you must choose a card to discover.\n")
         await self.print_player_card_list("discovery choices", player.discover_queue[0])
         await self.transport.send("input card number to discover here: ")
@@ -202,14 +202,14 @@ class TextAgent(Agent):
             user_input = await self.transport.receive_line()
 
     @staticmethod
-    def parse_discover_input(user_input: str, player: 'Player') -> Optional['Card']:
+    def parse_discover_input(user_input: str, player: 'Player') -> Optional['MonsterCard']:
         try:
             card_index = int(user_input)
             return player.discover_queue[0][card_index]
         except ValueError:
             return None
 
-    async def print_player_card_list(self, card_location: str, card_list: List['Card']):
+    async def print_player_card_list(self, card_location: str, card_list: List['MonsterCard']):
         await self.transport.send(f"your current {card_location}: \n")
         for index, card in enumerate(card_list):
             await self.transport.send(f"{index}  {card}\n")

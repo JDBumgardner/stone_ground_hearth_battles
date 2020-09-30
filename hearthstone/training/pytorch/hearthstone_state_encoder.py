@@ -8,7 +8,7 @@ import numpy as np
 
 from hearthstone.agent import TripleRewardsAction, TavernUpgradeAction, RerollAction, \
     EndPhaseAction, SummonAction, BuyAction, SellAction, Action
-from hearthstone.cards import Card, CardLocation
+from hearthstone.cards import MonsterCard, CardLocation
 from hearthstone.monster_types import MONSTER_TYPES
 from hearthstone.player import Player, StoreIndex, HandIndex, BoardIndex
 
@@ -39,7 +39,7 @@ MAX_ENCODED_BOARD = 7
 
 
 class LocatedCard:
-    def __init__(self, card: Card, location: CardLocation):
+    def __init__(self, card: MonsterCard, location: CardLocation):
         self.card = card
         self.location = location
 

@@ -30,7 +30,7 @@ def one_minion_per_type(cards: List['MonsterCard'], randomizer: 'Randomizer') ->
 
 
 class PrintingPress:
-    cards: Set[Type['Card']] = set()
+    cards: Set[Type['MonsterCard']] = set()
     cards_per_tier = {1: 16, 2: 15, 3: 13, 4: 11, 5: 9, 6: 7}
 
     @classmethod
@@ -50,27 +50,12 @@ class PrintingPress:
         return [card_type for card_type in cls.cards if not card_type.token]
 
 
-CardType = make_metaclass(PrintingPress.add_card, ("Card", "MonsterCard"))
+CardType = make_metaclass(PrintingPress.add_card, ("MonsterCard",))
 
 
-class Card(metaclass=CardType):
-    type_name = "card"
-    mana_cost: Optional[int]
-    card_name: str
+class MonsterCard(metaclass=CardType):
     coin_cost = 3
-    redeem_rate = 1
-    tier: int
-    token = False
-    tracked = False
-
-    def __init__(self):
-        self.state = None
-        self.tavern = None
-
-
-class MonsterCard(Card):
-    type_name = "monster"
-    mana_cost = None
+    mana_cost: Optional[int] = None
     base_health: int
     base_attack: int
     monster_type = None
@@ -84,7 +69,10 @@ class MonsterCard(Card):
     base_battlecry = None
     num_battlecry_targets = [0]
     base_reborn = False
+    redeem_rate = 1
+    tier: int
     token = False
+    tracked = False
     cant_attack = False
     shifting = False
     give_immunity = False
@@ -158,10 +146,6 @@ class MonsterCard(Card):
             reborn_self.health = 1
             reborn_self.reborn = False
             context.friendly_war_party.summon_in_combat(reborn_self, context, index + i + 1)
-
-    def change_state(self, new_state):
-        self.tavern.run_callbacks(self, new_state)
-        self.state = new_state
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if self == event.card:
@@ -284,7 +268,7 @@ class MonsterCard(Card):
 
 
 class CardList:
-    def __init__(self, cards: List[Card]):
+    def __init__(self, cards: List[MonsterCard]):
         self.cards_by_tier = defaultdict(lambda: set())
         for card in cards:
             self.cards_by_tier[card.tier].add(card)

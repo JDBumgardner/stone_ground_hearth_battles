@@ -6,7 +6,6 @@ from hearthstone.monster_types import MONSTER_TYPES
 from hearthstone.player import StoreIndex, HandIndex, BoardIndex
 
 if typing.TYPE_CHECKING:
-    from hearthstone.cards import Card
     from hearthstone.hero import Hero
     from hearthstone.tavern import Player
 
@@ -189,7 +188,7 @@ class Agent:
     async def hero_choice_action(self, player: 'Player') -> 'Hero':
         return player.hero_options[0]
 
-    async def rearrange_cards(self, player: 'Player') -> List['Card']:
+    async def rearrange_cards(self, player: 'Player') -> List['MonsterCard']:
         """
         here the player selects a card arangement one time per combat directly preceeding combat
 
@@ -218,7 +217,7 @@ class Agent:
         """
         pass
 
-    async def discover_choice_action(self, player: 'Player') -> 'Card':
+    async def discover_choice_action(self, player: 'Player') -> 'MonsterCard':
         """
 
         Args:

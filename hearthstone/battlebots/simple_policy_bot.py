@@ -8,7 +8,7 @@ from typing import List, Optional
 from hearthstone.agent import Agent, generate_valid_actions, TavernUpgradeAction, RerollAction, EndPhaseAction, \
     SellAction, Action, BuyAction, SummonAction
 if typing.TYPE_CHECKING:
-    from hearthstone.cards import Card
+
     from hearthstone.player import Player
 
 
@@ -52,7 +52,7 @@ class SimplePolicyBot(Agent):
         with open(path) as f:
             self.priority_dict.update(json.load(f))
 
-    async def rearrange_cards(self, player: 'Player') -> List['Card']:
+    async def rearrange_cards(self, player: 'Player') -> List['MonsterCard']:
         card_list = player.in_play.copy()
         self.local_random.shuffle(card_list)
         return card_list
@@ -71,7 +71,7 @@ class SimplePolicyBot(Agent):
         self.update_gradient(player, choice[0], ranked_actions)
         return choice[0][1]
 
-    async def discover_choice_action(self, player: 'Player') -> 'Card':
+    async def discover_choice_action(self, player: 'Player') -> 'MonsterCard':
         discover_cards = player.discover_queue[0]
         discover_cards = sorted(discover_cards, key=lambda card: self.priority_buy_dict[type(card).__name__], reverse=True)
         return discover_cards[0]

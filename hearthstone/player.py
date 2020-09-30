@@ -4,7 +4,7 @@ from collections import defaultdict
 from typing import Optional, List, Callable, Type
 
 from hearthstone import events
-from hearthstone.cards import MonsterCard, Card
+from hearthstone.cards import MonsterCard
 from hearthstone.events import BuyPhaseContext, CardEvent
 from hearthstone.hero import EmptyHero
 from hearthstone.monster_types import MONSTER_TYPES
@@ -155,7 +155,7 @@ class Player:
     def valid_triple_rewards(self) -> bool:
         return bool(self.triple_rewards)
 
-    def draw_discover(self, predicate: Callable[['Card'], bool]): #TODO: Jarett help make discoverables unique are cards with more copies in the deck more likely to be discovered?
+    def draw_discover(self, predicate: Callable[['MonsterCard'], bool]): #TODO: Jarett help make discoverables unique are cards with more copies in the deck more likely to be discovered?
         discoverables = [card for card in self.tavern.deck.unique_cards() if predicate(card)]
         discovered_cards = []
         for _ in range(3):
@@ -164,7 +164,7 @@ class Player:
             self.tavern.deck.remove_card(discovered_cards[-1])
         self.discover_queue.append(discovered_cards)
 
-    def select_discover(self, card: 'Card'):
+    def select_discover(self, card: 'MonsterCard'):
         assert (card in self.discover_queue[0])
         assert (isinstance(card, MonsterCard))
         self.discover_queue[0].remove(card)

@@ -7,7 +7,7 @@ from typing import List
 from hearthstone.agent import Agent, generate_valid_actions, TavernUpgradeAction, RerollAction, EndPhaseAction, \
     SellAction, Action, BuyAction, SummonAction
 if typing.TYPE_CHECKING:
-    from hearthstone.cards import Card
+
     from hearthstone.player import Player, StoreIndex
 
 
@@ -42,7 +42,7 @@ class LearnedPriorityBot(Agent):
             self.priority_dict.update(json.load(f))
         self.set_priority_function()
 
-    async def rearrange_cards(self, player: 'Player') -> List['Card']:
+    async def rearrange_cards(self, player: 'Player') -> List['MonsterCard']:
         card_list = player.in_play.copy()
         self.local_random.shuffle(card_list)
         return card_list
@@ -95,7 +95,7 @@ class LearnedPriorityBot(Agent):
 
         return EndPhaseAction(False)
 
-    async def discover_choice_action(self, player: 'Player') -> 'Card':
+    async def discover_choice_action(self, player: 'Player') -> 'MonsterCard':
         discover_cards = player.discover_queue[0]
         discover_cards = sorted(discover_cards, key=lambda card: self.adjusted_priority(card), reverse=True)
         return discover_cards[0]

@@ -5,28 +5,28 @@ from typing import List, Tuple, Type, Optional
 from hearthstone.monster_types import MONSTER_TYPES
 
 if typing.TYPE_CHECKING:
-    from hearthstone.cards import MonsterCard, Card
+    from hearthstone.cards import MonsterCard
     from hearthstone.hero import Hero
     from hearthstone.player import Player
 
 
 class Randomizer:
-    def select_draw_card(self, cards: List['Card'], player_name: str, round_number: int) -> 'Card':
+    def select_draw_card(self, cards: List['MonsterCard'], player_name: str, round_number: int) -> 'MonsterCard':
         raise NotImplementedError()
 
     def select_player_pairings(self, players: List['Player']) -> List[Tuple['Player', 'Player']]:
         raise NotImplementedError()
 
-    def select_attack_target(self, defenders: List['Card']) -> 'MonsterCard':
+    def select_attack_target(self, defenders: List['MonsterCard']) -> 'MonsterCard':
         raise NotImplementedError()
 
     def select_friendly_minion(self, friendly_minions: List['MonsterCard']) -> 'MonsterCard':
         raise NotImplementedError()
 
-    def select_enemy_minion(self, enemy_minions: List['Card']) -> 'MonsterCard':
+    def select_enemy_minion(self, enemy_minions: List['MonsterCard']) -> 'MonsterCard':
         raise NotImplementedError()
 
-    def select_discover_card(self, discoverables: List['Card']) -> 'Card':
+    def select_discover_card(self, discoverables: List['MonsterCard']) -> 'MonsterCard':
         raise NotImplementedError()
 
     def select_from_store(self, store: List['MonsterCard']) -> 'MonsterCard':
@@ -60,7 +60,7 @@ class DefaultRandomizer(Randomizer):
             seed = random.random()
         self.rand = random.Random(seed)
 
-    def select_draw_card(self, cards: List['Card'], player_name: str, round_number: int) -> 'Card':
+    def select_draw_card(self, cards: List['MonsterCard'], player_name: str, round_number: int) -> 'MonsterCard':
         return self.rand.choice(cards)
 
     def select_player_pairings(self, players: List['Player']) -> List[Tuple['Player', 'Player']]:
@@ -68,16 +68,16 @@ class DefaultRandomizer(Randomizer):
         number_of_battles = len(players) // 2
         return list(zip(players[:number_of_battles], players[number_of_battles:]))
 
-    def select_attack_target(self, defenders: List['Card']) -> 'Card':
+    def select_attack_target(self, defenders: List['MonsterCard']) -> 'MonsterCard':
         return self.rand.choice(defenders)
 
     def select_friendly_minion(self, friendly_minions: List['MonsterCard']) -> 'MonsterCard':
         return self.rand.choice(friendly_minions)
 
-    def select_enemy_minion(self, enemy_minions: List['Card']) -> 'Card':
+    def select_enemy_minion(self, enemy_minions: List['MonsterCard']) -> 'MonsterCard':
         return self.rand.choice(enemy_minions)
 
-    def select_discover_card(self, discoverables: List['Card']) -> 'Card':
+    def select_discover_card(self, discoverables: List['MonsterCard']) -> 'MonsterCard':
         return self.rand.choice(discoverables)
 
     def select_from_store(self, store: List['MonsterCard']) -> 'MonsterCard':

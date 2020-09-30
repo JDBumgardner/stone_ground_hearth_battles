@@ -4,7 +4,7 @@ from typing import List
 
 from hearthstone.agent import Agent, Action, generate_valid_actions, BuyAction, EndPhaseAction, SummonAction
 if typing.TYPE_CHECKING:
-    from hearthstone.cards import Card
+
     from hearthstone.player import Player
 
 
@@ -14,7 +14,7 @@ class CheapoBot(Agent):
     def __init__(self, seed: int):
         self.local_random = random.Random(seed)
 
-    async def rearrange_cards(self, player: 'Player') -> List['Card']:
+    async def rearrange_cards(self, player: 'Player') -> List['MonsterCard']:
         card_list = player.in_play.copy()
         self.local_random.shuffle(card_list)
         return card_list
@@ -33,7 +33,7 @@ class CheapoBot(Agent):
 
         return EndPhaseAction(False)
 
-    async def discover_choice_action(self, player: 'Player') -> 'Card':
+    async def discover_choice_action(self, player: 'Player') -> 'MonsterCard':
         discover_cards = player.discover_queue[0]
         discover_cards = sorted(discover_cards, key=lambda card: card.tier)
         return discover_cards[0]

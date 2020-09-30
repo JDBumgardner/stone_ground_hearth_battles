@@ -9,7 +9,7 @@ from hearthstone.events import CombatPhaseContext
 if typing.TYPE_CHECKING:
     from hearthstone.player import Player
     from hearthstone.randomizer import Randomizer
-    from hearthstone.cards import Card, MonsterCard
+    from hearthstone.cards import MonsterCard
 
 
 logger = logging.getLogger(__name__)

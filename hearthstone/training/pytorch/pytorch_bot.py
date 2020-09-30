@@ -34,9 +34,9 @@ class PytorchBot(Agent):
         return get_indexed_action(int(action))
 
     #TODO handle learning card and discover choice actions
-    async def rearrange_cards(self, player: 'Player') -> List['Card']:
+    async def rearrange_cards(self, player: 'Player') -> List['MonsterCard']:
         return player.in_play
 
-    async def discover_choice_action(self, player: 'Player') -> 'Card':
+    async def discover_choice_action(self, player: 'Player') -> 'MonsterCard':
         return random.choice(player.discover_queue[0])
 

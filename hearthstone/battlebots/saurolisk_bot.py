@@ -9,7 +9,7 @@ from hearthstone.card_pool import RabidSaurolisk
 from hearthstone.player import Player, BoardIndex
 
 if typing.TYPE_CHECKING:
-    from hearthstone.cards import Card
+    from hearthstone.cards import MonsterCard
 
 
 class SauroliskBot(Agent):
@@ -17,7 +17,7 @@ class SauroliskBot(Agent):
     def __init__(self, seed: int):
         self.local_random = random.Random(seed)
 
-    async def rearrange_cards(self, player: 'Player') -> List['Card']:
+    async def rearrange_cards(self, player: 'Player') -> List['MonsterCard']:
         card_list = player.in_play.copy()
         self.local_random.shuffle(card_list)
         return card_list
@@ -52,7 +52,7 @@ class SauroliskBot(Agent):
 
         return EndPhaseAction(False)
 
-    async def discover_choice_action(self, player: 'Player') -> 'Card':
+    async def discover_choice_action(self, player: 'Player') -> 'MonsterCard':
         discover_cards = player.discover_queue[0]
         discover_cards = sorted(discover_cards, key=lambda card: self.desired_card(card), reverse=True)
         return discover_cards[0]

@@ -8,11 +8,11 @@ from hearthstone.player import Player, StoreIndex
 
 if typing.TYPE_CHECKING:
     from hearthstone.agent import Action
-    from hearthstone.cards import Card
+
 
 
 class PriorityBot(PriorityFunctionBot):
-    async def rearrange_cards(self, player: 'Player') -> List['Card']:
+    async def rearrange_cards(self, player: 'Player') -> List['MonsterCard']:
         card_list = player.in_play.copy()
         self.local_random.shuffle(card_list)
         return card_list
@@ -48,7 +48,7 @@ class PriorityBot(PriorityFunctionBot):
 
         return EndPhaseAction(False)
 
-    async def discover_choice_action(self, player: 'Player') -> 'Card':
+    async def discover_choice_action(self, player: 'Player') -> 'MonsterCard':
         discover_cards = player.discover_queue[0]
         discover_cards = sorted(discover_cards, key=lambda card: self.priority(player, card), reverse=True)
         return discover_cards[0]

@@ -4,14 +4,14 @@ from typing import Type
 from hearthstone.adaptations import AdaptBuffs
 from hearthstone.card_graveyard import *
 from hearthstone.card_pool import *
-from hearthstone.cards import Card, CardType
+from hearthstone.cards import MonsterCard, CardType
 from hearthstone.hero_pool import *
 from hearthstone.player import StoreIndex, HandIndex, BoardIndex
 from hearthstone.randomizer import DefaultRandomizer
 from hearthstone.tavern import Tavern
 
 
-def force_card(cards: List[Card], card_type) -> Card:
+def force_card(cards: List[MonsterCard], card_type) -> MonsterCard:
     return [card for card in cards if isinstance(card, card_type)][0]
 
 
@@ -20,7 +20,7 @@ class CardForcer(DefaultRandomizer):
         super().__init__()
         self.forced_cards = forced_cards
 
-    def select_draw_card(self, cards: List[Card], player_name: str, round_number: int) -> Card:
+    def select_draw_card(self, cards: List[MonsterCard], player_name: str, round_number: int) -> MonsterCard:
         next_card_type = self.forced_cards.pop(0)
         return force_card(cards, next_card_type)
 
@@ -31,7 +31,7 @@ class RepeatedCardForcer(DefaultRandomizer):
         self.repeatedly_forced_cards = repeatedly_forced_cards
         self.pointer = 0
 
-    def select_draw_card(self, cards: List[Card], player_name: str, round_number: int) -> Card:
+    def select_draw_card(self, cards: List[MonsterCard], player_name: str, round_number: int) -> MonsterCard:
         next_card_type = self.repeatedly_forced_cards[self.pointer]
         self.pointer = (self.pointer + 1) % len(self.repeatedly_forced_cards)
         return force_card(cards, next_card_type)
@@ -56,11 +56,11 @@ class CardTests(unittest.TestCase):
         self.assertNotIn(None, player_1.store)
         self.assertNotIn(None, player_2.store)
 
-    def type_of_cards(self, cards: List[Card]) -> List[Type]:
+    def type_of_cards(self, cards: List[MonsterCard]) -> List[Type]:
         return list(map(type, cards))
 
     class TestGameRandomizer(DefaultRandomizer):
-        def select_draw_card(self, cards: List[Card], player_name: str, round_number: int) -> Card:
+        def select_draw_card(self, cards: List[MonsterCard], player_name: str, round_number: int) -> MonsterCard:
             if player_name == "Dante_Kong":
                 return force_card(cards, WrathWeaver)
             if player_name == "lucy":
@@ -117,7 +117,7 @@ class CardTests(unittest.TestCase):
         def __init__(self):
             self.cards_drawn = 0
 
-        def select_draw_card(self, cards: List[Card], player_name: str, round_number: int) -> Card:
+        def select_draw_card(self, cards: List[MonsterCard], player_name: str, round_number: int) -> MonsterCard:
             if round_number == 0:
                 if player_name == "Dante_Kong":
                     return force_card(cards, WrathWeaver)
@@ -131,7 +131,7 @@ class CardTests(unittest.TestCase):
                 if player_name == "lucy":
                     return force_card(cards, WrathWeaver)
 
-        def select_attack_target(self, defenders: List[Card]) -> Card:
+        def select_attack_target(self, defenders: List[MonsterCard]) -> MonsterCard:
             target = [card for card in defenders if type(card) is not RighteousProtector]
             if target:
                 return target[0]
@@ -189,7 +189,7 @@ class CardTests(unittest.TestCase):
         self.assertEqual(player_2.health, 40, f"{player_2.name}'s heath is incorrect")
 
     class TestBattlecryRandomizer(DefaultRandomizer):
-        def select_draw_card(self, cards: List[Card], player_name: str, round_number: int) -> Card:
+        def select_draw_card(self, cards: List[MonsterCard], player_name: str, round_number: int) -> MonsterCard:
             return [card for card in cards if type(card) is AlleyCat][0]
 
     def test_battlecry(self):
@@ -203,7 +203,7 @@ class CardTests(unittest.TestCase):
         self.assertListEqual([AlleyCat, TabbyCat], self.type_of_cards(player_1.in_play))
 
     class TestRaftWeaverRandomizer(DefaultRandomizer):
-        def select_draw_card(self, cards: List[Card], player_name: str, round_number: int) -> Card:
+        def select_draw_card(self, cards: List[MonsterCard], player_name: str, round_number: int) -> MonsterCard:
             if round_number == 0:
                 return [card for card in cards if type(card) is WrathWeaver][0]
             else:
@@ -259,7 +259,7 @@ class CardTests(unittest.TestCase):
         self.assertEqual(pyramad_bonus, 1)
 
     class TestLordJaraxxusRandomizer(DefaultRandomizer):
-        def select_draw_card(self, cards: List[Card], player_name: str, round_number: int) -> Card:
+        def select_draw_card(self, cards: List[MonsterCard], player_name: str, round_number: int) -> MonsterCard:
             return [card for card in cards if type(card) is WrathWeaver][0]
 
     def test_lord_jaraxxus(self):
@@ -386,10 +386,10 @@ class CardTests(unittest.TestCase):
         self.assertCardListEquals(player_1.in_play, [])
 
     class TestDiscoverCardRandomizer(DefaultRandomizer):
-        def select_draw_card(self, cards: List[Card], player_name: str, round_number: int) -> Card:
+        def select_draw_card(self, cards: List[MonsterCard], player_name: str, round_number: int) -> MonsterCard:
             return force_card(cards, WrathWeaver)
 
-        def select_discover_card(self, discoverables: List[Card]) -> Card:
+        def select_discover_card(self, discoverables: List[MonsterCard]) -> MonsterCard:
             minion_types = [type(card) for card in discoverables]
             if FreedealingGambler in minion_types:
                 return force_card(discoverables, FreedealingGambler)
@@ -416,13 +416,13 @@ class CardTests(unittest.TestCase):
         self.assertCardListEquals(player_1.discover_queue, [])
 
     class TestDiscoverGoldenRandomizer(DefaultRandomizer):
-        def select_draw_card(self, cards: List[Card], player_name: str, round_number: int) -> Card:
+        def select_draw_card(self, cards: List[MonsterCard], player_name: str, round_number: int) -> MonsterCard:
             if round_number < 4:
                 return force_card(cards, WrathWeaver)
             else:
                 return force_card(cards, FreedealingGambler)
 
-        def select_discover_card(self, discoverables: List[Card]) -> Card:
+        def select_discover_card(self, discoverables: List[MonsterCard]) -> MonsterCard:
             minion_types = [type(card) for card in discoverables]
             if FreedealingGambler in minion_types:
                 return force_card(discoverables, FreedealingGambler)
@@ -726,7 +726,7 @@ class CardTests(unittest.TestCase):
         self.assertEqual(player_1.in_play[1].health, player_1.in_play[1].base_health)
 
     class TestGoldGrubberRandomizer(DefaultRandomizer):
-        def select_draw_card(self, cards: List[Card], player_name: str, round_number: int) -> Card:
+        def select_draw_card(self, cards: List[MonsterCard], player_name: str, round_number: int) -> MonsterCard:
             if round_number < 6:
                 return force_card(cards, FiendishServant)
             else:
@@ -776,7 +776,7 @@ class CardTests(unittest.TestCase):
         self.assertEqual(player_1.in_play[1].health, player_1.in_play[1].base_health + 2)
 
     class TestZoobotRandomizer(DefaultRandomizer):
-        def select_draw_card(self, cards: List[Card], player_name: str, round_number: int) -> Card:
+        def select_draw_card(self, cards: List[MonsterCard], player_name: str, round_number: int) -> MonsterCard:
             if round_number == 0:
                 return force_card(cards, MurlocTidehunter)
             elif round_number == 1:
@@ -786,7 +786,7 @@ class CardTests(unittest.TestCase):
             elif round_number == 4:
                 return force_card(cards, Zoobot)
 
-        def select_friendly_minion(self, friendly_minions: List[Card]) -> Card:
+        def select_friendly_minion(self, friendly_minions: List[MonsterCard]) -> MonsterCard:
             minion_types = [type(card) for card in friendly_minions]
             if MurlocTidehunter in minion_types:
                 return force_card(friendly_minions, MurlocTidehunter)
@@ -1183,7 +1183,7 @@ class CardTests(unittest.TestCase):
         self.assertTrue(player_1.in_play[0].taunt)
 
     class TestDancinDerylRandomizer(DefaultRandomizer):
-        def select_from_store(self, store: List['Card']) -> 'Card':
+        def select_from_store(self, store: List['MonsterCard']) -> 'MonsterCard':
             return store[0]
 
     def test_dancin_deryl(self):
@@ -1202,10 +1202,10 @@ class CardTests(unittest.TestCase):
             self.assertEqual(player_1.store[i].health, player_1.store[i].base_health)
 
     class TestFungalmancerFlurglRandomizer(DefaultRandomizer):
-        def select_draw_card(self, cards: List['Card'], player_name: str, round_number: int) -> 'Card':
+        def select_draw_card(self, cards: List['MonsterCard'], player_name: str, round_number: int) -> 'MonsterCard':
             return force_card(cards, MurlocTidecaller)
 
-        def select_add_to_store(self, cards: List['Card']) -> 'Card':
+        def select_add_to_store(self, cards: List['MonsterCard']) -> 'MonsterCard':
             return force_card(cards, RockpoolHunter)
 
     def test_fungalmancer_flurgl(self):
@@ -1287,7 +1287,7 @@ class CardTests(unittest.TestCase):
         self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health + 1)
 
     class TestTheRatKingRandomizer(DefaultRandomizer):
-        def select_draw_card(self, cards: List[Card], player_name: str, round_number: int) -> Card:
+        def select_draw_card(self, cards: List[MonsterCard], player_name: str, round_number: int) -> MonsterCard:
             if round_number == 0:
                 return force_card(cards, ScavengingHyena)
             elif round_number == 1:
@@ -1330,7 +1330,7 @@ class CardTests(unittest.TestCase):
             self.assertEqual(player_1.hand[i].health, player_1.hand[i].base_health + 2)
 
     class TestYseraRandomizer(DefaultRandomizer):
-        def select_add_to_store(self, cards: List['Card']) -> 'Card':
+        def select_add_to_store(self, cards: List['MonsterCard']) -> 'MonsterCard':
             return force_card(cards, DragonspawnLieutenant)
 
     def test_ysera(self):
@@ -1370,7 +1370,7 @@ class CardTests(unittest.TestCase):
         self.assertEqual(player_1.coins, 1)
 
     class TestShifterZerusRandomizer(DefaultRandomizer):
-        def select_draw_card(self, cards: List['Card'], player_name: str, round_number: int) -> 'Card':
+        def select_draw_card(self, cards: List['MonsterCard'], player_name: str, round_number: int) -> 'MonsterCard':
             if round_number < 4:
                 return force_card(cards, AlleyCat)
             return force_card(cards, ShifterZerus)
@@ -1686,7 +1686,7 @@ class CardTests(unittest.TestCase):
         self.assertEqual(player_1.in_play[3].health, player_1.in_play[3].base_health)
 
     class TestCaptainEudoraRandomizer(DefaultRandomizer):
-        def select_gain_card(self, cards: List['Card']) -> 'Card':
+        def select_gain_card(self, cards: List['MonsterCard']) -> 'MonsterCard':
             return force_card(cards, Goldgrubber)
 
     def test_captain_eudora(self):
@@ -1713,7 +1713,7 @@ class CardTests(unittest.TestCase):
         self.assertTrue(player_1.hand[0].golden)
 
     class TestHangryDragonRandomizer(DefaultRandomizer):
-        def select_draw_card(self, cards: List[Card], player_name: str, round_number: int) -> Card:
+        def select_draw_card(self, cards: List[MonsterCard], player_name: str, round_number: int) -> MonsterCard:
             if player_name == "Dante_Kong":
                 return force_card(cards, HangryDragon)
             if player_name == "lucy":
@@ -1745,7 +1745,7 @@ class CardTests(unittest.TestCase):
         self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health + 2)
 
     class TestLightfangEnforcerRandomizer(DefaultRandomizer):
-        def select_draw_card(self, cards: List[Card], player_name: str, round_number: int) -> Card:
+        def select_draw_card(self, cards: List[MonsterCard], player_name: str, round_number: int) -> MonsterCard:
             if round_number == 0:
                 return force_card(cards, MurlocTidecaller)
             elif round_number == 1:
@@ -1759,7 +1759,7 @@ class CardTests(unittest.TestCase):
             else:
                 return cards[0]
 
-        def select_friendly_minion(self, friendly_minions: List[Card]) -> Card:
+        def select_friendly_minion(self, friendly_minions: List[MonsterCard]) -> MonsterCard:
             minion_types = [type(card) for card in friendly_minions]
             if MurlocTidecaller in minion_types:
                 return force_card(friendly_minions, MurlocTidecaller)
@@ -1809,7 +1809,7 @@ class CardTests(unittest.TestCase):
         self.assertEqual(player_1.in_play[6].health, player_1.in_play[6].base_health)
 
     class TestMenagerieRandomizer(DefaultRandomizer):
-        def select_draw_card(self, cards: List[Card], player_name: str, round_number: int) -> Card:
+        def select_draw_card(self, cards: List[MonsterCard], player_name: str, round_number: int) -> MonsterCard:
             if round_number == 0:
                 return force_card(cards, MurlocTidehunter)
             elif round_number == 1:
@@ -1821,7 +1821,7 @@ class CardTests(unittest.TestCase):
             else:
                 return force_card(cards, AlleyCat)
 
-        def select_friendly_minion(self, friendly_minions: List[Card]) -> Card:
+        def select_friendly_minion(self, friendly_minions: List[MonsterCard]) -> MonsterCard:
             minion_types = [type(card) for card in friendly_minions]
             if MurlocTidehunter in minion_types:
                 return force_card(friendly_minions, MurlocTidehunter)
@@ -1932,13 +1932,13 @@ class CardTests(unittest.TestCase):
         self.assertEqual(player_1.in_play[6].health, player_1.in_play[6].base_health)
 
     class TestMicroMummyRandomizer(DefaultRandomizer):
-        def select_draw_card(self, cards: List[Card], player_name: str, round_number: int) -> Card:
+        def select_draw_card(self, cards: List[MonsterCard], player_name: str, round_number: int) -> MonsterCard:
             if round_number == 0:
                 return force_card(cards, AlleyCat)
             else:
                 return force_card(cards, MicroMummy)
 
-        def select_friendly_minion(self, friendly_minions: List[Card]) -> Card:
+        def select_friendly_minion(self, friendly_minions: List[MonsterCard]) -> MonsterCard:
             minion_types = [type(card) for card in friendly_minions]
             if AlleyCat in minion_types:
                 return force_card(friendly_minions, AlleyCat)
@@ -2003,7 +2003,7 @@ class CardTests(unittest.TestCase):
         self.assertFalse(player_1.in_play[1].golden)
 
     class TestJandiceBarovRandomizer(DefaultRandomizer):
-        def select_from_store(self, store: List['Card']) -> 'Card':
+        def select_from_store(self, store: List['MonsterCard']) -> 'MonsterCard':
             minion_types = [type(card) for card in store]
             if VulgarHomunculus in minion_types:
                 return force_card(store, VulgarHomunculus)
@@ -2194,7 +2194,7 @@ class CardTests(unittest.TestCase):
         self.assertCardListEquals(player_1.hand, [WrathWeaver])
 
     class TestCobaltScalebaneRandomizer(DefaultRandomizer):
-        def select_friendly_minion(self, friendly_minions: List['MonsterCard']) -> 'Card':
+        def select_friendly_minion(self, friendly_minions: List['MonsterCard']) -> 'MonsterCard':
             minion_types = [type(card) for card in friendly_minions]
             if AlleyCat in minion_types:
                 return force_card(friendly_minions, AlleyCat)
@@ -2426,7 +2426,7 @@ class CardTests(unittest.TestCase):
 
     class DinotamerBrannRandomizer(DefaultRandomizer):
 
-        def select_draw_card(self, cards: List['Card'], player_name: str, round_number: int) -> 'Card':
+        def select_draw_card(self, cards: List['MonsterCard'], player_name: str, round_number: int) -> 'MonsterCard':
             for card in cards:
                 assert card.base_battlecry
             return self.rand.choice(cards)

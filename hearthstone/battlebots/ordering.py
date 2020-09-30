@@ -1,8 +1,8 @@
-from hearthstone.cards import Card
+
 from hearthstone.card_pool import *
 from hearthstone.tavern import Player
 
-def rate_position(card: 'Card') -> float:
+def rate_position(card: 'MonsterCard') -> float:
     if type(card) is MonstrousMacaw:
         return 0.0
     if type(card) is UnstableGhoul or type(card) is SpawnOfNzoth:
@@ -28,7 +28,7 @@ def rate_position(card: 'Card') -> float:
     return 4.0
 
 
-def naive_rearrange_cards(player: 'Player') -> List['Card']:
+def naive_rearrange_cards(player: 'Player') -> List['MonsterCard']:
     in_play = player.in_play
     in_play.sort(key=rate_position)
     return in_play

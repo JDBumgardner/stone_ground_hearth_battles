@@ -3,7 +3,7 @@ import unittest
 from hearthstone.adaptations import AdaptBuffs
 from hearthstone.card_graveyard import *
 from hearthstone.card_pool import *
-from hearthstone.cards import Card
+
 from hearthstone.combat import WarParty, fight_boards
 from hearthstone.hero_pool import *
 from hearthstone.player import Player
@@ -13,7 +13,7 @@ from hearthstone.tavern import Tavern
 
 class CombatTests(unittest.TestCase):
     class TauntTestRandomizer(DefaultRandomizer):
-        def select_attack_target(self, defenders: List[Card]) -> Card:
+        def select_attack_target(self, defenders: List[MonsterCard]) -> MonsterCard:
             target = [card for card in defenders if type(card) is not RighteousProtector]
             if target:
                 return target[0]
@@ -54,7 +54,7 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(jeremy.health, 40)
 
     class FiendishServantRandomizer(DefaultRandomizer):
-        def select_attack_target(self, defenders: List[Card]) -> Card:
+        def select_attack_target(self, defenders: List[MonsterCard]) -> MonsterCard:
             return defenders[-1]
 
     def test_fiendish_servant(self):
@@ -324,7 +324,7 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     class DeflectOBotRandomizer(DefaultRandomizer):
-        def select_enemy_minion(self, enemy_minions: List[Card]) -> Card:
+        def select_enemy_minion(self, enemy_minions: List[MonsterCard]) -> MonsterCard:
             harvest_golem = [card for card in enemy_minions if type(card) is HarvestGolem]
             return harvest_golem[0]
 

@@ -3,6 +3,7 @@ from typing import Union, Tuple, Optional
 
 from hearthstone.card_factory import make_metaclass
 from hearthstone.cards import CardLocation
+
 from hearthstone.events import BuyPhaseContext, CombatPhaseContext, CardEvent
 
 if typing.TYPE_CHECKING:
