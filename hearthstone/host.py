@@ -1,11 +1,12 @@
-import collections
 import typing
 from typing import Dict
-from hearthstone.tavern import Tavern
+
 from hearthstone.agent import EndPhaseAction
+from hearthstone.tavern import Tavern
+
 if typing.TYPE_CHECKING:
     from hearthstone.agent import Agent
-import trio
+import asyncio
 
 
 class Host:
@@ -32,32 +33,33 @@ class RoundRobinHost(Host):
         for player_name in agents.keys():
             self.tavern.add_player(player_name)
         for player_name, player in self.tavern.players.items():
-            player.choose_hero(trio.run(self.agents[player_name].hero_choice_action, player))
+            player.choose_hero(
+                asyncio.get_event_loop().run_until_complete(self.agents[player_name].hero_choice_action(player)))
 
-    def play_round_generator(self) -> typing.Generator: # TODO: think about how to test this code
+    def play_round_generator(self) -> typing.Generator:  # TODO: think about how to test this code
         self.tavern.buying_step()
         for player_name, player in self.tavern.players.items():
             if player.health <= 0:
                 continue
             agent = self.agents[player_name]
             for _ in range(20):
-                action = trio.run(agent.buy_phase_action, player)
+                action = asyncio.get_event_loop().run_until_complete(agent.buy_phase_action(player))
                 yield
                 action.apply(player)
                 if player.discover_queue:
-                    discovered_card = trio.run(agent.discover_choice_action, player)
+                    discovered_card = asyncio.get_event_loop().run_until_complete(agent.discover_choice_action(player))
                     player.select_discover(discovered_card)
 
                 if type(action) is EndPhaseAction:
                     break
             if len(player.in_play) > 1:
-                arrangement = trio.run(agent.rearrange_cards, player)
+                arrangement = asyncio.get_event_loop().run_until_complete(agent.rearrange_cards(player))
                 assert set(arrangement) == set(player.in_play)
                 player.in_play = arrangement
         self.tavern.combat_step()
         if self.tavern.game_over():
             for position, (name, player) in enumerate(reversed(self.tavern.losers)):
-                trio.run(self.agents[name].game_over, player, position)
+                asyncio.get_event_loop().run_until_complete(self.agents[name].game_over(player, position))
 
     def play_round(self):
         for _ in self.play_round_generator():
@@ -83,7 +85,7 @@ class AsyncHost(Host):
             self.tavern.add_player(player_name)
 
     def start_game(self):
-        trio.run(self._async_start_game)
+        asyncio.get_event_loop().run_until_complete(self._async_start_game())
 
     async def _async_start_game(self):
         player_choices = {}
@@ -91,15 +93,16 @@ class AsyncHost(Host):
         async def set_player_choice(player_name, player):
             player_choices[player_name] = await self.agents[player_name].hero_choice_action(player)
 
-        async with trio.open_nursery() as nursery:
-            for player_name, player in self.tavern.players.items():
-                nursery.start_soon(set_player_choice, player_name, player)
+        loop = asyncio.get_event_loop()
+        for player_name, player in self.tavern.players.items():
+            asyncio.create_task(set_player_choice(player_name, player))
+        loop.run_until_complete(asyncio.gather(*asyncio.all_tasks(loop)))
 
         for player_name, player in self.tavern.players.items():
             player.choose_hero(player_choices[player_name])
 
     def play_round(self):
-        return trio.run(self._async_play_round)
+        return asyncio.get_event_loop().run_until_complete(self._async_play_round())
 
     async def _async_play_round(self):
         self.tavern.buying_step()
@@ -119,17 +122,20 @@ class AsyncHost(Host):
                 assert set(arrangement) == set(player.in_play)
                 player.in_play = arrangement
 
-        async with trio.open_nursery() as nursery:
-            for player_name, player in self.tavern.players.items():
-                if player.health <= 0:
-                    continue
-                nursery.start_soon(perform_player_actions, self.agents[player_name], player)
+        perform_player_action_tasks = []
+        for player_name, player in self.tavern.players.items():
+            if player.health <= 0:
+                continue
+            perform_player_action_tasks.append(
+                asyncio.create_task(perform_player_actions(self.agents[player_name], player)))
+        await asyncio.gather(*perform_player_action_tasks)
 
         self.tavern.combat_step()
         if self.tavern.game_over():
-            async with trio.open_nursery() as nursery:
-                for position, (name, player) in enumerate(reversed(self.tavern.losers)):
-                    nursery.start_soon(self.agents[name].game_over, player, position)
+            game_over_tasks = []
+            for position, (name, player) in enumerate(reversed(self.tavern.losers)):
+                game_over_tasks.append(await self.agents[name].game_over(player, position))
+            await asyncio.gather(*game_over_tasks)
 
     def game_over(self):
         return self.tavern.game_over()
