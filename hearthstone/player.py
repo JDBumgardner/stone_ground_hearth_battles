@@ -52,6 +52,7 @@ class Player:
         self.purchased_minions: List['Type'] = []
         self.last_opponent_warband: List['MonsterCard'] = []
         self.recruitment_maps = []
+        self.dead = False
 
     @property
     def coins(self):
@@ -338,3 +339,9 @@ class Player:
 
     def valid_play_recruitment_map(self):
         return bool(self.recruitment_maps) and self.coins >= self.recruitment_maps[-1].cost
+
+    def resolve_death(self):
+        assert not self.dead and self.health <= 0
+        self.dead = True
+        self.tavern.deck.return_cards(itertools.chain.from_iterable([card.dissolve() for card in self.in_play]))
+        self.broadcast_buy_phase_event(events.PlayerDeadEvent(self))
