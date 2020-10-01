@@ -69,7 +69,7 @@ def easy_contestants():
 
 
 StateBatch = namedtuple('StateBatch', ('player_tensor', 'cards_tensor'))
-TransitionBatch = namedtuple('TransitionBatch', ('state', 'valid_actions', 'action', 'action_prob', 'value', 'next_state', 'reward', 'is_terminal'))
+TransitionBatch = namedtuple('TransitionBatch', ('state', 'valid_actions', 'action', 'action_prob', 'value', 'value_target', 'reward', 'is_terminal'))
 
 
 # TODO: Delete all of this
@@ -81,8 +81,7 @@ def tensorize_batch(transitions: List[Transition], device: torch.device) -> Tran
     action_tensor = torch.tensor([transition.action for transition in transitions])
     action_prob_tensor = torch.tensor([transition.action_prob for transition in transitions])
     value_tensor = torch.tensor([transition.value for transition in transitions])
-    next_player_tensor = torch.stack([transition.next_state.player_tensor for transition in transitions])
-    next_cards_tensor = torch.stack([transition.next_state.cards_tensor for transition in transitions])
+    value_target_tensor = torch.tensor([transition.value_target for transition in transitions])
     reward_tensor = torch.tensor([transition.reward for transition in transitions])
     is_terminal_tensor = torch.tensor([transition.is_terminal for transition in transitions])
     return TransitionBatch(StateBatch(player_tensor.to(device), cards_tensor.to(device)),
@@ -90,6 +89,7 @@ def tensorize_batch(transitions: List[Transition], device: torch.device) -> Tran
                            action_tensor.to(device),
                            action_prob_tensor.to(device),
                            value_tensor.to(device),
-                           StateBatch(next_player_tensor.to(device), next_cards_tensor.to(device)),
+                           value_target_tensor.to(device),
                            reward_tensor.to(device),
-                           is_terminal_tensor.to(device))
+                           is_terminal_tensor.to(device),
+                           )

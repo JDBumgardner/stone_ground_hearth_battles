@@ -17,7 +17,8 @@ from hearthstone.training.pytorch.networks.feedforward_net import HearthstoneFFN
 from hearthstone.training.pytorch.networks.transformer_net import HearthstoneTransformerNet
 from hearthstone.training.pytorch.policy_gradient import tensorize_batch, easiest_contestants
 from hearthstone.training.pytorch.replay_buffer import ReplayBuffer, NormalizingReplayBuffer
-from hearthstone.training.pytorch.surveillance import SurveiledPytorchBot, ReplayBufferSaver, GlobalStepContext
+from hearthstone.training.pytorch.surveillance import SurveiledPytorchBot, ReplayBufferSaver, GlobalStepContext, \
+    GAEReplaySaver
 from hearthstone.training.pytorch.tensorboard_altair import TensorboardAltairPlotter
 from hearthstone.simulator.core import hero_pool
 
@@ -129,15 +130,10 @@ class PPOLearner(GlobalStepContext):
         """
         transitions: List[Transition] = replay_buffer.sample(batch_size)
         transition_batch = tensorize_batch(transitions, self.get_device())
-        # TODO turn off gradient here
-        # Note transition_batch.valid_actions is not the set of valid actions from the next state, but we are ignoring the
-        # policy network here so it doesn't matter
-        with torch.no_grad():
-            next_policy_, next_value = learning_net(transition_batch.next_state, transition_batch.valid_actions)
 
         policy, value = learning_net(transition_batch.state, transition_batch.valid_actions)
-        value_target = transition_batch.reward.unsqueeze(-1) + next_value.masked_fill(
-            transition_batch.is_terminal.unsqueeze(-1), 0.0)
+        value_target = transition_batch.value_target
+
         # The advantage is the difference between the expected value before taking the action and the value after updating
         advantage = value_target - value
         # Clip the advantage to be within ppo_epsilon of the advantage at the time that the action was taken.
@@ -256,7 +252,7 @@ class PPOLearner(GlobalStepContext):
                                              lambda: SurveiledPytorchBot(
                                                  learning_net,
                                                  [
-                                                     ReplayBufferSaver(replay_buffer),
+                                                     GAEReplaySaver(replay_buffer, device=device),
                                                      TensorboardAltairPlotter(tensorboard, self)
                                                  ],
                                                  device)
@@ -305,7 +301,7 @@ def main():
     ppo_learner = PPOLearner(PPOHyperparameters({'adam_lr': 0.000698178899316577,
                                                  'batch_size': 269,
                                                  'entropy_weight': 3.20049705838473e-05,
-                                                 'gradient_clipping': 100,
+                                                 'gradient_clipping': 0.5,
                                                  'nn_architecture': 'transformer',
                                                  'nn_hidden_layers': 3,
                                                  'nn_hidden_size': 256,
@@ -314,12 +310,10 @@ def main():
                                                  'normalize_advantage': True,
                                                  'normalize_observations': False,
                                                  'num_workers': 1,
-                                                 'optimizer': 'sgd',
-                                                 'sgd_lr': 0.00006,
-                                                 'sgd_momentum': 0.1,
+                                                 'optimizer': 'adam',
                                                  'policy_weight': 0.581166675499831,
                                                  'ppo_epochs': 8,
-                                                 'ppo_epsilon': 100}))
+                                                 'ppo_epsilon': 0.1}))
     ppo_learner.run()
 
 

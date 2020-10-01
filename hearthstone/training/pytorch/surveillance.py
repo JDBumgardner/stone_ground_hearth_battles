@@ -81,7 +81,7 @@ class ReplayBufferSaver(Parasite):
             logger.debug("No! Bad Citizen!")
             logger.debug("This IDE is lit")
         else:
-            new_state = encode_player(player)
+            new_state = encode_player(player, self.device)
             if self.last_state is not None:
                 self.remember_result(new_state, 0, False)
             self.last_state = encode_player(player, self.device)
@@ -100,6 +100,50 @@ class ReplayBufferSaver(Parasite):
                                            self.last_action, self.last_action_prob,
                                            self.last_value,
                                            new_state, reward, is_terminal))
+
+
+class GAEReplaySaver(Parasite):
+    GameStep = collections.namedtuple("GameStep", ["state", "action", "valid_actions",  "action_prob","value"])
+
+    def __init__(self, replay_buffer: ReplayBuffer, lam: float = 0.9, gamma: float = 0.99, device: Optional[torch.device] = None):
+        """
+        Puts transitions into the replay buffer.
+
+        Args:
+            replay_buffer: Buffer of transitions.
+        """
+        self.replay_buffer = replay_buffer
+        self.lam = lam
+        self.gamma = gamma
+        self.device = device
+
+        self.game_steps = []
+
+    def on_buy_phase_action(self, player: 'Player', action: Action, policy: torch.Tensor, value: torch.Tensor):
+        action_index = get_action_index(action)
+        self.game_steps.append(
+            self.GameStep(
+                state=encode_player(player, self.device),
+                action=int(action_index),
+                valid_actions=encode_valid_actions(player, self.device),
+                action_prob=float(policy[0][action_index]),
+                value=float(value)
+            )
+        )
+
+    def on_game_over(self, player: 'Player', ranking: int):
+        value_target = 3.5 - ranking
+        next_value = 3.5 - ranking
+        for i in range(len(self.game_steps)-1, -1, -1):
+            game_step = self.game_steps[i]
+            is_terminal = i == len(self.game_steps)-1
+            self.replay_buffer.push(Transition(game_step.state, game_step.valid_actions,
+                                               game_step.action, game_step.action_prob,
+                                               game_step.value, value_target,
+                                               3.5-ranking if is_terminal else 0.0, is_terminal))
+            delta = next_value - game_step.value
+            value_target = delta + value_target * self.gamma * self.lam
+            next_value = self.gamma * game_step.value
 
 
 class GlobalStepContext:

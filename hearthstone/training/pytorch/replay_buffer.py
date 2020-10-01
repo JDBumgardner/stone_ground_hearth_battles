@@ -62,10 +62,7 @@ class NormalizingReplayBuffer(ReplayBuffer):
                                 action=transition.action,
                                 action_prob=transition.action_prob,
                                 value=transition.value,
-                                next_state=State(self.player_normalizer.normalize(transition.next_state.player_tensor),
-                                                 self.cards_normalizer.normalize(transition.next_state.cards_tensor)),
-                                reward=transition.reward,
-                                is_terminal=transition.is_terminal
+                                value_target=transition.value_target
                                 ))
 
 
