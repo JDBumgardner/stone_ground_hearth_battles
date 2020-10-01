@@ -39,7 +39,7 @@ class RoundRobinHost(Host):
     def play_round_generator(self) -> typing.Generator:  # TODO: think about how to test this code
         self.tavern.buying_step()
         for player_name, player in self.tavern.players.items():
-            if player.health <= 0:
+            if player.dead:
                 continue
             agent = self.agents[player_name]
             for _ in range(20):
@@ -124,7 +124,7 @@ class AsyncHost(Host):
 
         perform_player_action_tasks = []
         for player_name, player in self.tavern.players.items():
-            if player.health <= 0:
+            if player.dead:
                 continue
             perform_player_action_tasks.append(
                 asyncio.create_task(perform_player_actions(self.agents[player_name], player)))

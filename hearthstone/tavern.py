@@ -47,6 +47,8 @@ class Tavern:
         self.game_state = GameState.BUY_PHASE
         self._generate_pairings()
         for player_name, player in self.players.items():
+            if player.dead:
+                continue
             player.buying_step()
 
     def combat_step(self):
@@ -57,6 +59,7 @@ class Tavern:
             player.broadcast_buy_phase_event(events.BuyEndEvent())
         for player_1, player_2 in self.current_player_pairings:
             combat.fight_boards(WarParty(player_1), WarParty(player_2), self.randomizer)
+        self.resolve_player_deaths()
         self._update_losers()
         self.turn_count += 1
 
@@ -79,6 +82,11 @@ class Tavern:
 
     def game_over(self):
         return len(self.losers) >= len(self.players)
+
+    def resolve_player_deaths(self):
+        for player in self.players.values():
+            if player.health <= 0 and not player.dead:
+                player.resolve_death()
 
 
 class GameState(enum.Enum):

@@ -29,6 +29,7 @@ class EVENTS(enum.Enum):
     END_COMBAT = 16
     TAVERN_UPGRADE = 17
     REFRESHED_STORE = 18
+    PLAYER_DEAD = 19
 
 
 class CardEvent:
@@ -96,6 +97,7 @@ class RefreshStoreEvent(CardEvent):
     def __init__(self):
         super().__init__(EVENTS.REFRESHED_STORE)
 
+
 class BuyEndEvent(CardEvent):
     def __init__(self):
         super().__init__(EVENTS.BUY_END)
@@ -136,6 +138,12 @@ class EndCombatEvent(CardEvent):
 class TavernUpgradeEvent(CardEvent):
     def __init__(self):
         super().__init__(EVENTS.TAVERN_UPGRADE)
+
+
+class PlayerDeadEvent(CardEvent):
+    def __init__(self, player: 'Player'):
+        super().__init__(EVENTS.PLAYER_DEAD)
+        self.player = player
 
 
 class BuyPhaseContext:
