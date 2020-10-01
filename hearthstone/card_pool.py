@@ -1885,3 +1885,25 @@ class LieutenantGarr(MonsterCard):
             num_elementals = len([card for card in context.owner.in_play if card.check_type(MONSTER_TYPES.ELEMENTAL)])
             multiplier = 2 if self.golden else 1
             self.health += num_elementals * multiplier
+
+
+class Sellemental(MonsterCard):
+    tier = 1
+    monster_type = MONSTER_TYPES.ELEMENTAL
+    base_attack = 2
+    base_health = 2
+
+    def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
+        if event.event is EVENTS.SELL and event.card == self:
+            num_tokens = 2 if self.golden else 1
+            for _ in range(num_tokens):
+                water_droplet = WaterDroplet()
+                context.owner.gain_card(water_droplet)
+
+
+class WaterDroplet(MonsterCard):
+    tier = 1
+    monster_type = MONSTER_TYPES.ELEMENTAL
+    base_attack = 2
+    base_health = 2
+    token = True

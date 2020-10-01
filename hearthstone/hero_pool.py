@@ -131,6 +131,8 @@ class FungalmancerFlurgl(Hero):
 
 
 class KaelthasSunstrider(Hero):
+    buy_counter = 0
+
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY:
             self.buy_counter += 1
@@ -400,3 +402,48 @@ class EliseStarseeker(Hero):
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.TAVERN_UPGRADE and context.owner.room_in_hand():
             context.owner.recruitment_maps.append(RecruitmentMap(context.owner.tavern_tier))
+
+
+class AlAkir(Hero):
+    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.COMBAT_START and len(context.friendly_war_party.board) >= 1:
+            leftmost_minion = context.friendly_war_party.board[0]
+            leftmost_minion.windfury = True
+            leftmost_minion.divine_shield = True
+            leftmost_minion.taunt = True
+
+
+class Chenvaala(Hero):
+    play_counter = 0
+
+    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.SUMMON_BUY and event.card.check_type(MONSTER_TYPES.ELEMENTAL):
+            self.play_counter += 1
+            if self.play_counter == 3:
+                context.owner.tavern_upgrade_cost -= 2
+                self.play_counter = 0
+
+
+class RagnarosTheFirelord(Hero):
+    minions_killed = 0
+    sulfuras = False
+
+    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.DIES and event.card in context.enemy_war_party.board:
+            self.minions_killed += 1
+            if self.minions_killed == 20:
+                self.sulfuras = True
+        if event.event is EVENTS.BUY_END and self.sulfuras and len(context.owner.in_play) >= 1:
+            for i in [0, -1]:
+                context.owner.in_play[i].attack += 4
+                context.owner.in_play[i].health += 4
+
+
+class Rakanishu(Hero):
+    power_cost = 2
+
+    def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                        store_index: Optional['StoreIndex'] = None):
+        random_minion = context.randomizer.select_friendly_minion(context.owner.in_play)
+        random_minion.attack += context.owner.tavern_tier
+        random_minion.health += context.owner.tavern_tier
