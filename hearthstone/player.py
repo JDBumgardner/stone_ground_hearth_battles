@@ -240,8 +240,9 @@ class Player:
 
     def sell_minion(self, index: BoardIndex):
         assert self.valid_sell_minion(index)
-        self.broadcast_buy_phase_event(events.SellEvent(self.in_play[index]))
-        card = self.in_play.pop(index)
+        card = self.in_play[index]
+        self.broadcast_buy_phase_event(events.SellEvent(card))
+        self.in_play.remove(card)
         self.coins += card.redeem_rate
         returned_cards = card.dissolve()
         self.tavern.deck.return_cards(returned_cards)

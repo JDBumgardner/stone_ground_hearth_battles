@@ -2,7 +2,7 @@ import logging
 import random
 import time
 from datetime import datetime
-from typing import List, Dict, Union, NewType
+from typing import List, Dict, Union, NewType, Optional
 
 import torch
 import trueskill
@@ -11,11 +11,11 @@ from torch.utils.tensorboard import SummaryWriter
 
 from hearthstone.host import RoundRobinHost
 from hearthstone.ladder.ladder import Contestant, update_ratings, load_ratings, print_standings
-from hearthstone.training.pytorch.networks.feedforward_net import HearthstoneFFNet
 from hearthstone.training.pytorch.hearthstone_state_encoder import Transition, get_indexed_action, \
     DEFAULT_PLAYER_ENCODING, DEFAULT_CARDS_ENCODING
+from hearthstone.training.pytorch.networks.feedforward_net import HearthstoneFFNet
 from hearthstone.training.pytorch.networks.transformer_net import HearthstoneTransformerNet
-from hearthstone.training.pytorch.policy_gradient import tensorize_batch, easy_contestants, easiest_contestants
+from hearthstone.training.pytorch.policy_gradient import tensorize_batch, easiest_contestants
 from hearthstone.training.pytorch.replay_buffer import ReplayBuffer, NormalizingReplayBuffer
 from hearthstone.training.pytorch.surveillance import SurveiledPytorchBot, ReplayBufferSaver, GlobalStepContext
 from hearthstone.training.pytorch.tensorboard_altair import TensorboardAltairPlotter
@@ -70,6 +70,7 @@ class Worker:
                     self._start_new_game()
                 else:
                     self.one_round_generator = self.host.play_round_generator()
+
 
 class PPOLearner(GlobalStepContext):
     """
@@ -126,7 +127,7 @@ class PPOLearner(GlobalStepContext):
             normalize_advantage: Whether to batch normal the advantage with a mean of 0 and stdev of 1.
         """
         transitions: List[Transition] = replay_buffer.sample(batch_size)
-        transition_batch = tensorize_batch(transitions)
+        transition_batch = tensorize_batch(transitions, self.get_device())
         # TODO turn off gradient here
         # Note transition_batch.valid_actions is not the set of valid actions from the next state, but we are ignoring the
         # policy network here so it doesn't matter
@@ -202,11 +203,18 @@ class PPOLearner(GlobalStepContext):
             for tag, parm in learning_net.named_parameters():
                 tensorboard.add_histogram(f"gradients_{tag}/train", parm.grad.data, self.global_step)
 
+    def get_device(self) -> torch.device:
+        if torch.cuda.is_available():
+            return torch.device('cuda:0')
+        else:
+            return torch.device('cpu')
+
     def run(self):
         start_time = time.time()
         last_reported_time = start_time
         batch_size = self.hparams['batch_size']
 
+        device = self.get_device()
         tensorboard = SummaryWriter(f"../../../data/learning/pytorch/tensorboard/{datetime.now().isoformat()}")
         logging.getLogger().setLevel(logging.INFO)
 
@@ -243,8 +251,15 @@ class PPOLearner(GlobalStepContext):
                                                     DEFAULT_CARDS_ENCODING)
         else:
             replay_buffer = ReplayBuffer(replay_buffer_size)
-        learning_bot_contestant = Contestant("LearningBot", lambda: SurveiledPytorchBot(learning_net, [
-            ReplayBufferSaver(replay_buffer), TensorboardAltairPlotter(tensorboard, self)]))
+        learning_bot_contestant = Contestant("LearningBot",
+                                             lambda: SurveiledPytorchBot(
+                                                 learning_net,
+                                                 [
+                                                     ReplayBufferSaver(replay_buffer),
+                                                     TensorboardAltairPlotter(tensorboard, self)
+                                                 ],
+                                                 device)
+                                             )
         # Rating starts a 14, which is how the randomly initialized pytorch bot performs.
         learning_bot_contestant.trueskill = trueskill.Rating(14)
         # Reuse standings from the current leaderboard.
@@ -286,13 +301,13 @@ class PPOLearner(GlobalStepContext):
 
 
 def main():
-    ppo_learner = PPOLearner(PPOHyperparameters({'adam_lr': 0.0000698178899316577,
+    ppo_learner = PPOLearner(PPOHyperparameters({'adam_lr': 0.000698178899316577,
                                                  'batch_size': 269,
                                                  'entropy_weight': 3.20049705838473e-05,
                                                  'gradient_clipping': 100,
                                                  'nn_architecture': 'transformer',
-                                                 'nn_hidden_layers': 1,
-                                                 'nn_hidden_size': 16,
+                                                 'nn_hidden_layers': 3,
+                                                 'nn_hidden_size': 256,
                                                  'nn_activation': 'gelu',
                                                  'nn_shared': 'false',
                                                  'normalize_advantage': True,

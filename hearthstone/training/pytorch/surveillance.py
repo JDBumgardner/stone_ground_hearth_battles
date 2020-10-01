@@ -32,13 +32,13 @@ class Parasite:
 
 
 class SurveiledPytorchBot(PytorchBot):
-    def __init__(self, net: nn.Module, parasites: List[Parasite] = None):
+    def __init__(self, net: nn.Module, parasites: List[Parasite] = None, device: Optional[torch.device] = None):
         """
         A pytorch bot that has attached listeners who get notified every time the bot takes an action
         :param net: The Pytorch value/policy module for this bot.
         :param parasites: A list of parasites who get notified whenever this bot takes an action.
         """
-        super().__init__(net)
+        super().__init__(net, device)
         self.parasites = parasites or []
 
     async def buy_phase_action(self, player: 'Player') -> Action:
@@ -60,7 +60,7 @@ class SurveiledPytorchBot(PytorchBot):
 
 
 class ReplayBufferSaver(Parasite):
-    def __init__(self, replay_buffer: ReplayBuffer):
+    def __init__(self, replay_buffer: ReplayBuffer, device: Optional[torch.device] = None):
         """
         Puts transitions into the replay buffer.
 
@@ -73,6 +73,7 @@ class ReplayBufferSaver(Parasite):
         self.last_action_prob: Optional[float] = None
         self.last_valid_actions: Optional[EncodedActionSet] = None
         self.last_value: Optional[float] = None
+        self.device = device
 
     def on_buy_phase_action(self, player: 'Player', action: Action, policy: torch.Tensor, value: torch.Tensor):
         action_index = get_action_index(action)
@@ -83,8 +84,8 @@ class ReplayBufferSaver(Parasite):
             new_state = encode_player(player)
             if self.last_state is not None:
                 self.remember_result(new_state, 0, False)
-            self.last_state = encode_player(player)
-            self.last_valid_actions = encode_valid_actions(player)
+            self.last_state = encode_player(player, self.device)
+            self.last_valid_actions = encode_valid_actions(player, self.device)
             self.last_action = int(action_index)
             self.last_action_prob = float(policy[0][action_index])
             self.last_value = float(value)

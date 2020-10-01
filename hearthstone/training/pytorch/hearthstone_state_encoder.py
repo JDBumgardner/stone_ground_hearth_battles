@@ -223,9 +223,12 @@ DEFAULT_PLAYER_ENCODING = default_player_encoding()
 DEFAULT_CARDS_ENCODING = default_cards_encoding()
 
 
-def encode_player(player: Player) -> State:
+def encode_player(player: Player, device: Optional[torch.device] = None) -> State:
     player_tensor = torch.from_numpy(DEFAULT_PLAYER_ENCODING.encode(player))
     cards_tensor = torch.from_numpy(DEFAULT_CARDS_ENCODING.encode(player))
+    if device:
+        player_tensor = player_tensor.to(device)
+        cards_tensor = cards_tensor.to(device)
     return State(player_tensor, cards_tensor)
 
 
@@ -287,7 +290,7 @@ def _all_actions_dict():
 ALL_ACTIONS_DICT: Dict[str, int] = _all_actions_dict()
 
 
-def encode_valid_actions(player: Player) -> EncodedActionSet:
+def encode_valid_actions(player: Player, device: Optional[torch.device] = None) -> EncodedActionSet:
     actions = ALL_ACTIONS
 
     player_action_tensor = torch.tensor([action.valid(player) for action in actions.player_action_set])
@@ -296,6 +299,10 @@ def encode_valid_actions(player: Player) -> EncodedActionSet:
         for j, action in enumerate(card_actions):
             cards_action_array[i, j] = action.valid(player)
     cards_action_tensor = torch.from_numpy(cards_action_array)
+
+    if device:
+        player_action_tensor = player_action_tensor.to(device)
+        cards_action_tensor = cards_action_tensor.to(device)
     return EncodedActionSet(player_action_tensor, cards_action_tensor)
 
 

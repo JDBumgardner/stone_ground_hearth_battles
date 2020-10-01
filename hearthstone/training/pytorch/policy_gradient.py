@@ -1,5 +1,5 @@
 from collections import namedtuple
-from typing import List
+from typing import List, Optional
 
 import torch
 from torch import nn
@@ -73,7 +73,7 @@ TransitionBatch = namedtuple('TransitionBatch', ('state', 'valid_actions', 'acti
 
 
 # TODO: Delete all of this
-def tensorize_batch(transitions: List[Transition]) -> TransitionBatch:
+def tensorize_batch(transitions: List[Transition], device: torch.device) -> TransitionBatch:
     player_tensor = torch.stack([transition.state.player_tensor for transition in transitions])
     cards_tensor = torch.stack([transition.state.cards_tensor for transition in transitions])
     valid_player_actions_tensor = torch.stack([transition.valid_actions.player_action_tensor for transition in transitions])
@@ -85,11 +85,11 @@ def tensorize_batch(transitions: List[Transition]) -> TransitionBatch:
     next_cards_tensor = torch.stack([transition.next_state.cards_tensor for transition in transitions])
     reward_tensor = torch.tensor([transition.reward for transition in transitions])
     is_terminal_tensor = torch.tensor([transition.is_terminal for transition in transitions])
-    return TransitionBatch(StateBatch(player_tensor, cards_tensor),
-                           EncodedActionSet(valid_player_actions_tensor, valid_card_actions_tensor),
-                           action_tensor,
-                           action_prob_tensor,
-                           value_tensor,
-                           StateBatch(next_player_tensor, next_cards_tensor),
-                           reward_tensor,
-                           is_terminal_tensor)
+    return TransitionBatch(StateBatch(player_tensor.to(device), cards_tensor.to(device)),
+                           EncodedActionSet(valid_player_actions_tensor.to(device), valid_card_actions_tensor.to(device)),
+                           action_tensor.to(device),
+                           action_prob_tensor.to(device),
+                           value_tensor.to(device),
+                           StateBatch(next_player_tensor.to(device), next_cards_tensor.to(device)),
+                           reward_tensor.to(device),
+                           is_terminal_tensor.to(device))
