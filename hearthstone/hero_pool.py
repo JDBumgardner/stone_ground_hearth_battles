@@ -442,6 +442,10 @@ class RagnarosTheFirelord(Hero):
 class Rakanishu(Hero):
     power_cost = 2
 
+    def hero_power_valid(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                         store_index: Optional['StoreIndex'] = None):
+        return bool(context.owner.in_play)
+
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
         random_minion = context.randomizer.select_friendly_minion(context.owner.in_play)
