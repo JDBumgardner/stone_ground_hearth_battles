@@ -21,7 +21,7 @@ class Transition(NamedTuple):
     action: int  # Index of the action
     action_prob: float
     value: float
-    next_state: State
+    value_target: float
     reward: float
     is_terminal: bool
 
