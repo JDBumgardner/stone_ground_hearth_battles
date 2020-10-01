@@ -93,10 +93,10 @@ class AsyncHost(Host):
         async def set_player_choice(player_name, player):
             player_choices[player_name] = await self.agents[player_name].hero_choice_action(player)
 
-        loop = asyncio.get_event_loop()
+        player_choice_tasks = []
         for player_name, player in self.tavern.players.items():
-            asyncio.create_task(set_player_choice(player_name, player))
-        loop.run_until_complete(asyncio.gather(*asyncio.all_tasks(loop)))
+            player_choice_tasks.append(asyncio.create_task(set_player_choice(player_name, player)))
+        await asyncio.gather(*player_choice_tasks)
 
         for player_name, player in self.tavern.players.items():
             player.choose_hero(player_choices[player_name])
@@ -134,7 +134,7 @@ class AsyncHost(Host):
         if self.tavern.game_over():
             game_over_tasks = []
             for position, (name, player) in enumerate(reversed(self.tavern.losers)):
-                game_over_tasks.append(await self.agents[name].game_over(player, position))
+                game_over_tasks.append(asyncio.create_task(self.agents[name].game_over(player, position)))
             await asyncio.gather(*game_over_tasks)
 
     def game_over(self):

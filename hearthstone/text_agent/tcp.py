@@ -1,7 +1,5 @@
-import trio
+import asyncio
 
-from hearthstone.agent import Agent
-from hearthstone.text_agent.line_reader import LineReader
 from hearthstone.text_agent.text_agent import TextAgentTransport
 
 
@@ -9,16 +7,17 @@ class TcpTransport(TextAgentTransport):
     """
     Non-blocking Text agent that communicates over TCP.
     """
-    def __init__(self, stream: trio.abc.Stream):
-        self.stream = stream
-        self.line_reader = LineReader(self.stream, 1024)
+    def __init__(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
+        self.reader = reader
+        self.writer = writer
 
     async def receive_line(self) -> str:
         try:
-            return (await self.line_reader.readline()).decode('utf-8').rstrip()
+            return (await self.reader.readline()).decode('utf-8').rstrip()
         except UnicodeDecodeError:
             print("fnord")
             return ""
 
     async def send(self, text: str):
-        await self.stream.send_all(text.encode('utf-8'))
+        self.writer.write(text.encode('utf-8'))
+        await self.writer.drain()
