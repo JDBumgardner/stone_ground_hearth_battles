@@ -2647,6 +2647,48 @@ class CardTests(unittest.TestCase):
         self.assertEqual(player_1.in_play[0].attack, player_1.in_play[0].base_attack + 6)
         self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health + 6)
 
+    def test_mr_bigglesworth(self):
+        tavern = Tavern()
+        player_1 = tavern.add_player_with_hero("Dante_Kong", MrBigglesworth())
+        player_2 = tavern.add_player_with_hero("lucy")
+        self.upgrade_to_tier(tavern, 6)
+        tavern.randomizer = RepeatedCardForcer([AlleyCat, DefenderOfArgus, ZappSlywick])
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(2))
+        player_1.summon_from_hand(HandIndex(0))
+        player_2.purchase(StoreIndex(0))
+        player_2.summon_from_hand(HandIndex(0))
+        player_2.purchase(StoreIndex(0))
+        player_2.summon_from_hand(HandIndex(0), [BoardIndex(0), BoardIndex(1)])
+        self.assertCardListEquals(player_1.in_play, [ZappSlywick])
+        self.assertCardListEquals(player_2.in_play, [AlleyCat, TabbyCat, DefenderOfArgus])
+        self.assertEqual(player_2.in_play[0].attack, player_2.in_play[0].base_attack + 1)
+        self.assertEqual(player_2.in_play[0].health, player_2.in_play[0].base_health + 1)
+        self.assertEqual(player_2.in_play[1].attack, player_2.in_play[1].base_attack + 1)
+        self.assertEqual(player_2.in_play[1].health, player_2.in_play[1].base_health + 1)
+        self.assertTrue(player_2.in_play[0].taunt)
+        self.assertTrue(player_2.in_play[1].taunt)
+        for _ in range(4):
+            self.assertFalse(player_2.dead)
+            tavern.combat_step()
+            tavern.buying_step()
+        self.assertTrue(player_2.dead)
+        self.assertFalse(bool(player_2.in_play))
+        self.assertEqual(len(player_1.discover_queue), 1)
+        self.assertEqual(len(player_1.discover_queue[0]), 3)
+        for card in player_1.discover_queue[0]:
+            if type(card) != DefenderOfArgus:
+                self.assertEqual(card.attack, card.base_attack + 1)
+                self.assertEqual(card.health, card.base_health + 1)
+                self.assertTrue(card.taunt)
+        player_1.select_discover(player_1.discover_queue[0][0])
+        self.assertEqual(len(player_1.hand), 1)
+        self.assertEqual(len(player_1.discover_queue), 0)
+        tavern.combat_step()
+        tavern.buying_step()
+        self.assertEqual(len(player_1.discover_queue), 0)
+
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -93,6 +93,7 @@ class BuyEvent(CardEvent):
         super().__init__(EVENTS.BUY)
         self.card = card
 
+
 class RefreshStoreEvent(CardEvent):
     def __init__(self):
         super().__init__(EVENTS.REFRESHED_STORE)

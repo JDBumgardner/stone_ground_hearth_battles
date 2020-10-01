@@ -333,9 +333,9 @@ class Player:
 
     def play_recruitment_map(self):
         assert self.valid_play_recruitment_map()
-        map = self.recruitment_maps.pop()
-        self.coins -= map.cost
-        discover_tier = map.level
+        recruitment_map = self.recruitment_maps.pop()
+        self.coins -= recruitment_map.cost
+        discover_tier = recruitment_map.level
         self.draw_discover(lambda card: card.tier == discover_tier)
 
     def valid_play_recruitment_map(self):
@@ -344,5 +344,10 @@ class Player:
     def resolve_death(self):
         assert not self.dead and self.health <= 0
         self.dead = True
+        self.broadcast_self_death_event(events.PlayerDeadEvent(self))
         self.tavern.deck.return_cards(itertools.chain.from_iterable([card.dissolve() for card in self.in_play]))
-        self.broadcast_buy_phase_event(events.PlayerDeadEvent(self))
+
+    def broadcast_self_death_event(self, event: 'CardEvent', randomizer: Optional['Randomizer'] = None):  # Perhaps there is a better implementation than this
+        for player in self.tavern.players.values():
+            player.hero.handle_event(event, BuyPhaseContext(player, randomizer or self.tavern.randomizer))
+

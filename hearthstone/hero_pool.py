@@ -451,3 +451,15 @@ class Rakanishu(Hero):
         random_minion = context.randomizer.select_friendly_minion(context.owner.in_play)
         random_minion.attack += context.owner.tavern_tier
         random_minion.health += context.owner.tavern_tier
+
+
+class MrBigglesworth(Hero):
+    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.PLAYER_DEAD and bool(event.player.in_play):
+            discovered_cards = []
+            for _ in range(3):
+                if event.player.in_play:
+                    enemy_minion = context.randomizer.select_enemy_minion(event.player.in_play)
+                    event.player.in_play.remove(enemy_minion)
+                    discovered_cards.append(enemy_minion)
+            context.owner.discover_queue.append(discovered_cards)
