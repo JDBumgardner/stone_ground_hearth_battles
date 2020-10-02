@@ -1,5 +1,6 @@
+import collections
 from collections import defaultdict
-from typing import List
+from typing import List, Optional
 
 import altair as alt
 import pandas as pd
@@ -9,7 +10,51 @@ from torch.utils.tensorboard import SummaryWriter
 
 from hearthstone.simulator.agent import Action, SellAction, SummonAction, BuyAction, generate_valid_actions
 from hearthstone.training.pytorch import hearthstone_state_encoder
+from hearthstone.training.pytorch.hearthstone_state_encoder import encode_player, encode_valid_actions, get_action_index
+from hearthstone.training.pytorch.replay_buffer import ReplayBuffer
 from hearthstone.training.pytorch.surveillance import Parasite, GlobalStepContext
+
+
+class GAEPlotter(Parasite):
+    GameStep = collections.namedtuple("GameStep", ["state", "action", "valid_actions", "action_prob", "value"])
+
+    def __init__(self, lam: float = 0.9, gamma: float = 0.99,
+                 device: Optional[torch.device] = None):
+        """
+        Puts transitions into the replay buffer.
+
+        Args:
+            replay_buffer: Buffer of transitions.
+        """
+        self.lam = lam
+        self.gamma = gamma
+        self.device = device
+
+        self.game_steps = []
+
+    def on_buy_phase_action(self, player: 'Player', action: Action, policy: torch.Tensor, value: torch.Tensor):
+        action_index = get_action_index(action)
+        self.game_steps.append(
+            self.GameStep(
+                state=encode_player(player, self.device),
+                action=int(action_index),
+                valid_actions=encode_valid_actions(player, self.device),
+                action_prob=float(policy[0][action_index]),
+                value=float(value)
+            )
+        )
+
+    def on_game_over(self, player: 'Player', ranking: int) -> List[int]:
+        result = []
+        gae_return = 3.5 - ranking
+        next_value = 3.5 - ranking
+        for i in range(len(self.game_steps) - 1, -1, -1):
+            game_step = self.game_steps[i]
+            result.append(gae_return)
+            gae_return = next_value + (gae_return - next_value) * self.gamma * self.lam
+            next_value = self.gamma * game_step.value
+        result.reverse()
+        return result
 
 
 class TensorboardAltairPlotter(Parasite):
@@ -36,6 +81,8 @@ class TensorboardAltairPlotter(Parasite):
         self.sell_probs = []
         self.summon_probs = []
         self.buy_probs = []
+
+        self.gae_plotter = GAEPlotter()
 
     def populate_action_probs(self, player: 'player', policy:torch.Tensor):
         policy = policy.detach().squeeze().exp()
@@ -67,6 +114,7 @@ class TensorboardAltairPlotter(Parasite):
         self.actions.append(action.str_in_context(player))
         self.action_types.append(type(action).__name__)
         self.populate_action_probs(player, policy)
+        self.gae_plotter.on_buy_phase_action(player, action, policy, value)
 
     def update_gamestate(self, player: 'Player', value, reward):
         self.turn_counts.append(player.tavern.turn_count)
@@ -133,6 +181,9 @@ class TensorboardAltairPlotter(Parasite):
         self.summon_probs.append([None for _ in player.hand])
         self.buy_probs.append([None for _ in player.store])
 
+        gae_value_targets = self.gae_plotter.on_game_over(player, ranking)
+        gae_value_targets.append(None)
+
         df = pd.DataFrame({
             "turn_count": self.turn_counts,
             "health": self.healths,
@@ -140,6 +191,7 @@ class TensorboardAltairPlotter(Parasite):
             "dead_players": self.dead_players,
             "avg_enemy_health": self.avg_enemy_healths,
             "critic_value": self.values,
+            "critic_value_gae_target": gae_value_targets,
             "reward": self.rewards,
             "action": self.actions,
             "action_type": self.action_types,

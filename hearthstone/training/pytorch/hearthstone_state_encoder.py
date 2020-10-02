@@ -3,8 +3,8 @@ import enum
 from collections import namedtuple
 from typing import Callable, List, Any, Optional, Dict, NamedTuple, Tuple
 
-import torch
 import numpy as np
+import torch
 
 from hearthstone.simulator.agent import TripleRewardsAction, TavernUpgradeAction, RerollAction, \
     EndPhaseAction, SummonAction, BuyAction, SellAction, Action
@@ -21,7 +21,8 @@ class Transition(NamedTuple):
     action: int  # Index of the action
     action_prob: float
     value: float
-    value_target: float
+    gae_return: float
+    retn: float
     reward: float
     is_terminal: bool
 
@@ -191,7 +192,6 @@ def default_player_encoding() -> Feature:
 
     Encodes a `Player`.
     """
-
     return CombinedFeature([
         ScalarFeature(lambda player: float(player.tavern.turn_count)),
         ScalarFeature(lambda player: float(player.health)),

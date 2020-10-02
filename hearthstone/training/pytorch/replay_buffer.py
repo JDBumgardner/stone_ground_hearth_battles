@@ -62,7 +62,10 @@ class NormalizingReplayBuffer(ReplayBuffer):
                                 action=transition.action,
                                 action_prob=transition.action_prob,
                                 value=transition.value,
-                                value_target=transition.value_target
+                                gae_return=transition.gae_return,
+                                retn=transition.retn,
+                                reward=transition.reward,
+                                is_terminal=transition.is_terminal
                                 ))
 
 

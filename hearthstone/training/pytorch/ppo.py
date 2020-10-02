@@ -132,13 +132,9 @@ class PPOLearner(GlobalStepContext):
         transition_batch = tensorize_batch(transitions, self.get_device())
 
         policy, value = learning_net(transition_batch.state, transition_batch.valid_actions)
-        value_target = transition_batch.value_target
 
         # The advantage is the difference between the expected value before taking the action and the value after updating
-        advantage = value_target - value
-        # Clip the advantage to be within ppo_epsilon of the advantage at the time that the action was taken.
-        clipped_advantage = value_target - transition_batch.value + torch.clamp(transition_batch.value - value,
-                                                                                -ppo_epsilon, ppo_epsilon)
+        advantage = transition_batch.gae_return - value
 
         ratio = torch.exp(policy - transition_batch.action_prob.unsqueeze(-1)).gather(1,
                                                                                       transition_batch.action.unsqueeze(
@@ -152,7 +148,13 @@ class PPOLearner(GlobalStepContext):
         clipped_policy_loss = - clipped_ratio * normalized_advantage
         unclipped_policy_loss = - ratio * normalized_advantage
         policy_loss = torch.max(clipped_policy_loss, unclipped_policy_loss).mean()
-        value_loss = torch.max(advantage.pow(2), clipped_advantage.pow(2)).mean()
+
+        value_error = transition_batch.retn - value
+        # Clip the value error to be within ppo_epsilon of the advantage at the time that the action was taken.
+        clipped_value_error = transition_batch.retn - transition_batch.value + torch.clamp(transition_batch.value - value,
+                                                                                -ppo_epsilon, ppo_epsilon)
+
+        value_loss = torch.max(value_error.pow(2), clipped_value_error.pow(2)).mean()
 
         # Here we compute the policy only for actions which are valid.
         valid_action_tensor = torch.cat(
@@ -299,12 +301,12 @@ class PPOLearner(GlobalStepContext):
 
 def main():
     ppo_learner = PPOLearner(PPOHyperparameters({'adam_lr': 0.000698178899316577,
-                                                 'batch_size': 269,
+                                                 'batch_size': 1024,
                                                  'entropy_weight': 3.20049705838473e-05,
                                                  'gradient_clipping': 0.5,
                                                  'nn_architecture': 'transformer',
-                                                 'nn_hidden_layers': 3,
-                                                 'nn_hidden_size': 256,
+                                                 'nn_hidden_layers': 1,
+                                                 'nn_hidden_size': 16,
                                                  'nn_activation': 'gelu',
                                                  'nn_shared': 'false',
                                                  'normalize_advantage': True,
