@@ -173,17 +173,6 @@ class BananaAction(Action):
         return player.valid_use_banana(self.board_target, self.store_target)
 
 
-class RecruitmentMapAction(Action):
-    def __repr__(self):
-        return f"RecruitmentMap()"
-
-    def apply(self, player: 'Player'):
-        player.play_recruitment_map()
-
-    def valid(self, player: 'Player') -> bool:
-        return player.valid_play_recruitment_map()
-
-
 class Agent:
     async def hero_choice_action(self, player: 'Player') -> 'Hero':
         return player.hero_options[0]

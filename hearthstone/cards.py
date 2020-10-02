@@ -71,7 +71,7 @@ class MonsterCard(metaclass=CardType):
     base_reborn = False
     redeem_rate = 1
     tier: int
-    token = False
+    token = False  # TODO: should this be an instance attribute so it can be manipulated by Rafaam/Bigglesworth?
     tracked = False
     cant_attack = False
     shifting = False

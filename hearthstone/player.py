@@ -40,7 +40,7 @@ class Player:
         self.maximum_hand_size = 10
         self.refresh_store_cost = 1
         self._tavern_upgrade_costs = (0, 5, 7, 8, 9, 10)
-        self.tavern_upgrade_cost = 5
+        self._tavern_upgrade_cost = 5
         self.hand: List[MonsterCard] = []
         self.in_play: List[MonsterCard] = []
         self.store: List[MonsterCard] = []
@@ -51,7 +51,6 @@ class Player:
         self.bananas = 0
         self.purchased_minions: List['Type'] = []
         self.last_opponent_warband: List['MonsterCard'] = []
-        self.recruitment_maps = []
         self.dead = False
 
     @property
@@ -61,6 +60,14 @@ class Player:
     @coins.setter
     def coins(self, coins):
         self._coins = min(coins, 10)
+
+    @property
+    def tavern_upgrade_cost(self):
+        return self._tavern_upgrade_cost
+
+    @tavern_upgrade_cost.setter
+    def tavern_upgrade_cost(self, tavern_upgrade_cost):
+        self._tavern_upgrade_cost = max(0, tavern_upgrade_cost)
 
     @staticmethod
     def new_player_with_hero(tavern: Optional['Tavern'], name: str, hero: Optional['Hero'] = None) -> 'Player':
@@ -88,7 +95,7 @@ class Player:
         self.coins = self.coin_income_rate
 
     def decrease_tavern_upgrade_cost(self):
-        self.tavern_upgrade_cost = max(0, self.tavern_upgrade_cost - 1)
+        self.tavern_upgrade_cost -= 1
 
     def upgrade_tavern(self):
         assert self.valid_upgrade_tavern()
@@ -265,7 +272,7 @@ class Player:
             card.handle_event_in_hand(event, BuyPhaseContext(self, randomizer or self.tavern.randomizer))
 
     def hand_size(self):
-        return len(self.hand) + len(self.triple_rewards) + self.gold_coins + self.bananas + len(self.recruitment_maps)
+        return len(self.hand) + len(self.triple_rewards) + self.gold_coins + self.bananas + (len(self.hero.recruitment_maps) if hasattr(self.hero, 'recruitment_maps') else 0)
 
     def room_in_hand(self):
         return self.hand_size() < self.maximum_hand_size
@@ -331,23 +338,13 @@ class Player:
             return False
         return True
 
-    def play_recruitment_map(self):
-        assert self.valid_play_recruitment_map()
-        recruitment_map = self.recruitment_maps.pop()
-        self.coins -= recruitment_map.cost
-        discover_tier = recruitment_map.level
-        self.draw_discover(lambda card: card.tier == discover_tier)
-
-    def valid_play_recruitment_map(self):
-        return bool(self.recruitment_maps) and self.coins >= self.recruitment_maps[-1].cost
-
     def resolve_death(self):
         assert not self.dead and self.health <= 0
         self.dead = True
         self.broadcast_self_death_event(events.PlayerDeadEvent(self))
         self.tavern.deck.return_cards(itertools.chain.from_iterable([card.dissolve() for card in self.in_play]))
 
-    def broadcast_self_death_event(self, event: 'CardEvent', randomizer: Optional['Randomizer'] = None):  # Perhaps there is a better implementation than this
+    def broadcast_self_death_event(self, event: 'CardEvent'):
         for player in self.tavern.players.values():
-            player.hero.handle_event(event, BuyPhaseContext(player, randomizer or self.tavern.randomizer))
+            player.hero.handle_event(event, BuyPhaseContext(player, self.tavern.randomizer))
 

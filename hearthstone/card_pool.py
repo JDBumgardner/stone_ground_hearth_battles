@@ -458,7 +458,7 @@ class DeckSwabbie(MonsterCard):
 
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
         discount = 2 if self.golden else 1
-        context.owner.tavern_upgrade_cost = max(context.owner.tavern_upgrade_cost - discount, 0)
+        context.owner.tavern_upgrade_cost -= discount
 
 
 class UnstableGhoul(MonsterCard):
@@ -1588,6 +1588,7 @@ class MicroMummy(MonsterCard):
     base_attack = 1
     base_health = 2
     base_reborn = True
+    mana_cost = 2
 
     def handle_event_powers(self, event: CardEvent, context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_END:

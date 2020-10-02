@@ -287,7 +287,7 @@ class JandiceBarov(Hero):
         context.owner.store.append(board_minion)
 
 
-class ArchVillianRafaam(Hero):
+class ArchVillianRafaam(Hero):  # TODO: tokens gained will enter the pool when sold
     power_cost = 1
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
@@ -399,9 +399,22 @@ class KingMukla(Hero):
 
 
 class EliseStarseeker(Hero):
+    power_cost = 3
+    multiple_power_uses_per_turn = True
+    recruitment_maps = []
+
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.TAVERN_UPGRADE and context.owner.room_in_hand():
-            context.owner.recruitment_maps.append(RecruitmentMap(context.owner.tavern_tier))
+            self.recruitment_maps.append(context.owner.tavern_tier)
+
+    def hero_power_valid_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                              store_index: Optional['StoreIndex'] = None):
+        return bool(self.recruitment_maps)
+
+    def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                        store_index: Optional['StoreIndex'] = None):
+        discover_tier = self.recruitment_maps.pop()
+        context.owner.draw_discover(lambda card: card.tier == discover_tier)
 
 
 class AlAkir(Hero):
@@ -434,7 +447,7 @@ class RagnarosTheFirelord(Hero):
             if self.minions_killed == 20:
                 self.sulfuras = True
         if event.event is EVENTS.BUY_END and self.sulfuras and len(context.owner.in_play) >= 1:
-            for i in [0, -1]:
+            for i in [0, -1]:  # TODO: not 100% sure this is correct with only 1 minion in play
                 context.owner.in_play[i].attack += 4
                 context.owner.in_play[i].health += 4
 
@@ -453,13 +466,13 @@ class Rakanishu(Hero):
         random_minion.health += context.owner.tavern_tier
 
 
-class MrBigglesworth(Hero):
+class MrBigglesworth(Hero):  # TODO: tokens discovered will enter the pool when sold
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.PLAYER_DEAD and bool(event.player.in_play):
             discovered_cards = []
             for _ in range(3):
                 if event.player.in_play:
                     enemy_minion = context.randomizer.select_enemy_minion(event.player.in_play)
-                    event.player.in_play.remove(enemy_minion)
+                    event.player.in_play.remove(enemy_minion)  # TODO: need to keep these three minions on the board
                     discovered_cards.append(enemy_minion)
             context.owner.discover_queue.append(discovered_cards)

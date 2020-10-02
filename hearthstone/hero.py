@@ -19,6 +19,7 @@ class Hero(metaclass=HeroType):
     hero_power_used = False
     can_use_power = True
     power_target_location: Optional['CardLocation'] = None
+    multiple_power_uses_per_turn = False
 
     def __repr__(self):
         return str(type(self).__name__)
@@ -55,8 +56,9 @@ class Hero(metaclass=HeroType):
             return False
         if context.owner.coins < self.power_cost:
             return False
-        if self.hero_power_used:
-            return False
+        if not self.multiple_power_uses_per_turn:
+            if self.hero_power_used:
+                return False
         if not self.can_use_power:
             return False
         if board_index is None and store_index is None and self.power_target_location is not None:

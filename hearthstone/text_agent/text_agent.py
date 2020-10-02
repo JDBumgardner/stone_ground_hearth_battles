@@ -1,9 +1,8 @@
 from typing import Optional, List
 
 from hearthstone.agent import SummonAction, SellAction, EndPhaseAction, RerollAction, TavernUpgradeAction, \
-    HeroPowerAction, TripleRewardsAction, RedeemGoldCoinAction, BuyAction, Action, Agent, BananaAction, \
-    RecruitmentMapAction
-from hearthstone.cards import CardLocation
+    HeroPowerAction, TripleRewardsAction, RedeemGoldCoinAction, BuyAction, Action, Agent, BananaAction
+from hearthstone.cards import CardLocation, MonsterCard
 from hearthstone.hero import Hero
 from hearthstone.player import HandIndex, BoardIndex, StoreIndex, Player
 
@@ -75,8 +74,6 @@ class TextAgent(Agent):
         await self.print_player_card_list("board", player.in_play)
         await self.print_player_card_list("hand", player.hand)
         await self.transport.send(f"Your current triple rewards are {player.triple_rewards}\n")
-        if player.recruitment_maps:
-            await self.transport.send(f"Your current recruitment maps are {player.recruitment_maps}\n")
         await self.transport.send(f"you have {player.coins} coins and {player.health} health and your tavern is level {player.tavern_tier}\n")
         if player.gold_coins >= 1:
             await self.transport.send(f"you have {player.gold_coins} gold coins\n")
@@ -91,8 +88,6 @@ class TextAgent(Agent):
         await self.transport.send(f'upgrade tavern: "u" will upgrade the tavern (current upgrade cost: {player.tavern_upgrade_cost if player.tavern_tier < 6 else 0})\n')
         await self.transport.send('hero power: "h [0]" will activate your hero power with ability target index 0 on the board or in the store\n')
         await self.transport.send('triple rewards: "t" will use your highest tavern tier triple rewards\n')
-        if player.recruitment_maps:
-            await self.transport.send(f'recruitment maps: "m" will use your highest tier recruitment map (3 coins)\n')
         if player.gold_coins >= 1:
             await self.transport.send('coin tokens: "c" will use a coin token\n')
         if player.bananas >= 1:
@@ -184,8 +179,6 @@ class TextAgent(Agent):
                 if not player.valid_store_index(index):
                     return None
                 return BananaAction(store_target=StoreIndex(index))
-        elif split_list[0] == "m":
-            return RecruitmentMapAction()
         else:
             return None
 
