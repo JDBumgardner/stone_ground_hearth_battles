@@ -132,18 +132,20 @@ class GAEReplaySaver(Parasite):
         )
 
     def on_game_over(self, player: 'Player', ranking: int):
-        value_target = 3.5 - ranking
-        next_value = 3.5 - ranking
+        retn = 3.5-ranking
+        gae_return = retn
+        next_value = retn
         for i in range(len(self.game_steps)-1, -1, -1):
             game_step = self.game_steps[i]
             is_terminal = i == len(self.game_steps)-1
             self.replay_buffer.push(Transition(game_step.state, game_step.valid_actions,
                                                game_step.action, game_step.action_prob,
-                                               game_step.value, value_target,
+                                               game_step.value, gae_return,
+                                               retn,
                                                3.5-ranking if is_terminal else 0.0, is_terminal))
-            delta = next_value - game_step.value
-            value_target = delta + value_target * self.gamma * self.lam
+            gae_return = next_value + (gae_return - next_value) * self.gamma * self.lam
             next_value = self.gamma * game_step.value
+            retn *= self.gamma
 
 
 class GlobalStepContext:
