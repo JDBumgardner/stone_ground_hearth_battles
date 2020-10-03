@@ -474,6 +474,6 @@ class MrBigglesworth(Hero):  # TODO: tokens discovered will enter the pool when 
             for _ in range(3):
                 if event.player.in_play:
                     enemy_minion = context.randomizer.select_enemy_minion(event.player.in_play)
-                    event.player.in_play.remove(enemy_minion)  # TODO: need to keep these three minions on the board
+                    event.player.remove_board_card(enemy_minion)  # TODO: need to keep these three minions on the board
                     discovered_cards.append(enemy_minion)
             context.owner.discover_queue.append(discovered_cards)
