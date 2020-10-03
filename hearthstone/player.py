@@ -60,7 +60,7 @@ class Player:
 
     @coins.setter
     def coins(self, coins):
-        self._coins = min(coins, 10)
+        self._coins = max(0, min(coins, 10))
 
     @property
     def tavern_upgrade_cost(self):
