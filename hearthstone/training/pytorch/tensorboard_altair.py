@@ -1,6 +1,6 @@
 import collections
 from collections import defaultdict
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 import altair as alt
 import pandas as pd
@@ -44,17 +44,28 @@ class GAEPlotter(Parasite):
             )
         )
 
-    def on_game_over(self, player: 'Player', ranking: int) -> List[int]:
-        result = []
-        gae_return = 3.5 - ranking
-        next_value = 3.5 - ranking
+    def on_game_over(self, player: 'Player', ranking: int) -> Dict[str, List]:
+        gae_returns = []
+        returns = []
+        retn = 3.5 - ranking
+        gae_return = retn
+        next_value = retn
         for i in range(len(self.game_steps) - 1, -1, -1):
             game_step = self.game_steps[i]
-            result.append(gae_return)
+            gae_returns.append(gae_return)
+            returns.append(retn)
             gae_return = next_value + (gae_return - next_value) * self.gamma * self.lam
             next_value = self.gamma * game_step.value
-        result.reverse()
-        return result
+            retn *= self.gamma
+
+        gae_returns.reverse()
+        gae_returns.append(None)
+        returns.reverse()
+        returns.append(None)
+        return {
+            "critic_value_gae_return": gae_returns,
+            "return": returns,
+        }
 
 
 class TensorboardAltairPlotter(Parasite):
@@ -181,21 +192,19 @@ class TensorboardAltairPlotter(Parasite):
         self.summon_probs.append([None for _ in player.hand])
         self.buy_probs.append([None for _ in player.store])
 
-        gae_value_targets = self.gae_plotter.on_game_over(player, ranking)
-        gae_value_targets.append(None)
-
-        df = pd.DataFrame({
+        columns = self.gae_plotter.on_game_over(player, ranking)
+        columns.update({
             "turn_count": self.turn_counts,
             "health": self.healths,
             "coins": self.coins,
             "dead_players": self.dead_players,
             "avg_enemy_health": self.avg_enemy_healths,
             "critic_value": self.values,
-            "critic_value_gae_target": gae_value_targets,
             "reward": self.rewards,
             "action": self.actions,
             "action_type": self.action_types,
         })
+        df = pd.DataFrame(columns)
         hover_selection = alt.selection_single(name="gamestep_hover", fields=['step_in_game'], encodings=['x'], empty="none",
                                          on="mousemove", nearest=True)
         legend_selection = alt.selection_multi(name="scalar_legend", fields=['variable'], bind="legend")

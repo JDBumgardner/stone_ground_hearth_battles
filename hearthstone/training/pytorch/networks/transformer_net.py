@@ -62,8 +62,6 @@ class HearthstoneTransformerNet(nn.Module):
 
         self.fc_value = nn.Linear(self.player_hidden_size, 1)
 
-        self.fc_hack1 = nn.Linear(player_encoding.flattened_size(), 10)
-        self.fc_hack2 = nn.Linear(10, 1)
 
     def forward(self, state: State, valid_actions: EncodedActionSet):
         policy_encoded_player, policy_encoded_cards = self.policy_encoder(state)
@@ -85,5 +83,4 @@ class HearthstoneTransformerNet(nn.Module):
         # The value network outputs the linear combination of the representation of the player in the last layer,
         # which will be between -3.5 (8th place) at the minimum and 3.5 (1st place) at the max.
         value = self.fc_value(value_encoded_player)
-        value = self.fc_hack2(F.relu(self.fc_hack1(state.player_tensor)))
         return policy, value
