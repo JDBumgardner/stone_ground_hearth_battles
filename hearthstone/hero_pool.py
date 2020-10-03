@@ -76,7 +76,7 @@ class YoggSaron(Hero):
         card.attack += 1
         card.health += 1
         context.owner.store.remove(card)
-        context.owner.gain_card(card)
+        context.owner.gain_hand_card(card)
 
     def hero_power_valid_impl(self, context: BuyPhaseContext, board_index: Optional['BoardIndex'] = None,
                               store_index: Optional['StoreIndex'] = None):
@@ -103,7 +103,7 @@ class PatchesThePirate(Hero):
         if pirates:
             card = context.randomizer.select_gain_card(pirates)
             context.owner.tavern.deck.remove_card(card)
-            context.owner.gain_card(card)
+            context.owner.gain_hand_card(card)
         self.power_cost = 4
 
     def hero_power_valid_impl(self, context: BuyPhaseContext, board_index: Optional['BoardIndex'] = None,
@@ -167,7 +167,7 @@ class SkycapnKragg(Hero):
 class TheCurator(Hero):
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_START and context.owner.tavern.turn_count == 0:
-            context.owner.in_play.append(Amalgam())
+            context.owner.gain_board_card(Amalgam())
 
 
 class TheRatKing(Hero):
@@ -224,7 +224,7 @@ class CaptainEudora(Hero):
             random_minion = context.randomizer.select_gain_card(diggable_minions)
             context.owner.tavern.deck.remove_card(random_minion)
             random_minion.golden_transformation([])
-            context.owner.gain_card(random_minion)
+            context.owner.gain_hand_card(random_minion)
             self.digs_left = 5
 
 
@@ -280,10 +280,10 @@ class JandiceBarov(Hero):
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
-        board_minion = context.owner.in_play.pop(board_index)
+        board_minion = context.owner.pop_board_card(board_index)
         store_minion = context.randomizer.select_from_store(context.owner.store)
         context.owner.store.remove(store_minion)
-        context.owner.in_play.append(store_minion)
+        context.owner.gain_board_card(store_minion)
         context.owner.store.append(board_minion)
 
 
@@ -293,7 +293,7 @@ class ArchVillianRafaam(Hero):  # TODO: tokens gained will enter the pool when s
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.DIES and event.card in context.enemy_war_party.board and self.hero_power_used:
             if len(context.enemy_war_party.dead_minions) == 1 and context.friendly_war_party.owner.room_in_hand():
-                context.friendly_war_party.owner.gain_card(type(event.card)())
+                context.friendly_war_party.owner.gain_hand_card(type(event.card)())
 
 
 class CaptainHooktusk(Hero):
@@ -306,13 +306,13 @@ class CaptainHooktusk(Hero):
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
-        board_minion = context.owner.in_play.pop(board_index)
+        board_minion = context.owner.pop_board_card(board_index)
         board_minion.dissolve()
         predicate = lambda card: card.tier < board_minion.tier if board_minion.tier > 1 else card.tier == 1
         lower_tier_minions = [card for card in context.owner.tavern.deck.unique_cards() if predicate(card)]
         random_minion = context.randomizer.select_gain_card(lower_tier_minions)
         context.owner.tavern.deck.remove_card(random_minion)
-        context.owner.gain_card(random_minion)
+        context.owner.gain_hand_card(random_minion)
 
 
 class Malygos(Hero):
@@ -321,12 +321,12 @@ class Malygos(Hero):
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
-        board_minion = context.owner.in_play.pop(board_index)
+        board_minion = context.owner.pop_board_card(board_index)
         board_minion.dissolve()
         same_tier_minions = [card for card in context.owner.tavern.deck.unique_cards() if card.tier == board_minion.tier]
         random_minion = context.randomizer.select_gain_card(same_tier_minions)
         context.owner.tavern.deck.remove_card(random_minion)
-        context.owner.in_play.insert(board_index, random_minion)
+        context.owner.gain_board_card(random_minion)
 
 
 class AFKay(Hero):

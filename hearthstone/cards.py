@@ -203,7 +203,7 @@ class MonsterCard(metaclass=CardType):
                 if getattr(self, attr) and attr != 'magnetic':
                     setattr(targets[0], attr, True)
             targets[0].attached_cards.append(self)
-            context.owner.in_play.remove(self)
+            context.owner.remove_board_card(self)
 
     def overkill(self, context: CombatPhaseContext):
         return
@@ -237,8 +237,8 @@ class MonsterCard(metaclass=CardType):
         random_minion.attack += self.attack - self.base_attack * (2 if self.golden else 1)
         random_minion.health += self.health - self.base_health * (2 if self.golden else 1)
         random_minion.shifting = True
-        context.owner.hand.remove(self)
-        context.owner.gain_card(random_minion)
+        context.owner.remove_hand_card(self)
+        context.owner.gain_hand_card(random_minion)
 
     @classmethod
     def check_type(cls, desired_type: 'MONSTER_TYPES') -> bool:

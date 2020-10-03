@@ -1405,7 +1405,7 @@ class NatPagleExtremeAngler(MonsterCard):
                 if context.friendly_war_party.owner.room_in_hand():
                     random_minion = context.randomizer.select_gain_card(context.friendly_war_party.owner.tavern.deck.unique_cards())
                     context.friendly_war_party.owner.tavern.deck.remove_card(random_minion)
-                    context.friendly_war_party.owner.gain_card(random_minion)
+                    context.friendly_war_party.owner.gain_hand_card(random_minion)
 
 
 class FloatingWatcher(MonsterCard):
@@ -1807,7 +1807,7 @@ class Murozond(MonsterCard):
             plain_copy = type(card)()
             if self.golden:
                 plain_copy.golden_transformation([])
-            context.owner.gain_card(plain_copy)
+            context.owner.gain_hand_card(plain_copy)
 
 
 class PartyElemental(MonsterCard):
@@ -1899,7 +1899,7 @@ class Sellemental(MonsterCard):
             num_tokens = 2 if self.golden else 1
             for _ in range(num_tokens):
                 water_droplet = WaterDroplet()
-                context.owner.gain_card(water_droplet)
+                context.owner.gain_hand_card(water_droplet)
 
 
 class WaterDroplet(MonsterCard):

@@ -3,6 +3,7 @@ import typing
 from collections import defaultdict
 from typing import Optional, List, Callable, Type
 
+from frozenlist.frozen_list import FrozenList
 from hearthstone import events
 from hearthstone.cards import MonsterCard
 from hearthstone.events import BuyPhaseContext, CardEvent
@@ -41,8 +42,8 @@ class Player:
         self.refresh_store_cost = 1
         self._tavern_upgrade_costs = (0, 5, 7, 8, 9, 10)
         self._tavern_upgrade_cost = 5
-        self.hand: List[MonsterCard] = []
-        self.in_play: List[MonsterCard] = []
+        self._hand: List[MonsterCard] = []
+        self._in_play: List[MonsterCard] = []
         self.store: List[MonsterCard] = []
         self.frozen = False
         self.counted_cards = defaultdict(lambda: 0)
@@ -68,6 +69,14 @@ class Player:
     @tavern_upgrade_cost.setter
     def tavern_upgrade_cost(self, tavern_upgrade_cost):
         self._tavern_upgrade_cost = max(0, tavern_upgrade_cost)
+
+    @property
+    def in_play(self):
+        return FrozenList(self._in_play)
+
+    @property
+    def hand(self):
+        return FrozenList(self._hand)
 
     @staticmethod
     def new_player_with_hero(tavern: Optional['Tavern'], name: str, hero: Optional['Hero'] = None) -> 'Player':
@@ -116,8 +125,8 @@ class Player:
         if targets is None:
             targets = []
         assert self.valid_summon_from_hand(index, targets)
-        card = self.hand.pop(index)
-        self.in_play.append(card)
+        card = self._hand.pop(index)
+        self.gain_board_card(card)
         if card.golden:
             self.triple_rewards.append(TripleRewardCard(min(self.tavern_tier + 1, 6)))
         target_cards = [self.in_play[target] for target in targets]
@@ -176,14 +185,13 @@ class Player:
         assert (card in self.discover_queue[0])
         assert (isinstance(card, MonsterCard))
         self.discover_queue[0].remove(card)
-        self.gain_card(card)
+        self.gain_hand_card(card)
         self.tavern.deck.return_cards(itertools.chain.from_iterable([card.dissolve() for card in self.discover_queue[0]]))
         self.discover_queue.pop(0)
 
     def summon_from_void(self, monster: MonsterCard):
         if self.room_on_board():
-            self.in_play.append(monster)
-            self.check_golden(type(monster))
+            self.gain_board_card(monster)
             self.broadcast_buy_phase_event(events.SummonBuyEvent(monster))
 
     def room_on_board(self):
@@ -202,7 +210,7 @@ class Player:
         assert self.valid_purchase(index)
         card = self.store.pop(index)
         self.coins -= self.minion_cost
-        self.hand.append(card)
+        self._hand.append(card)
         event = events.BuyEvent(card)
         self.broadcast_buy_phase_event(event)
         self.check_golden(type(card))
@@ -223,12 +231,12 @@ class Player:
         if len(cards) == 3:
             for card in cards:
                 if card in self.in_play:
-                    self.in_play.remove(card)
+                    self._in_play.remove(card)
                 if card in self.hand:
-                    self.hand.remove(card)
+                    self._hand.remove(card)
             golden_card = check_card()
             golden_card.golden_transformation(cards)
-            self.hand.append(golden_card)
+            self._hand.append(golden_card)
 
     def reroll_store(self):
         assert self.valid_reroll()
@@ -250,7 +258,7 @@ class Player:
         assert self.valid_sell_minion(index)
         card = self.in_play[index]
         self.broadcast_buy_phase_event(events.SellEvent(card))
-        self.in_play.remove(card)
+        self._in_play.remove(card)
         self.coins += card.redeem_rate
         returned_cards = card.dissolve()
         self.tavern.deck.return_cards(returned_cards)
@@ -270,6 +278,13 @@ class Player:
             card.handle_event(event, BuyPhaseContext(self, randomizer or self.tavern.randomizer))
         for card in self.hand.copy():
             card.handle_event_in_hand(event, BuyPhaseContext(self, randomizer or self.tavern.randomizer))
+
+    def valid_rearrange_cards(self, new_board: List[MonsterCard]) -> bool:
+        return len(new_board) == len(self.in_play) and set(new_board) == set(self.in_play)
+
+    def rearrange_cards(self, new_board: List[MonsterCard]):
+        assert self.valid_rearrange_cards(new_board)
+        self._in_play = new_board
 
     def hand_size(self):
         return len(self.hand) + len(self.triple_rewards) + self.gold_coins + self.bananas + (len(self.hero.recruitment_maps) if hasattr(self.hero, 'recruitment_maps') else 0)
@@ -303,9 +318,25 @@ class Player:
             self.gold_coins -= 1
             self.coins += 1
 
-    def gain_card(self, card: 'MonsterCard'):
-        self.hand.append(card)
+    def gain_hand_card(self, card: 'MonsterCard'):
+        self._hand.append(card)
         self.check_golden(type(card))
+
+    def gain_board_card(self, card: 'MonsterCard'):
+        self._in_play.append(card)
+        self.check_golden(type(card))
+
+    def remove_hand_card(self, card: 'MonsterCard'):
+        self._hand.remove(card)
+
+    def remove_board_card(self, card: 'MonsterCard'):
+        self._in_play.remove(card)
+
+    def pop_hand_card(self, index:int) -> 'MonsterCard':
+        return self._hand.pop(index)
+
+    def pop_board_card(self, index: int) -> 'MonsterCard':
+        return self._in_play.pop(index)
 
     def valid_board_index(self, index: 'BoardIndex') -> bool:
         return 0 <= index < len(self.in_play)

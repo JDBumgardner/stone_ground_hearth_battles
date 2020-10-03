@@ -119,8 +119,7 @@ class AsyncHost(Host):
                         break
             if len(player.in_play) > 1:
                 arrangement = await agent.rearrange_cards(player)
-                assert set(arrangement) == set(player.in_play)
-                player.in_play = arrangement
+                player.rearrange_cards(arrangement)
 
         perform_player_action_tasks = []
         for player_name, player in self.tavern.players.items():

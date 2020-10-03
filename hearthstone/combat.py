@@ -19,7 +19,7 @@ class WarParty:
     #  (HalfBoard)
     def __init__(self, player: 'Player'):
         self.owner = player
-        self.board = copy.deepcopy(player.in_play)
+        self.board = [copy.deepcopy(card) for card in player.in_play]
         self.next_attacker_idx = 0
         self.dead_minions: List[MonsterCard] = []
 
