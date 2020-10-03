@@ -19,6 +19,7 @@ from hearthstone.training.pytorch.policy_gradient import tensorize_batch, easies
 from hearthstone.training.pytorch.replay_buffer import ReplayBuffer, NormalizingReplayBuffer
 from hearthstone.training.pytorch.surveillance import SurveiledPytorchBot, ReplayBufferSaver, GlobalStepContext
 from hearthstone.training.pytorch.tensorboard_altair import TensorboardAltairPlotter
+from hearthstone.simulator.core import hero_pool
 
 PPOHyperparameters = NewType('PPOHyperparameters', Dict[str, Union[str, int, float]])
 

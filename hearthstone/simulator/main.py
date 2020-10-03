@@ -7,6 +7,7 @@ from hearthstone.simulator.host import AsyncHost
 from hearthstone.text_agent.stdio import StdIOTransport
 from hearthstone.text_agent.text_agent import TextAgent
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
+from hearthstone.simulator.core import hero_pool
 import logging
 
 
@@ -22,7 +23,7 @@ def main():
                       "priority_pogo_hopper_bot": PriorityFunctions.priority_pogo_hopper_bot(7, PriorityBot),
                       })
     host.play_game()
-gio
+
 
 if __name__ == '__main__':
     main()

@@ -54,8 +54,7 @@ class RoundRobinHost(Host):
                     break
             if len(player.in_play) > 1:
                 arrangement = asyncio.get_event_loop().run_until_complete(agent.rearrange_cards(player))
-                assert set(arrangement) == set(player.in_play)
-                player.in_play = arrangement
+                player.rearrange_cards(arrangement)
         self.tavern.combat_step()
         if self.tavern.game_over():
             for position, (name, player) in enumerate(reversed(self.tavern.losers)):

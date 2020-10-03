@@ -285,7 +285,7 @@ class Player:
 
     def rearrange_cards(self, new_board: List[MonsterCard]):
         assert self.valid_rearrange_cards(new_board)
-        self._in_play = new_board
+        self._in_play = list(new_board)
 
     def hand_size(self):
         return len(self.hand) + len(self.triple_rewards) + self.gold_coins + self.bananas + (len(self.hero.recruitment_maps) if hasattr(self.hero, 'recruitment_maps') else 0)
