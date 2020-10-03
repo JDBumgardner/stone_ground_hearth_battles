@@ -9,7 +9,7 @@ from hearthstone.cards import MonsterCard
 from hearthstone.events import BuyPhaseContext, CardEvent
 from hearthstone.hero import EmptyHero
 from hearthstone.monster_types import MONSTER_TYPES
-from hearthstone.special_cards import TripleRewardCard
+from hearthstone.triple_reward_card import TripleRewardCard
 
 if typing.TYPE_CHECKING:
     from hearthstone.tavern import Tavern

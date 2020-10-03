@@ -6,7 +6,7 @@ from hearthstone.events import BuyPhaseContext, CombatPhaseContext, EVENTS, Card
 from hearthstone.hero import Hero
 from hearthstone.monster_types import MONSTER_TYPES
 from hearthstone.player import BoardIndex, StoreIndex
-from hearthstone.special_cards import TripleRewardCard, RecruitmentMap
+from hearthstone.triple_reward_card import TripleRewardCard
 
 
 class Pyramad(Hero):

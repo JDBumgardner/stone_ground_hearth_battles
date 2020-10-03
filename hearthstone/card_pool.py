@@ -1746,7 +1746,7 @@ class TheBeast(MonsterCard):
 
 class FinkleEinhorn(MonsterCard):
     tier = 1
-    monster_type = MONSTER_TYPES.BEAST
+    monster_type = None
     base_attack = 3
     base_health = 3
     token = True
