@@ -1,10 +1,10 @@
 import typing
 from typing import List
 
-from hearthstone.agent import Agent, Action, EndPhaseAction
+from hearthstone.simulator.agent import Agent, Action, EndPhaseAction
 if typing.TYPE_CHECKING:
 
-    from hearthstone.player import Player
+    from hearthstone.simulator.core.player import Player
 
 
 class NoActionBot(Agent):

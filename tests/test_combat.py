@@ -1,14 +1,14 @@
 import unittest
 
-from hearthstone.adaptations import AdaptBuffs
-from hearthstone.card_graveyard import *
-from hearthstone.card_pool import *
+from hearthstone.simulator.core.adaptations import AdaptBuffs
+from hearthstone.simulator.core.card_graveyard import *
+from hearthstone.simulator.core.card_pool import *
 
-from hearthstone.combat import WarParty, fight_boards
-from hearthstone.hero_pool import *
-from hearthstone.player import Player
-from hearthstone.randomizer import DefaultRandomizer
-from hearthstone.tavern import Tavern
+from hearthstone.simulator.core.combat import WarParty, fight_boards
+from hearthstone.simulator.core.hero_pool import *
+from hearthstone.simulator.core.player import Player
+from hearthstone.simulator.core.randomizer import DefaultRandomizer
+from hearthstone.simulator.core.tavern import Tavern
 
 
 class CombatTests(unittest.TestCase):

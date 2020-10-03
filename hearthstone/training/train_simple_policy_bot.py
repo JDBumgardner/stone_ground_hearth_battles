@@ -6,9 +6,9 @@ from hearthstone.battlebots.priority_functions import racist_priority_bot
 from hearthstone.battlebots.random_bot import RandomBot
 from hearthstone.battlebots.simple_policy_bot import SimplePolicyBot
 from hearthstone.battlebots.supremacy_bot import SupremacyBot
-from hearthstone.host import RoundRobinHost
+from hearthstone.simulator.host import RoundRobinHost
 from hearthstone.ladder.ladder import Contestant, update_ratings, print_standings, save_ratings
-from hearthstone.monster_types import MONSTER_TYPES.DRAGON, MONSTER_TYPES.MECH, MONSTER_TYPES.BEAST, MONSTER_TYPES.MURLOC, MONSTER_TYPES.DEMON, MONSTER_TYPES.PIRATE
+from hearthstone.simulator.core.monster_types import MONSTER_TYPES.DRAGON, MONSTER_TYPES.MECH, MONSTER_TYPES.BEAST, MONSTER_TYPES.MURLOC, MONSTER_TYPES.DEMON, MONSTER_TYPES.PIRATE
 
 learning_rate = .1
 

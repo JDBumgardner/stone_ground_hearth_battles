@@ -4,10 +4,10 @@ import enum
 from typing import Optional, List
 
 if typing.TYPE_CHECKING:
-    from hearthstone.player import Player
-    from hearthstone.randomizer import Randomizer
-    from hearthstone.tavern import WarParty
-    from hearthstone.cards import MonsterCard
+    from hearthstone.simulator.core.player import Player
+    from hearthstone.simulator.core.randomizer import Randomizer
+    from hearthstone.simulator.core.tavern import WarParty
+    from hearthstone.simulator.core.cards import MonsterCard
 
 
 class EVENTS(enum.Enum):

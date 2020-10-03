@@ -7,7 +7,7 @@ import tensorboard_vega_embed.summary
 import torch
 from torch.utils.tensorboard import SummaryWriter
 
-from hearthstone.agent import Action, SellAction, SummonAction, BuyAction, generate_valid_actions
+from hearthstone.simulator.agent import Action, SellAction, SummonAction, BuyAction, generate_valid_actions
 from hearthstone.training.pytorch import hearthstone_state_encoder
 from hearthstone.training.pytorch.surveillance import Parasite, GlobalStepContext
 

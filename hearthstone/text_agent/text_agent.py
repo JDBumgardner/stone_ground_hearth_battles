@@ -1,10 +1,10 @@
 from typing import Optional, List
 
-from hearthstone.agent import SummonAction, SellAction, EndPhaseAction, RerollAction, TavernUpgradeAction, \
+from hearthstone.simulator.agent import SummonAction, SellAction, EndPhaseAction, RerollAction, TavernUpgradeAction, \
     HeroPowerAction, TripleRewardsAction, RedeemGoldCoinAction, BuyAction, Action, Agent, BananaAction
-from hearthstone.cards import CardLocation, MonsterCard
-from hearthstone.hero import Hero
-from hearthstone.player import HandIndex, BoardIndex, StoreIndex, Player
+from hearthstone.simulator.core.cards import CardLocation, MonsterCard
+from hearthstone.simulator.core.hero import Hero
+from hearthstone.simulator.core.player import HandIndex, BoardIndex, StoreIndex, Player
 
 
 class TextAgentTransport:

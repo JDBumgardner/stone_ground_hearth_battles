@@ -2,11 +2,11 @@ import random
 import typing
 from typing import List
 
-from hearthstone.agent import Agent, Action, generate_valid_actions, BuyAction, EndPhaseAction, SummonAction, \
+from hearthstone.simulator.agent import Agent, Action, generate_valid_actions, BuyAction, EndPhaseAction, SummonAction, \
     TavernUpgradeAction
 if typing.TYPE_CHECKING:
 
-    from hearthstone.player import Player
+    from hearthstone.simulator.core.player import Player
 
 
 class SupremacyBot(Agent):

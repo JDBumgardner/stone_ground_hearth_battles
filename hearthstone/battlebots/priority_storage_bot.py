@@ -2,12 +2,12 @@ import random
 import typing
 from typing import List, Callable
 
-from hearthstone.agent import Agent, Action, generate_valid_actions, BuyAction, EndPhaseAction, SummonAction, \
+from hearthstone.simulator.agent import Agent, Action, generate_valid_actions, BuyAction, EndPhaseAction, SummonAction, \
     TavernUpgradeAction, RerollAction, SellAction
 
 if typing.TYPE_CHECKING:
     , MonsterCard
-    from hearthstone.player import Player, StoreIndex
+    from hearthstone.simulator.core.player import Player, StoreIndex
 
 
 class PriorityStorageBot(Agent):

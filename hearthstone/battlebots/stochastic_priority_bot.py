@@ -4,11 +4,11 @@ import typing
 from collections import defaultdict
 from typing import List
 
-from hearthstone.agent import Agent, generate_valid_actions, TavernUpgradeAction, RerollAction, EndPhaseAction, \
+from hearthstone.simulator.agent import Agent, generate_valid_actions, TavernUpgradeAction, RerollAction, EndPhaseAction, \
     SellAction, Action, BuyAction, SummonAction
 if typing.TYPE_CHECKING:
 
-    from hearthstone.player import Player, StoreIndex
+    from hearthstone.simulator.core.player import Player, StoreIndex
 
 
 class LearnedPriorityBot(Agent):

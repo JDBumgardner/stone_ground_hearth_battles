@@ -6,7 +6,7 @@ from hearthstone.battlebots.early_game_bot import EarlyGameBot
 from hearthstone.battlebots.priority_functions import PriorityFunctions
 from hearthstone.battlebots.hero_bot import HeroBot
 from hearthstone.battlebots.priority_bot import PriorityBot
-from hearthstone.monster_types import MONSTER_TYPES
+from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 
 
 def get_priority_bot_contestant_tuples():

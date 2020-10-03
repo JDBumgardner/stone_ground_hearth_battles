@@ -2,12 +2,12 @@ import random
 import typing
 from typing import List, Tuple, Type, Optional
 
-from hearthstone.monster_types import MONSTER_TYPES
+from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 
 if typing.TYPE_CHECKING:
-    from hearthstone.cards import MonsterCard
-    from hearthstone.hero import Hero
-    from hearthstone.player import Player
+    from hearthstone.simulator.core.cards import MonsterCard
+    from hearthstone.simulator.core.hero import Hero
+    from hearthstone.simulator.core.player import Player
 
 
 class Randomizer:

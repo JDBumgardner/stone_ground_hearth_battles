@@ -4,14 +4,14 @@ import typing
 from collections import defaultdict
 from typing import Set, List, Optional, Callable, Type, Union, Iterator
 
-from hearthstone import events
-from hearthstone.card_factory import make_metaclass
-from hearthstone.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
-from hearthstone.monster_types import MONSTER_TYPES
-from hearthstone.randomizer import Randomizer, DefaultRandomizer
+from hearthstone.simulator.core import events
+from hearthstone.simulator.core.card_factory import make_metaclass
+from hearthstone.simulator.core.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
+from hearthstone.simulator.core.monster_types import MONSTER_TYPES
+from hearthstone.simulator.core.randomizer import Randomizer
 
 if typing.TYPE_CHECKING:
-    from hearthstone.adaptations import Adaptation
+    from hearthstone.simulator.core.adaptations import Adaptation
 
 
 def one_minion_per_type(cards: List['MonsterCard'], randomizer: 'Randomizer') -> List['MonsterCard']:

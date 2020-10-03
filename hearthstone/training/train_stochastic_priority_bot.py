@@ -2,7 +2,7 @@ import logging
 import random
 
 from hearthstone.battlebots.stochastic_priority_bot import LearnedPriorityBot
-from hearthstone.host import RoundRobinHost
+from hearthstone.simulator.host import RoundRobinHost
 from hearthstone.ladder.ladder import Contestant, update_ratings, print_standings, load_ratings, save_ratings, \
     all_contestants
 

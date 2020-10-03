@@ -6,11 +6,11 @@ from typing import Callable, List, Any, Optional, Dict, NamedTuple, Tuple
 import torch
 import numpy as np
 
-from hearthstone.agent import TripleRewardsAction, TavernUpgradeAction, RerollAction, \
+from hearthstone.simulator.agent import TripleRewardsAction, TavernUpgradeAction, RerollAction, \
     EndPhaseAction, SummonAction, BuyAction, SellAction, Action
-from hearthstone.cards import MonsterCard, CardLocation
-from hearthstone.monster_types import MONSTER_TYPES
-from hearthstone.player import Player, StoreIndex, HandIndex, BoardIndex
+from hearthstone.simulator.core.cards import MonsterCard, CardLocation
+from hearthstone.simulator.core.monster_types import MONSTER_TYPES
+from hearthstone.simulator.core.player import Player, StoreIndex, HandIndex, BoardIndex
 
 State = namedtuple('State', ('player_tensor', 'cards_tensor'))
 

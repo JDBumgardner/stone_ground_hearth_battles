@@ -1,8 +1,8 @@
 from typing import Union, List
 
-from hearthstone.cards import MonsterCard, PrintingPress
-from hearthstone.events import EVENTS, BuyPhaseContext, CombatPhaseContext, CardEvent
-from hearthstone.monster_types import MONSTER_TYPES
+from hearthstone.simulator.core.cards import MonsterCard, PrintingPress
+from hearthstone.simulator.core.events import EVENTS, BuyPhaseContext, CombatPhaseContext, CardEvent
+from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 
 
 class ArcaneCannon(MonsterCard):

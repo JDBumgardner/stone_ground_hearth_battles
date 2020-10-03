@@ -1,12 +1,11 @@
 import asyncio
 import logging
-import socket
 from typing import Dict
 
-from hearthstone.agent import Agent
+from hearthstone.simulator.agent import Agent
 from hearthstone.battlebots.early_game_bot import EarlyGameBot
 from hearthstone.battlebots.priority_functions import PriorityFunctions
-from hearthstone.host import AsyncHost
+from hearthstone.simulator.host import AsyncHost
 from hearthstone.text_agent.tcp import TcpTransport
 from hearthstone.text_agent.text_agent import TextAgent
 

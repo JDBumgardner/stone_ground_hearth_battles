@@ -1,11 +1,9 @@
-import operator
 import unittest
-from functools import reduce
 
 import torch
 from torch.distributions import Categorical
 
-from hearthstone.tavern import Tavern
+from hearthstone.simulator.core.tavern import Tavern
 from hearthstone.training.pytorch.hearthstone_state_encoder import encode_player, encode_valid_actions
 
 

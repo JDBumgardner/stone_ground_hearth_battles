@@ -1,2 +1,1 @@
-from . import card_pool
-from . import hero_pool
+from .simulator.core import card_pool

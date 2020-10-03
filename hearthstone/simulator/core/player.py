@@ -4,17 +4,18 @@ from collections import defaultdict
 from typing import Optional, List, Callable, Type
 
 from frozenlist.frozen_list import FrozenList
-from hearthstone import events
-from hearthstone.cards import MonsterCard
-from hearthstone.events import BuyPhaseContext, CardEvent
-from hearthstone.hero import EmptyHero
-from hearthstone.monster_types import MONSTER_TYPES
-from hearthstone.triple_reward_card import TripleRewardCard
+
+from hearthstone.simulator.core import events
+from hearthstone.simulator.core.cards import MonsterCard
+from hearthstone.simulator.core.events import BuyPhaseContext, CardEvent
+from hearthstone.simulator.core.hero import EmptyHero
+from hearthstone.simulator.core.monster_types import MONSTER_TYPES
+from hearthstone.simulator.core.triple_reward_card import TripleRewardCard
 
 if typing.TYPE_CHECKING:
-    from hearthstone.tavern import Tavern
-    from hearthstone.hero import Hero
-    from hearthstone.randomizer import Randomizer
+    from hearthstone.simulator.core.tavern import Tavern
+    from hearthstone.simulator.core.hero import Hero
+    from hearthstone.simulator.core.randomizer import Randomizer
 
 
 class BuyPhaseEvent:

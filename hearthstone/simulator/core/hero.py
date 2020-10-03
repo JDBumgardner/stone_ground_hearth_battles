@@ -1,13 +1,13 @@
 import typing
 from typing import Union, Tuple, Optional
 
-from hearthstone.card_factory import make_metaclass
-from hearthstone.cards import CardLocation
+from hearthstone.simulator.core.card_factory import make_metaclass
+from hearthstone.simulator.core.cards import CardLocation
 
-from hearthstone.events import BuyPhaseContext, CombatPhaseContext, CardEvent
+from hearthstone.simulator.core.events import BuyPhaseContext, CombatPhaseContext, CardEvent
 
 if typing.TYPE_CHECKING:
-    from hearthstone.player import BoardIndex, StoreIndex
+    from hearthstone.simulator.core.player import BoardIndex, StoreIndex
 
 VALHALLA = []
 

@@ -2,14 +2,14 @@ import random
 import typing
 from typing import List
 
-from hearthstone.agent import Agent, Action, generate_valid_actions, BuyAction, EndPhaseAction, SummonAction, \
+from hearthstone.simulator.agent import Agent, Action, generate_valid_actions, BuyAction, EndPhaseAction, SummonAction, \
     SellAction, TavernUpgradeAction, RerollAction
-from hearthstone.card_pool import RabidSaurolisk
+from hearthstone.simulator.core.card_pool import RabidSaurolisk
 
-from hearthstone.player import Player, BoardIndex
+from hearthstone.simulator.core.player import Player, BoardIndex
 
 if typing.TYPE_CHECKING:
-    from hearthstone.cards import MonsterCard
+    from hearthstone.simulator.core.cards import MonsterCard
 
 
 class SauroliskBot(Agent):

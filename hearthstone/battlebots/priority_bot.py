@@ -1,13 +1,13 @@
 import typing
 from typing import List
-from hearthstone.agent import generate_valid_actions, BuyAction, EndPhaseAction, SummonAction, SellAction
-from hearthstone.agent import  TavernUpgradeAction, RerollAction
+from hearthstone.simulator.agent import generate_valid_actions, BuyAction, EndPhaseAction, SummonAction, SellAction
+from hearthstone.simulator.agent import  TavernUpgradeAction, RerollAction
 from hearthstone.battlebots.bot_types import PriorityFunctionBot
 
-from hearthstone.player import Player, StoreIndex
+from hearthstone.simulator.core.player import Player, StoreIndex
 
 if typing.TYPE_CHECKING:
-    from hearthstone.agent import Action
+    from hearthstone.simulator.agent import Action
 
 
 

@@ -3,13 +3,13 @@ import logging
 import typing
 from typing import Optional, List
 
-from hearthstone import events
-from hearthstone.events import CombatPhaseContext
+from hearthstone.simulator.core import events
+from hearthstone.simulator.core.events import CombatPhaseContext
 
 if typing.TYPE_CHECKING:
-    from hearthstone.player import Player
-    from hearthstone.randomizer import Randomizer
-    from hearthstone.cards import MonsterCard
+    from hearthstone.simulator.core.player import Player
+    from hearthstone.simulator.core.randomizer import Randomizer
+    from hearthstone.simulator.core.cards import MonsterCard
 
 
 logger = logging.getLogger(__name__)

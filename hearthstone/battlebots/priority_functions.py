@@ -1,11 +1,11 @@
 import typing
 from typing import Callable
 
-from hearthstone.card_pool import *
+from hearthstone.simulator.core.card_pool import *
 
 if typing.TYPE_CHECKING:
-    from hearthstone.cards import MonsterCard
-    from hearthstone.player import Player
+    from hearthstone.simulator.core.cards import MonsterCard
+    from hearthstone.simulator.core.player import Player
 
 
 class PriorityFunctions:

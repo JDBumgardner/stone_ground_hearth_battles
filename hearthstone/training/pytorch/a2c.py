@@ -7,7 +7,7 @@ import torch
 from torch import optim, nn
 from torch.utils.tensorboard import SummaryWriter
 
-from hearthstone.host import RoundRobinHost
+from hearthstone.simulator.host import RoundRobinHost
 from hearthstone.ladder.ladder import Contestant, update_ratings, print_standings, save_ratings
 from hearthstone.training.pytorch.networks.feedforward_net import HearthstoneFFNet
 from hearthstone.training.pytorch.hearthstone_state_encoder import Transition, get_indexed_action, \

@@ -1,13 +1,12 @@
 from hearthstone.battlebots.cheapo_bot import CheapoBot
 from hearthstone.battlebots.early_game_bot import EarlyGameBot
-from hearthstone.battlebots.no_action_bot import NoActionBot
 from hearthstone.battlebots.priority_bot import PriorityBot
 from hearthstone.battlebots.priority_functions import PriorityFunctions
 
-from hearthstone.host import AsyncHost
+from hearthstone.simulator.host import AsyncHost
 from hearthstone.text_agent.stdio import StdIOTransport
 from hearthstone.text_agent.text_agent import TextAgent
-from hearthstone.monster_types import MONSTER_TYPES
+from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 import logging
 
 
@@ -23,7 +22,7 @@ def main():
                       "priority_pogo_hopper_bot": PriorityFunctions.priority_pogo_hopper_bot(7, PriorityBot),
                       })
     host.play_game()
-
+gio
 
 if __name__ == '__main__':
     main()

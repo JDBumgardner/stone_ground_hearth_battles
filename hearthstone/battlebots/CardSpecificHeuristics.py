@@ -1,11 +1,11 @@
 import itertools
 
-from typing import List, Callable, Dict, Optional
+from typing import Optional
 
-from hearthstone.card_pool import *
-from hearthstone.cards import MonsterCard, PrintingPress
-from hearthstone.player import Player
-from hearthstone.monster_types import MONSTER_TYPES
+from hearthstone.simulator.core.card_pool import *
+from hearthstone.simulator.core.cards import MonsterCard, PrintingPress
+from hearthstone.simulator.core.player import Player
+from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 
 
 

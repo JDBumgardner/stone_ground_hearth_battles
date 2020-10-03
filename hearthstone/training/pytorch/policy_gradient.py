@@ -1,5 +1,5 @@
 from collections import namedtuple
-from typing import List, Optional
+from typing import List
 
 import torch
 from torch import nn
@@ -13,10 +13,10 @@ from hearthstone.battlebots.random_bot import RandomBot
 from hearthstone.battlebots.saurolisk_bot import SauroliskBot
 from hearthstone.battlebots.supremacy_bot import SupremacyBot
 
-from hearthstone.hero import EmptyHero
+from hearthstone.simulator.core.hero import EmptyHero
 from hearthstone.ladder.ladder import Contestant
-from hearthstone.monster_types import MONSTER_TYPES
-from hearthstone.tavern import Tavern
+from hearthstone.simulator.core.monster_types import MONSTER_TYPES
+from hearthstone.simulator.core.tavern import Tavern
 from hearthstone.training.pytorch.hearthstone_state_encoder import encode_player, encode_valid_actions, Transition, \
     EncodedActionSet
 

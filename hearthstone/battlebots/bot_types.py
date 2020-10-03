@@ -2,10 +2,10 @@ import random
 import typing
 from typing import List, Callable
 
-from hearthstone.agent import Agent, Action
+from hearthstone.simulator.agent import Agent, Action
 if typing.TYPE_CHECKING:
-    from hearthstone.cards import MonsterCard
-    from hearthstone.player import Player
+    from hearthstone.simulator.core.cards import MonsterCard
+    from hearthstone.simulator.core.player import Player
 
 
 class PriorityFunctionBot(Agent):

@@ -1,11 +1,10 @@
-import logging
 import unittest
 
 from hearthstone.battlebots.early_game_bot import EarlyGameBot
 from hearthstone.battlebots.priority_bot import PriorityBot
 from hearthstone.battlebots.priority_functions import PriorityFunctions
-from hearthstone.host import AsyncHost
-from hearthstone.monster_types import MONSTER_TYPES
+from hearthstone.simulator.host import AsyncHost
+from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 
 
 class GameplayTests(unittest.TestCase):

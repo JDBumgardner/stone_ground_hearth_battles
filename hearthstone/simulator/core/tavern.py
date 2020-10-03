@@ -1,12 +1,12 @@
 import enum
 from typing import Dict
 
-from hearthstone import combat, hero, events
-from hearthstone.cards import CardList, PrintingPress
-from hearthstone.combat import WarParty
-from hearthstone.hero import Hero
-from hearthstone.player import Player
-from hearthstone.randomizer import DefaultRandomizer
+from hearthstone.simulator.core import hero, combat, events
+from hearthstone.simulator.core.cards import CardList, PrintingPress
+from hearthstone.simulator.core.combat import WarParty
+from hearthstone.simulator.core.hero import Hero
+from hearthstone.simulator.core.player import Player
+from hearthstone.simulator.core.randomizer import DefaultRandomizer
 
 
 class Tavern:

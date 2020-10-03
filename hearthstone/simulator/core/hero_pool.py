@@ -1,12 +1,13 @@
 from typing import Union, Tuple, Optional
 
-from hearthstone.card_pool import Amalgam
-from hearthstone.cards import one_minion_per_type, CardLocation
-from hearthstone.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
-from hearthstone.hero import Hero
-from hearthstone.monster_types import MONSTER_TYPES
-from hearthstone.player import BoardIndex, StoreIndex
-from hearthstone.triple_reward_card import TripleRewardCard
+from hearthstone.simulator.core.card_pool import Amalgam
+from hearthstone.simulator.core.cards import one_minion_per_type, CardLocation
+from hearthstone.simulator.core.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
+from hearthstone.simulator.core.hero import Hero
+from hearthstone.simulator.core.monster_types import MONSTER_TYPES
+from hearthstone.simulator.core.player import BoardIndex, StoreIndex
+from hearthstone.simulator.core.triple_reward_card import TripleRewardCard
+
 
 
 class Pyramad(Hero):

@@ -1,11 +1,11 @@
 import typing
 from typing import Dict
 
-from hearthstone.agent import EndPhaseAction
-from hearthstone.tavern import Tavern
+from hearthstone.simulator.agent import EndPhaseAction
+from hearthstone.simulator.core.tavern import Tavern
 
 if typing.TYPE_CHECKING:
-    from hearthstone.agent import Agent
+    from hearthstone.simulator.agent import Agent
 import asyncio
 
 

@@ -1,14 +1,14 @@
 import unittest
 from typing import Type
 
-from hearthstone.adaptations import AdaptBuffs
-from hearthstone.card_graveyard import *
-from hearthstone.card_pool import *
-from hearthstone.cards import MonsterCard, CardType
-from hearthstone.hero_pool import *
-from hearthstone.player import StoreIndex, HandIndex, BoardIndex
-from hearthstone.randomizer import DefaultRandomizer
-from hearthstone.tavern import Tavern
+from hearthstone.simulator.core.adaptations import AdaptBuffs
+from hearthstone.simulator.core.card_graveyard import *
+from hearthstone.simulator.core.card_pool import *
+from hearthstone.simulator.core.cards import MonsterCard, CardType
+from hearthstone.simulator.core.hero_pool import *
+from hearthstone.simulator.core.player import StoreIndex, HandIndex, BoardIndex
+from hearthstone.simulator.core.randomizer import DefaultRandomizer
+from hearthstone.simulator.core.tavern import Tavern
 
 
 def force_card(cards: List[MonsterCard], card_type) -> MonsterCard:

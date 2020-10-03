@@ -2,10 +2,10 @@ import random
 import typing
 from typing import List
 
-from hearthstone.agent import Agent, generate_valid_actions, Action
+from hearthstone.simulator.agent import Agent, generate_valid_actions, Action
 if typing.TYPE_CHECKING:
 
-    from hearthstone.player import Player
+    from hearthstone.simulator.core.player import Player
 
 
 class RandomBot(Agent):

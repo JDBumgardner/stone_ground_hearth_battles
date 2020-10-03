@@ -2,12 +2,12 @@ import itertools
 import typing
 from typing import List, Optional, Generator
 
-from hearthstone.monster_types import MONSTER_TYPES
-from hearthstone.player import StoreIndex, HandIndex, BoardIndex
+from hearthstone.simulator.core.monster_types import MONSTER_TYPES
+from hearthstone.simulator.core.player import StoreIndex, HandIndex, BoardIndex
 
 if typing.TYPE_CHECKING:
-    from hearthstone.hero import Hero
-    from hearthstone.tavern import Player
+    from hearthstone.simulator.core.hero import Hero
+    from hearthstone.simulator.core.tavern import Player
 
 
 class Action:

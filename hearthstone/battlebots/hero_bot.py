@@ -2,13 +2,13 @@ import random
 import typing
 from typing import List, Callable
 
-from hearthstone.agent import Agent, Action, generate_valid_actions, BuyAction, EndPhaseAction, SummonAction, \
+from hearthstone.simulator.agent import Agent, Action, generate_valid_actions, BuyAction, EndPhaseAction, SummonAction, \
      SellAction, TavernUpgradeAction, RerollAction, HeroPowerAction
 
-from hearthstone.player import Player, StoreIndex
+from hearthstone.simulator.core.player import Player, StoreIndex
 
 if typing.TYPE_CHECKING:
-    from hearthstone.cards import MonsterCard
+    from hearthstone.simulator.core.cards import MonsterCard
 
 
 class HeroBot(Agent):

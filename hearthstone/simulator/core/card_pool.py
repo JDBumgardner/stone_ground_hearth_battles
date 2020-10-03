@@ -2,11 +2,11 @@ import logging
 import types
 from typing import Union, List
 
-from hearthstone import combat
-from hearthstone.adaptations import valid_adaptations
-from hearthstone.cards import MonsterCard, PrintingPress, one_minion_per_type
-from hearthstone.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
-from hearthstone.monster_types import MONSTER_TYPES
+from hearthstone.simulator.core import combat
+from hearthstone.simulator.core.adaptations import valid_adaptations
+from hearthstone.simulator.core.cards import MonsterCard, PrintingPress, one_minion_per_type
+from hearthstone.simulator.core.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
+from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 
 
 class MamaBear(MonsterCard):

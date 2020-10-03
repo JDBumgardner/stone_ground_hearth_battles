@@ -1,6 +1,6 @@
 
-from hearthstone.card_pool import *
-from hearthstone.tavern import Player
+from hearthstone.simulator.core.card_pool import *
+from hearthstone.simulator.core.tavern import Player
 
 def rate_position(card: 'MonsterCard') -> float:
     if type(card) is MonstrousMacaw:

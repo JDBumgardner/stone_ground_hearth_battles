@@ -6,7 +6,7 @@ import torch
 from torch import nn, Tensor
 from torch.distributions import Categorical
 
-from hearthstone.agent import Agent, Action
+from hearthstone.simulator.agent import Agent, Action
 from hearthstone.training.pytorch.hearthstone_state_encoder import encode_player, encode_valid_actions, State, \
     EncodedActionSet, get_indexed_action
 

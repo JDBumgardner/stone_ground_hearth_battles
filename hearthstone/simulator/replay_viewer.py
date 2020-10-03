@@ -1,8 +1,8 @@
 from typing import List, Tuple
 
-from hearthstone.agent import Action, EndPhaseAction
-from hearthstone.randomizer import DefaultRandomizer
-from hearthstone.tavern import Tavern
+from hearthstone.simulator.agent import Action, EndPhaseAction
+from hearthstone.simulator.core.randomizer import DefaultRandomizer
+from hearthstone.simulator.core.tavern import Tavern
 
 
 class Replay:

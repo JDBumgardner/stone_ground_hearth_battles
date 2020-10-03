@@ -1,8 +1,8 @@
 from inspect import isclass
 from typing import Type, List
 
-from hearthstone.cards import MonsterCard
-from hearthstone.events import CombatPhaseContext
+from hearthstone.simulator.core.cards import MonsterCard
+from hearthstone.simulator.core.events import CombatPhaseContext
 
 
 class Plant(MonsterCard):

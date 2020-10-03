@@ -2,14 +2,14 @@ import logging
 import random
 import time
 from datetime import datetime
-from typing import List, Dict, Union, NewType, Optional
+from typing import List, Dict, Union, NewType
 
 import torch
 import trueskill
 from torch import optim, nn
 from torch.utils.tensorboard import SummaryWriter
 
-from hearthstone.host import RoundRobinHost
+from hearthstone.simulator.host import RoundRobinHost
 from hearthstone.ladder.ladder import Contestant, update_ratings, load_ratings, print_standings
 from hearthstone.training.pytorch.hearthstone_state_encoder import Transition, get_indexed_action, \
     DEFAULT_PLAYER_ENCODING, DEFAULT_CARDS_ENCODING
