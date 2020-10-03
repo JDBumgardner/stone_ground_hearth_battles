@@ -154,7 +154,7 @@ class PPOLearner(GlobalStepContext):
         clipped_value_error = transition_batch.retn - transition_batch.value + torch.clamp(transition_batch.value - value,
                                                                                 -ppo_epsilon, ppo_epsilon)
 
-        value_loss = torch.max(value_error.pow(2), clipped_value_error.pow(2)).mean()
+        value_loss = value_error.pow(2).mean() # torch.max(value_error.pow(2), clipped_value_error.pow(2)).mean()
 
         # Here we compute the policy only for actions which are valid.
         valid_action_tensor = torch.cat(
@@ -191,7 +191,7 @@ class PPOLearner(GlobalStepContext):
         tensorboard.add_scalar("avg_policy_loss/clipped", clipped_policy_loss.mean(), self.global_step)
 
         tensorboard.add_scalar("entropy_loss", entropy_loss, self.global_step)
-        loss = policy_loss * policy_weight + value_loss + entropy_loss
+        loss = value_loss #policy_loss * policy_weight + value_loss + entropy_loss
 
         optimizer.zero_grad()
         loss.backward()
