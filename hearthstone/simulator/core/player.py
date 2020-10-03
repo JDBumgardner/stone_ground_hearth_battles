@@ -320,12 +320,14 @@ class Player:
             self.coins += 1
 
     def gain_hand_card(self, card: 'MonsterCard'):
-        self._hand.append(card)
-        self.check_golden(type(card))
+        if self.room_in_hand():
+            self._hand.append(card)
+            self.check_golden(type(card))
 
     def gain_board_card(self, card: 'MonsterCard'):
-        self._in_play.append(card)
-        self.check_golden(type(card))
+        if self.room_on_board():
+            self._in_play.append(card)
+            self.check_golden(type(card))
 
     def remove_hand_card(self, card: 'MonsterCard'):
         self._hand.remove(card)
