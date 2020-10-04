@@ -8,14 +8,17 @@ from hearthstone.battlebots.priority_functions import PriorityFunctions
 from hearthstone.simulator.host import AsyncHost
 from hearthstone.text_agent.tcp import TcpTransport
 from hearthstone.text_agent.text_agent import TextAgent
+from hearthstone.simulator.core import hero_pool
 
 
 async def open_client_streams(max_players: int) -> Dict[str, Agent]:
     result = {}
-
+    event = asyncio.Event()
     server: asyncio.AbstractServer
 
     async def serve(client_reader: asyncio.StreamReader, client_writer: asyncio.StreamWriter):
+        if event.is_set():
+            return
         nonlocal server
         transport = TcpTransport(client_reader, client_writer)
         await transport.send('Please enter your name: ')
@@ -24,10 +27,13 @@ async def open_client_streams(max_players: int) -> Dict[str, Agent]:
         print(f"'{name}' has entered the game!")
         result[name] = TextAgent(transport)
         if len(result) >= max_players:
-            server.close()
+            print("at max players")
+            event.set()
 
     server = await asyncio.start_server(serve, '0.0.0.0', 9998)
-    await server.serve_forever()
+    asyncio.get_event_loop().create_task(server.serve_forever())
+    await event.wait()
+    print("done waiting")
     return result
 
 

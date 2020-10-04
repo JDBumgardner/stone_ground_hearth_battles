@@ -1,4 +1,5 @@
 import asyncio
+from random import random
 
 from hearthstone.text_agent.text_agent import TextAgentTransport
 
@@ -16,7 +17,7 @@ class TcpTransport(TextAgentTransport):
             return (await self.reader.readline()).decode('utf-8').rstrip()
         except UnicodeDecodeError:
             print("fnord")
-            return ""
+            return f"{random()+1000}"
 
     async def send(self, text: str):
         self.writer.write(text.encode('utf-8'))
