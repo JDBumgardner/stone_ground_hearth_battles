@@ -9,15 +9,15 @@ import trueskill
 from torch import optim, nn
 from torch.utils.tensorboard import SummaryWriter
 
-from hearthstone.simulator.host import RoundRobinHost
 from hearthstone.ladder.ladder import Contestant, update_ratings, load_ratings, print_standings
+from hearthstone.simulator.host import RoundRobinHost
 from hearthstone.training.pytorch.hearthstone_state_encoder import Transition, get_indexed_action, \
     DEFAULT_PLAYER_ENCODING, DEFAULT_CARDS_ENCODING
 from hearthstone.training.pytorch.networks.feedforward_net import HearthstoneFFNet
 from hearthstone.training.pytorch.networks.transformer_net import HearthstoneTransformerNet
 from hearthstone.training.pytorch.policy_gradient import tensorize_batch, easiest_contestants
 from hearthstone.training.pytorch.replay_buffer import ReplayBuffer, NormalizingReplayBuffer
-from hearthstone.training.pytorch.surveillance import SurveiledPytorchBot, ReplayBufferSaver, GlobalStepContext, \
+from hearthstone.training.pytorch.surveillance import SurveiledPytorchBot, GlobalStepContext, \
     GAEReplaySaver
 from hearthstone.training.pytorch.tensorboard_altair import TensorboardAltairPlotter
 from hearthstone.simulator.core import hero_pool
@@ -45,7 +45,7 @@ class Worker:
         self._start_new_game()
 
     def _start_new_game(self):
-        self.round_contestants = [self.learning_bot_contestant] + random.sample(self.other_contestants, k=7)
+        self.round_contestants = [self.learning_bot_contestant] + random.sample(self.other_contestants, k=1)
         self.host = RoundRobinHost(
             {contestant.name: contestant.agent_generator() for contestant in self.round_contestants})
         self.learning_bot_agent = self.host.agents[self.learning_bot_contestant.name]
@@ -191,6 +191,16 @@ class PPOLearner(GlobalStepContext):
         tensorboard.add_scalar("avg_policy_loss/clipped", clipped_policy_loss.mean(), self.global_step)
 
         tensorboard.add_scalar("entropy_loss", entropy_loss, self.global_step)
+
+        mean_0_return = transition_batch.retn - transition_batch.retn.mean()
+        mean_0_value = value.squeeze() - value.mean()
+        mean_0_diff = transition_batch.retn - value.squeeze()
+        mean_0_diff -= mean_0_diff.mean()
+        tensorboard.add_scalar("critic_explanation/explained_variance", (1 - mean_0_diff.pow(2).mean()) /
+                    mean_0_return.pow(2).mean(), self.global_step)
+        tensorboard.add_scalar("critic_explanation/correlation", (mean_0_return * mean_0_value).mean() / (
+                    mean_0_return.pow(2).mean() * mean_0_value.pow(2).mean()).sqrt(), self.global_step)
+
         loss = value_loss #policy_loss * policy_weight + value_loss + entropy_loss
 
         optimizer.zero_grad()
