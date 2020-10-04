@@ -9,7 +9,6 @@ from hearthstone.simulator.core.player import BoardIndex, StoreIndex
 from hearthstone.simulator.core.triple_reward_card import TripleRewardCard
 
 
-
 class Pyramad(Hero):
     power_cost = 1
 
@@ -216,6 +215,10 @@ class CaptainEudora(Hero):
     power_cost = 1
     digs_left = 5
 
+    def hero_power_valid_impl(self, context: BuyPhaseContext, board_index: Optional['BoardIndex'] = None,
+                              store_index: Optional['StoreIndex'] = None):
+        return context.owner.room_in_hand()
+
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
         self.digs_left -= 1
@@ -308,8 +311,9 @@ class CaptainHooktusk(Hero):
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
         board_minion = context.owner.pop_board_card(board_index)
-        board_minion.dissolve()
-        predicate = lambda card: card.tier < board_minion.tier if board_minion.tier > 1 else card.tier == 1
+        context.owner.tavern.deck.return_cards(board_minion.dissolve())
+        predicate = lambda card: (card.tier < board_minion.tier if board_minion.tier > 1 else card.tier == 1) and type(
+            card) != type(board_minion)
         lower_tier_minions = [card for card in context.owner.tavern.deck.unique_cards() if predicate(card)]
         random_minion = context.randomizer.select_gain_card(lower_tier_minions)
         context.owner.tavern.deck.remove_card(random_minion)
@@ -323,8 +327,9 @@ class Malygos(Hero):
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
         board_minion = context.owner.pop_board_card(board_index)
-        board_minion.dissolve()
-        same_tier_minions = [card for card in context.owner.tavern.deck.unique_cards() if card.tier == board_minion.tier]
+        context.owner.tavern.deck.return_cards(board_minion.dissolve())
+        predicate = lambda card: card.tier == board_minion.tier and type(card) != type(board_minion)
+        same_tier_minions = [card for card in context.owner.tavern.deck.unique_cards() if predicate(card)]
         random_minion = context.randomizer.select_gain_card(same_tier_minions)
         context.owner.tavern.deck.remove_card(random_minion)
         context.owner.gain_board_card(random_minion)
@@ -358,7 +363,7 @@ class ArannaStarseeker(Hero):
         if event.event is EVENTS.REFRESHED_STORE:
             self.total_rerolls += 1
             if self.total_rerolls >= 4:
-                context.owner.store.extend(context.owner.tavern.deck.draw(context.owner, 7-len(context.owner.store)))
+                context.owner.store.extend(context.owner.tavern.deck.draw(context.owner, 7 - len(context.owner.store)))
 
 
 class DinotamerBrann(Hero):
@@ -369,12 +374,13 @@ class DinotamerBrann(Hero):
         context.owner.return_cards()
         number_of_cards = 3 + context.owner.tavern_tier // 2 - len(context.owner.store)
         predicate = lambda card: card.base_battlecry
-        context.owner.store.extend([context.owner.tavern.deck.draw_with_predicate(context.owner, predicate) for _ in range(number_of_cards)])
+        context.owner.store.extend(
+            [context.owner.tavern.deck.draw_with_predicate(context.owner, predicate) for _ in range(number_of_cards)])
 
 
 class Alexstrasza(Hero):
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
-        if event.event is EVENTS.TAVERN_UPGRADE and context.owner.tavern_tier == 5:
+        if event.event is EVENTS.TAVERN_UPGRADE and context.owner.tavern_tier == 5 and context.owner.room_in_hand():
             for _ in range(2):
                 context.owner.draw_discover(lambda card: card.check_type(MONSTER_TYPES.DRAGON))
 
