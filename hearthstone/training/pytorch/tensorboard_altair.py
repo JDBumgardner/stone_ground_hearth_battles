@@ -132,7 +132,7 @@ class TensorboardAltairPlotter(Parasite):
         self.healths.append(player.health)
         self.coins.append(player.coins)
         self.avg_enemy_healths.append(
-            (sum(max(p.health, 0) for name, p in player.tavern.players.items()) - player.health) / 7.0)
+            (sum(max(p.health, 0) for name, p in player.tavern.players.items()) - player.health) / (len(player.tavern.players)-1))
         self.dead_players.append(len(player.tavern.losers) - 3.5)
         if value is None:
             self.values.append(None)
