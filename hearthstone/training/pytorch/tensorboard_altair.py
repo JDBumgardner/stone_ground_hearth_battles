@@ -47,7 +47,7 @@ class GAEPlotter(Parasite):
     def on_game_over(self, player: 'Player', ranking: int) -> Dict[str, List]:
         gae_returns = []
         returns = []
-        retn = 3.5 - ranking
+        retn = (len(player.tavern.players) - 1) / 2.0 - ranking
         gae_return = retn
         next_value = retn
         for i in range(len(self.game_steps) - 1, -1, -1):
@@ -185,7 +185,7 @@ class TensorboardAltairPlotter(Parasite):
     def on_game_over(self, player: 'Player', ranking: int):
         if self.dont_plot:
             return
-        self.update_gamestate(player, None, 3.5 - ranking)
+        self.update_gamestate(player, None, (len(player.tavern.players) - 1) / 2.0 - ranking)
         self.actions.append(None)
         self.action_types.append(None)
         self.sell_probs.append([None for _ in player.in_play])
