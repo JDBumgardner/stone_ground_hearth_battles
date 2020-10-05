@@ -217,7 +217,7 @@ class CaptainEudora(Hero):
 
     def hero_power_valid_impl(self, context: BuyPhaseContext, board_index: Optional['BoardIndex'] = None,
                               store_index: Optional['StoreIndex'] = None):
-        return context.owner.room_in_hand()
+        return self.digs_left != 1 or context.owner.room_in_hand()
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
@@ -380,9 +380,10 @@ class DinotamerBrann(Hero):
 
 class Alexstrasza(Hero):
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
-        if event.event is EVENTS.TAVERN_UPGRADE and context.owner.tavern_tier == 5 and context.owner.room_in_hand():
+        if event.event is EVENTS.TAVERN_UPGRADE and context.owner.tavern_tier == 5:
             for _ in range(2):
-                context.owner.draw_discover(lambda card: card.check_type(MONSTER_TYPES.DRAGON))
+                if context.owner.room_in_hand():
+                    context.owner.draw_discover(lambda card: card.check_type(MONSTER_TYPES.DRAGON))
 
 
 class KingMukla(Hero):
