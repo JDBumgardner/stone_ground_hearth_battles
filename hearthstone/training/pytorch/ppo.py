@@ -1,5 +1,6 @@
 import logging
 import random
+import sys
 import time
 from datetime import datetime
 from typing import List, Dict, Union, NewType
@@ -20,6 +21,7 @@ from hearthstone.training.pytorch.replay_buffer import ReplayBuffer, Normalizing
 from hearthstone.training.pytorch.surveillance import SurveiledPytorchBot, GlobalStepContext, \
     GAEReplaySaver
 from hearthstone.training.pytorch.tensorboard_altair import TensorboardAltairPlotter
+import torch.autograd.profiler as profiler
 from hearthstone.simulator.core import hero_pool
 
 PPOHyperparameters = NewType('PPOHyperparameters', Dict[str, Union[str, int, float]])
@@ -193,15 +195,15 @@ class PPOLearner(GlobalStepContext):
         tensorboard.add_scalar("entropy_loss", entropy_loss, self.global_step)
 
         mean_0_return = transition_batch.retn - transition_batch.retn.mean()
-        mean_0_value = value.squeeze() - value.mean()
-        mean_0_diff = transition_batch.retn - value.squeeze()
+        mean_0_value = value - value.mean()
+        mean_0_diff = transition_batch.retn - value
         mean_0_diff -= mean_0_diff.mean()
         tensorboard.add_scalar("critic_explanation/explained_variance", (1 - mean_0_diff.pow(2).mean()) /
                     mean_0_return.pow(2).mean(), self.global_step)
         tensorboard.add_scalar("critic_explanation/correlation", (mean_0_return * mean_0_value).mean() / (
                     mean_0_return.pow(2).mean() * mean_0_value.pow(2).mean()).sqrt(), self.global_step)
 
-        loss = value_loss #policy_loss * policy_weight + value_loss + entropy_loss
+        loss = policy_loss * policy_weight + value_loss + entropy_loss
 
         optimizer.zero_grad()
         loss.backward()
@@ -213,7 +215,7 @@ class PPOLearner(GlobalStepContext):
                 tensorboard.add_histogram(f"gradients_{tag}/train", parm.grad.data, self.global_step)
 
     def get_device(self) -> torch.device:
-        if torch.cuda.is_available():
+        if self.hparams['cuda'] and torch.cuda.is_available():
             return torch.device('cuda:0')
         else:
             return torch.device('cpu')
@@ -251,7 +253,6 @@ class PPOLearner(GlobalStepContext):
                                   nesterov=True)
         else:
             assert False
-
 
         replay_buffer_size = 10000
         if self.hparams["normalize_observations"]:
@@ -300,7 +301,7 @@ class PPOLearner(GlobalStepContext):
                     self.early_stopper.report(learning_bot_contestant.trueskill.mu, time_elapsed)
                 if self.early_stopper.should_prune():
                     break
-            if self.time_limit_secs and time_elapsed > time_limit_secs:
+            if self.time_limit_secs and time_elapsed > self.time_limit_secs:
                 break
 
         tensorboard.add_hparams(hparam_dict=self.hparams,
@@ -310,8 +311,9 @@ class PPOLearner(GlobalStepContext):
 
 
 def main():
-    ppo_learner = PPOLearner(PPOHyperparameters({'adam_lr': 0.000698178899316577,
+    ppo_learner = PPOLearner(PPOHyperparameters({'adam_lr': 0.0000698178899316577,
                                                  'batch_size': 1024,
+                                                 'cuda': False,
                                                  'entropy_weight': 3.20049705838473e-05,
                                                  'gradient_clipping': 0.5,
                                                  'nn_architecture': 'transformer',
@@ -326,6 +328,7 @@ def main():
                                                  'policy_weight': 0.581166675499831,
                                                  'ppo_epochs': 8,
                                                  'ppo_epsilon': 0.1}))
+
     ppo_learner.run()
 
 

@@ -93,7 +93,7 @@ class ReplayBufferSaver(Parasite):
 
     def on_game_over(self, player: 'Player', ranking: int):
         if self.last_state is not None:
-            self.remember_result(encode_player(player), 3.5 - ranking, True)
+            self.remember_result(encode_player(player), (len(player.tavern.players) - 1) / 2.0 - ranking, True)
 
     def remember_result(self, new_state, reward, is_terminal):
         self.replay_buffer.push(Transition(self.last_state, self.last_valid_actions,
@@ -132,7 +132,7 @@ class GAEReplaySaver(Parasite):
         )
 
     def on_game_over(self, player: 'Player', ranking: int):
-        retn = 3.5-ranking
+        retn = (len(player.tavern.players) - 1) / 2.0 - ranking
         gae_return = retn
         next_value = retn
         for i in range(len(self.game_steps)-1, -1, -1):
@@ -142,7 +142,7 @@ class GAEReplaySaver(Parasite):
                                                game_step.action, game_step.action_prob,
                                                game_step.value, gae_return,
                                                retn,
-                                               3.5-ranking if is_terminal else 0.0, is_terminal))
+                                               (len(player.tavern.players) - 1) / 2.0 - ranking if is_terminal else 0.0, is_terminal))
             gae_return = next_value + (gae_return - next_value) * self.gamma * self.lam
             next_value = self.gamma * game_step.value
             retn *= self.gamma
@@ -154,60 +154,3 @@ class GlobalStepContext:
 
     def should_plot(self) -> bool:
         raise NotImplemented("Note Implemented")
-
-
-class TensorboardGamePlotter(Parasite):
-    def __init__(self, tensorboard: SummaryWriter, global_step_context: GlobalStepContext):
-        self.tensorboard = tensorboard
-        self.healths = []
-        self.dead_players = []
-        self.avg_enemy_healths = []
-        self.values = []
-        self.global_step_context = global_step_context
-        self.action_types = []
-
-    def on_buy_phase_action(self, player: 'Player', action: Action, policy: torch.Tensor, value: torch.Tensor):
-        self.update_gamestate(player, value)
-        self.action_types.append(type(action).__name__)
-
-    def update_gamestate(self, player: 'Player', value):
-        self.healths.append(player.health)
-        self.avg_enemy_healths.append((sum(max(p.health, 0) for name, p in player.tavern.players.items()) - player.health) / 7.0)
-        self.dead_players.append(len(player.tavern.losers)-3.5)
-        if value is not None:
-            self.values.append(float(value))
-
-    def on_game_over(self, player: 'Player', ranking: int):
-        self.update_gamestate(player, None)
-
-        figure, ax1 = plt.subplots()
-        lns1 = ax1.plot(self.dead_players, label="Dead Players", color="tab:green")
-        lns2 = ax1.plot(self.values, label="Value", color="black")
-        lns3 = ax1.plot(len(self.values), 3.5 - ranking, label="Reward", marker="*", color="black", linestyle="none")
-        ax1.grid(True, axis="x")
-        plt.legend()
-        ax2 = ax1.twinx()
-        ax2.set_ylim([-5, 45])
-        lns4 = ax2.plot(self.healths, label="Health", color='tab:blue')
-        lns5 = ax2.plot(self.avg_enemy_healths, label="Avg Enemy Health", color='tab:purple')
-
-        leg = lns1 + lns2 + lns3 + lns4 + lns5
-        labs = [l.get_label() for l in leg]
-        ax1.legend(leg, labs, loc=0)
-
-        self.tensorboard.add_figure("game_state", figure, global_step=self.global_step_context.get_global_step())
-        plt.close()
-        figure, ax = plt.subplots()
-
-        c = collections.Counter(self.action_types)
-        c = sorted(c.items())
-        plt.bar([i[0] for i in c], [i[1] for i in c])
-        plt.title("Action Probablity By Type")
-        plt.xlabel("Action Type")
-        plt.ylabel("Frequency")
-        ax.set_xticks(range(len(c)))
-        ax.set_xticklabels([i[0] for i in c])
-        figure.autofmt_xdate()
-        self.tensorboard.add_figure("action_type_distribution", figure, global_step=self.global_step_context.get_global_step())
-        plt.close()
-        self.values.clear()

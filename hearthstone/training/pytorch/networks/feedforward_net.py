@@ -78,5 +78,5 @@ class HearthstoneFFNet(nn.Module):
         policy = F.log_softmax(policy, dim=1)
         # The value network outputs the linear combination of the last hidden layer. The value layer predicts the total reward at the end of the game,
         # which will be between -3.5 (8th place) at the minimum and 3.5 (1st place) at the max. 
-        value = self.fc_value(x_value)
+        value = self.fc_value(x_value).squeeze(1)
         return policy, value
