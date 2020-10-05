@@ -15,13 +15,12 @@ class TransformerWithContextEncoder(nn.Module):
         # TODO Orthogonal initialization?
         self.fc_player = nn.Linear(player_encoding.size()[0], self.width - 1)
         self.fc_card = nn.Linear(card_encoding.size()[1], self.width - 1)
-        self.encoder_layer = nn.TransformerEncoderLayer(d_model=width, dim_feedforward=width, nhead=4, dropout=0.0, activation=activation)
+        self.encoder_layer = nn.TransformerEncoderLayer(d_model=width, dim_feedforward=width*4, nhead=4, dropout=0.0, activation=activation)
         self.transformer_encoder = nn.TransformerEncoder(self.encoder_layer, num_layers=num_layers)
 
     def forward(self, state: State) -> Tuple[torch.Tensor, torch.Tensor]:
         player_rep = self.fc_player(state.player_tensor).unsqueeze(1)
         card_rep = self.fc_card(state.cards_tensor)
-
         # We add an indicator dimension to distinguish the player representation from the card representation.
         player_rep = F.pad(player_rep, [1, 0], value=1.0)
         card_rep = F.pad(card_rep, [1, 0], value=0.0)
@@ -65,8 +64,11 @@ class HearthstoneTransformerNet(nn.Module):
         self.value_hack1 = nn.Linear(player_encoding.flattened_size(), 16)
         self.value_hack2 = nn.Linear(16, 1)
 
-
     def forward(self, state: State, valid_actions: EncodedActionSet):
+        if not isinstance(state, State):
+            state = State(state[0], state[1])
+        if not isinstance(valid_actions, EncodedActionSet):
+            valid_actions = EncodedActionSet(valid_actions[0], valid_actions[1])
         policy_encoded_player, policy_encoded_cards = self.policy_encoder(state)
         value_encoded_player, value_encoded_cards = self.value_encoder(state)
 
@@ -82,9 +84,8 @@ class HearthstoneTransformerNet(nn.Module):
 
         # The policy network outputs an array of the log probability of each action.
         policy = F.log_softmax(policy, dim=1)
-
         # The value network outputs the linear combination of the representation of the player in the last layer,
         # which will be between -3.5 (8th place) at the minimum and 3.5 (1st place) at the max.
         value = self.fc_value(value_encoded_player).squeeze(1)
-        value = self.value_hack2(F.relu(self.value_hack1(state.player_tensor))).squeeze(1)
+        # value = self.value_hack2(F.relu(self.value_hack1(state.player_tensor))).squeeze(1)
         return policy, value

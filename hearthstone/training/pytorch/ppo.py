@@ -11,12 +11,14 @@ from torch import optim, nn
 from torch.utils.tensorboard import SummaryWriter
 
 from hearthstone.ladder.ladder import Contestant, update_ratings, load_ratings, print_standings
+from hearthstone.simulator.core.hero import EmptyHero
+from hearthstone.simulator.core.tavern import Tavern
 from hearthstone.simulator.host import RoundRobinHost
 from hearthstone.training.pytorch.hearthstone_state_encoder import Transition, get_indexed_action, \
-    DEFAULT_PLAYER_ENCODING, DEFAULT_CARDS_ENCODING
+    DEFAULT_PLAYER_ENCODING, DEFAULT_CARDS_ENCODING, State, EncodedActionSet, encode_player, encode_valid_actions
 from hearthstone.training.pytorch.networks.feedforward_net import HearthstoneFFNet
 from hearthstone.training.pytorch.networks.transformer_net import HearthstoneTransformerNet
-from hearthstone.training.pytorch.policy_gradient import tensorize_batch, easiest_contestants
+from hearthstone.training.pytorch.policy_gradient import tensorize_batch, easiest_contestants, easy_contestants
 from hearthstone.training.pytorch.replay_buffer import ReplayBuffer, NormalizingReplayBuffer
 from hearthstone.training.pytorch.surveillance import SurveiledPytorchBot, GlobalStepContext, \
     GAEReplaySaver
@@ -140,7 +142,7 @@ class PPOLearner(GlobalStepContext):
 
         ratio = torch.exp(policy - transition_batch.action_prob.unsqueeze(-1)).gather(1,
                                                                                       transition_batch.action.unsqueeze(
-                                                                                          -1))
+                                                                                          -1)).squeeze(1)
         clipped_ratio = ratio.clamp(1 - ppo_epsilon, 1 + ppo_epsilon)
 
         normalized_advantage: torch.Tensor = advantage.detach()
@@ -220,6 +222,21 @@ class PPOLearner(GlobalStepContext):
         else:
             return torch.device('cpu')
 
+    def add_graph_to_tensorboard(self, tensorboard: SummaryWriter, learning_net:nn.Module):
+        tavern = Tavern()
+        tavern.add_player_with_hero("Dummy", EmptyHero())
+        tavern.add_player_with_hero("Other", EmptyHero())
+        tavern.buying_step()
+        player = list(tavern.players.values())[0]
+
+        encoded_state: State = encode_player(player, self.get_device())
+        valid_actions_mask: EncodedActionSet = encode_valid_actions(player, self.get_device())
+
+        tensorboard.add_graph(learning_net, input_to_model=(State(encoded_state.player_tensor.unsqueeze(0),
+                                       encoded_state.cards_tensor.unsqueeze(0)),
+                                 EncodedActionSet(valid_actions_mask.player_action_tensor.unsqueeze(0),
+                                                  valid_actions_mask.card_action_tensor.unsqueeze(0))))
+
     def run(self):
         start_time = time.time()
         last_reported_time = start_time
@@ -241,6 +258,10 @@ class PPOLearner(GlobalStepContext):
                                             self.hparams.get("nn_hidden_size") or 0,
                                             self.hparams.get("nn_shared") or False,
                                             self.hparams.get("nn_activation") or "")
+
+        if not self.hparams["cuda"]:
+            # This is broken on CUDA and we are too lazy to debug.
+            self.add_graph_to_tensorboard(tensorboard, learning_net)
 
         # Set gradient descent algorithm
         if self.hparams["optimizer"] == "adam":
@@ -273,7 +294,7 @@ class PPOLearner(GlobalStepContext):
         # Rating starts a 14, which is how the randomly initialized pytorch bot performs.
         learning_bot_contestant.trueskill = trueskill.Rating(14)
         # Reuse standings from the current leaderboard.
-        other_contestants = easiest_contestants()
+        other_contestants = easy_contestants()
         load_ratings(other_contestants, "../../../data/standings.json")
 
         workers = [Worker(learning_bot_contestant, other_contestants, replay_buffer) for _ in
@@ -313,14 +334,14 @@ class PPOLearner(GlobalStepContext):
 def main():
     ppo_learner = PPOLearner(PPOHyperparameters({'adam_lr': 0.0000698178899316577,
                                                  'batch_size': 1024,
-                                                 'cuda': False,
+                                                 'cuda': True,
                                                  'entropy_weight': 3.20049705838473e-05,
                                                  'gradient_clipping': 0.5,
                                                  'nn_architecture': 'transformer',
                                                  'nn_hidden_layers': 1,
                                                  'nn_hidden_size': 16,
                                                  'nn_activation': 'gelu',
-                                                 'nn_shared': 'false',
+                                                 'nn_shared': False,
                                                  'normalize_advantage': True,
                                                  'normalize_observations': False,
                                                  'num_workers': 1,

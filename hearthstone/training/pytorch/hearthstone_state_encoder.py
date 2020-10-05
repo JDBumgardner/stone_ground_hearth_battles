@@ -196,6 +196,7 @@ def default_player_encoding() -> Feature:
         ScalarFeature(lambda player: float(player.tavern.turn_count)),
         ScalarFeature(lambda player: float(player.health)),
         ScalarFeature(lambda player: float(player.coins)),
+        ScalarFeature(lambda player: float(player.tavern_tier)),
         SortedByValueFeature(lambda player: [p.health for name, p in player.tavern.players.items()], 8),
     ])
 
