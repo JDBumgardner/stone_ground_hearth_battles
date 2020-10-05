@@ -15,6 +15,7 @@ class Tavern:
         self.deck: CardList = PrintingPress.make_cards()
         self.hero_pool = [hero_type() for hero_type in hero.VALHALLA]
         self.turn_count = 0
+        self._max_turn_count = 50
         self.current_player_pairings = []
         self.randomizer = DefaultRandomizer()
         self.losers = []
@@ -79,6 +80,9 @@ class Tavern:
             for name, player in self.players.items():
                 if (name, player) not in self.losers:
                     self.losers.append((name, player))
+        if self.turn_count > self._max_turn_count:
+            remaining_players = [(name, player) for name, player in self.players.items() if (name, player) not in self.losers]
+            self.losers.extend(sorted(remaining_players, key=lambda e: e[1].health))
 
     def game_over(self):
         return len(self.losers) >= len(self.players)
