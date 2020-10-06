@@ -148,7 +148,7 @@ class PPOLearner(GlobalStepContext):
         normalized_advantage: torch.Tensor = advantage.detach()
         if normalize_advantage:
             normalized_advantage = (normalized_advantage - normalized_advantage.mean()) / (
-                    normalized_advantage.std() + 1e-5)
+                    normalized_advantage.std() + 1e-7)
         clipped_policy_loss = - clipped_ratio * normalized_advantage
         unclipped_policy_loss = - ratio * normalized_advantage
         policy_loss = torch.max(clipped_policy_loss, unclipped_policy_loss).mean()
@@ -188,7 +188,9 @@ class PPOLearner(GlobalStepContext):
                                transition_batch.reward.masked_select(transition_batch.is_terminal).float().mean(),
                                self.global_step)
         tensorboard.add_scalar("avg_value", value.mean(), self.global_step)
-        tensorboard.add_scalar("avg_advantage", advantage.mean(), self.global_step)
+        tensorboard.add_scalar("avg_advantage/unnormalized", advantage.mean(), self.global_step)
+        tensorboard.add_scalar("avg_advantage/normalized", normalized_advantage.mean(), self.global_step)
+        tensorboard.add_scalar("avg_value_error", value_error.mean(), self.global_step)
         tensorboard.add_scalar("policy_loss", policy_loss, self.global_step)
         tensorboard.add_scalar("value_loss", value_loss, self.global_step)
         tensorboard.add_scalar("avg_policy_loss/unclipped", unclipped_policy_loss.mean(), self.global_step)
