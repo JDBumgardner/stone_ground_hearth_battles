@@ -339,7 +339,7 @@ def main():
                                                  'gradient_clipping': 0.5,
                                                  'nn_architecture': 'transformer',
                                                  'nn_hidden_layers': 1,
-                                                 'nn_hidden_size': 16,
+                                                 'nn_hidden_size': 32,
                                                  'nn_activation': 'gelu',
                                                  'nn_shared': False,
                                                  'normalize_advantage': True,
