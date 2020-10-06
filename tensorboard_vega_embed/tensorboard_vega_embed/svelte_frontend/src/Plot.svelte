@@ -14,14 +14,14 @@
 
    $: {
       if (selectedStep in stepToChart) {
-      	 vegaEmbed("#chrt", JSON.parse(stepToChart[selectedStep]), {actions: false}).catch(error => console.log(error));
+      	 vegaEmbed("#chrt", JSON.parse(stepToChart[selectedStep]), {actions: false}).catch(error => console.log("VegaEmbedError: ", error));
       }
    }
 
 </script>
 
 <main>
-<input type=range bind:value={sliderStep} min=0 max={maxStep} list="steplist">
+<input class="stepSlider" type=range bind:value={sliderStep} min=0 max={maxStep} list="steplist">
 
 <datalist id="steplist">
     {#each steps as step}
@@ -37,3 +37,9 @@
 	<p style="color: red">{error.message}</p>
 {/await}
 </main>
+
+<style>
+    .stepSlider {
+		width: 100%;
+	}
+</style>
