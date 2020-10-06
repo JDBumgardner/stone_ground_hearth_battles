@@ -11,7 +11,6 @@ from torch.utils.tensorboard import SummaryWriter
 from hearthstone.simulator.agent import Action, SellAction, SummonAction, BuyAction, generate_valid_actions
 from hearthstone.training.pytorch import hearthstone_state_encoder
 from hearthstone.training.pytorch.hearthstone_state_encoder import encode_player, encode_valid_actions, get_action_index
-from hearthstone.training.pytorch.replay_buffer import ReplayBuffer
 from hearthstone.training.pytorch.surveillance import Parasite, GlobalStepContext
 
 
@@ -145,11 +144,7 @@ class TensorboardAltairPlotter(Parasite):
 
     @staticmethod
     def _action_chart(df: pd.DataFrame, name: str, max_size: int):
-        ranked_text = alt.Chart(df).mark_text().encode(
-            y=alt.Y('row_number:O', axis=None, scale=alt.Scale(domain=list(range(1, max_size+1)))),
-            color=alt.Color("action_probability:Q", scale=alt.Scale(domain=[0, 1], scheme="bluegreen")),
-            tooltip=["action_probability:Q"]
-        ).transform_lookup(lookup="step_in_game",
+        ranked_text = alt.Chart(df).mark_text().transform_lookup(lookup="step_in_game",
                            from_=alt.LookupSelection(key="step_in_game",
                                                      selection="gamestep_hover",
                                                      fields=["step_in_game"]),
@@ -159,7 +154,12 @@ class TensorboardAltairPlotter(Parasite):
         ).transform_window(
             row_number='row_number()'
         )
-        return ranked_text.encode(text=f'{name}:N')
+        return ranked_text.encode(text=f'{name}:N',
+                                  y=alt.Y('row_number:O', axis=None,
+                                          scale=alt.Scale(domain=list(range(1, max_size + 1)))),
+                                  color=alt.Color("action_probability:Q",
+                                                  scale=alt.Scale(domain=[0, 1], scheme="bluegreen")),
+                                  tooltip=[alt.Tooltip("action_probability:Q", title="Probability")])
 
     @staticmethod
     def _card_list_chart(name: str, cards_list: List[List[str]], action_probs: List[List[str]], max_size:int):
@@ -276,7 +276,7 @@ class TensorboardAltairPlotter(Parasite):
 
         left_chart = alt.vconcat(game_progression_chart, action_chart).resolve_scale(color='independent')
         right_chart = alt.vconcat(basic_action_chart, board_chart, hand_chart, store_chart).resolve_legend('shared')
-        full_chart = alt.hconcat(left_chart, right_chart)
+        full_chart = alt.hconcat(left_chart, right_chart).configure(autosize=alt.AutoSizeParams(resize=True))
         json = full_chart.to_json()
 
         tensorboard_vega_embed.summary.vega_embed(self.tensorboard, "GameSummary", json,
