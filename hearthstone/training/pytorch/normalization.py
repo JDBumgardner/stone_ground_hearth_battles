@@ -1,4 +1,8 @@
+import copy
+
 import torch
+
+from hearthstone.training.pytorch.replay import ActorCriticGameStepInfo
 
 
 class WelfordAggregator:
@@ -45,3 +49,14 @@ class PPONormalizer:
         else:
             return value
 
+
+class ObservationNormalizer:
+    def __init__(self, player_normalizer: PPONormalizer, cards_normalizer: PPONormalizer):
+        self.player_normalizer = player_normalizer
+        self.cards_normalizer = cards_normalizer
+
+    def normalize(self, game_step_info: ActorCriticGameStepInfo):
+        normalized = copy.copy(game_step_info)
+        normalized.state.player_tensor = self.player_normalizer.normalize(normalized.state.player_tensor)
+        normalized.state.cards_tensor = self.player_normalizer.normalize(normalized.state.cards_tensor)
+        return normalized
