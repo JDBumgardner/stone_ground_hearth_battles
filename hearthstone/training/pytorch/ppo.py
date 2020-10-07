@@ -1,6 +1,4 @@
 import logging
-import random
-import sys
 import time
 from datetime import datetime
 from typing import List, Dict, Union, NewType
@@ -10,72 +8,23 @@ import trueskill
 from torch import optim, nn
 from torch.utils.tensorboard import SummaryWriter
 
-from hearthstone.ladder.ladder import Contestant, update_ratings, load_ratings, print_standings
+from hearthstone.ladder.ladder import Contestant, load_ratings
 from hearthstone.simulator.core.hero import EmptyHero
 from hearthstone.simulator.core.tavern import Tavern
-from hearthstone.simulator.host import RoundRobinHost
-from hearthstone.training.pytorch.hearthstone_state_encoder import Transition, get_indexed_action, \
+from hearthstone.training.pytorch.hearthstone_state_encoder import get_indexed_action, \
     DEFAULT_PLAYER_ENCODING, DEFAULT_CARDS_ENCODING, State, EncodedActionSet, encode_player, encode_valid_actions
 from hearthstone.training.pytorch.networks.feedforward_net import HearthstoneFFNet
 from hearthstone.training.pytorch.networks.transformer_net import HearthstoneTransformerNet
-from hearthstone.training.pytorch.policy_gradient import tensorize_batch, easiest_contestants, easy_contestants
-from hearthstone.training.pytorch.replay_buffer import ReplayBuffer, NormalizingReplayBuffer
+from hearthstone.training.pytorch.normalization import ObservationNormalizer, PPONormalizer
+from hearthstone.training.pytorch.policy_gradient import tensorize_batch, easy_contestants
+from hearthstone.training.pytorch.replay import ActorCriticGameStepInfo
+from hearthstone.training.pytorch.replay_buffer import EpochBuffer
 from hearthstone.training.pytorch.surveillance import SurveiledPytorchBot, GlobalStepContext, \
     GAEReplaySaver
 from hearthstone.training.pytorch.tensorboard_altair import TensorboardAltairPlotter
-import torch.autograd.profiler as profiler
-from hearthstone.simulator.core import hero_pool
+from hearthstone.training.pytorch.worker import Worker
 
 PPOHyperparameters = NewType('PPOHyperparameters', Dict[str, Union[str, int, float]])
-
-
-class Worker:
-    def __init__(self, learning_bot_contestant: Contestant, other_contestants: List[Contestant], replay_buffer):
-        """
-        Worker is responsible for setting up games where the learning bot plays against a random set of opponents and
-        provides a way to step through the games one action at a time.
-
-        Args:
-            learning_bot_contestant (Contestant):
-            other_contestants (List[Contestant]):
-        """
-        self.other_contestants = other_contestants
-        self.learning_bot_contestant = learning_bot_contestant
-        self.host = None
-        self.round_contestants = None
-        self.one_round_generator = None
-        self.learning_bot_agent = None
-        self.replay_buffer = replay_buffer
-        self._start_new_game()
-
-    def _start_new_game(self):
-        self.round_contestants = [self.learning_bot_contestant] + random.sample(self.other_contestants, k=1)
-        self.host = RoundRobinHost(
-            {contestant.name: contestant.agent_generator() for contestant in self.round_contestants})
-        self.learning_bot_agent = self.host.agents[self.learning_bot_contestant.name]
-        self.host.start_game()
-        self.one_round_generator = self.host.play_round_generator()
-
-    def play_step(self):
-        last_replay_buffer_position = self.replay_buffer.position
-        while self.replay_buffer.position == last_replay_buffer_position:
-            try:
-                next(self.one_round_generator)
-            except StopIteration as e:
-                if self.host.game_over():
-                    winner_names = list(reversed([name for name, player in self.host.tavern.losers]))
-                    print("---------------------------------------------------------------")
-                    print(winner_names)
-                    print(self.host.tavern.players[self.learning_bot_contestant.name].in_play)
-                    ranked_contestants = sorted(self.round_contestants, key=lambda c: winner_names.index(c.name))
-                    update_ratings(ranked_contestants)
-                    print_standings([self.learning_bot_contestant] + self.other_contestants)
-                    for contestant in self.round_contestants:
-                        contestant.games_played += 1
-
-                    self._start_new_game()
-                else:
-                    self.one_round_generator = self.host.play_round_generator()
 
 
 class PPOLearner(GlobalStepContext):
@@ -112,11 +61,21 @@ class PPOLearner(GlobalStepContext):
         self.games_plotted += 1
         return do_plot
 
-    def learn(self, tensorboard: SummaryWriter, optimizer: optim.Optimizer, learning_net: nn.Module,
-              replay_buffer: ReplayBuffer,
-              batch_size: int, policy_weight: float, entropy_weight: float, ppo_epsilon: float,
-              gradient_clipping: float,
-              normalize_advantage: bool):
+    def learn_epoch(self, tensorboard: SummaryWriter, optimizer: optim.Optimizer, learning_net: nn.Module,
+                    replay_buffer: EpochBuffer,
+                    minibatch_size: int, policy_weight: float, entropy_weight: float, ppo_epsilon: float,
+                    gradient_clipping: float,
+                    normalize_advantage: bool
+                    ):
+        for minibatch in replay_buffer.sample_minibatches(minibatch_size):
+            self.learn_minibatch(tensorboard, optimizer, learning_net, minibatch, policy_weight, entropy_weight, ppo_epsilon,
+                                 gradient_clipping, normalize_advantage)
+
+    def learn_minibatch(self, tensorboard: SummaryWriter, optimizer: optim.Optimizer, learning_net: nn.Module,
+                        minibatch: List[ActorCriticGameStepInfo],
+                        policy_weight: float, entropy_weight: float, ppo_epsilon: float,
+                        gradient_clipping: float,
+                        normalize_advantage: bool):
         """
         This does one step of gradient descent on a mini batch of transitions.
 
@@ -124,28 +83,26 @@ class PPOLearner(GlobalStepContext):
             tensorboard: Visualization framework
             optimizer: PyTorch optimizer, e.g. Adam.
             learning_net: The NN. A wise man once said, the learning net catch the smart fish.
-            replay_buffer: Buffer of observed transitions to learn from.
-            batch_size: The size of your mom.
+            minibatch: A minibatch of ActorCriticGameStepInfo to learn from.
             policy_weight: The weight of the policy relative to the value
             entropy_weight: The weight of entropy loss, which is used for regularization.
             ppo_epsilon: Clips the difference between the current and next value between +/- ppo_epsilon.
             gradient_clipping: Clip the norm of the gradient if it's above this threshold.
             normalize_advantage: Whether to batch normal the advantage with a mean of 0 and stdev of 1.
         """
-        transitions: List[Transition] = replay_buffer.sample(batch_size)
-        transition_batch = tensorize_batch(transitions, self.get_device())
+        transition_batch = tensorize_batch(minibatch, self.get_device())
 
         policy, value = learning_net(transition_batch.state, transition_batch.valid_actions)
 
         # The advantage is the difference between the expected value before taking the action and the value after updating
-        advantage = transition_batch.gae_return - value
+        advantage = transition_batch.gae_return - transition_batch.value
 
         ratio = torch.exp(policy - transition_batch.action_prob.unsqueeze(-1)).gather(1,
                                                                                       transition_batch.action.unsqueeze(
                                                                                           -1)).squeeze(1)
         clipped_ratio = ratio.clamp(1 - ppo_epsilon, 1 + ppo_epsilon)
 
-        normalized_advantage: torch.Tensor = advantage.detach()
+        normalized_advantage: torch.Tensor = advantage
         if normalize_advantage:
             normalized_advantage = (normalized_advantage - normalized_advantage.mean()) / (
                     normalized_advantage.std() + 1e-7)
@@ -235,9 +192,10 @@ class PPOLearner(GlobalStepContext):
         valid_actions_mask: EncodedActionSet = encode_valid_actions(player, self.get_device())
 
         tensorboard.add_graph(learning_net, input_to_model=(State(encoded_state.player_tensor.unsqueeze(0),
-                                       encoded_state.cards_tensor.unsqueeze(0)),
-                                 EncodedActionSet(valid_actions_mask.player_action_tensor.unsqueeze(0),
-                                                  valid_actions_mask.card_action_tensor.unsqueeze(0))))
+                                                                  encoded_state.cards_tensor.unsqueeze(0)),
+                                                            EncodedActionSet(
+                                                                valid_actions_mask.player_action_tensor.unsqueeze(0),
+                                                                valid_actions_mask.card_action_tensor.unsqueeze(0))))
 
     def run(self):
         start_time = time.time()
@@ -277,14 +235,15 @@ class PPOLearner(GlobalStepContext):
         else:
             assert False
 
-        replay_buffer_size = 10000
+        learning_bot_name = "LearningBot"
+        observation_normalizer = None
         if self.hparams["normalize_observations"]:
-            # TODO(anyone): decide on gamma / make it a hyperparameter.
-            replay_buffer = NormalizingReplayBuffer(replay_buffer_size, 0, DEFAULT_PLAYER_ENCODING,
-                                                    DEFAULT_CARDS_ENCODING)
-        else:
-            replay_buffer = ReplayBuffer(replay_buffer_size)
-        learning_bot_contestant = Contestant("LearningBot",
+            normalization_gamma = self.hparams["normalization_gamma"]
+            observation_normalizer = ObservationNormalizer(
+                PPONormalizer(normalization_gamma, DEFAULT_PLAYER_ENCODING.size()),
+                PPONormalizer(normalization_gamma, DEFAULT_CARDS_ENCODING.size()))
+        replay_buffer = EpochBuffer(learning_bot_name, observation_normalizer)
+        learning_bot_contestant = Contestant(learning_bot_name,
                                              lambda: SurveiledPytorchBot(
                                                  learning_net,
                                                  [
@@ -299,16 +258,15 @@ class PPOLearner(GlobalStepContext):
         other_contestants = easy_contestants()
         load_ratings(other_contestants, "../../../data/standings.json")
 
-        workers = [Worker(learning_bot_contestant, other_contestants, replay_buffer) for _ in
+        workers = [Worker(learning_bot_contestant, other_contestants, self.hparams["game_size"], replay_buffer) for _ in
                    range(self.hparams['num_workers'])]
 
         for _ in range(1000000):
             for worker in workers:
                 worker.play_step()
-            # print(len(replay_buffer))
             if len(replay_buffer) >= batch_size:
                 for i in range(self.hparams["ppo_epochs"]):
-                    self.learn(tensorboard, optimizer, learning_net, replay_buffer, batch_size,
+                    self.learn_epoch(tensorboard, optimizer, learning_net, replay_buffer, minibatch_size,
                                self.hparams["policy_weight"],
                                self.hparams["entropy_weight"], self.hparams["ppo_epsilon"],
                                self.hparams["gradient_clipping"],
@@ -334,23 +292,26 @@ class PPOLearner(GlobalStepContext):
 
 
 def main():
-    ppo_learner = PPOLearner(PPOHyperparameters({'adam_lr': 0.0000698178899316577,
-                                                 'batch_size': 1024,
-                                                 'cuda': True,
-                                                 'entropy_weight': 3.20049705838473e-05,
-                                                 'gradient_clipping': 0.5,
-                                                 'nn_architecture': 'transformer',
-                                                 'nn_hidden_layers': 1,
-                                                 'nn_hidden_size': 32,
-                                                 'nn_activation': 'gelu',
-                                                 'nn_shared': False,
-                                                 'normalize_advantage': True,
-                                                 'normalize_observations': False,
-                                                 'num_workers': 1,
-                                                 'optimizer': 'adam',
-                                                 'policy_weight': 0.581166675499831,
-                                                 'ppo_epochs': 8,
-                                                 'ppo_epsilon': 0.1}))
+    ppo_learner = PPOLearner(PPOHyperparameters({
+        'adam_lr': 0.0000698178899316577,
+        'batch_size': 1024,
+        'minibatch_size': 1024,
+        'cuda': True,
+        'entropy_weight': 3.20049705838473e-06,
+        'gradient_clipping': 0.5,
+        'game_size': 2,
+        'nn_architecture': 'transformer',
+        'nn_hidden_layers': 1,
+        'nn_hidden_size': 32,
+        'nn_activation': 'gelu',
+        'nn_shared': False,
+        'normalize_advantage': True,
+        'normalize_observations': False,
+        'num_workers': 1,
+        'optimizer': 'adam',
+        'policy_weight': 0.581166675499831,
+        'ppo_epochs': 8,
+        'ppo_epsilon': 0.1}))
 
     ppo_learner.run()
 

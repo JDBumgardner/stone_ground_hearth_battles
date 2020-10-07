@@ -19,6 +19,7 @@ from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 from hearthstone.simulator.core.tavern import Tavern
 from hearthstone.training.pytorch.hearthstone_state_encoder import encode_player, encode_valid_actions, Transition, \
     EncodedActionSet
+from hearthstone.training.pytorch.replay import ActorCriticGameStepInfo
 
 
 def add_net_to_tensorboard(tensorboard: SummaryWriter, net: nn.Module):
@@ -73,25 +74,26 @@ TransitionBatch = namedtuple('TransitionBatch', ('state', 'valid_actions', 'acti
 
 
 # TODO: Delete all of this
-def tensorize_batch(transitions: List[Transition], device: torch.device) -> TransitionBatch:
+def tensorize_batch(transitions: List[ActorCriticGameStepInfo], device: torch.device) -> TransitionBatch:
     player_tensor = torch.stack([transition.state.player_tensor for transition in transitions])
     cards_tensor = torch.stack([transition.state.cards_tensor for transition in transitions])
     valid_player_actions_tensor = torch.stack([transition.valid_actions.player_action_tensor for transition in transitions])
-    valid_card_actions_tensor = torch.stack([transition.valid_actions.card_action_tensor for transition in transitions])
+    valid_card_actions_tensor = torch.stack([tranrsition.valid_actions.card_action_tensor for transition in transitions])
     action_tensor = torch.tensor([transition.action for transition in transitions])
     action_prob_tensor = torch.tensor([transition.action_prob for transition in transitions])
     value_tensor = torch.tensor([transition.value for transition in transitions])
-    gae_return_tensor = torch.tensor([transition.gae_return for transition in transitions])
-    retn_tensor = torch.tensor([transition.retn for transition in transitions])
     reward_tensor = torch.tensor([transition.reward for transition in transitions])
     is_terminal_tensor = torch.tensor([transition.is_terminal for transition in transitions])
+    gae_return_tensor = torch.tensor([transition.gae_info.gae_return for transition in transitions])
+    retrn_tensor = torch.tensor([transition.gae_info.retrn for transition in transitions])
+
     return TransitionBatch(StateBatch(player_tensor.to(device), cards_tensor.to(device)),
                            EncodedActionSet(valid_player_actions_tensor.to(device), valid_card_actions_tensor.to(device)),
                            action_tensor.to(device),
                            action_prob_tensor.to(device),
                            value_tensor.to(device),
                            gae_return_tensor.to(device),
-                           retn_tensor.to(device),
+                           retrn_tensor.to(device),
                            reward_tensor.to(device),
                            is_terminal_tensor.to(device),
                            )
