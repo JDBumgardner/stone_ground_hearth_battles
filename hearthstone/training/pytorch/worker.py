@@ -1,16 +1,17 @@
-from random import random
+import random
 from typing import List
 
 from hearthstone.ladder.ladder import Contestant, update_ratings, print_standings
-from hearthstone.simulator.host import RoundRobinHost, Host
+from hearthstone.simulator.host.round_robin_host import RoundRobinHost
+from hearthstone.training.pytorch.gae import GAEAnnotator
 from hearthstone.training.pytorch.replay_buffer import EpochBuffer
 
 
 class Worker:
-    def __init__(self, learning_bot_contestant: Contestant, other_contestants: List[Contestant], game_size: int, epoch_buffer: EpochBuffer):
+    def __init__(self, learning_bot_contestant: Contestant, other_contestants: List[Contestant], game_size: int,
+                 epoch_buffer: EpochBuffer, annotator: GAEAnnotator):
         """
-        Worker is responsible for setting up games where the learning bot plays against a random set of opponents and
-        provides a way to step through the games one action at a time.
+        Worker is responsible for setting up games where the learning bot plays against a random set of opponents.
 
         Args:
             learning_bot_contestant (Contestant):
@@ -20,6 +21,7 @@ class Worker:
         self.learning_bot_contestant = learning_bot_contestant
         self.game_size = game_size
         self.epoch_buffer: EpochBuffer = epoch_buffer
+        self.annotator: GAEAnnotator = annotator
 
     def play_game(self):
         round_contestants = [self.learning_bot_contestant] + random.sample(self.other_contestants,
@@ -36,3 +38,7 @@ class Worker:
         print_standings([self.learning_bot_contestant] + self.other_contestants)
         for contestant in round_contestants:
             contestant.games_played += 1
+
+        replay = host.get_replay()
+        self.annotator.annotate(replay)
+        self.epoch_buffer.add_replay(replay)

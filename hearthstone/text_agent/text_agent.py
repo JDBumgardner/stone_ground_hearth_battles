@@ -1,7 +1,8 @@
 from typing import Optional, List
 
 from hearthstone.simulator.agent import SummonAction, SellAction, EndPhaseAction, RerollAction, TavernUpgradeAction, \
-    HeroPowerAction, TripleRewardsAction, RedeemGoldCoinAction, BuyAction, Action, Agent, BananaAction
+    HeroPowerAction, TripleRewardsAction, RedeemGoldCoinAction, BuyAction, StandardAction, Agent, BananaAction, \
+    DiscoverChoiceAction
 from hearthstone.simulator.core.cards import CardLocation, MonsterCard
 from hearthstone.simulator.core.hero import Hero
 from hearthstone.simulator.core.player import HandIndex, BoardIndex, StoreIndex, Player
@@ -70,7 +71,7 @@ class TextAgent(Agent):
             return None
         return check_list
 
-    async def buy_phase_action(self, player: 'Player') -> Action:
+    async def buy_phase_action(self, player: 'Player') -> StandardAction:
         await self.connection.send(f"\n\nplayer {player.name} ({player.hero}), it is your buy phase.\n")
         await self.connection.send(
             f"available monster types: {[monster_type.name for monster_type in player.tavern.available_types]}\n")
@@ -107,7 +108,7 @@ class TextAgent(Agent):
             user_input = await self.connection.receive_line()
 
     @staticmethod
-    def parse_buy_input(user_input: str, player: 'Player') -> Optional[Action]:
+    def parse_buy_input(user_input: str, player: 'Player') -> Optional[StandardAction]:
         split_list = user_input.split(" ")
         if split_list[0] == "p":
             if not len(split_list) == 2:
@@ -186,8 +187,8 @@ class TextAgent(Agent):
         else:
             return None
 
-    async def discover_choice_action(self, player: 'Player') -> 'MonsterCard':
-        await self.connection.send(f"player {player.name}, you must choose a card to discover.\n")
+    async def discover_choice_action(self, player: 'Player') -> DiscoverChoiceAction:
+        await self.transport.send(f"player {player.name}, you must choose a card to discover.\n")
         await self.print_player_card_list("discovery choices", player.discover_queue[0])
         await self.connection.send("input card number to discover here: ")
         user_input = await self.connection.receive_line()
@@ -199,11 +200,11 @@ class TextAgent(Agent):
             user_input = await self.connection.receive_line()
 
     @staticmethod
-    def parse_discover_input(user_input: str, player: 'Player') -> Optional['MonsterCard']:
-        try:
-            card_index = int(user_input)
-            return player.discover_queue[0][card_index]
-        except ValueError:
+    def parse_discover_input(user_input: str, player: 'Player') -> Optional['DiscoverChoiceAction']:
+        card_index = int(user_input)
+        if card_index in range(len(player.discover_queue[0])):
+            return DiscoverChoiceAction(card_index)
+        else:
             return None
 
     async def print_player_card_list(self, card_location: str, card_list: List['MonsterCard']):

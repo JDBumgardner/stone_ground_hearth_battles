@@ -58,6 +58,7 @@ class DefaultRandomizer(Randomizer):
     def __init__(self, seed: Optional[int] = None):
         if seed is None:
             seed = random.random()
+        self.seed = seed
         self.rand = random.Random(seed)
 
     def select_draw_card(self, cards: List['MonsterCard'], player_name: str, round_number: int) -> 'MonsterCard':

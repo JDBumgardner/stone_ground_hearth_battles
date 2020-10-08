@@ -30,8 +30,8 @@ class EpochBuffer:
 
     def add_replay(self, replay: Replay):
         for replay_step in replay.steps:
-            if replay_step.player == self.bot_name and replay_step.bot_info:
-                bot_info = replay_step.bot_info
+            if replay_step.player == self.bot_name and replay_step.agent_annotation:
+                bot_info = replay_step.agent_annotation
                 if self.observation_normalizer:
                     bot_info = self.observation_normalizer.normalize(bot_info)
                 self.transitions.append(bot_info)

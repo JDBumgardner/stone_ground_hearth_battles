@@ -11,17 +11,17 @@ from torch.utils.tensorboard import SummaryWriter
 from hearthstone.ladder.ladder import Contestant, load_ratings
 from hearthstone.simulator.core.hero import EmptyHero
 from hearthstone.simulator.core.tavern import Tavern
+from hearthstone.training.pytorch.gae import GAEAnnotator
 from hearthstone.training.pytorch.hearthstone_state_encoder import get_indexed_action, \
     DEFAULT_PLAYER_ENCODING, DEFAULT_CARDS_ENCODING, State, EncodedActionSet, encode_player, encode_valid_actions
 from hearthstone.training.pytorch.networks.feedforward_net import HearthstoneFFNet
 from hearthstone.training.pytorch.networks.transformer_net import HearthstoneTransformerNet
 from hearthstone.training.pytorch.normalization import ObservationNormalizer, PPONormalizer
 from hearthstone.training.pytorch.policy_gradient import tensorize_batch, easy_contestants
+from hearthstone.training.pytorch.pytorch_bot import PytorchBot
 from hearthstone.training.pytorch.replay import ActorCriticGameStepInfo
 from hearthstone.training.pytorch.replay_buffer import EpochBuffer
-from hearthstone.training.pytorch.surveillance import SurveiledPytorchBot, GlobalStepContext, \
-    GAEReplaySaver
-from hearthstone.training.pytorch.tensorboard_altair import TensorboardAltairPlotter
+from hearthstone.training.pytorch.surveillance import GlobalStepContext
 from hearthstone.training.pytorch.worker import Worker
 
 PPOHyperparameters = NewType('PPOHyperparameters', Dict[str, Union[str, int, float]])
@@ -70,6 +70,7 @@ class PPOLearner(GlobalStepContext):
         for minibatch in replay_buffer.sample_minibatches(minibatch_size):
             self.learn_minibatch(tensorboard, optimizer, learning_net, minibatch, policy_weight, entropy_weight, ppo_epsilon,
                                  gradient_clipping, normalize_advantage)
+            self.global_step += 1
 
     def learn_minibatch(self, tensorboard: SummaryWriter, optimizer: optim.Optimizer, learning_net: nn.Module,
                         minibatch: List[ActorCriticGameStepInfo],
@@ -115,7 +116,7 @@ class PPOLearner(GlobalStepContext):
         clipped_value_error = transition_batch.retn - transition_batch.value + torch.clamp(transition_batch.value - value,
                                                                                 -ppo_epsilon, ppo_epsilon)
 
-        value_loss = value_error.pow(2).mean() # torch.max(value_error.pow(2), clipped_value_error.pow(2)).mean()
+        value_loss = torch.max(value_error.pow(2), clipped_value_error.pow(2)).mean()
 
         # Here we compute the policy only for actions which are valid.
         valid_action_tensor = torch.cat(
@@ -243,35 +244,33 @@ class PPOLearner(GlobalStepContext):
                 PPONormalizer(normalization_gamma, DEFAULT_PLAYER_ENCODING.size()),
                 PPONormalizer(normalization_gamma, DEFAULT_CARDS_ENCODING.size()))
         replay_buffer = EpochBuffer(learning_bot_name, observation_normalizer)
-        learning_bot_contestant = Contestant(learning_bot_name,
-                                             lambda: SurveiledPytorchBot(
-                                                 learning_net,
-                                                 [
-                                                     GAEReplaySaver(replay_buffer, device=device),
-                                                     TensorboardAltairPlotter(tensorboard, self)
-                                                 ],
-                                                 device)
-                                             )
+        learning_bot_contestant = Contestant(
+            learning_bot_name,
+            lambda: PytorchBot(net=learning_net,
+                               annotate=True,
+                               device=device)
+        )
         # Rating starts a 14, which is how the randomly initialized pytorch bot performs.
         learning_bot_contestant.trueskill = trueskill.Rating(14)
         # Reuse standings from the current leaderboard.
         other_contestants = easy_contestants()
         load_ratings(other_contestants, "../../../data/standings.json")
 
-        workers = [Worker(learning_bot_contestant, other_contestants, self.hparams["game_size"], replay_buffer) for _ in
+        gae_annotator = GAEAnnotator(learning_bot_name, self.hparams['gae_gamma'], self.hparams['gae_lambda'])
+        workers = [Worker(learning_bot_contestant, other_contestants, self.hparams["game_size"], replay_buffer, gae_annotator) for _ in
                    range(self.hparams['num_workers'])]
 
         for _ in range(1000000):
             for worker in workers:
-                worker.play_step()
+                worker.play_game()
             if len(replay_buffer) >= batch_size:
                 for i in range(self.hparams["ppo_epochs"]):
-                    self.learn_epoch(tensorboard, optimizer, learning_net, replay_buffer, minibatch_size,
+                    self.learn_epoch(tensorboard, optimizer, learning_net, replay_buffer,
+                                     self.hparams['minibatch_size'],
                                self.hparams["policy_weight"],
                                self.hparams["entropy_weight"], self.hparams["ppo_epsilon"],
                                self.hparams["gradient_clipping"],
                                self.hparams["normalize_advantage"])
-                    self.global_step += 1
                 replay_buffer.clear()
             time_elapsed = int(time.time() - start_time)
             tensorboard.add_scalar("elo/train", learning_bot_contestant.elo, global_step=self.global_step)
@@ -294,12 +293,14 @@ class PPOLearner(GlobalStepContext):
 def main():
     ppo_learner = PPOLearner(PPOHyperparameters({
         'adam_lr': 0.0000698178899316577,
-        'batch_size': 1024,
+        'batch_size': 4096,
         'minibatch_size': 1024,
         'cuda': True,
-        'entropy_weight': 3.20049705838473e-06,
-        'gradient_clipping': 0.5,
+        'entropy_weight': 0.1,
+        'gae_gamma': 0.99,
+        'gae_lambda': 0.9,
         'game_size': 2,
+        'gradient_clipping': 0.5,
         'nn_architecture': 'transformer',
         'nn_hidden_layers': 1,
         'nn_hidden_size': 32,

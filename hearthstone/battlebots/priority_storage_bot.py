@@ -2,8 +2,9 @@ import random
 import typing
 from typing import List, Callable
 
-from hearthstone.simulator.agent import Agent, Action, generate_valid_actions, BuyAction, EndPhaseAction, SummonAction, \
-    TavernUpgradeAction, RerollAction, SellAction
+from hearthstone.simulator.agent import Agent, StandardAction, generate_valid_actions, BuyAction, EndPhaseAction, \
+    SummonAction, \
+    TavernUpgradeAction, RerollAction, SellAction, DiscoverChoiceAction, RearrangeCardsAction
 
 if typing.TYPE_CHECKING:
     , MonsterCard
@@ -19,12 +20,12 @@ class PriorityStorageBot(Agent):
         self.storage_priority = storage_priority
         self.local_random = random.Random(seed)
 
-    async def rearrange_cards(self, player: 'Player') -> List['MonsterCard']:
-        card_list = player.in_play.copy()
-        self.local_random.shuffle(card_list)
-        return card_list
+    async def rearrange_cards(self, player: 'Player') -> RearrangeCardsAction:
+        permutation = list(range(len(player.in_play)))
+        self.local_random.shuffle(permutation)
+        return RearrangeCardsAction(permutation)
 
-    async def buy_phase_action(self, player: 'Player') -> Action:
+    async def buy_phase_action(self, player: 'Player') -> StandardAction:
 
         all_actions = list(generate_valid_actions(player))
 
@@ -68,10 +69,10 @@ class PriorityStorageBot(Agent):
 
         return EndPhaseAction(False)
 
-    async def discover_choice_action(self, player: 'Player') -> 'MonsterCard':
+    async def discover_choice_action(self, player: 'Player') -> DiscoverChoiceAction:
         discover_cards = player.discover_queue[0]
         discover_cards = sorted(discover_cards, key=lambda card: self.priority(player, card), reverse=True)
-        return discover_cards[0]
+        return DiscoverChoiceAction(player.discover_queue[0].index(discover_cards[0]))
 
 
 def priority_st_ad_tr_bot(seed: int):

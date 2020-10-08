@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, NamedTuple
 
 import torch
 
@@ -17,14 +17,24 @@ class ActorCriticGameStepInfo:
     action: int  # Index of the action
     action_prob: float
     value: float
-    reward: float
-    is_terminal: bool
     gae_info: Optional['GAEReplayInfo']
 
+    def __init__(self, state: State, valid_actions: torch.BoolTensor, action: int, action_prob: float, value: float,
+                 gae_info: Optional['GAEReplayInfo']):
+        self.state = state
+        self.valid_actions = valid_actions
+        self.action = action
+        self.action_prob = action_prob
+        self.value = value
+        self.gae_info = gae_info
 
-class GAEReplayInfo:
+
+
+class GAEReplayInfo(NamedTuple):
     """
     Information calculated based on the entire episode, about future returns, to be attached to ReplaySteps.
     """
+    is_terminal: bool
+    reward: float
     gae_return: float
     retrn: float

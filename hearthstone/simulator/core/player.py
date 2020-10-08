@@ -25,6 +25,8 @@ class BuyPhaseEvent:
 StoreIndex = typing.NewType("StoreIndex", int)
 HandIndex = typing.NewType("HandIndex", int)
 BoardIndex = typing.NewType("BoardIndex", int)
+DiscoverIndex = typing.NewType("DiscoverIndex", int)
+HeroChoiceIndex = typing.NewType("HeroChoiceIndex", int)
 
 
 class Player:
@@ -85,7 +87,7 @@ class Player:
         if hero is None:
             hero = EmptyHero()
         player = Player(tavern, name, [hero])
-        player.choose_hero(hero)
+        player.choose_hero(0)
         return player
 
     @property
@@ -183,13 +185,15 @@ class Player:
             self.tavern.deck.remove_card(discovered_cards[-1])
         self.discover_queue.append(discovered_cards)
 
-    def select_discover(self, card: 'MonsterCard'):
-        assert (card in self.discover_queue[0])
-        assert (isinstance(card, MonsterCard))
-        self.discover_queue[0].remove(card)
+    def select_discover(self, card_index: DiscoverIndex):
+        assert self.valid_select_discover(card_index)
+        card = self.discover_queue[0].pop(card_index)
         self.gain_hand_card(card)
         self.tavern.deck.return_cards(itertools.chain.from_iterable([card.dissolve() for card in self.discover_queue[0]]))
         self.discover_queue.pop(0)
+
+    def valid_select_discover(self, card_index: DiscoverIndex):
+        return self.discover_queue and card_index in range(len(self.discover_queue[0]))
 
     def summon_from_void(self, monster: MonsterCard):
         if self.room_on_board():
@@ -284,12 +288,12 @@ class Player:
         for card in self.hand.copy():
             card.handle_event_in_hand(event, BuyPhaseContext(self, randomizer or self.tavern.randomizer))
 
-    def valid_rearrange_cards(self, new_board: List[MonsterCard]) -> bool:
-        return len(new_board) == len(self.in_play) and set(new_board) == set(self.in_play)
+    def valid_rearrange_cards(self, permutation: List[int]) -> bool:
+        return len(permutation) == len(self.in_play) and set(permutation) == set(range(len(self.in_play)))
 
-    def rearrange_cards(self, new_board: List[MonsterCard]):
-        assert self.valid_rearrange_cards(new_board)
-        self._in_play = list(new_board)
+    def rearrange_cards(self, permutation: List[int]):
+        assert self.valid_rearrange_cards(permutation)
+        self._in_play = [self._in_play[i] for i in permutation]
 
     def hand_size(self):
         return len(self.hand) + len(self.triple_rewards) + self.gold_coins + self.bananas + (len(self.hero.recruitment_maps) if hasattr(self.hero, 'recruitment_maps') else 0)
@@ -300,9 +304,9 @@ class Player:
     def max_tier(self):
         return len(self._tavern_upgrade_costs)
 
-    def choose_hero(self, hero: 'Hero'):
-        assert(self.valid_choose_hero(hero))
-        self.hero = hero
+    def choose_hero(self, hero_index: HeroChoiceIndex):
+        assert(self.valid_choose_hero(hero_index))
+        self.hero = self.hero_options[hero_index]
         self.hero_options = []
         self.health = self.hero.starting_health()
         self.minion_cost = self.hero.minion_cost()
@@ -310,8 +314,8 @@ class Player:
         self._tavern_upgrade_costs = self.hero.tavern_upgrade_costs()
         self.tavern_upgrade_cost = self.hero.tavern_upgrade_costs()[1]
 
-    def valid_choose_hero(self, hero: 'Hero'):
-        return self.hero is None and hero in self.hero_options
+    def valid_choose_hero(self, hero_index: HeroChoiceIndex):
+        return hero_index in range(len(self.hero_options))
 
     def take_damage(self, damage: int):
         if not any(card.give_immunity for card in self.in_play):

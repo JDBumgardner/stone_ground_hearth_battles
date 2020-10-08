@@ -7,7 +7,7 @@ import numpy as np
 import torch
 
 from hearthstone.simulator.agent import TripleRewardsAction, TavernUpgradeAction, RerollAction, \
-    EndPhaseAction, SummonAction, BuyAction, SellAction, Action
+    EndPhaseAction, SummonAction, BuyAction, SellAction, StandardAction
 from hearthstone.simulator.core.cards import MonsterCard, CardLocation
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 from hearthstone.simulator.core.player import Player, StoreIndex, HandIndex, BoardIndex
@@ -245,7 +245,7 @@ EncodedActionSet = namedtuple('EncodedActionSet', ('player_action_tensor', 'card
 ActionSet = namedtuple('ActionSet', ('player_action_set', 'card_action_set'))
 
 
-class InvalidAction(Action):
+class InvalidAction(StandardAction):
     def __repr__(self):
         return f"InvalidAction()"
 
@@ -320,11 +320,11 @@ def action_encoding_size() -> int:
     return player_action_size + card_action_size
 
 
-def get_action_index(action: Action) -> int:
+def get_action_index(action: StandardAction) -> int:
     return ALL_ACTIONS_DICT[str(action)]
 
 
-def get_indexed_action(index: int) -> Action:
+def get_indexed_action(index: int) -> StandardAction:
 
     if index < len(ALL_ACTIONS.player_action_set):
         return ALL_ACTIONS.player_action_set[index]

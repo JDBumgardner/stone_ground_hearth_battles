@@ -1,4 +1,4 @@
-
+from hearthstone.simulator.agent import RearrangeCardsAction
 from hearthstone.simulator.core.card_pool import *
 from hearthstone.simulator.core.tavern import Player
 
@@ -28,7 +28,7 @@ def rate_position(card: 'MonsterCard') -> float:
     return 4.0
 
 
-def naive_rearrange_cards(player: 'Player') -> List['MonsterCard']:
-    in_play = player.in_play
-    in_play.sort(key=rate_position)
-    return in_play
+def naive_rearrange_cards(player: 'Player') -> RearrangeCardsAction:
+    in_play = list(enumerate(player.in_play))
+    in_play.sort(key=lambda pair: rate_position(pair[1]))
+    return RearrangeCardsAction([pair[0] for pair in in_play])

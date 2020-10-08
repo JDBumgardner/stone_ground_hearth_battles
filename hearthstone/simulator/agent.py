@@ -1,9 +1,9 @@
 import itertools
 import typing
-from typing import List, Optional, Generator
+from typing import Any, List, Optional, Generator
 
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
-from hearthstone.simulator.core.player import StoreIndex, HandIndex, BoardIndex
+from hearthstone.simulator.core.player import StoreIndex, HandIndex, BoardIndex, HeroChoiceIndex, DiscoverIndex
 
 if typing.TYPE_CHECKING:
     from hearthstone.simulator.core.hero import Hero
@@ -21,7 +21,59 @@ class Action:
         return str(self)
 
 
-class BuyAction(Action):
+class HeroChoiceAction(Action):
+    def __init__(self, hero_index: HeroChoiceIndex):
+        self.hero_index = hero_index
+
+    def __repr__(self):
+        return f"ChooseHero({self.hero_index})"
+
+    def apply(self, player: 'Player'):
+        player.choose_hero(self.hero_index)
+
+    def valid(self, player: 'Player') -> bool:
+        return player.valid_choose_hero(self.hero_index)
+
+    def str_in_context(self, player: 'Player') -> str:
+        return f"ChooseHero({player.hero_options[self.hero_index]})"
+
+
+class DiscoverChoiceAction(Action):
+    def __init__(self, card_index: DiscoverIndex):
+        self.card_index = card_index
+
+    def __repr__(self):
+        return f"Discover({self.card_index})"
+
+    def apply(self, player: 'Player'):
+        player.select_discover(self.card_index)
+
+    def valid(self, player: 'Player') -> bool:
+        return player.valid_select_discover(self.card_index)
+
+    def str_in_context(self, player: 'Player') -> str:
+        return f"Discover({player.discover_queue[0][self.card_index]})"
+
+
+class RearrangeCardsAction(Action):
+    def __init__(self, permutation: List[int]):
+        self.permutation = permutation
+
+    def __repr__(self):
+        return f"Rearrange_cards({','.join([str(i) for i in self.permutation])})"
+
+    def apply(self, player: 'Player'):
+        player.rearrange_cards(self.permutation)
+
+    def valid(self, player: 'Player') -> bool:
+        return player.valid_rearrange_cards(self.permutation)
+
+
+class StandardAction(Action):
+    pass
+
+
+class BuyAction(StandardAction):
 
     def __init__(self, index: StoreIndex):
         self.index = index
@@ -39,7 +91,7 @@ class BuyAction(Action):
         return f"Buy({player.store[self.index]})"
 
 
-class SummonAction(Action):
+class SummonAction(StandardAction):
     def __init__(self, index: HandIndex, targets: Optional[List[BoardIndex]] = None):
         if targets is None:
             targets = []
@@ -59,7 +111,7 @@ class SummonAction(Action):
         return f"Summon({player.hand[self.index]},{self.targets})"
 
 
-class SellAction(Action):
+class SellAction(StandardAction):
 
     def __init__(self, index: BoardIndex):
         self.index: BoardIndex = index
@@ -77,7 +129,7 @@ class SellAction(Action):
         return f"Sell({player.in_play[self.index]})"
 
 
-class EndPhaseAction(Action):
+class EndPhaseAction(StandardAction):
 
     def __init__(self, freeze: bool):
         self.freeze: bool = freeze
@@ -93,7 +145,7 @@ class EndPhaseAction(Action):
         return True
 
 
-class RerollAction(Action):
+class RerollAction(StandardAction):
     def __repr__(self):
         return f"Reroll()"
 
@@ -104,7 +156,7 @@ class RerollAction(Action):
         return player.valid_reroll()
 
 
-class TavernUpgradeAction(Action):
+class TavernUpgradeAction(StandardAction):
     def __repr__(self):
         return f"TavernUpgrade()"
 
@@ -118,7 +170,7 @@ class TavernUpgradeAction(Action):
         return f"TavernUpgrade({player.tavern_tier}, {player.tavern_upgrade_cost})"
 
 
-class HeroPowerAction(Action):
+class HeroPowerAction(StandardAction):
     def __init__(self, board_target: Optional['BoardIndex'] = None, store_target: Optional['StoreIndex'] = None):
         self.board_target = board_target
         self.store_target = store_target
@@ -133,7 +185,7 @@ class HeroPowerAction(Action):
         return player.valid_hero_power(self.board_target, self.store_target)
 
 
-class TripleRewardsAction(Action):
+class TripleRewardsAction(StandardAction):
     def __repr__(self):
         return f"TripleRewards()"
 
@@ -147,7 +199,7 @@ class TripleRewardsAction(Action):
         return f"TripleRewards({player.triple_rewards[-1]})"
 
 
-class RedeemGoldCoinAction(Action):
+class RedeemGoldCoinAction(StandardAction):
     def __repr__(self):
         return f"RedeemGoldCoin()"
 
@@ -158,7 +210,7 @@ class RedeemGoldCoinAction(Action):
         return player.gold_coins >= 1
 
 
-class BananaAction(Action):
+class BananaAction(StandardAction):
     def __init__(self, board_target: Optional['BoardIndex'] = None, store_target: Optional['StoreIndex'] = None):
         self.board_target = board_target
         self.store_target = store_target
@@ -173,13 +225,16 @@ class BananaAction(Action):
         return player.valid_use_banana(self.board_target, self.store_target)
 
 
-class Agent:
-    async def hero_choice_action(self, player: 'Player') -> 'Hero':
-        return player.hero_options[0]
+Annotation = Any
 
-    async def rearrange_cards(self, player: 'Player') -> List['MonsterCard']:
+
+class AnnotatingAgent:
+    async def hero_choice_action(self, player: 'Player') -> HeroChoiceAction:
+        return HeroChoiceAction(0)
+
+    async def rearrange_cards(self, player: 'Player') -> RearrangeCardsAction:
         """
-        here the player selects a card arangement one time per combat directly preceeding combat
+        here the player selects a card arrangement one time per combat directly preceding combat
 
         Args:
             player: The player object controlled by this agent. This function should not modify it.
@@ -189,7 +244,7 @@ class Agent:
         """
         pass
 
-    async def buy_phase_action(self, player: 'Player') -> Action:
+    async def annotated_buy_phase_action(self, player: 'Player') -> (StandardAction, Annotation):
         """
         here the player chooses a buy phase action including:
         purchasing a card from the store
@@ -200,20 +255,20 @@ class Agent:
         Args:
             player: The player object controlled by this agent. This function should not modify it.
 
-        Returns: one of four action types
-        (BuyAction, SummonAction, SellAction, EndPhaseAction)
+        Returns:
+            A tuple containing the Action, and the Agent Annotation to attach to the replay.
 
         """
         pass
 
-    async def discover_choice_action(self, player: 'Player') -> 'MonsterCard':
+    async def discover_choice_action(self, player: 'Player') -> DiscoverChoiceAction:
         """
 
         Args:
             player: The player object controlled by this agent. This function should not modify it.
 
         Returns:
-
+            Tuple of MonsterCard to discover, and Annotation to attach to the action.
         """
         pass
 
@@ -226,11 +281,20 @@ class Agent:
         pass
 
 
-def generate_valid_actions(player: 'Player') -> Generator[Action, None, None]:
+class Agent(AnnotatingAgent):
+
+    async def buy_phase_action(self, player: 'Player') -> StandardAction:
+        pass
+
+    async def annotated_buy_phase_action(self, player: 'Player') -> (StandardAction, Annotation):
+        return await self.buy_phase_action(player), None
+
+
+def generate_valid_actions(player: 'Player') -> Generator[StandardAction, None, None]:
     return (action for action in generate_all_actions(player) if action.valid(player))
 
 
-def generate_all_actions(player: 'Player') -> Generator[Action, None, None]:
+def generate_all_actions(player: 'Player') -> Generator[StandardAction, None, None]:
     yield TripleRewardsAction()
     yield TavernUpgradeAction()
     yield RerollAction()

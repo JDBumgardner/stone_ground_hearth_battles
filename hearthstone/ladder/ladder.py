@@ -5,7 +5,7 @@ from typing import List, Callable
 
 import trueskill
 
-from hearthstone.simulator.agent import Agent
+from hearthstone.simulator.agent import Agent, AnnotatingAgent
 from hearthstone.battlebots.cheapo_bot import CheapoBot
 from hearthstone.battlebots.get_bot_contestants import get_priority_bot_contestant_tuples, \
     get_priority_heuristics_bot_contestant_tuples
@@ -13,12 +13,13 @@ from hearthstone.battlebots.no_action_bot import NoActionBot
 from hearthstone.battlebots.random_bot import RandomBot
 from hearthstone.battlebots.saurolisk_bot import SauroliskBot
 from hearthstone.battlebots.supremacy_bot import SupremacyBot
-from hearthstone.simulator.host import RoundRobinHost
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
+import hearthstone.simulator.core.hero_pool
+from hearthstone.simulator.host.round_robin_host import RoundRobinHost
 
 
 class Contestant:
-    def __init__(self, name,  agent_generator: Callable[[], Agent]):
+    def __init__(self, name,  agent_generator: Callable[[], AnnotatingAgent]):
         self.name = name
         self.agent_generator = agent_generator
         self.elo = 1200

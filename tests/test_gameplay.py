@@ -3,8 +3,10 @@ import unittest
 from hearthstone.battlebots.early_game_bot import EarlyGameBot
 from hearthstone.battlebots.priority_bot import PriorityBot
 from hearthstone.battlebots.priority_functions import PriorityFunctions
-from hearthstone.simulator.host import AsyncHost
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
+from hearthstone.simulator.core.randomizer import DefaultRandomizer
+from hearthstone.simulator.host.async_host import AsyncHost
+import hearthstone.simulator.core.hero_pool
 
 
 class GameplayTests(unittest.TestCase):
@@ -16,8 +18,25 @@ class GameplayTests(unittest.TestCase):
             "racist_priority_bot_murloc": PriorityFunctions.racist_priority_bot(4, EarlyGameBot, MONSTER_TYPES.MURLOC),
             "priority_adaptive_tripler_bot": PriorityFunctions.priority_adaptive_tripler_bot(5, EarlyGameBot),
             "priority_pogo_hopper_bot": PriorityFunctions.priority_pogo_hopper_bot(7, PriorityBot),
+        }, DefaultRandomizer(107))
+
+        host.play_game()
+
+    def test_replay_same_outcome(self):
+        # TODO make replays work so this test passes.  This requires handling the ordering of players joining and
+        # Choosing their heros.
+        host = AsyncHost({
+            "battlerattler_priority_bot": PriorityFunctions.battlerattler_priority_bot(1, EarlyGameBot),
+            "priority_saurolisk_buff_bot": PriorityFunctions.priority_saurolisk_buff_bot(2, EarlyGameBot),
+            "racist_priority_bot_mech": PriorityFunctions.racist_priority_bot(3, EarlyGameBot, MONSTER_TYPES.MECH),
+            "racist_priority_bot_murloc": PriorityFunctions.racist_priority_bot(4, EarlyGameBot, MONSTER_TYPES.MURLOC),
+            "priority_adaptive_tripler_bot": PriorityFunctions.priority_adaptive_tripler_bot(5, EarlyGameBot),
+            "priority_pogo_hopper_bot": PriorityFunctions.priority_pogo_hopper_bot(7, PriorityBot),
         })
         host.play_game()
+        replay = host.get_replay()
+        replayed_tavern = replay.run_replay()
+        self.assertListEqual(host.tavern.losers, replayed_tavern.losers)
 
 
 if __name__ == '__main__':

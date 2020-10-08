@@ -410,7 +410,7 @@ class CardTests(unittest.TestCase):
         player_1.summon_from_hand(HandIndex(0))
         self.assertEqual([card.level for card in player_1.triple_rewards], [2])
         player_1.play_triple_rewards()
-        player_1.select_discover(player_1.discover_queue[0][0])
+        player_1.select_discover(0)
         print(f"Player 1's hand is: {player_1.hand}")
         self.assertCardListEquals(player_1.hand, [FreedealingGambler])
         self.assertCardListEquals(player_1.discover_queue, [])
@@ -448,7 +448,7 @@ class CardTests(unittest.TestCase):
         player_1.purchase(StoreIndex(0))
         player_1.purchase(StoreIndex(0))
         player_1.play_triple_rewards()
-        player_1.select_discover(player_1.discover_queue[0][0])
+        player_1.select_discover(0)
         print(player_1.hand)
         self.assertCardListEquals(player_1.hand, [FreedealingGambler])
         self.assertEqual(player_1.hand[0].golden, True)
@@ -2365,7 +2365,7 @@ class CardTests(unittest.TestCase):
         player_1.play_triple_rewards()
         self.assertEqual(len(player_1.discover_queue), 3)
         for _ in range(3):
-            player_1.select_discover(player_1.discover_queue[0][0])
+            player_1.select_discover(0)
         self.assertEqual(len(player_1.hand), 3)
         self.assertEqual(len(player_1.discover_queue), 0)
 
@@ -2447,7 +2447,7 @@ class CardTests(unittest.TestCase):
         self.assertEqual(len(player_1.discover_queue), 2)
         for _ in range(2):
             self.assertTrue(card.check_type(MONSTER_TYPES.DRAGON) for card in player_1.discover_queue[0])
-            player_1.select_discover(player_1.discover_queue[0][0])
+            player_1.select_discover(0)
         self.assertEqual(len(player_1.hand), 2)
         self.assertEqual(len(player_1.discover_queue), 0)
 
@@ -2484,7 +2484,7 @@ class CardTests(unittest.TestCase):
         tavern.buying_step()
         player_1.hero_power()
         self.assertEqual(len(player_1.discover_queue), 1)
-        player_1.select_discover(player_1.discover_queue[0][0])
+        player_1.select_discover(0)
         self.assertEqual(len(player_1.hand), 1)
         self.assertEqual(len(player_1.discover_queue), 0)
 
@@ -2681,7 +2681,7 @@ class CardTests(unittest.TestCase):
                 self.assertEqual(card.attack, card.base_attack + 1)
                 self.assertEqual(card.health, card.base_health + 1)
                 self.assertTrue(card.taunt)
-        player_1.select_discover(player_1.discover_queue[0][0])
+        player_1.select_discover(0)
         self.assertEqual(len(player_1.hand), 1)
         self.assertEqual(len(player_1.discover_queue), 0)
         tavern.combat_step()

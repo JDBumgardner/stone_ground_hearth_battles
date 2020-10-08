@@ -7,10 +7,11 @@ from torch import nn
 from torch.distributions import Categorical
 from torch.utils.tensorboard import SummaryWriter
 
-from hearthstone.simulator.agent import Action
+from hearthstone.simulator.agent import StandardAction
 from hearthstone.training.pytorch.hearthstone_state_encoder import State, EncodedActionSet, get_indexed_action, \
     encode_player, encode_valid_actions, Transition, get_action_index
 from hearthstone.training.pytorch.pytorch_bot import PytorchBot
+
 from hearthstone.training.pytorch.replay_buffer import ReplayBuffer, logger
 
 
@@ -29,123 +30,6 @@ class Parasite:
 
     def on_game_over(self, player: 'Player', ranking: int):
         pass
-
-
-class SurveiledPytorchBot(PytorchBot):
-    def __init__(self, net: nn.Module, parasites: List[Parasite] = None, device: Optional[torch.device] = None):
-        """
-        A pytorch bot that has attached listeners who get notified every time the bot takes an action
-        :param net: The Pytorch value/policy module for this bot.
-        :param parasites: A list of parasites who get notified whenever this bot takes an action.
-        """
-        super().__init__(net, device)
-        self.parasites = parasites or []
-
-    async def buy_phase_action(self, player: 'Player') -> Action:
-        policy, value = self.policy_and_value(player)
-        probs = torch.exp(policy[0])
-        action_index = Categorical(probs).sample()
-        action = get_indexed_action(int(action_index))
-        if not action.valid(player):
-            logger.debug("No! Bad Citizen!")
-            logger.debug("This IDE is lit")
-        else:
-            for parasite in self.parasites:
-                parasite.on_buy_phase_action(player, action, policy, value)
-        return action
-
-    async def game_over(self, player: 'Player', ranking: int):
-        for parasite in self.parasites:
-            parasite.on_game_over(player, ranking)
-
-
-class ReplayBufferSaver(Parasite):
-    def __init__(self, replay_buffer: ReplayBuffer, device: Optional[torch.device] = None):
-        """
-        Puts transitions into the replay buffer.
-
-        Args:
-            replay_buffer: Buffer of transitions.
-        """
-        self.replay_buffer = replay_buffer
-        self.last_state: Optional[State] = None
-        self.last_action: Optional[int] = None
-        self.last_action_prob: Optional[float] = None
-        self.last_valid_actions: Optional[EncodedActionSet] = None
-        self.last_value: Optional[float] = None
-        self.device = device
-
-    def on_buy_phase_action(self, player: 'Player', action: Action, policy: torch.Tensor, value: torch.Tensor):
-        action_index = get_action_index(action)
-        if not action.valid(player):
-            logger.debug("No! Bad Citizen!")
-            logger.debug("This IDE is lit")
-        else:
-            new_state = encode_player(player, self.device)
-            if self.last_state is not None:
-                self.remember_result(new_state, 0, False)
-            self.last_state = encode_player(player, self.device)
-            self.last_valid_actions = encode_valid_actions(player, self.device)
-            self.last_action = int(action_index)
-            self.last_action_prob = float(policy[0][action_index])
-            self.last_value = float(value)
-        return action
-
-    def on_game_over(self, player: 'Player', ranking: int):
-        if self.last_state is not None:
-            self.remember_result(encode_player(player), (len(player.tavern.players) - 1) / 2.0 - ranking, True)
-
-    def remember_result(self, new_state, reward, is_terminal):
-        self.replay_buffer.push(Transition(self.last_state, self.last_valid_actions,
-                                           self.last_action, self.last_action_prob,
-                                           self.last_value,
-                                           new_state, reward, is_terminal))
-
-
-class GAEReplaySaver(Parasite):
-    GameStep = collections.namedtuple("GameStep", ["state", "action", "valid_actions",  "action_prob","value"])
-
-    def __init__(self, replay_buffer: ReplayBuffer, lam: float = 0.9, gamma: float = 0.99, device: Optional[torch.device] = None):
-        """
-        Puts transitions into the replay buffer.
-
-        Args:
-            replay_buffer: Buffer of transitions.
-        """
-        self.replay_buffer = replay_buffer
-        self.lam = lam
-        self.gamma = gamma
-        self.device = device
-
-        self.game_steps = []
-
-    def on_buy_phase_action(self, player: 'Player', action: Action, policy: torch.Tensor, value: torch.Tensor):
-        action_index = get_action_index(action)
-        self.game_steps.append(
-            self.GameStep(
-                state=encode_player(player, self.device),
-                action=int(action_index),
-                valid_actions=encode_valid_actions(player, self.device),
-                action_prob=float(policy[0][action_index]),
-                value=float(value)
-            )
-        )
-
-    def on_game_over(self, player: 'Player', ranking: int):
-        retn = (len(player.tavern.players) - 1) / 2.0 - ranking
-        gae_return = retn
-        next_value = retn
-        for i in range(len(self.game_steps)-1, -1, -1):
-            game_step = self.game_steps[i]
-            is_terminal = i == len(self.game_steps)-1
-            self.replay_buffer.push(Transition(game_step.state, game_step.valid_actions,
-                                               game_step.action, game_step.action_prob,
-                                               game_step.value, gae_return,
-                                               retn,
-                                               (len(player.tavern.players) - 1) / 2.0 - ranking if is_terminal else 0.0, is_terminal))
-            gae_return = next_value + (gae_return - next_value) * self.gamma * self.lam
-            next_value = self.gamma * game_step.value
-            retn *= self.gamma
 
 
 class GlobalStepContext:
