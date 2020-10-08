@@ -8,7 +8,7 @@ import tensorboard_vega_embed.summary
 import torch
 from torch.utils.tensorboard import SummaryWriter
 
-from hearthstone.simulator.agent import Action, SellAction, SummonAction, BuyAction, generate_valid_actions
+from hearthstone.simulator.agent import StandardAction, SellAction, SummonAction, BuyAction, generate_valid_actions
 from hearthstone.training.pytorch import hearthstone_state_encoder
 from hearthstone.training.pytorch.hearthstone_state_encoder import encode_player, encode_valid_actions, get_action_index
 from hearthstone.training.pytorch.surveillance import Parasite, GlobalStepContext
@@ -31,7 +31,7 @@ class GAEPlotter(Parasite):
 
         self.game_steps = []
 
-    def on_buy_phase_action(self, player: 'Player', action: Action, policy: torch.Tensor, value: torch.Tensor):
+    def on_buy_phase_action(self, player: 'Player', action: StandardAction, policy: torch.Tensor, value: torch.Tensor):
         action_index = get_action_index(action)
         self.game_steps.append(
             self.GameStep(
@@ -117,7 +117,7 @@ class TensorboardAltairPlotter(Parasite):
         self.summon_probs.append([action_probs[card] for card in player.hand])
         self.buy_probs.append([action_probs[card] for card in player.store])
 
-    def on_buy_phase_action(self, player: 'Player', action: Action, policy: torch.Tensor, value: torch.Tensor):
+    def on_buy_phase_action(self, player: 'Player', action: StandardAction, policy: torch.Tensor, value: torch.Tensor):
         if self.dont_plot:
             return
         self.update_gamestate(player, value, None)

@@ -13,8 +13,8 @@ def main():
     learning_bot = LearnedPriorityBot(None, 0.05, 10)
     learning_bot_contestant = Contestant("LearningBot", learning_bot)
     contestants = other_contestants + [learning_bot_contestant]
-    bot_file = "../../data/learning/priority_bot.1.json"
-    standings_path = "../../data/learning/standings.json"
+    bot_file = "../../../data/learning/priority_bot.1.json"
+    standings_path = "../../../data/learning/standings.json"
     learning_bot.read_from_file(bot_file)
     load_ratings(contestants, standings_path)
 

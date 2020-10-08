@@ -1,7 +1,9 @@
 import typing
 from typing import List
 
-from hearthstone.simulator.agent import Agent, Action, EndPhaseAction
+from hearthstone.simulator.agent import Agent, StandardAction, EndPhaseAction, DiscoverChoiceAction, \
+    RearrangeCardsAction
+
 if typing.TYPE_CHECKING:
 
     from hearthstone.simulator.core.player import Player
@@ -9,11 +11,12 @@ if typing.TYPE_CHECKING:
 
 class NoActionBot(Agent):
     authors = ["Brian Kelly"]
-    async def rearrange_cards(self, player: 'Player') -> List['MonsterCard']:
-        return []
 
-    async def buy_phase_action(self, player: 'Player') -> Action:
+    async def rearrange_cards(self, player: 'Player') -> RearrangeCardsAction:
+        return RearrangeCardsAction([])
+
+    async def buy_phase_action(self, player: 'Player') -> StandardAction:
         return EndPhaseAction(True)
 
-    async def discover_choice_action(self, player: 'Player') -> 'MonsterCard':
-        return player.discover_queue[0][0]
+    async def discover_choice_action(self, player: 'Player') -> DiscoverChoiceAction:
+        return DiscoverChoiceAction(0)
