@@ -2762,6 +2762,49 @@ class CardTests(unittest.TestCase):
         self.assertCardListEquals(player_1.hand, [WaterDroplet])
         self.assertTrue(player_1.hand[0].golden)
 
+    class TestLilRagRandomizer(DefaultRandomizer):
+        def select_friendly_minion(self, friendly_minions: List['MonsterCard']) -> 'MonsterCard':
+            minion_types = [type(card) for card in friendly_minions]
+            if AlleyCat in minion_types:
+                return force_card(friendly_minions, AlleyCat)
+            else:
+                return friendly_minions[0]
+
+    def test_lil_rag(self):
+        tavern = Tavern()
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        self.upgrade_to_tier(tavern, 5)
+        tavern.randomizer = RepeatedCardForcer([AlleyCat, LilRag, Sellemental])
+        tavern.buying_step()
+        for _ in range(3):
+            player_1.purchase(StoreIndex(0))
+        for _ in range(2):
+            player_1.summon_from_hand(HandIndex(0))
+        tavern.randomizer = self.TestLilRagRandomizer()
+        player_1.summon_from_hand(HandIndex(0))
+        self.assertCardListEquals(player_1.in_play, [AlleyCat, TabbyCat, LilRag, Sellemental])
+        self.assertEqual(player_1.in_play[0].attack, player_1.in_play[0].base_attack + 1)
+        self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health + 1)
+        self.assertEqual(player_1.in_play[1].attack, player_1.in_play[1].base_attack)
+        self.assertEqual(player_1.in_play[1].health, player_1.in_play[1].base_health)
+        self.assertEqual(player_1.in_play[2].attack, player_1.in_play[2].base_attack)
+        self.assertEqual(player_1.in_play[2].health, player_1.in_play[2].base_health)
+        self.assertEqual(player_1.in_play[3].attack, player_1.in_play[3].base_attack)
+        self.assertEqual(player_1.in_play[3].health, player_1.in_play[3].base_health)
+
+    def test_tavern_tempest(self):
+        tavern = Tavern()
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        self.upgrade_to_tier(tavern, 5)
+        tavern.randomizer = RepeatedCardForcer([TavernTempest, AlleyCat])
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        self.assertEqual(player_1.hand_size(), 1)
+        self.assertTrue(player_1.hand[0].check_type(MONSTER_TYPES.ELEMENTAL) and player_1.hand[0].tier <= player_1.tavern_tier)
+
 
 if __name__ == '__main__':
     unittest.main()

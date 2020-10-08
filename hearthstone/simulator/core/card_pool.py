@@ -1908,3 +1908,63 @@ class WaterDroplet(MonsterCard):
     base_attack = 2
     base_health = 2
     token = True
+
+
+class LilRag(MonsterCard):
+    tier = 5
+    monster_type = MONSTER_TYPES.ELEMENTAL
+    base_attack = 4
+    base_health = 4
+    legendary = True
+
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', CombatPhaseContext]):
+        if event.event is EVENTS.SUMMON_BUY and event.card.check_type(MONSTER_TYPES.ELEMENTAL) and event.card != self:
+            num_buffs = 2 if self.golden else 1
+            for _ in range(num_buffs):
+                friendly_minion = context.randomizer.select_friendly_minion(context.owner.in_play)
+                friendly_minion.attack += event.card.tier
+                friendly_minion.health += event.card.tier
+
+
+class TavernTempest(MonsterCard):
+    tier = 5
+    monster_type = MONSTER_TYPES.ELEMENTAL
+    base_attack = 4
+    base_health = 4
+
+    def base_battlecry(self, targets: List['MonsterCard'], context: 'BuyPhaseContext'):
+        for _ in range(2 if self.golden else 1):
+            if context.owner.room_in_hand():
+                available_elementals = [card for card in context.owner.tavern.deck.unique_cards() if card.check_type(
+                    MONSTER_TYPES.ELEMENTAL) and card.tier <= context.owner.tavern_tier and type(card) != type(self)]
+                random_elementals = context.randomizer.select_gain_card(available_elementals)
+                context.owner.tavern.deck.remove_card(random_elementals)
+                context.owner.gain_hand_card(random_elementals)
+
+
+class GentleDjinni(MonsterCard):
+    tier = 6
+    monster_type = MONSTER_TYPES.ELEMENTAL
+    base_attack = 6
+    base_health = 8
+    base_taunt = True
+    legendary = True
+
+    def base_deathrattle(self, context: 'CombatPhaseContext'):  # TODO: how does this minion interact with the pool?
+        count = 2 if self.golden else 1
+        summon_index = context.friendly_war_party.get_index(self)
+        i = 0
+        for _ in range(count):
+            for _ in range(context.summon_minion_multiplier()):
+                elementals = [card_type for card_type in PrintingPress.all_types() if
+                              card_type.check_type(MONSTER_TYPES.ELEMENTAL) and card_type != self]
+                random_elemental_type = context.randomizer.select_summon_minion(elementals)
+                context.friendly_war_party.summon_in_combat(random_elemental_type(), context, summon_index + i + 1)
+                i += 1
+                if context.friendly_war_party.owner.room_in_hand():
+                    same_elemental_in_tavern = [card for card in
+                                                context.friendly_war_party.owner.tavern.deck.unique_cards() if
+                                                type(card) == random_elemental_type]
+                    if same_elemental_in_tavern:
+                        context.friendly_war_party.owner.tavern.deck.remove_card(same_elemental_in_tavern[0])
+                    context.friendly_war_party.owner.gain_hand_card(random_elemental_type())
