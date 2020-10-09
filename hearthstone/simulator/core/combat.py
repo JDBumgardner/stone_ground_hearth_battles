@@ -53,10 +53,8 @@ class WarParty:
     def num_cards(self):
         return len(self.board)
 
-    def summon_in_combat(self, monster: 'MonsterCard', context: CombatPhaseContext, index: Optional[int] = None):
-        live_monsters_num = len([card for card in context.friendly_war_party.board if not card.dead])
-        max_board_size = context.friendly_war_party.owner.maximum_board_size
-        if live_monsters_num >= max_board_size:
+    def summon_in_combat(self, monster: 'MonsterCard', context: 'CombatPhaseContext', index: Optional[int] = None):
+        if not context.friendly_war_party.room_on_board():
             return
         if not index:
             index = len(context.friendly_war_party.board)
@@ -68,8 +66,11 @@ class WarParty:
     def get_index(self, card):
         return self.board.index(card)
 
-    def attackers(self) -> List['Card']:
+    def attackers(self) -> List['MonsterCard']:
         return [board_member for board_member in self.board if not board_member.dead and not board_member.cant_attack and board_member.attack > 0]
+
+    def room_on_board(self) -> bool:
+        return len(self.live_minions()) < self.owner.maximum_board_size
 
 
 def fight_boards(war_party_1: 'WarParty', war_party_2: 'WarParty', randomizer: 'Randomizer'):

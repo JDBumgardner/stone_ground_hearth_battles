@@ -1956,15 +1956,16 @@ class GentleDjinni(MonsterCard):
         i = 0
         for _ in range(count):
             for _ in range(context.summon_minion_multiplier()):
-                elementals = [card_type for card_type in PrintingPress.all_types() if
-                              card_type.check_type(MONSTER_TYPES.ELEMENTAL) and card_type != self]
-                random_elemental_type = context.randomizer.select_summon_minion(elementals)
-                context.friendly_war_party.summon_in_combat(random_elemental_type(), context, summon_index + i + 1)
-                i += 1
-                if context.friendly_war_party.owner.room_in_hand():
-                    same_elemental_in_tavern = [card for card in
-                                                context.friendly_war_party.owner.tavern.deck.unique_cards() if
-                                                type(card) == random_elemental_type]
-                    if same_elemental_in_tavern:
-                        context.friendly_war_party.owner.tavern.deck.remove_card(same_elemental_in_tavern[0])
-                    context.friendly_war_party.owner.gain_hand_card(random_elemental_type())
+                if context.friendly_war_party.room_on_board():
+                    elementals = [card_type for card_type in PrintingPress.all_types() if
+                                  card_type.check_type(MONSTER_TYPES.ELEMENTAL) and card_type != self]
+                    random_elemental_type = context.randomizer.select_summon_minion(elementals)
+                    context.friendly_war_party.summon_in_combat(random_elemental_type(), context, summon_index + i + 1)
+                    i += 1
+                    if context.friendly_war_party.owner.room_in_hand():
+                        same_elemental_in_tavern = [card for card in
+                                                    context.friendly_war_party.owner.tavern.deck.unique_cards() if
+                                                    type(card) == random_elemental_type]
+                        if same_elemental_in_tavern:
+                            context.friendly_war_party.owner.tavern.deck.remove_card(same_elemental_in_tavern[0])
+                        context.friendly_war_party.owner.gain_hand_card(random_elemental_type())
