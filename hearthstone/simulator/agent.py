@@ -272,7 +272,7 @@ class AnnotatingAgent:
         """
         pass
 
-    async def game_over(self, player: 'Player', ranking: int):
+    async def game_over(self, player: 'Player', ranking: int) -> Annotation:
         """
         Notifies the agent that the game is over and the agent has achieved a given rank
         :param ranking: Integer index 0 to 7 of where the agent placed

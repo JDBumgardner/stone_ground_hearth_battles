@@ -1,35 +1,27 @@
 import asyncio
 import typing
-from typing import Dict
+from typing import Dict, List, Optional
 
 from hearthstone.simulator import agent
-from hearthstone.simulator.agent import EndPhaseAction, Action
+from hearthstone.simulator.agent import EndPhaseAction, Action, AnnotatingAgent
 from hearthstone.simulator.core.randomizer import Randomizer
 from hearthstone.simulator.core.tavern import Tavern
 from hearthstone.simulator.host.host import Host
+from hearthstone.simulator.observer import Observer
 from hearthstone.simulator.replay.replay import Replay, ReplayStep
 
 
 class RoundRobinHost(Host):
-    tavern: Tavern
-    agents: Dict[str, 'AnnotatingAgent']
-    replay: Replay
+    def __init__(self, agents: Dict[str, 'AnnotatingAgent'],
+                 observers: Optional[List['Observer']] = None,
+                 randomizer: Optional[Randomizer] = None):
+        super().__init__(agents, observers, randomizer)
 
-    def __init__(self, agents: Dict[str, 'AnnotatingAgent'], randomizer: typing.Optional[Randomizer] = None):
-        self.tavern = Tavern()
-        if randomizer:
-            self.tavern.randomizer = randomizer
-        self.agents = agents
-        for player_name in sorted(agents.keys()):  # Sorting is important for replays to be exact with RNG.
-            self.tavern.add_player(player_name)
-        self.replay = Replay(self.tavern.randomizer.seed, list(self.tavern.players.keys()))
+    def start_game(self):
         for player_name, player in self.tavern.players.items():
-            hero_choice_action = asyncio.get_event_loop().run_until_complete(self.agents[player_name].hero_choice_action(player))
+            hero_choice_action = asyncio.get_event_loop().run_until_complete(
+                self.agents[player_name].hero_choice_action(player))
             self._apply_and_record(player_name, hero_choice_action)
-
-    def _apply_and_record(self, player_name: str, action: Action, agent_annotation: agent.Annotation = None):
-        action.apply(self.tavern.players[player_name])
-        self.replay.append_action(ReplayStep(player_name, action, agent_annotation))
 
     def play_round_generator(self) -> typing.Generator:  # TODO: think about how to test this code
         self.tavern.buying_step()
@@ -53,7 +45,8 @@ class RoundRobinHost(Host):
         if self.tavern.game_over():
             for position, (name, player) in enumerate(reversed(self.tavern.losers)):
                 annotation = asyncio.get_event_loop().run_until_complete(self.agents[name].game_over(player, position))
-                self.replay.annotate_replay(name, annotation)
+                self.replay.agent_annotate(name, annotation)
+            self._on_game_over()
 
     def play_round(self):
         for _ in self.play_round_generator():

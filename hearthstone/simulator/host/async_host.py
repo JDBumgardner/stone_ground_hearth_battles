@@ -10,22 +10,10 @@ from hearthstone.simulator.replay.replay import Replay, ReplayStep
 
 
 class AsyncHost(Host):
-    tavern: Tavern
-    agents: Dict[str, 'AnnotatingAgent']
-    replay: Replay
-
-    def __init__(self, agents: Dict[str, 'AnnotatingAgent'], randomizer: Optional[Randomizer]=None):
-        self.tavern = Tavern()
-        if randomizer:
-            self.tavern.randomizer = randomizer
-        self.agents = agents
-        for player_name in sorted(agents.keys()): # Sorting is important for replays to be exact with RNG.
-            self.tavern.add_player(player_name)
-        self.replay = Replay(self.tavern.randomizer.seed, list(self.tavern.players.keys()))
-
-    def _apply_and_record(self, player_name: str, action: Action, agent_annotation: agent.Annotation = None):
-        action.apply(self.tavern.players[player_name])
-        self.replay.append_action(ReplayStep(player_name, action, agent_annotation))
+    def __init__(self, agents: Dict[str, 'AnnotatingAgent'],
+                 observers: Optional[List['Observer']] = None,
+                 randomizer: Optional[Randomizer] = None):
+        super().__init__(agents, observers, randomizer)
 
     def start_game(self):
         asyncio.get_event_loop().run_until_complete(self._async_start_game())
@@ -76,11 +64,12 @@ class AsyncHost(Host):
         if self.tavern.game_over():
             async def report_game_over(name, player):
                 annotation = self.agents[name].game_over(player, position)
-                self.replay.annotate_replay(name, annotation)
+                self.replay.agent_annotate(name, annotation)
             game_over_tasks = []
             for position, (name, player) in enumerate(reversed(self.tavern.losers)):
                 game_over_tasks.append(asyncio.create_task(report_game_over(name, player)))
             await asyncio.gather(*game_over_tasks)
+            self._on_game_over()
 
     def game_over(self):
         return self.tavern.game_over()

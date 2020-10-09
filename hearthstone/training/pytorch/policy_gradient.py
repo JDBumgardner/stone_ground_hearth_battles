@@ -17,7 +17,7 @@ from hearthstone.simulator.core.hero import EmptyHero
 from hearthstone.ladder.ladder import Contestant
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 from hearthstone.simulator.core.tavern import Tavern
-from hearthstone.training.pytorch.hearthstone_state_encoder import encode_player, encode_valid_actions, Transition, \
+from hearthstone.training.pytorch.hearthstone_state_encoder import encode_player, encode_valid_actions, \
     EncodedActionSet
 from hearthstone.training.pytorch.replay import ActorCriticGameStepInfo
 
@@ -70,17 +70,17 @@ def easy_contestants():
 
 
 StateBatch = namedtuple('StateBatch', ('player_tensor', 'cards_tensor'))
-TransitionBatch = namedtuple('TransitionBatch', ('state', 'valid_actions', 'action', 'action_prob', 'value', 'gae_return', 'retn', 'reward', 'is_terminal'))
+TransitionBatch = namedtuple('TransitionBatch', ('state', 'valid_actions', 'action', 'policy', 'value', 'gae_return', 'retn', 'reward', 'is_terminal'))
 
 
 # TODO: Delete all of this
 def tensorize_batch(transitions: List[ActorCriticGameStepInfo], device: torch.device) -> TransitionBatch:
-    player_tensor = torch.stack([transition.state.player_tensor for transition in transitions])
-    cards_tensor = torch.stack([transition.state.cards_tensor for transition in transitions])
-    valid_player_actions_tensor = torch.stack([transition.valid_actions.player_action_tensor for transition in transitions])
-    valid_card_actions_tensor = torch.stack([transition.valid_actions.card_action_tensor for transition in transitions])
+    player_tensor = torch.stack([transition.state.player_tensor for transition in transitions]).detach()
+    cards_tensor = torch.stack([transition.state.cards_tensor for transition in transitions]).detach()
+    valid_player_actions_tensor = torch.stack([transition.valid_actions.player_action_tensor for transition in transitions]).detach()
+    valid_card_actions_tensor = torch.stack([transition.valid_actions.card_action_tensor for transition in transitions]).detach()
     action_tensor = torch.tensor([transition.action for transition in transitions])
-    action_prob_tensor = torch.tensor([transition.action_prob for transition in transitions])
+    policy_tensor = torch.stack([transition.policy for transition in transitions]).detach()
     value_tensor = torch.tensor([transition.value for transition in transitions])
     reward_tensor = torch.tensor([transition.gae_info.reward for transition in transitions])
     is_terminal_tensor = torch.tensor([transition.gae_info.is_terminal for transition in transitions])
@@ -90,7 +90,7 @@ def tensorize_batch(transitions: List[ActorCriticGameStepInfo], device: torch.de
     return TransitionBatch(StateBatch(player_tensor.to(device), cards_tensor.to(device)),
                            EncodedActionSet(valid_player_actions_tensor.to(device), valid_card_actions_tensor.to(device)),
                            action_tensor.to(device),
-                           action_prob_tensor.to(device),
+                           policy_tensor.to(device),
                            value_tensor.to(device),
                            gae_return_tensor.to(device),
                            retrn_tensor.to(device),

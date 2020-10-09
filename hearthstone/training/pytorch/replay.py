@@ -2,7 +2,7 @@ from typing import Optional, NamedTuple
 
 import torch
 
-from hearthstone.training.pytorch.hearthstone_state_encoder import State
+from hearthstone.training.pytorch.hearthstone_state_encoder import State, EncodedActionSet
 
 
 class ActorCriticGameStepInfo:
@@ -13,21 +13,21 @@ class ActorCriticGameStepInfo:
     also optionally contains information propagated about future returns in gae_info.
     """
     state: State
-    valid_actions: torch.BoolTensor
+    valid_actions: EncodedActionSet
     action: int  # Index of the action
+    policy: torch.Tensor
     action_prob: float
     value: float
     gae_info: Optional['GAEReplayInfo']
 
-    def __init__(self, state: State, valid_actions: torch.BoolTensor, action: int, action_prob: float, value: float,
+    def __init__(self, state: State, valid_actions: EncodedActionSet, action: int, policy: torch.Tensor, value: float,
                  gae_info: Optional['GAEReplayInfo']):
         self.state = state
         self.valid_actions = valid_actions
         self.action = action
-        self.action_prob = action_prob
+        self.policy = policy
         self.value = value
         self.gae_info = gae_info
-
 
 
 class GAEReplayInfo(NamedTuple):

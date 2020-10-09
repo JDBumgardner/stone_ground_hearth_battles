@@ -98,9 +98,9 @@ class PPOLearner(GlobalStepContext):
         # The advantage is the difference between the expected value before taking the action and the value after updating
         advantage = transition_batch.gae_return - transition_batch.value
 
-        ratio = torch.exp(policy - transition_batch.action_prob.unsqueeze(-1)).gather(1,
-                                                                                      transition_batch.action.unsqueeze(
-                                                                                          -1)).squeeze(1)
+        ratio = torch.exp((policy - transition_batch.policy).gather(1,
+                                                                   transition_batch.action.unsqueeze(
+                                                                       -1))).squeeze(1)
         clipped_ratio = ratio.clamp(1 - ppo_epsilon, 1 + ppo_epsilon)
 
         normalized_advantage: torch.Tensor = advantage
@@ -149,12 +149,11 @@ class PPOLearner(GlobalStepContext):
         tensorboard.add_scalar("avg_advantage/unnormalized", advantage.mean(), self.global_step)
         tensorboard.add_scalar("avg_advantage/normalized", normalized_advantage.mean(), self.global_step)
         tensorboard.add_scalar("avg_value_error", value_error.mean(), self.global_step)
-        tensorboard.add_scalar("policy_loss", policy_loss, self.global_step)
-        tensorboard.add_scalar("value_loss", value_loss, self.global_step)
+        tensorboard.add_scalar("loss/policy", policy_loss, self.global_step)
+        tensorboard.add_scalar("loss/value", value_loss, self.global_step)
+        tensorboard.add_scalar("loss/entropy", entropy_loss, self.global_step)
         tensorboard.add_scalar("avg_policy_loss/unclipped", unclipped_policy_loss.mean(), self.global_step)
         tensorboard.add_scalar("avg_policy_loss/clipped", clipped_policy_loss.mean(), self.global_step)
-
-        tensorboard.add_scalar("entropy_loss", entropy_loss, self.global_step)
 
         mean_0_return = transition_batch.retn - transition_batch.retn.mean()
         mean_0_value = value - value.mean()
@@ -257,8 +256,10 @@ class PPOLearner(GlobalStepContext):
         load_ratings(other_contestants, "../../../data/standings.json")
 
         gae_annotator = GAEAnnotator(learning_bot_name, self.hparams['gae_gamma'], self.hparams['gae_lambda'])
-        workers = [Worker(learning_bot_contestant, other_contestants, self.hparams["game_size"], replay_buffer, gae_annotator) for _ in
-                   range(self.hparams['num_workers'])]
+        workers = [
+            Worker(learning_bot_contestant, other_contestants, self.hparams["game_size"], replay_buffer, gae_annotator,
+                   tensorboard, self) for _ in
+            range(self.hparams['num_workers'])]
 
         for _ in range(1000000):
             for worker in workers:
@@ -273,8 +274,9 @@ class PPOLearner(GlobalStepContext):
                                self.hparams["normalize_advantage"])
                 replay_buffer.clear()
             time_elapsed = int(time.time() - start_time)
-            tensorboard.add_scalar("elo/train", learning_bot_contestant.elo, global_step=self.global_step)
-            tensorboard.add_scalar("trueskill_mu/train", learning_bot_contestant.trueskill.mu, global_step=self.global_step)
+            tensorboard.add_scalar("rating/elo", learning_bot_contestant.elo, global_step=self.global_step)
+            tensorboard.add_scalar("rating/trueskill_mu", learning_bot_contestant.trueskill.mu, global_step=self.global_step)
+            tensorboard.add_scalar("rating/trueskill_sigma", learning_bot_contestant.trueskill.sigma, global_step=self.global_step)
             if self.early_stopper:
                 if time.time() - last_reported_time > 5:
                     last_reported_time = time.time()
@@ -293,8 +295,8 @@ class PPOLearner(GlobalStepContext):
 def main():
     ppo_learner = PPOLearner(PPOHyperparameters({
         'adam_lr': 0.0000698178899316577,
-        'batch_size': 4096,
-        'minibatch_size': 1024,
+        'batch_size': 128,
+        'minibatch_size': 128,
         'cuda': True,
         'entropy_weight': 0.1,
         'gae_gamma': 0.99,

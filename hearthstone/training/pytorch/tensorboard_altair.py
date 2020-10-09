@@ -1,6 +1,5 @@
-import collections
 from collections import defaultdict
-from typing import List, Optional, Dict
+from typing import List, NamedTuple, Any
 
 import altair as alt
 import pandas as pd
@@ -8,276 +7,266 @@ import tensorboard_vega_embed.summary
 import torch
 from torch.utils.tensorboard import SummaryWriter
 
-from hearthstone.simulator.agent import StandardAction, SellAction, SummonAction, BuyAction, generate_valid_actions
+from hearthstone.simulator.agent import StandardAction, SellAction, SummonAction, BuyAction, generate_valid_actions, \
+    generate_all_actions, Action
+from hearthstone.simulator.core.tavern import Tavern
+from hearthstone.simulator.observer import Observer, Annotation
+from hearthstone.simulator.replay.replay import Replay, ReplayStep
 from hearthstone.training.pytorch import hearthstone_state_encoder
-from hearthstone.training.pytorch.hearthstone_state_encoder import encode_player, encode_valid_actions, get_action_index
-from hearthstone.training.pytorch.surveillance import Parasite, GlobalStepContext
+from hearthstone.training.pytorch.surveillance import GlobalStepContext
 
 
-class GAEPlotter(Parasite):
-    GameStep = collections.namedtuple("GameStep", ["state", "action", "valid_actions", "action_prob", "value"])
+class TensorboardAltairAnnotation(NamedTuple):
+    """
+    Additional information that the TensorboardAltair plotter needs to generate nice game graphs.  This information
+    will be attached to each game step.
+    """
+    turn_count: int
+    health: int
+    coins: int
+    avg_enemy_health: float
+    dead_players: float
+    board: List[str]
+    hand: List[str]
+    store: List[str]
+    action: str
+    action_type: str
 
-    def __init__(self, lam: float = 0.9, gamma: float = 0.99,
-                 device: Optional[torch.device] = None):
+
+class TensorboardAltairAnnotator(Observer):
+    """
+    This observer annotates the replay with extra information for the purposes of generating nice Tensorboard plots.
+    """
+
+    def __init__(self, player_names: List[str]):
         """
-        Puts transitions into the replay buffer.
 
-        Args:
-            replay_buffer: Buffer of transitions.
+        :param player_names: The players to annotate for.  All other player actions will be ignored.
         """
-        self.lam = lam
-        self.gamma = gamma
-        self.device = device
+        self.player_names = set(player_names)
 
-        self.game_steps = []
+    def name(self) -> str:
+        return "TensorboardAltairAnnotator"
 
-    def on_buy_phase_action(self, player: 'Player', action: StandardAction, policy: torch.Tensor, value: torch.Tensor):
-        action_index = get_action_index(action)
-        self.game_steps.append(
-            self.GameStep(
-                state=encode_player(player, self.device),
-                action=int(action_index),
-                valid_actions=encode_valid_actions(player, self.device),
-                action_prob=float(policy[0][action_index]),
-                value=float(value)
-            )
+    def on_action(self, tavern: 'Tavern', player_name: str, action: 'Action') -> Annotation:
+
+        if player_name not in self.player_names:
+            return None
+
+        if not isinstance(action, StandardAction):
+            return None
+        player = tavern.players[player_name]
+        return TensorboardAltairAnnotation(
+            turn_count=player.tavern.turn_count,
+            health=player.health,
+            coins=player.coins,
+            avg_enemy_health=(sum(max(p.health, 0) for name, p in tavern.players.items()) - max(player.health,
+                                                                                                0)) / (
+                                     len(tavern.players) - 1),
+            dead_players=len(tavern.losers) - (len(tavern.players) - 1) / 2.0,
+            board=[str(card) for card in player.in_play],
+            hand=[str(card) for card in player.hand],
+            store=[str(card) for card in player.store],
+            action=action.str_in_context(player),
+            action_type=type(action).__name__
         )
 
-    def on_game_over(self, player: 'Player', ranking: int) -> Dict[str, List]:
-        gae_returns = []
-        returns = []
-        retn = (len(player.tavern.players) - 1) / 2.0 - ranking
-        gae_return = retn
-        next_value = retn
-        for i in range(len(self.game_steps) - 1, -1, -1):
-            game_step = self.game_steps[i]
-            gae_returns.append(gae_return)
-            returns.append(retn)
-            gae_return = next_value + (gae_return - next_value) * self.gamma * self.lam
-            next_value = self.gamma * game_step.value
-            retn *= self.gamma
 
-        gae_returns.reverse()
-        gae_returns.append(None)
-        returns.reverse()
-        returns.append(None)
-        return {
-            "critic_value_gae_return": gae_returns,
-            "return": returns,
+def _action_chart(df: pd.DataFrame, name: str, max_size: int):
+    ranked_text = alt.Chart(df).mark_text().transform_lookup(lookup="step_in_game",
+                       from_=alt.LookupSelection(key="step_in_game",
+                                                 selection="gamestep_hover",
+                                                 fields=["step_in_game"]),
+                       as_="looked_up_step"
+                       ).transform_filter(
+        (alt.datum.step_in_game == alt.datum.looked_up_step)
+    ).transform_window(
+        row_number='row_number()'
+    )
+    return ranked_text.encode(text=f'{name}:N',
+                              y=alt.Y('row_number:O', axis=None,
+                                      scale=alt.Scale(domain=list(range(1, max_size + 1)))),
+                              color=alt.Color("action_probability:Q",
+                                              scale=alt.Scale(domain=[0, 1], scheme="bluegreen")),
+                              tooltip=[alt.Tooltip("action_probability:Q", title="Probability")])
+
+
+def _card_list_chart(name: str, cards_list: List[List[str]], action_probs: List[List[float]], max_size:int):
+    df = pd.DataFrame({
+        name: cards_list,
+        "action_probability": action_probs
+    })
+    df = df.apply(pd.Series.explode).reset_index().rename(columns={'index': 'step_in_game'}).dropna()
+    return _action_chart(df, name, max_size)
+
+
+def _player_action_chart(action_probs: List[List[float]], max_size: int):
+    basic_actions = [str(action) for action in hearthstone_state_encoder.ALL_ACTIONS.player_action_set]
+    df = pd.DataFrame(
+        {
+            "basic_actions": [basic_actions] * len(action_probs),
+            "action_probability": action_probs,
         }
+    )
+    df = df.apply(pd.Series.explode).reset_index().rename(columns={'index': 'step_in_game'})
+    return _action_chart(df, "basic_actions", max_size)
 
 
-class TensorboardAltairPlotter(Parasite):
-    def __init__(self, tensorboard: SummaryWriter, global_step_context: GlobalStepContext):
-        if not global_step_context.should_plot():
-            self.dont_plot = True
-            return
-        self.dont_plot = False
-        self.tensorboard = tensorboard
-        self.healths = []
-        self.coins = []
-        self.dead_players = []
-        self.avg_enemy_healths = []
-        self.values = []
-        self.global_step_context = global_step_context
-        self.actions = []
-        self.action_types = []
-        self.rewards = []
-        self.turn_counts = []
-        self.boards = []
-        self.hands = []
-        self.stores = []
-        self.basic_action_probs = []
-        self.sell_probs = []
-        self.summon_probs = []
-        self.buy_probs = []
+def calc_action_probs(policy: torch.Tensor, store: List[str], hand: List[str], board:List[str]) -> (List, List, List, List):
+    policy = policy.detach().squeeze().exp()
+    basic_action_probs = [float(policy[hearthstone_state_encoder.get_action_index(action)]) for action in
+                                    hearthstone_state_encoder.ALL_ACTIONS.player_action_set]
 
-        self.gae_plotter = GAEPlotter()
-
-    def populate_action_probs(self, player: 'player', policy:torch.Tensor):
-        policy = policy.detach().squeeze().exp()
-        self.basic_action_probs.append([float(policy[hearthstone_state_encoder.get_action_index(action)]) for action in
-                                        hearthstone_state_encoder.ALL_ACTIONS.player_action_set])
-
-        action_probs = defaultdict(lambda: 0.0)
-        for action in generate_valid_actions(player):
-            if str(action) in hearthstone_state_encoder.ALL_ACTIONS_DICT:
-                if isinstance(action, SellAction):
-                    card = player.in_play[action.index]
-                elif isinstance(action, SummonAction):
-                    card = player.hand[action.index]
-                elif isinstance(action,BuyAction):
-                    card = player.store[action.index]
-                else:
-                    continue
-
-                action_probs[card] += float(policy[hearthstone_state_encoder.get_action_index(action)])
-
-        self.sell_probs.append([action_probs[card] for card in player.in_play])
-        self.summon_probs.append([action_probs[card] for card in player.hand])
-        self.buy_probs.append([action_probs[card] for card in player.store])
-
-    def on_buy_phase_action(self, player: 'Player', action: StandardAction, policy: torch.Tensor, value: torch.Tensor):
-        if self.dont_plot:
-            return
-        self.update_gamestate(player, value, None)
-        self.actions.append(action.str_in_context(player))
-        self.action_types.append(type(action).__name__)
-        self.populate_action_probs(player, policy)
-        self.gae_plotter.on_buy_phase_action(player, action, policy, value)
-
-    def update_gamestate(self, player: 'Player', value, reward):
-        self.turn_counts.append(player.tavern.turn_count)
-        self.healths.append(player.health)
-        self.coins.append(player.coins)
-        self.avg_enemy_healths.append(
-            (sum(max(p.health, 0) for name, p in player.tavern.players.items()) - player.health) / (len(player.tavern.players)-1))
-        self.dead_players.append(len(player.tavern.losers) - 3.5)
-        if value is None:
-            self.values.append(None)
+    action_probs = defaultdict(lambda: 0.0)
+    for action in hearthstone_state_encoder.ALL_ACTIONS_DICT.values():
+        if isinstance(action, SellAction):
+            card = f"B{action.index}"
+        elif isinstance(action, SummonAction):
+            card = f"H{action.index}"
+        elif isinstance(action,BuyAction):
+            card = f"S{action.index}"
         else:
-            self.values.append(float(value))
-        self.rewards.append(reward)
-        self.boards.append([str(card) for card in player.in_play])
-        self.hands.append([str(card) for card in player.hand])
-        self.stores.append([str(card) for card in player.store])
+            continue
 
-    @staticmethod
-    def _action_chart(df: pd.DataFrame, name: str, max_size: int):
-        ranked_text = alt.Chart(df).mark_text().transform_lookup(lookup="step_in_game",
-                           from_=alt.LookupSelection(key="step_in_game",
-                                                     selection="gamestep_hover",
-                                                     fields=["step_in_game"]),
-                           as_="looked_up_step"
-                           ).transform_filter(
-            (alt.datum.step_in_game == alt.datum.looked_up_step)
-        ).transform_window(
-            row_number='row_number()'
-        )
-        return ranked_text.encode(text=f'{name}:N',
-                                  y=alt.Y('row_number:O', axis=None,
-                                          scale=alt.Scale(domain=list(range(1, max_size + 1)))),
-                                  color=alt.Color("action_probability:Q",
-                                                  scale=alt.Scale(domain=[0, 1], scheme="bluegreen")),
-                                  tooltip=[alt.Tooltip("action_probability:Q", title="Probability")])
+        action_probs[card] += float(policy[hearthstone_state_encoder.get_action_index(action)])
 
-    @staticmethod
-    def _card_list_chart(name: str, cards_list: List[List[str]], action_probs: List[List[str]], max_size:int):
-        df = pd.DataFrame({
-            name: cards_list,
-            "action_probability": action_probs
-        })
-        df = df.apply(pd.Series.explode).reset_index().rename(columns={'index': 'step_in_game'}).dropna()
-        return TensorboardAltairPlotter._action_chart(df, name, max_size)
+    buy_probs = [action_probs[f"S{index}"] for index in range(len(store))]
+    summon_probs = [action_probs[f"H{index}"] for index in range(len(hand))]
+    sell_probs = [action_probs[f"B{index}"] for index in range(len(board))]
+    return basic_action_probs, buy_probs, summon_probs, sell_probs
 
-    @staticmethod
-    def _player_action_chart(action_probs: List[List[str]], max_size: int):
-        basic_actions = [str(action) for action in hearthstone_state_encoder.ALL_ACTIONS.player_action_set]
-        df = pd.DataFrame(
-            {
-                "basic_actions": [basic_actions] * len(action_probs),
-                "action_probability": action_probs,
-            }
-        )
-        df = df.apply(pd.Series.explode).reset_index().rename(columns={'index': 'step_in_game'})
-        return TensorboardAltairPlotter._action_chart(df, "basic_actions", max_size)
 
-    def on_game_over(self, player: 'Player', ranking: int):
-        if self.dont_plot:
-            return
-        self.update_gamestate(player, None, (len(player.tavern.players) - 1) / 2.0 - ranking)
-        self.actions.append(None)
-        self.action_types.append(None)
-        self.sell_probs.append([None for _ in player.in_play])
-        self.summon_probs.append([None for _ in player.hand])
-        self.buy_probs.append([None for _ in player.store])
+def plot_replay(replay: Replay, player_name: str, tensorboard: SummaryWriter, global_step_context: GlobalStepContext):
+    if not global_step_context.should_plot():
+        return
+    game_steps: List[ReplayStep] = [step for step in replay.steps if step.player == player_name]
 
-        columns = self.gae_plotter.on_game_over(player, ranking)
-        columns.update({
-            "turn_count": self.turn_counts,
-            "health": self.healths,
-            "coins": self.coins,
-            "dead_players": self.dead_players,
-            "avg_enemy_health": self.avg_enemy_healths,
-            "critic_value": self.values,
-            "reward": self.rewards,
-            "action": self.actions,
-            "action_type": self.action_types,
-        })
-        df = pd.DataFrame(columns)
-        hover_selection = alt.selection_single(name="gamestep_hover", fields=['step_in_game'], encodings=['x'], empty="none",
-                                         on="mousemove", nearest=True)
-        legend_selection = alt.selection_multi(name="scalar_legend", fields=['variable'], bind="legend")
+    def valid_step(step: ReplayStep) -> Any:
+        return step.player == player_name and isinstance(step.action, StandardAction)
 
-        df = df.reset_index().rename(columns={'index': 'step_in_game'})
-        melted = df.melt(id_vars=['step_in_game', 'action', 'action_type', 'turn_count'], value_name='value')
-        base = alt.Chart(melted)
+    scalar_columns =  ["turn_count", "health", "coins", "avg_enemy_health", "dead_players", "action", "action_type"]
+    columns = {
+        field: [getattr(step.observer_annotations.get("TensorboardAltairAnnotator"), field) for step in game_steps if
+                valid_step(step)]
+        for field in
+        scalar_columns
+    }
 
-        rule = base.transform_filter(hover_selection).mark_rule().encode(alt.X('step_in_game:Q'))
-        value_base = base.encode(
-            alt.X('step_in_game:Q'),
-            color=alt.Color('variable:N'),
-            opacity=alt.condition(legend_selection, alt.value(1), alt.value(0.2)),
-        ).properties(width=1000)
+    columns.update({
+        "critic_value": [step.agent_annotation.value for step in game_steps if
+                         valid_step(step)],
+        "reward": [step.agent_annotation.gae_info.reward if step.agent_annotation.gae_info.is_terminal else None for step in game_steps if
+                   valid_step(step)],
+        "critic_value_gae_return": [step.agent_annotation.gae_info.gae_return for step in game_steps if
+                                    valid_step(step)],
+        "return": [step.agent_annotation.gae_info.retrn for step in game_steps if
+                   valid_step(step)],
+    })
 
-        point_chart = value_base.mark_point(
+    stores = []
+    hands = []
+    boards = []
+    basic_action_probs = []
+    buy_probs = []
+    summon_probs = []
+    sell_probs = []
+    for step in replay.steps:
+        if not valid_step(step):
+            continue
 
-        ).encode(
-            alt.Y('value:Q'),
-            opacity=alt.condition(hover_selection, alt.value(1), alt.value(0)),
-            tooltip=['step_in_game:Q', 'action:N', 'variable:N', 'value:Q']
-        ).add_selection(
-            hover_selection).add_selection(legend_selection)
-        text_chart = value_base.mark_text(align='left', dx=5, dy=-7
-                                          ).encode(alt.Y('value:Q'),
-                                                   text=alt.condition(hover_selection,
-                                                                      alt.Text('value:Q',
-                                                                               format='.3'),
-                                                                      alt.value('')))
-        line_chart = value_base.transform_filter(
-            (alt.datum.variable != "reward")
-        ).mark_line().encode(
-            alt.Y('value:Q'),
-        )
-        reward_chart = value_base.transform_filter(
-            (alt.datum.variable == "reward")
-        ).mark_point(size=100, shape="diamond", filled=True).encode(
-            alt.Y('value:Q'),
-            tooltip=['step_in_game:Q', 'variable:N', 'value:Q'],
-        )
+        annotations:TensorboardAltairAnnotation = step.observer_annotations.get("TensorboardAltairAnnotator")
+        basic_action_prob, buy_prob, summon_prob, sell_prob = calc_action_probs(step.agent_annotation.policy,
+                                                                                annotations.store,
+                                                                                annotations.hand,
+                                                                                annotations.board,
+                                                                                )
+        stores.append(annotations.store)
+        hands.append(annotations.hand)
+        boards.append(annotations.board)
+        basic_action_probs.append(basic_action_prob)
+        buy_probs.append(buy_prob)
+        summon_probs.append(summon_prob)
+        sell_probs.append(sell_prob)
 
-        turn_chart = value_base.transform_filter(
-            (alt.datum.action_type == "EndPhaseAction")
-        ).mark_rule().encode(
-            alt.X('step_in_game:Q')
-        )
+    df = pd.DataFrame(columns)
+    hover_selection = alt.selection_single(name="gamestep_hover", fields=['step_in_game'], encodings=['x'],
+                                           empty="none",
+                                           on="mousemove", nearest=True)
+    legend_selection = alt.selection_multi(name="scalar_legend", fields=['variable'], bind="legend")
 
-        game_progression_chart = alt.layer(rule, point_chart, text_chart, line_chart, reward_chart, turn_chart)
+    df = df.reset_index().rename(columns={'index': 'step_in_game'})
+    melted = df.melt(id_vars=['step_in_game', 'action', 'action_type', 'turn_count'], value_name='value')
+    base = alt.Chart(melted)
 
-        action_chart = alt.Chart(df).mark_text(align='left', angle=270
-                                               ).transform_lookup(lookup="step_in_game",
-                                                                  from_=alt.LookupSelection(
-                                                                      key="step_in_game",
-                                                                      selection="gamestep_hover",
-                                                                      fields=["step_in_game"]),
-                                                                  as_="looked_up_step"
-                                                                  ).encode(
-            alt.X('step_in_game:Q'),
-            y=alt.value(0),
-            text='action:N',
-            color='action_type:N',
-            opacity=alt.condition((alt.datum.step_in_game == alt.datum.looked_up_step), alt.value(1), alt.value(0.4))
-        ).properties(width=999)
+    rule = base.transform_filter(hover_selection).mark_rule().encode(alt.X('step_in_game:Q'))
+    value_base = base.encode(
+        alt.X('step_in_game:Q'),
+        color=alt.Color('variable:N'),
+        opacity=alt.condition(legend_selection, alt.value(1), alt.value(0.2)),
+    ).properties(width=1000)
 
-        basic_action_chart = self._player_action_chart(self.basic_action_probs, len(hearthstone_state_encoder.ALL_ACTIONS.player_action_set)).properties(title='Basic Actions', width=400)
-        board_chart = self._card_list_chart('board', self.boards, self.sell_probs, 7).properties(title='On Board', width=400)
-        hand_chart = self._card_list_chart('hand', self.hands, self.summon_probs, 10).properties(title='In Hand', width=400)
-        store_chart = self._card_list_chart('store', self.stores, self.buy_probs, 7).properties(title='In Store', width=400)
+    point_chart = value_base.mark_point(
 
-        left_chart = alt.vconcat(game_progression_chart, action_chart).resolve_scale(color='independent')
-        right_chart = alt.vconcat(basic_action_chart, board_chart, hand_chart, store_chart).resolve_legend('shared')
-        full_chart = alt.hconcat(left_chart, right_chart).configure(autosize=alt.AutoSizeParams(resize=True))
-        json = full_chart.to_json()
+    ).encode(
+        alt.Y('value:Q'),
+        opacity=alt.condition(hover_selection, alt.value(1), alt.value(0)),
+        tooltip=['step_in_game:Q', 'action:N', 'variable:N', 'value:Q']
+    ).add_selection(
+        hover_selection).add_selection(legend_selection)
+    text_chart = value_base.mark_text(align='left', dx=5, dy=-7
+                                      ).encode(alt.Y('value:Q'),
+                                               text=alt.condition(hover_selection,
+                                                                  alt.Text('value:Q',
+                                                                           format='.3'),
+                                                                  alt.value('')))
+    line_chart = value_base.transform_filter(
+        (alt.datum.variable != "reward")
+    ).mark_line().encode(
+        alt.Y('value:Q'),
+    )
+    reward_chart = value_base.transform_filter(
+        (alt.datum.variable == "reward")
+    ).mark_point(size=100, shape="diamond", filled=True).encode(
+        alt.Y('value:Q'),
+        tooltip=['step_in_game:Q', 'variable:N', 'value:Q'],
+    )
 
-        tensorboard_vega_embed.summary.vega_embed(self.tensorboard, "GameSummary", json,
-                                                  self.global_step_context.get_global_step())
+    turn_chart = value_base.transform_filter(
+        (alt.datum.action_type == "EndPhaseAction")
+    ).mark_rule().encode(
+        alt.X('step_in_game:Q')
+    )
+
+    game_progression_chart = alt.layer(rule, point_chart, text_chart, line_chart, reward_chart, turn_chart)
+
+    action_chart = alt.Chart(df).mark_text(align='left', angle=270
+                                           ).transform_lookup(lookup="step_in_game",
+                                                              from_=alt.LookupSelection(
+                                                                  key="step_in_game",
+                                                                  selection="gamestep_hover",
+                                                                  fields=["step_in_game"]),
+                                                              as_="looked_up_step"
+                                                              ).encode(
+        alt.X('step_in_game:Q'),
+        y=alt.value(0),
+        text='action:N',
+        color='action_type:N',
+        opacity=alt.condition((alt.datum.step_in_game == alt.datum.looked_up_step), alt.value(1), alt.value(0.4))
+    ).properties(width=999)
+
+
+
+    basic_action_chart = _player_action_chart(basic_action_probs, len(
+        hearthstone_state_encoder.ALL_ACTIONS.player_action_set)).properties(title='Basic Actions', width=400)
+    board_chart = _card_list_chart('board', boards, sell_probs, 7).properties(title='On Board', width=400)
+    hand_chart = _card_list_chart('hand', hands, summon_probs, 10).properties(title='In Hand', width=400)
+    store_chart = _card_list_chart('store', stores, buy_probs, 7).properties(title='In Store', width=400)
+
+    left_chart = alt.vconcat(game_progression_chart, action_chart).resolve_scale(color='independent')
+    right_chart = alt.vconcat(basic_action_chart, board_chart, hand_chart, store_chart).resolve_legend('shared')
+    full_chart = alt.hconcat(left_chart, right_chart).configure(autosize=alt.AutoSizeParams(resize=True))
+    json = full_chart.to_json()
+    tensorboard_vega_embed.summary.vega_embed(tensorboard, "GameSummary", json,
+                                              global_step_context.get_global_step())
+
+
