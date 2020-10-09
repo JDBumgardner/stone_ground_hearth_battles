@@ -1,6 +1,6 @@
 import logging
 import random
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Any, Dict
 
 import torch
 from torch import nn, Tensor
@@ -50,7 +50,7 @@ class PytorchBot(AnnotatingAgent):
                 state=encoded_state,
                 valid_actions=valid_actions_mask,
                 action=int(action_index),
-                action_prob=float(policy[0][action_index]),
+                policy=policy[0].detach(),
                 value=float(value),
                 gae_info=None
             )
@@ -63,6 +63,6 @@ class PytorchBot(AnnotatingAgent):
     async def discover_choice_action(self, player: 'Player') -> DiscoverChoiceAction:
         return DiscoverChoiceAction(random.choice(range(len(player.discover_queue[0]))))
 
-    async def game_over(self, player: 'Player', ranking: int):
+    async def game_over(self, player: 'Player', ranking: int) -> Dict[str, Any]:
         return {'ranking': ranking}
 
