@@ -1958,7 +1958,7 @@ class GentleDjinni(MonsterCard):
             for _ in range(context.summon_minion_multiplier()):
                 if context.friendly_war_party.room_on_board():
                     elementals = [card_type for card_type in PrintingPress.all_types() if
-                                  card_type.check_type(MONSTER_TYPES.ELEMENTAL) and card_type != self]
+                                  card_type.check_type(MONSTER_TYPES.ELEMENTAL) and card_type != type(self)]
                     random_elemental_type = context.randomizer.select_summon_minion(elementals)
                     context.friendly_war_party.summon_in_combat(random_elemental_type(), context, summon_index + i + 1)
                     i += 1
@@ -1969,3 +1969,15 @@ class GentleDjinni(MonsterCard):
                         if same_elemental_in_tavern:
                             context.friendly_war_party.owner.tavern.deck.remove_card(same_elemental_in_tavern[0])
                         context.friendly_war_party.owner.gain_hand_card(random_elemental_type())
+
+
+class NomiKitchenNightmare(MonsterCard):
+    tier = 5
+    monster_type = None
+    base_attack = 4
+    base_health = 4
+    legendary = True
+
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.SUMMON_BUY and event.card.check_type(MONSTER_TYPES.ELEMENTAL):
+            context.owner.nomi_bonus += 2 if self.golden else 1

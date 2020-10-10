@@ -54,6 +54,7 @@ class Player:
         self.purchased_minions: List['Type'] = []
         self.last_opponent_warband: List['MonsterCard'] = []
         self.dead = False
+        self.nomi_bonus = 0
 
     @property
     def coins(self):
@@ -211,6 +212,9 @@ class Player:
         assert self.valid_purchase(index)
         card = self.store.pop(index)
         self.coins -= self.minion_cost
+        if card.check_type(MONSTER_TYPES.ELEMENTAL):
+            card.attack += self.nomi_bonus
+            card.health += self.nomi_bonus
         self._hand.append(card)
         event = events.BuyEvent(card)
         self.broadcast_buy_phase_event(event)

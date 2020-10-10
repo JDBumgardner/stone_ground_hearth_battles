@@ -171,7 +171,7 @@ class MonsterCard(metaclass=CardType):
         if event.event is EVENTS.BUY_START and self.shifting:
             self.zerus_shift(context)
 
-    def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         return
 
     def valid_battlecry_target(self, card: 'MonsterCard') -> bool:

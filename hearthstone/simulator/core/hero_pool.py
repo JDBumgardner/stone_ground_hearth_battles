@@ -287,6 +287,9 @@ class JandiceBarov(Hero):
         board_minion = context.owner.pop_board_card(board_index)
         store_minion = context.randomizer.select_from_store(context.owner.store)
         context.owner.store.remove(store_minion)
+        if store_minion.check_type(MONSTER_TYPES.ELEMENTAL):
+            store_minion.attack += context.owner.nomi_bonus
+            store_minion.health += context.owner.nomi_bonus
         context.owner.gain_board_card(store_minion)
         context.owner.store.append(board_minion)
 
