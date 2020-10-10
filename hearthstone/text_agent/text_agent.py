@@ -7,7 +7,7 @@ from hearthstone.simulator.core.hero import Hero
 from hearthstone.simulator.core.player import HandIndex, BoardIndex, StoreIndex, Player
 
 
-class TextAgentTransport:
+class TextAgentProtocol:
     async def receive_line(self) -> str:
         pass
 
@@ -16,7 +16,7 @@ class TextAgentTransport:
 
 
 class TextAgent(Agent):
-    def __init__(self, transport: TextAgentTransport):
+    def __init__(self, transport: TextAgentProtocol):
         self.transport = transport
 
     async def hero_choice_action(self, player: 'Player') -> 'Hero':
@@ -44,7 +44,8 @@ class TextAgent(Agent):
         await self.transport.send(f"player {player.name}, it is your combat prephase.\n")
         await self.print_player_card_list("board", player.in_play)
         await self.transport.send("please rearrange your cards by specifying the ordering\n")
-        await self.transport.send("for example, 1, 0 will swap your 0 and 1 index monsters: ")
+        await self.transport.send("for example, 1, 0 will swap your 0 and 1 index monsters\n")
+        await self.transport.send("a will accept your current board order: ")
         user_text = await self.transport.receive_line()
         while True:
             arrangement = self.parse_rearrange_input(user_text, player)
