@@ -68,6 +68,9 @@ class StoneProtocol(asyncio.Protocol, TextAgentProtocol):
         print(f"lost connection from {self.peer_address_and_port}", exc )
 
     def data_received(self, data: bytes) -> None:
+        if data == b'\xff\xf4\xff\xfd\x06':
+            self._transport.close()
+            return
         try:
             data = data.decode().rstrip('\n\r')
         except UnicodeDecodeError:
