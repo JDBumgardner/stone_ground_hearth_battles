@@ -6,11 +6,13 @@ from hearthstone.simulator.agent import Agent
 from hearthstone.battlebots.early_game_bot import EarlyGameBot
 from hearthstone.battlebots.priority_functions import PriorityFunctions
 from hearthstone.simulator.host import AsyncHost
-from hearthstone.text_agent.tcp import TcpTransport
+from hearthstone.text_agent.tcp import StoneProtocol
 from hearthstone.text_agent.text_agent import TextAgent
 from hearthstone.simulator.core import hero_pool
 
 
+
+class GameServer:
 async def open_client_streams(max_players: int) -> Dict[str, Agent]:
     result = {}
     event = asyncio.Event()
