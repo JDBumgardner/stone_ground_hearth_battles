@@ -1,16 +1,20 @@
 import asyncio
 import random
+import typing
 from typing import Optional, Dict, Tuple, Set
 
 from hearthstone.text_agent.lighthouse_speech import LIGHTHOUSE_SPEECH
 from hearthstone.text_agent.text_agent import TextAgentProtocol
+if typing.TYPE_CHECKING:
+    from hearthstone.simulator.host import AsyncHost
 
 INSULTS = ['fucker', 'douchebag', 'sweetheart', 'incel', 'son of a hamster', 'foot sniffer', 'proud boy', 'hgh bull',
            'MAGA hatter', 'Shillary', 'sleepy', 'low energy', 'schmeeb', LIGHTHOUSE_SPEECH]
 
 
 class GameServer:
-    def __init__(self, max_sessions: int, kill_event: asyncio.Event):
+    def __init__(self, host: 'AsyncHost', max_sessions: int, kill_event: asyncio.Event):
+        self._host = host
         self.protocols: Dict[str, 'StoneProtocol'] = {}
         self.player_names: Set[str] = set()
         self.connection_count = 0
@@ -46,6 +50,7 @@ class GameServer:
         self.connection_count -= 1
 
 
+
 class StoneProtocol(asyncio.Protocol, TextAgentProtocol):
     def __init__(self, kill_event: asyncio.Event, player_names: Set[str], disconnect_fn):
         self._disconnect = disconnect_fn
@@ -59,6 +64,7 @@ class StoneProtocol(asyncio.Protocol, TextAgentProtocol):
         self.peer_address_and_port = ""
         self._transport: Optional[asyncio.Transport] = None
         self.process_task: Optional[asyncio.Task] = None
+        self._connection_lost = asyncio.Event()
 
     def connection_made(self, transport: asyncio.Transport) -> None:
         self._transport = transport
@@ -73,6 +79,7 @@ class StoneProtocol(asyncio.Protocol, TextAgentProtocol):
         self.process_task = None
         print(f"lost connection from {self.peer_address_and_port}", exc)
         self._disconnect(self)
+        self._connection_lost.set()
 
     def data_received(self, data: bytes) -> None:
         if data == b'\xff\xf4\xff\xfd\x06':
@@ -102,7 +109,13 @@ class StoneProtocol(asyncio.Protocol, TextAgentProtocol):
             self._transport.write((line.rstrip('\r')).encode())
 
     async def receive_line(self) -> str:
-        line = await self.lines_in.get()
+        line_task = asyncio.create_task(self.lines_in.get())
+        connection_lost_task = asyncio.create_task(self._connection_lost.wait())
+        await asyncio.wait([line_task, connection_lost_task], return_when=asyncio.FIRST_COMPLETED)
+
+        if connection_lost_task.done():
+            raise ConnectionError
+        line = await line_task
         print(f'received the line {line}')
         return line
 
