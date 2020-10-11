@@ -8,8 +8,8 @@ from hearthstone.text_agent.text_agent import TextAgentProtocol
 INSULTS = ['fucker', 'douchebag', 'sweetheart', 'incel', 'son of a hamster', 'foot sniffer', 'proud boy', 'hgh bull',
            'MAGA hatter', 'Shillary', 'sleepy', 'low energy', 'schmeeb', LIGHTHOUSE_SPEECH]
 
-class GameServer:
 
+class GameServer:
     def __init__(self, max_sessions: int, kill_event: asyncio.Event):
         self.protocols: Dict[str, 'StoneProtocol'] = {}
         self.player_names: Set[str] = set()
@@ -20,13 +20,13 @@ class GameServer:
 
     def handle_connection(self):
         if self.connection_count < self._max_sessions:
-            new_protocol = StoneProtocol(self.kill_event, self.player_names)
+            new_protocol = StoneProtocol(self.kill_event, self.player_names, self.disconnect)
             self.connection_count += 1
             self.connected.put_nowait(new_protocol)
             return new_protocol
 
     async def wait_for_ready(self):
-        for _ in range(self._max_sessions):
+        while len(self.protocols) < self._max_sessions:
             session = await self.connected.get()
             await session.ready.wait()
             self.protocols[session.player_name] = session
@@ -40,9 +40,15 @@ class GameServer:
                                                    if player_name != player.player_name])
                     await player.send(f'{connected_players}')
 
+    def disconnect(self, session: 'StoneProtocol'):
+        if session.player_name and session.player_name in self.protocols:
+            self.protocols.pop(session.player_name)
+        self.connection_count -= 1
+
 
 class StoneProtocol(asyncio.Protocol, TextAgentProtocol):
-    def __init__(self, kill_event: asyncio.Event, player_names: Set[str]):
+    def __init__(self, kill_event: asyncio.Event, player_names: Set[str], disconnect_fn):
+        self._disconnect = disconnect_fn
         self.ready = asyncio.Event()
         self.received_data = False
         self.player_name = None
@@ -65,7 +71,8 @@ class StoneProtocol(asyncio.Protocol, TextAgentProtocol):
         self._transport = None
         self.process_task.cancel()
         self.process_task = None
-        print(f"lost connection from {self.peer_address_and_port}", exc )
+        print(f"lost connection from {self.peer_address_and_port}", exc)
+        self._disconnect(self)
 
     def data_received(self, data: bytes) -> None:
         if data == b'\xff\xf4\xff\xfd\x06':
