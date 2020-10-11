@@ -7,7 +7,7 @@ from hearthstone.simulator.core.hero import Hero
 from hearthstone.simulator.core.player import HandIndex, BoardIndex, StoreIndex, Player
 
 
-class TextAgentTransport:
+class TextAgentProtocol:
     async def receive_line(self) -> str:
         pass
 
@@ -16,20 +16,20 @@ class TextAgentTransport:
 
 
 class TextAgent(Agent):
-    def __init__(self, transport: TextAgentTransport):
-        self.transport = transport
+    def __init__(self, connection: TextAgentProtocol):
+        self.connection = connection
 
     async def hero_choice_action(self, player: 'Player') -> 'Hero':
-        await self.transport.send(f"player {player.name}, it is your turn to choose a hero.\n")
+        await self.connection.send(f"player {player.name}, it is your turn to choose a hero.\n")
         await self.print_hero_list(player.hero_options)
-        await self.transport.send("please choose a hero: ")
-        user_text = await self.transport.receive_line()
+        await self.connection.send("please choose a hero: ")
+        user_text = await self.connection.receive_line()
         while True:
             hero = self.convert_to_hero(user_text, player)
             if hero is not None:
                 return hero
-            await self.transport.send("you fucked up, try again: ")
-            user_text = await self.transport.receive_line()
+            await self.connection.send("you fucked up, try again: ")
+            user_text = await self.connection.receive_line()
 
     def convert_to_hero(self, text: str, player: 'Player') -> Optional['Hero']:
         try:
@@ -41,17 +41,18 @@ class TextAgent(Agent):
         return None
 
     async def rearrange_cards(self, player: 'Player'):
-        await self.transport.send(f"player {player.name}, it is your combat prephase.\n")
+        await self.connection.send(f"player {player.name}, it is your combat prephase.\n")
         await self.print_player_card_list("board", player.in_play)
-        await self.transport.send("please rearrange your cards by specifying the ordering\n")
-        await self.transport.send("for example, 1, 0 will swap your 0 and 1 index monsters: ")
-        user_text = await self.transport.receive_line()
+        await self.connection.send("please rearrange your cards by specifying the ordering\n")
+        await self.connection.send("for example, 1, 0 will swap your 0 and 1 index monsters\n")
+        await self.connection.send("a will accept your current board order: ")
+        user_text = await self.connection.receive_line()
         while True:
             arrangement = self.parse_rearrange_input(user_text, player)
             if arrangement:
                 return [player.in_play[i] for i in arrangement]
-            await self.transport.send("you fucked up, try again: ")
-            user_text = await self.transport.receive_line()
+            await self.connection.send("you fucked up, try again: ")
+            user_text = await self.connection.receive_line()
 
     @staticmethod
     def parse_rearrange_input(user_text: str, player: 'Player') -> Optional[List[int]]:
@@ -69,38 +70,38 @@ class TextAgent(Agent):
 
     async def buy_phase_action(self, player: 'Player') -> Action:
 
-        await self.transport.send(f"\n\nplayer {player.name} ({player.hero}), it is your buy phase.\n")
+        await self.connection.send(f"\n\nplayer {player.name} ({player.hero}), it is your buy phase.\n")
         await self.print_player_card_list("store", player.store)
         await self.print_player_card_list("board", player.in_play)
         await self.print_player_card_list("hand", player.hand)
-        await self.transport.send(f"Your current triple rewards are {player.triple_rewards}\n")
-        await self.transport.send(f"you have {player.coins} coins and {player.health} health and your tavern is level {player.tavern_tier}\n")
+        await self.connection.send(f"Your current triple rewards are {player.triple_rewards}\n")
+        await self.connection.send(f"you have {player.coins} coins and {player.health} health and your tavern is level {player.tavern_tier}\n")
         if player.gold_coins >= 1:
-            await self.transport.send(f"you have {player.gold_coins} gold coins\n")
+            await self.connection.send(f"you have {player.gold_coins} gold coins\n")
         if player.bananas >= 1:
-            await self.transport.send(f"you have {player.bananas} bananas\n")
-        await self.transport.send("available actions are: \n")
-        await self.transport.send('purchase: "p 0" purchases the 0th indexed monster from the store\n')
-        await self.transport.send(
+            await self.connection.send(f"you have {player.bananas} bananas\n")
+        await self.connection.send("available actions are: \n")
+        await self.connection.send('purchase: "p 0" purchases the 0th indexed monster from the store\n')
+        await self.connection.send(
             'summon: "s 0 [1] [2]" summons the 0th indexed monster from your hand with battlecry targets index 1 and 2 in board card is placed at the end of the board\n')
-        await self.transport.send('redeem: "r 1" sells the 1 indexed monster from the board\n')
-        await self.transport.send('reroll store: "R" will reroll the store\n')
-        await self.transport.send(f'upgrade tavern: "u" will upgrade the tavern (current upgrade cost: {player.tavern_upgrade_cost if player.tavern_tier < 6 else 0})\n')
-        await self.transport.send('hero power: "h [0]" will activate your hero power with ability target index 0 on the board or in the store\n')
-        await self.transport.send('triple rewards: "t" will use your highest tavern tier triple rewards\n')
+        await self.connection.send('redeem: "r 1" sells the 1 indexed monster from the board\n')
+        await self.connection.send('reroll store: "R" will reroll the store\n')
+        await self.connection.send(f'upgrade tavern: "u" will upgrade the tavern (current upgrade cost: {player.tavern_upgrade_cost if player.tavern_tier < 6 else 0})\n')
+        await self.connection.send('hero power: "h [0]" will activate your hero power with ability target index 0 on the board or in the store\n')
+        await self.connection.send('triple rewards: "t" will use your highest tavern tier triple rewards\n')
         if player.gold_coins >= 1:
-            await self.transport.send('coin tokens: "c" will use a coin token\n')
+            await self.connection.send('coin tokens: "c" will use a coin token\n')
         if player.bananas >= 1:
-            await self.transport.send('bananas: "b b 0" will use a banana on the 0 index board minion, "b s 0" will use a banana on the 0 index store minion\n')
-        await self.transport.send('end turn: "e f" ends the turn and freezes the shop, "e" ends the turn without freezing the shop\n')
-        await self.transport.send("input action here: ")
-        user_input = await self.transport.receive_line()
+            await self.connection.send('bananas: "b b 0" will use a banana on the 0 index board minion, "b s 0" will use a banana on the 0 index store minion\n')
+        await self.connection.send('end turn: "e f" ends the turn and freezes the shop, "e" ends the turn without freezing the shop\n')
+        await self.connection.send("input action here: ")
+        user_input = await self.connection.receive_line()
         while True:
             buy_action = self.parse_buy_input(user_input, player)
             if buy_action and buy_action.valid(player):
                 return buy_action
-            await self.transport.send("sorry, my dude. Action invalid: ")
-            user_input = await self.transport.receive_line()
+            await self.connection.send("sorry, my dude. Action invalid: ")
+            user_input = await self.connection.receive_line()
 
     @staticmethod
     def parse_buy_input(user_input: str, player: 'Player') -> Optional[Action]:
@@ -183,16 +184,16 @@ class TextAgent(Agent):
             return None
 
     async def discover_choice_action(self, player: 'Player') -> 'MonsterCard':
-        await self.transport.send(f"player {player.name}, you must choose a card to discover.\n")
+        await self.connection.send(f"player {player.name}, you must choose a card to discover.\n")
         await self.print_player_card_list("discovery choices", player.discover_queue[0])
-        await self.transport.send("input card number to discover here: ")
-        user_input = await self.transport.receive_line()
+        await self.connection.send("input card number to discover here: ")
+        user_input = await self.connection.receive_line()
         while True:
             discover_card = self.parse_discover_input(user_input, player)
             if discover_card:
                 return discover_card
-            await self.transport.send("oops, try again: ")
-            user_input = await self.transport.receive_line()
+            await self.connection.send("oops, try again: ")
+            user_input = await self.connection.receive_line()
 
     @staticmethod
     def parse_discover_input(user_input: str, player: 'Player') -> Optional['MonsterCard']:
@@ -203,13 +204,13 @@ class TextAgent(Agent):
             return None
 
     async def print_player_card_list(self, card_location: str, card_list: List['MonsterCard']):
-        await self.transport.send(f"your current {card_location}: \n")
+        await self.connection.send(f"your current {card_location}: \n")
         for index, card in enumerate(card_list):
-            await self.transport.send(f"{index}  {card}\n")
+            await self.connection.send(f"{index}  {card}\n")
 
     async def print_hero_list(self, hero_list: List['Hero']):
         for index, hero in enumerate(hero_list):
-            await self.transport.send(f"{index} {hero}\n")
+            await self.connection.send(f"{index} {hero}\n")
 
     async def game_over(self, player: 'Player', ranking: int):
-        await self.transport.send(f'\n\n**************you have been killed you were ranked #{ranking}*******************')
+        await self.connection.send(f'\n\n**************you have been killed you were ranked #{ranking}*******************')

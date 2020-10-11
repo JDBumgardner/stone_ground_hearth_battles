@@ -1,6 +1,7 @@
 import typing
 from typing import Dict
-
+from hearthstone.battlebots.priority_functions import PriorityFunctions
+from hearthstone.battlebots.early_game_bot import EarlyGameBot
 from hearthstone.simulator.agent import EndPhaseAction
 from hearthstone.simulator.core.tavern import Tavern
 
@@ -83,6 +84,10 @@ class AsyncHost(Host):
         for player_name in agents.keys():
             self.tavern.add_player(player_name)
 
+    def add_player_and_agent(self, player_name: str, agent: 'Agent'):
+        self.tavern.add_player(player_name)
+        self.agents[player_name] = agent
+
     def start_game(self):
         asyncio.get_event_loop().run_until_complete(self._async_start_game())
 
@@ -142,3 +147,60 @@ class AsyncHost(Host):
         self.start_game()
         while not self.game_over():
             self.play_round()
+
+
+class CyborgArena(AsyncHost):
+    async def _async_play_round(self):
+        self.tavern.buying_step()
+
+        async def perform_player_actions(agent, player):
+            for _ in range(20):
+                if player.discover_queue:
+                    try:
+                        discovered_card = await agent.discover_choice_action(player)
+                    except ConnectionError:
+                        print("replace with a bot")
+                        # replace the agent and player
+                        agent = PriorityFunctions.battlerattler_priority_bot(3, EarlyGameBot)
+                        self.agents[player.name] = agent
+                        discovered_card = await agent.discover_choice_action(player)
+
+                    player.select_discover(discovered_card)
+                else:
+                    try:
+                        action = await agent.buy_phase_action(player)
+                    except ConnectionError:
+                        print("replace with a bot")
+
+                        # replace the agent and player
+                        agent = PriorityFunctions.battlerattler_priority_bot(3, EarlyGameBot)
+                        self.agents[player.name] = agent
+                        action = await agent.buy_phase_action(player)
+                    action.apply(player)
+                    if type(action) is EndPhaseAction:
+                        break
+            if len(player.in_play) > 1:
+                try:
+                    arrangement = await agent.rearrange_cards(player)
+                except ConnectionError:
+                    print("replace with a bot")
+                    # replace the agent and player
+                    agent = PriorityFunctions.battlerattler_priority_bot(3, EarlyGameBot)
+                    self.agents[player.name] = agent
+                    arrangement = await agent.rearrange_cards(player)
+                player.rearrange_cards(arrangement)
+
+        perform_player_action_tasks = []
+        for player_name, player in self.tavern.players.items():
+            if player.dead:
+                continue
+            perform_player_action_tasks.append(
+                asyncio.create_task(perform_player_actions(self.agents[player_name], player)))
+        await asyncio.gather(*perform_player_action_tasks)
+
+        self.tavern.combat_step()
+        if self.tavern.game_over():
+            game_over_tasks = []
+            for position, (name, player) in enumerate(reversed(self.tavern.losers)):
+                game_over_tasks.append(asyncio.create_task(self.agents[name].game_over(player, position)))
+            await asyncio.gather(*game_over_tasks)

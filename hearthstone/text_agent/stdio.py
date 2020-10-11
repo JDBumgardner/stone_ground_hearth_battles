@@ -1,7 +1,7 @@
-from hearthstone.text_agent.text_agent import TextAgentTransport
+from hearthstone.text_agent.text_agent import TextAgentProtocol
 
 
-class StdIOTransport(TextAgentTransport):
+class StdIOTransport(TextAgentProtocol):
     """
     Note this agent is blocking, since it uses the same stdin/stdout for all agents.
     """

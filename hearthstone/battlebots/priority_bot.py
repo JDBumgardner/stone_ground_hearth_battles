@@ -20,10 +20,9 @@ class PriorityBot(PriorityFunctionBot):
     async def buy_phase_action(self, player: 'Player') -> 'Action':
         all_actions = list(generate_valid_actions(player))
 
-        if player.tavern_tier < 2:
-            upgrade_action = TavernUpgradeAction()
-            if upgrade_action.valid(player):
-                return upgrade_action
+        upgrade_action = TavernUpgradeAction()
+        if upgrade_action.valid(player):
+            return upgrade_action
 
         top_hand_priority = max([self.priority(player, card) for card in player.hand], default=None)
         top_store_priority = max([self.priority(player, card) for card in player.store], default=None)
