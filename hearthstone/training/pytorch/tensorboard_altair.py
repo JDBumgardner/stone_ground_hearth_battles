@@ -1,3 +1,4 @@
+import itertools
 from collections import defaultdict
 from typing import List, NamedTuple, Any
 
@@ -7,12 +8,12 @@ import tensorboard_vega_embed.summary
 import torch
 from torch.utils.tensorboard import SummaryWriter
 
-from hearthstone.simulator.agent import StandardAction, SellAction, SummonAction, BuyAction, generate_valid_actions, \
-    generate_all_actions, Action
+from hearthstone.simulator.agent import StandardAction, SellAction, SummonAction, BuyAction, Action
 from hearthstone.simulator.core.tavern import Tavern
 from hearthstone.simulator.observer import Observer, Annotation
 from hearthstone.simulator.replay.replay import Replay, ReplayStep
 from hearthstone.training.pytorch import hearthstone_state_encoder
+from hearthstone.training.pytorch.hearthstone_state_encoder import EncodedActionSet
 from hearthstone.training.pytorch.surveillance import GlobalStepContext
 
 
@@ -112,24 +113,24 @@ def _player_action_chart(action_probs: List[List[float]], max_size: int):
     return _action_chart(df, "basic_actions", max_size)
 
 
-def calc_action_probs(policy: torch.Tensor, store: List[str], hand: List[str], board:List[str]) -> (List, List, List, List):
-    policy = policy.detach().squeeze().exp()
+def calc_action_probs(policy: torch.Tensor, valid_actions: EncodedActionSet, store: List[str], hand: List[str], board:List[str]) -> (List, List, List, List):
+    flat_valid_actions = torch.cat((valid_actions.player_action_tensor.flatten(0), valid_actions.card_action_tensor.flatten(0)), dim=0)
+    policy = policy.detach().masked_fill(flat_valid_actions.logical_not(), -1e30).squeeze().exp()
     basic_action_probs = [float(policy[hearthstone_state_encoder.get_action_index(action)]) for action in
                                     hearthstone_state_encoder.ALL_ACTIONS.player_action_set]
 
     action_probs = defaultdict(lambda: 0.0)
-    for action in hearthstone_state_encoder.ALL_ACTIONS_DICT.values():
+    for action in itertools.chain(hearthstone_state_encoder.ALL_ACTIONS.player_action_set,
+                                  *hearthstone_state_encoder.ALL_ACTIONS.card_action_set):
         if isinstance(action, SellAction):
             card = f"B{action.index}"
         elif isinstance(action, SummonAction):
             card = f"H{action.index}"
-        elif isinstance(action,BuyAction):
+        elif isinstance(action, BuyAction):
             card = f"S{action.index}"
         else:
             continue
-
         action_probs[card] += float(policy[hearthstone_state_encoder.get_action_index(action)])
-
     buy_probs = [action_probs[f"S{index}"] for index in range(len(store))]
     summon_probs = [action_probs[f"H{index}"] for index in range(len(hand))]
     sell_probs = [action_probs[f"B{index}"] for index in range(len(board))]
@@ -176,6 +177,7 @@ def plot_replay(replay: Replay, player_name: str, tensorboard: SummaryWriter, gl
 
         annotations:TensorboardAltairAnnotation = step.observer_annotations.get("TensorboardAltairAnnotator")
         basic_action_prob, buy_prob, summon_prob, sell_prob = calc_action_probs(step.agent_annotation.policy,
+                                                                                step.agent_annotation.valid_actions,
                                                                                 annotations.store,
                                                                                 annotations.hand,
                                                                                 annotations.board,
