@@ -30,6 +30,7 @@ HeroChoiceIndex = typing.NewType("HeroChoiceIndex", int)
 
 
 class Player:
+
     def __init__(self, tavern: 'Tavern', name: str, hero_options: List['Hero']):
         self.name = name
         self.tavern = tavern

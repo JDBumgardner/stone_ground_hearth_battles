@@ -14,18 +14,18 @@ class GAEAnnotator:
         retrn = reward
         gae_return = reward
         next_value = reward
-        # We iterate backwards over the actions taken by this player only.
-        reversed_player_steps = reversed([game_step for game_step in replay.steps if game_step.player == self.player])
+        # We iterate backwards over the actions taken by this player only.  For now, we are not learning from nonstandard actions.
+        reversed_player_steps = reversed([game_step for game_step in replay.steps if
+                                          game_step.player == self.player and isinstance(game_step.action,
+                                                                                         StandardAction)])
         for i, game_step in enumerate(reversed_player_steps):
-            # For now, we are not learning from nonstandard actions.
-            if not isinstance(game_step.action, StandardAction):
-                continue
             is_terminal = i == 0
-            game_step.agent_annotation.gae_info = GAEReplayInfo(is_terminal=is_terminal,
-                                                                reward=reward if is_terminal else 0,
-                                                                gae_return=gae_return,
-                                                                retrn=retrn,
-                                                                )
+            game_step.agent_annotation.gae_info = GAEReplayInfo(
+                is_terminal=is_terminal,
+                reward=reward if is_terminal else 0,
+                gae_return=gae_return,
+                retrn=retrn,
+            )
             gae_return = next_value + (gae_return - next_value) * self.gamma * self.lam
             next_value = self.gamma * game_step.agent_annotation.value
             retrn *= self.gamma

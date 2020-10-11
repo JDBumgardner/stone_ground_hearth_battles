@@ -295,11 +295,11 @@ class PPOLearner(GlobalStepContext):
 def main():
     ppo_learner = PPOLearner(PPOHyperparameters({
         'adam_lr': 0.0000698178899316577,
-        'batch_size': 128,
-        'minibatch_size': 128,
+        'batch_size': 1024,
+        'minibatch_size': 1024,
         'cuda': True,
-        'entropy_weight': 0.1,
-        'gae_gamma': 0.99,
+        'entropy_weight': 0.00001,
+        'gae_gamma': 0.999,
         'gae_lambda': 0.9,
         'game_size': 2,
         'gradient_clipping': 0.5,

@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import Optional, NamedTuple
 
 import torch
@@ -5,6 +6,7 @@ import torch
 from hearthstone.training.pytorch.hearthstone_state_encoder import State, EncodedActionSet
 
 
+@dataclass
 class ActorCriticGameStepInfo:
     """
     Extra information attached to ReplaySteps when training Actor Critic models.
@@ -16,18 +18,9 @@ class ActorCriticGameStepInfo:
     valid_actions: EncodedActionSet
     action: int  # Index of the action
     policy: torch.Tensor
-    action_prob: float
     value: float
     gae_info: Optional['GAEReplayInfo']
 
-    def __init__(self, state: State, valid_actions: EncodedActionSet, action: int, policy: torch.Tensor, value: float,
-                 gae_info: Optional['GAEReplayInfo']):
-        self.state = state
-        self.valid_actions = valid_actions
-        self.action = action
-        self.policy = policy
-        self.value = value
-        self.gae_info = gae_info
 
 
 class GAEReplayInfo(NamedTuple):
