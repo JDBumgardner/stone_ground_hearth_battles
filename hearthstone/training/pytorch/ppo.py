@@ -298,7 +298,7 @@ def main():
         'batch_size': 1024,
         'minibatch_size': 1024,
         'cuda': True,
-        'entropy_weight': 0.00001,
+        'entropy_weight': 0.000001,
         'gae_gamma': 0.999,
         'gae_lambda': 0.9,
         'game_size': 2,
