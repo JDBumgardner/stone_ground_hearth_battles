@@ -13,8 +13,7 @@ INSULTS = ['fucker', 'douchebag', 'sweetheart', 'incel', 'son of a hamster', 'fo
 
 
 class GameServer:
-    def __init__(self, host: 'AsyncHost', max_sessions: int, kill_event: asyncio.Event):
-        self._host = host
+    def __init__(self, max_sessions: int, kill_event: asyncio.Event):
         self.protocols: Dict[str, 'StoneProtocol'] = {}
         self.player_names: Set[str] = set()
         self.connection_count = 0
@@ -48,7 +47,6 @@ class GameServer:
         if session.player_name and session.player_name in self.protocols:
             self.protocols.pop(session.player_name)
         self.connection_count -= 1
-
 
 
 class StoneProtocol(asyncio.Protocol, TextAgentProtocol):

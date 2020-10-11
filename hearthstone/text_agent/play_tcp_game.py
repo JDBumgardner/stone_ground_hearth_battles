@@ -12,11 +12,10 @@ from hearthstone.text_agent.text_agent import TextAgent
 from hearthstone.simulator.core import hero_pool
 
 
-
-async def open_client_streams(host: 'AsyncHost', max_players: int) -> Tuple[Dict[str, Agent], GameServer]:
+async def open_client_streams(max_players: int) -> Dict[str, Agent]:
     loop = asyncio.get_event_loop()
     kill_event = asyncio.Event()
-    game_server = GameServer(host, max_players, kill_event)
+    game_server = GameServer(max_players, kill_event)
 
     async def serve():
         server = await loop.create_server(game_server.handle_connection, '0.0.0.0', 9998)
@@ -28,7 +27,7 @@ async def open_client_streams(host: 'AsyncHost', max_players: int) -> Tuple[Dict
     result = {}
     for name, protocol in game_server.protocols.items():
         result[name] = TextAgent(protocol)
-    return result, game_server
+    return result
 
 
     # server: asyncio.AbstractServer
@@ -66,8 +65,8 @@ def main():
         "battlerattler_priority_bot2": PriorityFunctions.battlerattler_priority_bot(3, EarlyGameBot),
         "battlerattler_priority_bot3": PriorityFunctions.battlerattler_priority_bot(4, EarlyGameBot),
     }
+    agents.update(asyncio.get_event_loop().run_until_complete(open_client_streams(MAX_PLAYERS-len(agents))))
     host = AsyncHost(agents)
-    game_server = asyncio.get_event_loop().run_until_complete(open_client_streams(host, MAX_PLAYERS-len(agents)))
     host.play_game()
 
 
