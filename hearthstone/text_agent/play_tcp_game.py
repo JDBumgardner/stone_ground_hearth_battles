@@ -4,9 +4,9 @@ import sys
 from typing import Dict, Tuple
 
 from hearthstone.simulator.agent import Agent
+from hearthstone.simulator.host import CyborgArena
 from hearthstone.battlebots.early_game_bot import EarlyGameBot
 from hearthstone.battlebots.priority_functions import PriorityFunctions
-from hearthstone.simulator.host import AsyncHost
 from hearthstone.text_agent.tcp import StoneProtocol, GameServer
 from hearthstone.text_agent.text_agent import TextAgent
 from hearthstone.simulator.core import hero_pool
@@ -66,7 +66,7 @@ def main():
         "battlerattler_priority_bot3": PriorityFunctions.battlerattler_priority_bot(4, EarlyGameBot),
     }
     agents.update(asyncio.get_event_loop().run_until_complete(open_client_streams(MAX_PLAYERS-len(agents))))
-    host = AsyncHost(agents)
+    host = CyborgArena(agents)
     host.play_game()
 
 

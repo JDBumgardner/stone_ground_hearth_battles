@@ -114,6 +114,48 @@ class AsyncHost(Host):
         async def perform_player_actions(agent, player):
             for _ in range(20):
                 if player.discover_queue:
+                    discovered_card = await agent.discover_choice_action(player)
+                    player.select_discover(discovered_card)
+                else:
+                    action = await agent.buy_phase_action(player)
+                    action.apply(player)
+                    if type(action) is EndPhaseAction:
+                        break
+            if len(player.in_play) > 1:
+                arrangement = await agent.rearrange_cards(player)
+                player.rearrange_cards(arrangement)
+
+        perform_player_action_tasks = []
+        for player_name, player in self.tavern.players.items():
+            if player.dead:
+                continue
+            perform_player_action_tasks.append(
+                asyncio.create_task(perform_player_actions(self.agents[player_name], player)))
+        await asyncio.gather(*perform_player_action_tasks)
+
+        self.tavern.combat_step()
+        if self.tavern.game_over():
+            game_over_tasks = []
+            for position, (name, player) in enumerate(reversed(self.tavern.losers)):
+                game_over_tasks.append(asyncio.create_task(self.agents[name].game_over(player, position)))
+            await asyncio.gather(*game_over_tasks)
+
+    def game_over(self):
+        return self.tavern.game_over()
+
+    def play_game(self):
+        self.start_game()
+        while not self.game_over():
+            self.play_round()
+
+
+class CyborgArena(AsyncHost):
+    async def _async_play_round(self):
+        self.tavern.buying_step()
+
+        async def perform_player_actions(agent, player):
+            for _ in range(20):
+                if player.discover_queue:
                     try:
                         discovered_card = await agent.discover_choice_action(player)
                     except ConnectionError:
@@ -162,11 +204,3 @@ class AsyncHost(Host):
             for position, (name, player) in enumerate(reversed(self.tavern.losers)):
                 game_over_tasks.append(asyncio.create_task(self.agents[name].game_over(player, position)))
             await asyncio.gather(*game_over_tasks)
-
-    def game_over(self):
-        return self.tavern.game_over()
-
-    def play_game(self):
-        self.start_game()
-        while not self.game_over():
-            self.play_round()
