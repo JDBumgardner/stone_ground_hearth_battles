@@ -1,4 +1,5 @@
 import unittest
+from typing import Type
 
 from hearthstone.simulator.core.adaptations import AdaptBuffs
 from hearthstone.simulator.core.card_graveyard import *
@@ -288,17 +289,6 @@ class CombatTests(unittest.TestCase):
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
-
-    def test_monstrous_macaw(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
-        adams_war_party = WarParty(adam)
-        ethans_war_party = WarParty(ethan)
-        adams_war_party.board = [MonstrousMacaw(), RighteousProtector(), RatPack()]
-        ethans_war_party.board = [RighteousProtector()]
-        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
-        self.assertEqual(adam.health, 40)
-        self.assertEqual(ethan.health, 32)
 
     def test_mechano_egg(self):
         adam = Player.new_player_with_hero(None, "Adam")

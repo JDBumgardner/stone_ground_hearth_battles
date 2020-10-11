@@ -21,6 +21,7 @@ class Pyramad(Hero):
 
 class LordJaraxxus(Hero):
     power_cost = 1
+    pool = MONSTER_TYPES.DEMON
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
@@ -60,6 +61,8 @@ class Deathwing(Hero):
 
 
 class MillificentManastorm(Hero):
+    pool = MONSTER_TYPES.MECH
+
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY:
             if event.card.check_type(MONSTER_TYPES.MECH):
@@ -91,6 +94,7 @@ class YoggSaron(Hero):
 
 class PatchesThePirate(Hero):
     power_cost = 4
+    pool = MONSTER_TYPES.PIRATE
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY and event.card.check_type(MONSTER_TYPES.PIRATE):
@@ -121,6 +125,8 @@ class DancinDeryl(Hero):
 
 
 class FungalmancerFlurgl(Hero):
+    pool = MONSTER_TYPES.MURLOC
+
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.SELL and event.card.check_type(MONSTER_TYPES.MURLOC) and len(context.owner.store) < 7:
             murlocs = [card for card in context.owner.tavern.deck.unique_cards() if
@@ -176,7 +182,7 @@ class TheRatKing(Hero):
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_START:
             available_types = [monster_type for monster_type in MONSTER_TYPES.single_types() if
-                               monster_type != self.current_type]
+                               monster_type != self.current_type and monster_type in context.owner.tavern.available_types]
             self.current_type = context.randomizer.select_monster_type(available_types, context.owner.tavern.turn_count)
 
         if event.event is EVENTS.BUY and event.card.monster_type == self.current_type:
@@ -185,6 +191,8 @@ class TheRatKing(Hero):
 
 
 class Ysera(Hero):
+    pool = MONSTER_TYPES.DRAGON
+
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_START and len(context.owner.store) < 7:
             dragons = [card for card in context.owner.tavern.deck.unique_cards() if
@@ -382,6 +390,8 @@ class DinotamerBrann(Hero):
 
 
 class Alexstrasza(Hero):
+    pool = MONSTER_TYPES.DRAGON
+
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.TAVERN_UPGRADE and context.owner.tavern_tier == 5:
             for _ in range(2):
@@ -439,6 +449,7 @@ class AlAkir(Hero):
 
 class Chenvaala(Hero):
     play_counter = 0
+    pool = MONSTER_TYPES.ELEMENTAL
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.SUMMON_BUY and event.card.check_type(MONSTER_TYPES.ELEMENTAL):

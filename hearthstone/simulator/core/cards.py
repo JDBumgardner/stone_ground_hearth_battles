@@ -2,7 +2,7 @@ import enum
 import itertools
 import typing
 from collections import defaultdict
-from typing import Set, List, Optional, Callable, Type, Union, Iterator
+from typing import Set, List, Optional, Callable, Type, Union, Iterator, Tuple
 
 from hearthstone.simulator.core import events
 from hearthstone.simulator.core.card_factory import make_metaclass
@@ -34,12 +34,15 @@ class PrintingPress:
     cards_per_tier = {1: 16, 2: 15, 3: 13, 4: 11, 5: 9, 6: 7}
 
     @classmethod
-    def make_cards(cls) -> 'CardList':
+    def make_cards(cls, randomizer: 'Randomizer') -> Tuple['CardList', List['MONSTER_TYPES']]:
+        available_types = MONSTER_TYPES.single_types()
+        for _ in range(2):
+            available_types.remove(randomizer.select_monster_type(available_types, 0))
         cardlist = []
         for card in cls.cards:
-            if not card.token:
+            if not card.token and (card.pool in available_types or card.pool == MONSTER_TYPES.ALL):
                 cardlist.extend([card() for _ in range(cls.cards_per_tier[card.tier])])
-        return CardList(cardlist)
+        return CardList(cardlist), available_types
 
     @classmethod
     def add_card(cls, card_class):
@@ -77,6 +80,7 @@ class MonsterCard(metaclass=CardType):
     shifting = False
     give_immunity = False
     legendary = False
+    pool: 'MONSTER_TYPES' = MONSTER_TYPES.ALL
 
     def __init__(self):
         super().__init__()

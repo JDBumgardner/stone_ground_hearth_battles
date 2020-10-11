@@ -12,6 +12,7 @@ from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 class MamaBear(MonsterCard):
     tier = 5
     monster_type = MONSTER_TYPES.BEAST
+    pool = MONSTER_TYPES.BEAST
     base_attack = 4
     base_health = 4
 
@@ -40,6 +41,7 @@ class ShifterZerus(MonsterCard):
 class SneedsOldShredder(MonsterCard):
     tier = 5
     monster_type = MONSTER_TYPES.MECH
+    pool = MONSTER_TYPES.MECH
     base_attack = 5
     base_health = 7
 
@@ -58,6 +60,7 @@ class SneedsOldShredder(MonsterCard):
 class FreedealingGambler(MonsterCard):
     tier = 2
     monster_type = MONSTER_TYPES.PIRATE
+    pool = MONSTER_TYPES.PIRATE
     base_attack = 3
     base_health = 3
     redeem_rate = 3
@@ -70,6 +73,7 @@ class FreedealingGambler(MonsterCard):
 class DragonspawnLieutenant(MonsterCard):
     tier = 1
     monster_type = MONSTER_TYPES.DRAGON
+    pool = MONSTER_TYPES.DRAGON
     base_attack = 2
     base_health = 3
     base_taunt = True
@@ -88,6 +92,7 @@ class RighteousProtector(MonsterCard):
 class AlleyCat(MonsterCard):
     tier = 1
     monster_type = MONSTER_TYPES.BEAST
+    pool = MONSTER_TYPES.BEAST
     base_attack = 1
     base_health = 1
 
@@ -103,6 +108,7 @@ class TabbyCat(MonsterCard):
     token = True
     tier = 1
     monster_type = MONSTER_TYPES.BEAST
+    pool = MONSTER_TYPES.BEAST
     base_attack = 1
     base_health = 1
 
@@ -110,6 +116,7 @@ class TabbyCat(MonsterCard):
 class ScavengingHyena(MonsterCard):
     tier = 1
     monster_type = MONSTER_TYPES.BEAST
+    pool = MONSTER_TYPES.BEAST
     base_attack = 2
     base_health = 2
     mana_cost = 2
@@ -124,6 +131,7 @@ class ScavengingHyena(MonsterCard):
 class FiendishServant(MonsterCard):
     tier = 1
     monster_type = MONSTER_TYPES.DEMON
+    pool = MONSTER_TYPES.DEMON
     base_attack = 2
     base_health = 1
 
@@ -153,6 +161,7 @@ class WrathWeaver(MonsterCard):
 class MicroMachine(MonsterCard):
     tier = 1
     monster_type = MONSTER_TYPES.MECH
+    pool = MONSTER_TYPES.MECH
     base_attack = 1
     base_health = 2
     mana_cost = 2
@@ -168,6 +177,7 @@ class MicroMachine(MonsterCard):
 class MurlocTidecaller(MonsterCard):
     tier = 1
     monster_type = MONSTER_TYPES.MURLOC
+    pool = MONSTER_TYPES.MURLOC
     base_attack = 1
     base_health = 2
 
@@ -182,6 +192,7 @@ class MurlocTidecaller(MonsterCard):
 class MurlocTidehunter(MonsterCard):
     tier = 1
     monster_type = MONSTER_TYPES.MURLOC
+    pool = MONSTER_TYPES.MURLOC
     base_attack = 2
     base_health = 1
     mana_cost = 2
@@ -198,6 +209,7 @@ class MurlocScout(MonsterCard):
     token = True
     tier = 1
     monster_type = MONSTER_TYPES.MURLOC
+    pool = MONSTER_TYPES.MURLOC
     base_attack = 1
     base_health = 1
 
@@ -223,6 +235,7 @@ class SelflessHero(MonsterCard):
 class VulgarHomunculus(MonsterCard):
     tier = 1
     monster_type = MONSTER_TYPES.DEMON
+    pool = MONSTER_TYPES.DEMON
     base_attack = 2
     base_health = 4
     base_taunt = True
@@ -235,6 +248,7 @@ class VulgarHomunculus(MonsterCard):
 class RedWhelp(MonsterCard):
     tier = 1
     monster_type = MONSTER_TYPES.DRAGON
+    pool = MONSTER_TYPES.DRAGON
     base_attack = 1
     base_health = 2
 
@@ -255,6 +269,7 @@ class RedWhelp(MonsterCard):
 class HarvestGolem(MonsterCard):
     tier = 2
     monster_type = MONSTER_TYPES.MECH
+    pool = MONSTER_TYPES.MECH
     base_attack = 2
     base_health = 3
 
@@ -271,6 +286,7 @@ class DamagedGolem(MonsterCard):
     token = True
     tier = 1
     monster_type = MONSTER_TYPES.MECH
+    pool = MONSTER_TYPES.MECH
     base_attack = 2
     base_health = 1
 
@@ -278,6 +294,7 @@ class DamagedGolem(MonsterCard):
 class KaboomBot(MonsterCard):
     tier = 2
     monster_type = MONSTER_TYPES.MECH
+    pool = MONSTER_TYPES.MECH
     base_attack = 2
     base_health = 2
 
@@ -295,6 +312,7 @@ class KaboomBot(MonsterCard):
 class KindlyGrandmother(MonsterCard):
     tier = 2
     monster_type = MONSTER_TYPES.BEAST
+    pool = MONSTER_TYPES.BEAST
     base_attack = 1
     base_health = 1
     mana_cost = 2
@@ -312,6 +330,7 @@ class BigBadWolf(MonsterCard):
     token = True
     tier = 1
     monster_type = MONSTER_TYPES.BEAST
+    pool = MONSTER_TYPES.BEAST
     base_attack = 3
     base_health = 2
 
@@ -319,6 +338,7 @@ class BigBadWolf(MonsterCard):
 class MetaltoothLeaper(MonsterCard):
     tier = 2
     monster_type = MONSTER_TYPES.MECH
+    pool = MONSTER_TYPES.MECH
     base_attack = 3
     base_health = 3
 
@@ -332,6 +352,7 @@ class MetaltoothLeaper(MonsterCard):
 class RabidSaurolisk(MonsterCard):
     tier = 2
     monster_type = MONSTER_TYPES.BEAST
+    pool = MONSTER_TYPES.BEAST
     base_attack = 4
     base_health = 2
 
@@ -345,6 +366,7 @@ class RabidSaurolisk(MonsterCard):
 class GlyphGuardian(MonsterCard):
     tier = 2
     monster_type = MONSTER_TYPES.DRAGON
+    pool = MONSTER_TYPES.DRAGON
     base_attack = 2
     base_health = 4
 
@@ -359,6 +381,7 @@ class GlyphGuardian(MonsterCard):
 class Imprisoner(MonsterCard):
     tier = 2
     monster_type = MONSTER_TYPES.DEMON
+    pool = MONSTER_TYPES.DEMON
     base_attack = 3
     base_health = 3
     base_taunt = True
@@ -376,6 +399,7 @@ class Imp(MonsterCard):
     token = True
     tier = 1
     monster_type = MONSTER_TYPES.DEMON
+    pool = MONSTER_TYPES.DEMON
     base_attack = 1
     base_health = 1
 
@@ -383,6 +407,7 @@ class Imp(MonsterCard):
 class MurlocWarleader(MonsterCard):
     tier = 2
     monster_type = MONSTER_TYPES.MURLOC
+    pool = MONSTER_TYPES.MURLOC
     base_attack = 3
     base_health = 3
 
@@ -406,6 +431,7 @@ class MurlocWarleader(MonsterCard):
 class StewardOfTime(MonsterCard):
     tier = 2
     monster_type = MONSTER_TYPES.DRAGON
+    pool = MONSTER_TYPES.DRAGON
     base_attack = 3
     base_health = 4
 
@@ -420,6 +446,7 @@ class StewardOfTime(MonsterCard):
 class Scallywag(MonsterCard):
     tier = 1
     monster_type = MONSTER_TYPES.PIRATE
+    pool = MONSTER_TYPES.PIRATE
     base_attack = 2
     base_health = 1
 
@@ -436,6 +463,7 @@ class SkyPirate(MonsterCard):
     tier = 1
     token = True
     monster_type = MONSTER_TYPES.PIRATE
+    pool = MONSTER_TYPES.PIRATE
     base_attack = 1
     base_health = 1
 
@@ -453,6 +481,7 @@ class SkyPirate(MonsterCard):
 class DeckSwabbie(MonsterCard):
     tier = 1
     monster_type = MONSTER_TYPES.PIRATE
+    pool = MONSTER_TYPES.PIRATE
     base_attack = 2
     base_health = 2
 
@@ -488,6 +517,7 @@ class UnstableGhoul(MonsterCard):
 class RockpoolHunter(MonsterCard):
     tier = 1
     monster_type = MONSTER_TYPES.MURLOC
+    pool = MONSTER_TYPES.MURLOC
     base_attack = 2
     base_health = 3
     num_battlecry_targets = [1]
@@ -506,6 +536,7 @@ class RockpoolHunter(MonsterCard):
 class RatPack(MonsterCard):
     tier = 3
     monster_type = MONSTER_TYPES.BEAST
+    pool = MONSTER_TYPES.BEAST
     base_attack = 2
     base_health = 2
 
@@ -521,6 +552,7 @@ class RatPack(MonsterCard):
 class Rat(MonsterCard):
     tier = 1
     monster_type = MONSTER_TYPES.BEAST
+    pool = MONSTER_TYPES.BEAST
     base_attack = 1
     base_health = 1
     token = True
@@ -529,6 +561,7 @@ class Rat(MonsterCard):
 class NathrezimOverseer(MonsterCard):
     tier = 2
     monster_type = MONSTER_TYPES.DEMON
+    pool = MONSTER_TYPES.DEMON
     base_attack = 2
     base_health = 3
     num_battlecry_targets = [1]
@@ -546,6 +579,7 @@ class NathrezimOverseer(MonsterCard):
 class OldMurkeye(MonsterCard):
     tier = 2
     monster_type = MONSTER_TYPES.MURLOC
+    pool = MONSTER_TYPES.MURLOC
     base_attack = 2
     base_health = 4
     legendary = True
@@ -570,6 +604,7 @@ class CrystalWeaver(MonsterCard):
     tier = 3
     base_attack = 5
     base_health = 4
+    pool = MONSTER_TYPES.DEMON
 
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
         bonus = 2 if self.golden else 1
@@ -582,6 +617,7 @@ class CrystalWeaver(MonsterCard):
 class MechanoEgg(MonsterCard):
     tier = 4
     monster_type = MONSTER_TYPES.MECH
+    pool = MONSTER_TYPES.MECH
     base_attack = 0
     base_health = 5
 
@@ -598,6 +634,7 @@ class Robosaur(MonsterCard):
     token = True
     tier = 1
     monster_type = MONSTER_TYPES.MECH
+    pool = MONSTER_TYPES.MECH
     base_attack = 8
     base_health = 8
 
@@ -605,6 +642,7 @@ class Robosaur(MonsterCard):
 class PogoHopper(MonsterCard):
     tier = 2
     monster_type = MONSTER_TYPES.MECH
+    pool = MONSTER_TYPES.MECH
     base_attack = 1
     base_health = 1
     tracked = True
@@ -618,6 +656,7 @@ class PogoHopper(MonsterCard):
 class Goldgrubber(MonsterCard):
     tier = 4
     monster_type = MONSTER_TYPES.PIRATE
+    pool = MONSTER_TYPES.PIRATE
     base_attack = 2
     base_health = 2
 
@@ -645,6 +684,7 @@ class SpawnOfNzoth(MonsterCard):
 class BloodsailCannoneer(MonsterCard):
     tier = 3
     monster_type = MONSTER_TYPES.PIRATE
+    pool = MONSTER_TYPES.PIRATE
     base_attack = 4
     base_health = 2
 
@@ -658,6 +698,7 @@ class BloodsailCannoneer(MonsterCard):
 class ColdlightSeer(MonsterCard):
     tier = 3
     monster_type = MONSTER_TYPES.MURLOC
+    pool = MONSTER_TYPES.MURLOC
     base_attack = 2
     base_health = 3
 
@@ -683,6 +724,7 @@ class CrowdFavorite(MonsterCard):
 class DeflectOBot(MonsterCard):
     tier = 3
     monster_type = MONSTER_TYPES.MECH
+    pool = MONSTER_TYPES.MECH
     base_attack = 3
     base_health = 2
     base_divine_shield = True
@@ -698,6 +740,7 @@ class DeflectOBot(MonsterCard):
 class FelfinNavigator(MonsterCard):
     tier = 3
     monster_type = MONSTER_TYPES.MURLOC
+    pool = MONSTER_TYPES.MURLOC
     base_attack = 4
     base_health = 4
 
@@ -729,6 +772,7 @@ class Houndmaster(MonsterCard):
 class ImpGangBoss(MonsterCard):
     tier = 3
     monster_type = MONSTER_TYPES.DEMON
+    pool = MONSTER_TYPES.DEMON
     base_attack = 2
     base_health = 4
 
@@ -747,6 +791,7 @@ class InfestedWolf(MonsterCard):
     base_attack = 3
     base_health = 3
     monster_type = MONSTER_TYPES.BEAST
+    pool = MONSTER_TYPES.BEAST
 
     def base_deathrattle(self, context: CombatPhaseContext):
         summon_index = context.friendly_war_party.get_index(self)
@@ -763,11 +808,13 @@ class Spider(MonsterCard):
     base_health = 1
     token = True
     monster_type = MONSTER_TYPES.BEAST
+    pool = MONSTER_TYPES.BEAST
 
 
 class MonstrousMacaw(MonsterCard):
     tier = 3
     monster_type = MONSTER_TYPES.BEAST
+    pool = MONSTER_TYPES.BEAST
     base_attack = 4
     base_health = 3
 
@@ -789,6 +836,7 @@ class ScrewjankClunker(MonsterCard):
     base_attack = 2
     base_health = 5
     monster_type = MONSTER_TYPES.MECH
+    pool = MONSTER_TYPES.MECH
     num_battlecry_targets = [1]
 
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
@@ -806,6 +854,7 @@ class PackLeader(MonsterCard):
     base_attack = 2
     base_health = 3
     monster_type = None
+    pool = MONSTER_TYPES.BEAST
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         friendly_summon = event.event is EVENTS.SUMMON_BUY or (
@@ -820,6 +869,7 @@ class PilotedShredder(MonsterCard):
     base_attack = 4
     base_health = 3
     monster_type = MONSTER_TYPES.MECH
+    pool = MONSTER_TYPES.MECH
 
     def base_deathrattle(self, context: CombatPhaseContext):
         count = 2 if self.golden else 1
@@ -838,6 +888,7 @@ class SaltyLooter(MonsterCard):
     base_attack = 3
     base_health = 3
     monster_type = MONSTER_TYPES.PIRATE
+    pool = MONSTER_TYPES.PIRATE
 
     def handle_event_powers(self, event: CardEvent, context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.SUMMON_BUY and event.card.check_type(MONSTER_TYPES.PIRATE) and event.card != self:
@@ -851,6 +902,7 @@ class SoulJuggler(MonsterCard):
     base_attack = 3
     base_health = 3
     monster_type = None
+    pool = MONSTER_TYPES.DEMON
 
     def handle_event_powers(self, event: CardEvent, context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.DIES and event.card.check_type(
@@ -869,6 +921,7 @@ class TwilightEmissary(MonsterCard):
     base_attack = 4
     base_health = 4
     monster_type = MONSTER_TYPES.DRAGON
+    pool = MONSTER_TYPES.DRAGON
     base_taunt = True
     num_battlecry_targets = [1]
 
@@ -899,6 +952,7 @@ class SavannahHighmane(MonsterCard):
     base_attack = 6
     base_health = 5
     monster_type = MONSTER_TYPES.BEAST
+    pool = MONSTER_TYPES.BEAST
 
     def base_deathrattle(self, context: CombatPhaseContext):
         summon_index = context.friendly_war_party.get_index(self)
@@ -914,6 +968,7 @@ class Hyena(MonsterCard):
     base_attack = 2
     base_health = 2
     monster_type = MONSTER_TYPES.BEAST
+    pool = MONSTER_TYPES.BEAST
     token = True
 
 
@@ -922,6 +977,7 @@ class SecurityRover(MonsterCard):
     base_attack = 2
     base_health = 6
     monster_type = MONSTER_TYPES.MECH
+    pool = MONSTER_TYPES.MECH
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         if event.event is EVENTS.CARD_DAMAGED and self == event.card:
@@ -938,6 +994,7 @@ class GuardBot(MonsterCard):
     base_attack = 2
     base_health = 3
     monster_type = MONSTER_TYPES.MECH
+    pool = MONSTER_TYPES.MECH
     token = True
     base_taunt = True
 
@@ -948,6 +1005,7 @@ class VirmenSensei(MonsterCard):
     base_health = 5
     monster_type = None
     num_battlecry_targets = [1]
+    pool = MONSTER_TYPES.BEAST
 
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
         bonus = 4 if self.golden else 2
@@ -964,6 +1022,7 @@ class RipsnarlCaptain(MonsterCard):
     base_attack = 3
     base_health = 4
     monster_type = MONSTER_TYPES.PIRATE
+    pool = MONSTER_TYPES.PIRATE
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         if event.event is EVENTS.ON_ATTACK and event.card.check_type(
@@ -992,6 +1051,7 @@ class DefenderOfArgus(MonsterCard):
 class SouthseaCaptain(MonsterCard):
     tier = 2
     monster_type = MONSTER_TYPES.PIRATE
+    pool = MONSTER_TYPES.PIRATE
     base_attack = 3
     base_health = 3
 
@@ -1033,6 +1093,7 @@ class BolvarFireblood(MonsterCard):
 class DrakonidEnforcer(MonsterCard):
     tier = 4
     monster_type = MONSTER_TYPES.DRAGON
+    pool = MONSTER_TYPES.DRAGON
     base_attack = 3
     base_health = 6
 
@@ -1046,6 +1107,7 @@ class DrakonidEnforcer(MonsterCard):
 class BronzeWarden(MonsterCard):
     tier = 3
     monster_type = MONSTER_TYPES.DRAGON
+    pool = MONSTER_TYPES.DRAGON
     base_attack = 2
     base_health = 1
     base_divine_shield = True
@@ -1065,6 +1127,7 @@ class Amalgam(MonsterCard):
 class ReplicatingMenace(MonsterCard):
     tier = 3
     monster_type = MONSTER_TYPES.MECH
+    pool = MONSTER_TYPES.MECH
     base_attack = 3
     base_health = 1
     base_magnetic = True
@@ -1084,6 +1147,7 @@ class ReplicatingMenace(MonsterCard):
 class Microbot(MonsterCard):
     tier = 1
     monster_type = MONSTER_TYPES.MECH
+    pool = MONSTER_TYPES.MECH
     base_attack = 1
     base_health = 1
     token = True
@@ -1092,6 +1156,7 @@ class Microbot(MonsterCard):
 class Junkbot(MonsterCard):
     tier = 5
     monster_type = MONSTER_TYPES.MECH
+    pool = MONSTER_TYPES.MECH
     base_attack = 1
     base_health = 5
 
@@ -1120,6 +1185,7 @@ class StrongshellScavenger(MonsterCard):
 class Voidlord(MonsterCard):
     tier = 5
     monster_type = MONSTER_TYPES.DEMON
+    pool = MONSTER_TYPES.DEMON
     base_attack = 3
     base_health = 9
     base_taunt = True
@@ -1136,6 +1202,7 @@ class Voidlord(MonsterCard):
 class Demon(MonsterCard):
     tier = 1
     monster_type = MONSTER_TYPES.DEMON
+    pool = MONSTER_TYPES.DEMON
     base_attack = 1
     base_health = 3
     base_taunt = True
@@ -1145,6 +1212,7 @@ class Demon(MonsterCard):
 class AnnihilanBattlemaster(MonsterCard):
     tier = 5
     monster_type = MONSTER_TYPES.DEMON
+    pool = MONSTER_TYPES.DEMON
     base_attack = 3
     base_health = 1
 
@@ -1157,6 +1225,7 @@ class AnnihilanBattlemaster(MonsterCard):
 class CapnHoggarr(MonsterCard):
     tier = 5
     monster_type = MONSTER_TYPES.PIRATE
+    pool = MONSTER_TYPES.PIRATE
     base_attack = 6
     base_health = 6
     legendary = True
@@ -1170,6 +1239,7 @@ class CapnHoggarr(MonsterCard):
 class KingBagurgle(MonsterCard):
     tier = 5
     monster_type = MONSTER_TYPES.MURLOC
+    pool = MONSTER_TYPES.MURLOC
     base_attack = 6
     base_health = 3
     legendary = True
@@ -1192,6 +1262,7 @@ class KingBagurgle(MonsterCard):
 class RazorgoreTheUntamed(MonsterCard):
     tier = 5
     monster_type = MONSTER_TYPES.DRAGON
+    pool = MONSTER_TYPES.DRAGON
     base_attack = 2
     base_health = 4
     legendary = True
@@ -1208,6 +1279,7 @@ class RazorgoreTheUntamed(MonsterCard):
 class Ghastcoiler(MonsterCard):
     tier = 6
     monster_type = MONSTER_TYPES.BEAST
+    pool = MONSTER_TYPES.BEAST
     base_attack = 7
     base_health = 7
 
@@ -1227,6 +1299,7 @@ class Ghastcoiler(MonsterCard):
 class DreadAdmiralEliza(MonsterCard):
     tier = 6
     monster_type = MONSTER_TYPES.PIRATE
+    pool = MONSTER_TYPES.PIRATE
     base_attack = 6
     base_health = 7
     legendary = True
@@ -1243,6 +1316,7 @@ class DreadAdmiralEliza(MonsterCard):
 class GoldrinnTheGreatWolf(MonsterCard):
     tier = 6
     monster_type = MONSTER_TYPES.BEAST
+    pool = MONSTER_TYPES.BEAST
     base_attack = 4
     base_health = 4
     legendary = True
@@ -1258,6 +1332,7 @@ class GoldrinnTheGreatWolf(MonsterCard):
 class ImpMama(MonsterCard):
     tier = 6
     monster_type = MONSTER_TYPES.DEMON
+    pool = MONSTER_TYPES.DEMON
     base_attack = 6
     base_health = 10
 
@@ -1281,6 +1356,7 @@ class ImpMama(MonsterCard):
 class KalecgosArcaneAspect(MonsterCard):
     tier = 6
     monster_type = MONSTER_TYPES.DRAGON
+    pool = MONSTER_TYPES.DRAGON
     base_attack = 4
     base_health = 12
     legendary = True
@@ -1300,6 +1376,7 @@ class NadinaTheRed(MonsterCard):
     base_attack = 7
     base_health = 4
     legendary = True
+    pool = MONSTER_TYPES.DRAGON
 
     def base_deathrattle(self, context: CombatPhaseContext):
         for card in context.friendly_war_party.board:
@@ -1312,6 +1389,7 @@ class TheTideRazor(MonsterCard):
     monster_type = None
     base_attack = 6
     base_health = 4
+    pool = MONSTER_TYPES.PIRATE
 
     def base_deathrattle(self, context: CombatPhaseContext):
         count = 6 if self.golden else 3
@@ -1329,6 +1407,7 @@ class TheTideRazor(MonsterCard):
 class Toxfin(MonsterCard):
     tier = 4
     monster_type = MONSTER_TYPES.MURLOC
+    pool = MONSTER_TYPES.MURLOC
     base_attack = 1
     base_health = 2
     num_battlecry_targets = [1]
@@ -1344,6 +1423,7 @@ class Toxfin(MonsterCard):
 class Maexxna(MonsterCard):
     tier = 6
     monster_type = MONSTER_TYPES.BEAST
+    pool = MONSTER_TYPES.BEAST
     base_attack = 2
     base_health = 8
     base_poisonous = True
@@ -1353,6 +1433,7 @@ class Maexxna(MonsterCard):
 class HeraldOfFlame(MonsterCard):
     tier = 4
     monster_type = MONSTER_TYPES.DRAGON
+    pool = MONSTER_TYPES.DRAGON
     base_attack = 5
     base_health = 6
 
@@ -1372,6 +1453,7 @@ class HeraldOfFlame(MonsterCard):
 class IronhideDirehorn(MonsterCard):
     tier = 5
     monster_type = MONSTER_TYPES.BEAST
+    pool = MONSTER_TYPES.BEAST
     base_attack = 7
     base_health = 7
 
@@ -1387,6 +1469,7 @@ class IronhideDirehorn(MonsterCard):
 class IronhideRunt(MonsterCard):
     tier = 1
     monster_type = MONSTER_TYPES.BEAST
+    pool = MONSTER_TYPES.BEAST
     base_attack = 5
     base_health = 5
     token = True
@@ -1395,6 +1478,7 @@ class IronhideRunt(MonsterCard):
 class NatPagleExtremeAngler(MonsterCard):
     tier = 5
     monster_type = MONSTER_TYPES.PIRATE
+    pool = MONSTER_TYPES.PIRATE
     base_attack = 8
     base_health = 5
     legendary = True
@@ -1411,6 +1495,7 @@ class NatPagleExtremeAngler(MonsterCard):
 class FloatingWatcher(MonsterCard):
     tier = 4
     monster_type = MONSTER_TYPES.DEMON
+    pool = MONSTER_TYPES.DEMON
     base_attack = 4
     base_health = 4
 
@@ -1424,6 +1509,7 @@ class FloatingWatcher(MonsterCard):
 class MalGanis(MonsterCard):
     tier = 5
     monster_type = MONSTER_TYPES.DEMON
+    pool = MONSTER_TYPES.DEMON
     base_attack = 9
     base_health = 7
     give_immunity = True
@@ -1475,6 +1561,7 @@ class BrannBronzebeard(MonsterCard):
 class IronSensei(MonsterCard):
     tier = 4
     monster_type = MONSTER_TYPES.MECH
+    pool = MONSTER_TYPES.MECH
     base_attack = 2
     base_health = 2
 
@@ -1492,6 +1579,7 @@ class IronSensei(MonsterCard):
 class YoHoOgre(MonsterCard):
     tier = 3
     monster_type = MONSTER_TYPES.PIRATE
+    pool = MONSTER_TYPES.PIRATE
     base_attack = 2
     base_health = 8
     base_taunt = True
@@ -1513,6 +1601,7 @@ class WaxriderTogwaggle(MonsterCard):
     base_attack = 1
     base_health = 2
     legendary = True
+    pool = MONSTER_TYPES.DRAGON
 
     def handle_event_powers(self, event: CardEvent, context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.DIES and event.card in context.enemy_war_party.board and event.foe in context.friendly_war_party.board and event.foe.check_type(
@@ -1525,6 +1614,7 @@ class WaxriderTogwaggle(MonsterCard):
 class HangryDragon(MonsterCard):
     tier = 3
     monster_type = MONSTER_TYPES.DRAGON
+    pool = MONSTER_TYPES.DRAGON
     base_attack = 4
     base_health = 4
 
@@ -1585,6 +1675,7 @@ class MenagerieJug(MonsterCard):
 class MicroMummy(MonsterCard):
     tier = 1
     monster_type = MONSTER_TYPES.MECH
+    pool = MONSTER_TYPES.MECH
     base_attack = 1
     base_health = 2
     base_reborn = True
@@ -1604,6 +1695,7 @@ class KangorsApprentice(MonsterCard):
     monster_type = None
     base_attack = 3
     base_health = 6
+    pool = MONSTER_TYPES.MECH
 
     def base_deathrattle(self, context: CombatPhaseContext): #TODO does this get tokens?
         count = 4 if self.golden else 2
@@ -1639,6 +1731,7 @@ class ZappSlywick(MonsterCard):
 class SeabreakerGoliath(MonsterCard):
     tier = 5
     monster_type = MONSTER_TYPES.PIRATE
+    pool = MONSTER_TYPES.PIRATE
     base_attack = 6
     base_health = 7
     base_windfury = True
@@ -1654,6 +1747,7 @@ class SeabreakerGoliath(MonsterCard):
 class FoeReaper4000(MonsterCard):
     tier = 6
     monster_type = MONSTER_TYPES.MECH
+    pool = MONSTER_TYPES.MECH
     base_attack = 6
     base_health = 9
     base_cleave = True  # TODO: need to implement cleave as an on-damage effect
@@ -1686,6 +1780,7 @@ class Amalgadon(MonsterCard):
 class AnnoyOModule(MonsterCard):
     tier = 4
     monster_type = MONSTER_TYPES.MECH
+    pool = MONSTER_TYPES.MECH
     base_attack = 2
     base_health = 4
     base_divine_shield = True
@@ -1696,6 +1791,7 @@ class AnnoyOModule(MonsterCard):
 class Siegebreaker(MonsterCard):
     tier = 4
     monster_type = MONSTER_TYPES.DEMON
+    pool = MONSTER_TYPES.DEMON
     base_attack = 5
     base_health = 8
     base_taunt = True
@@ -1720,6 +1816,7 @@ class Siegebreaker(MonsterCard):
 class CobaltScalebane(MonsterCard):
     tier = 4
     monster_type = MONSTER_TYPES.DRAGON
+    pool = MONSTER_TYPES.DRAGON
     base_attack = 5
     base_health = 5
 
@@ -1735,6 +1832,7 @@ class CobaltScalebane(MonsterCard):
 class TheBeast(MonsterCard):
     tier = 3
     monster_type = MONSTER_TYPES.BEAST
+    pool = MONSTER_TYPES.BEAST
     base_attack = 9
     base_health = 7
     legendary = True
@@ -1755,6 +1853,7 @@ class FinkleEinhorn(MonsterCard):
 class SouthseaStrongarm(MonsterCard):
     tier = 4
     monster_type = MONSTER_TYPES.PIRATE
+    pool = MONSTER_TYPES.PIRATE
     base_attack = 5
     base_health = 4
     num_battlecry_targets = [1]
@@ -1774,6 +1873,7 @@ class SouthseaStrongarm(MonsterCard):
 class CaveHydra(MonsterCard):
     tier = 4
     monster_type = MONSTER_TYPES.BEAST
+    pool = MONSTER_TYPES.BEAST
     base_attack = 2
     base_health = 4
     base_cleave = True  # TODO: need to implement cleave as an on-damage effect
@@ -1784,6 +1884,7 @@ class CaveHydra(MonsterCard):
 class PrimalfinLookout(MonsterCard):
     tier = 4
     monster_type = MONSTER_TYPES.MURLOC
+    pool = MONSTER_TYPES.MURLOC
     base_attack = 3
     base_health = 2
 
@@ -1798,6 +1899,7 @@ class PrimalfinLookout(MonsterCard):
 class Murozond(MonsterCard):
     tier = 5
     monster_type = MONSTER_TYPES.DRAGON
+    pool = MONSTER_TYPES.DRAGON
     base_attack = 5
     base_health = 5
 
@@ -1813,6 +1915,7 @@ class Murozond(MonsterCard):
 class PartyElemental(MonsterCard):
     tier = 2
     monster_type = MONSTER_TYPES.ELEMENTAL
+    pool = MONSTER_TYPES.ELEMENTAL
     base_attack = 2
     base_health = 2
 
@@ -1829,6 +1932,7 @@ class PartyElemental(MonsterCard):
 class MoltenRock(MonsterCard):
     tier = 2
     monster_type = MONSTER_TYPES.ELEMENTAL
+    pool = MONSTER_TYPES.ELEMENTAL
     base_attack = 2
     base_health = 3
     base_taunt = True
@@ -1841,6 +1945,7 @@ class MoltenRock(MonsterCard):
 class ArcaneAssistant(MonsterCard):
     tier = 3
     monster_type = MONSTER_TYPES.ELEMENTAL
+    pool = MONSTER_TYPES.ELEMENTAL
     base_attack = 3
     base_health = 2
 
@@ -1855,6 +1960,7 @@ class ArcaneAssistant(MonsterCard):
 class CracklingCyclone(MonsterCard):
     tier = 3
     monster_type = MONSTER_TYPES.ELEMENTAL
+    pool = MONSTER_TYPES.ELEMENTAL
     base_attack = 4
     base_health = 1
     base_divine_shield = True
@@ -1877,6 +1983,7 @@ class DeadlySpore(MonsterCard):
 class LieutenantGarr(MonsterCard):
     tier = 6
     monster_type = MONSTER_TYPES.ELEMENTAL
+    pool = MONSTER_TYPES.ELEMENTAL
     base_attack = 8
     base_health = 1
     base_taunt = True
@@ -1891,6 +1998,7 @@ class LieutenantGarr(MonsterCard):
 class Sellemental(MonsterCard):
     tier = 1
     monster_type = MONSTER_TYPES.ELEMENTAL
+    pool = MONSTER_TYPES.ELEMENTAL
     base_attack = 2
     base_health = 2
 
@@ -1905,6 +2013,7 @@ class Sellemental(MonsterCard):
 class WaterDroplet(MonsterCard):
     tier = 1
     monster_type = MONSTER_TYPES.ELEMENTAL
+    pool = MONSTER_TYPES.ELEMENTAL
     base_attack = 2
     base_health = 2
     token = True
@@ -1913,6 +2022,7 @@ class WaterDroplet(MonsterCard):
 class LilRag(MonsterCard):
     tier = 5
     monster_type = MONSTER_TYPES.ELEMENTAL
+    pool = MONSTER_TYPES.ELEMENTAL
     base_attack = 4
     base_health = 4
     legendary = True
@@ -1929,6 +2039,7 @@ class LilRag(MonsterCard):
 class TavernTempest(MonsterCard):
     tier = 5
     monster_type = MONSTER_TYPES.ELEMENTAL
+    pool = MONSTER_TYPES.ELEMENTAL
     base_attack = 4
     base_health = 4
 
@@ -1945,6 +2056,7 @@ class TavernTempest(MonsterCard):
 class GentleDjinni(MonsterCard):
     tier = 6
     monster_type = MONSTER_TYPES.ELEMENTAL
+    pool = MONSTER_TYPES.ELEMENTAL
     base_attack = 6
     base_health = 8
     base_taunt = True
@@ -1977,6 +2089,7 @@ class NomiKitchenNightmare(MonsterCard):
     base_attack = 4
     base_health = 4
     legendary = True
+    pool = MONSTER_TYPES.ELEMENTAL
 
     def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.SUMMON_BUY and event.card.check_type(MONSTER_TYPES.ELEMENTAL):

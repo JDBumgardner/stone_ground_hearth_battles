@@ -42,7 +42,7 @@ class CardTests(unittest.TestCase):
         self.assertListEqual([type(card) for card in cards], expected, msg=msg)
 
     def test_default_cardlist(self):
-        default_cardlist = PrintingPress.make_cards()
+        default_cardlist = PrintingPress.make_cards(DefaultRandomizer())
         self.assertGreater(len(default_cardlist), 20)
         print(f"the length of the default cardlist is {len(default_cardlist)}.")
 
@@ -2852,6 +2852,13 @@ class CardTests(unittest.TestCase):
         self.assertEqual(player_1.in_play[1].health, player_1.in_play[1].base_health + 1)
         self.assertEqual(player_1.in_play[2].attack, player_1.in_play[2].base_attack + 1)
         self.assertEqual(player_1.in_play[2].health, player_1.in_play[2].base_health + 1)
+
+    def test_excluded_types(self):
+        tavern = Tavern()
+        for hero in tavern.hero_pool:
+            self.assertTrue(hero.pool in tavern.available_types or hero.pool == MONSTER_TYPES.ALL)
+        for card in tavern.deck.all_cards():
+            self.assertTrue(card.pool in tavern.available_types or card.pool == MONSTER_TYPES.ALL)
 
 
 if __name__ == '__main__':

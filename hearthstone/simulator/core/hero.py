@@ -5,6 +5,7 @@ from hearthstone.simulator.core.card_factory import make_metaclass
 from hearthstone.simulator.core.cards import CardLocation
 
 from hearthstone.simulator.core.events import BuyPhaseContext, CombatPhaseContext, CardEvent
+from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 
 if typing.TYPE_CHECKING:
     from hearthstone.simulator.core.player import BoardIndex, StoreIndex
@@ -20,6 +21,7 @@ class Hero(metaclass=HeroType):
     can_use_power = True
     power_target_location: Optional['CardLocation'] = None
     multiple_power_uses_per_turn = False
+    pool: 'MONSTER_TYPES' = MONSTER_TYPES.ALL
 
     def __repr__(self):
         return str(type(self).__name__)

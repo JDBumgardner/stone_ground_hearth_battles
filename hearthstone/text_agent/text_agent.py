@@ -21,6 +21,8 @@ class TextAgent(Agent):
 
     async def hero_choice_action(self, player: 'Player') -> 'Hero':
         await self.connection.send(f"player {player.name}, it is your turn to choose a hero.\n")
+        await self.connection.send(
+            f"available monster types: {[monster_type.name for monster_type in player.tavern.available_types]}\n")
         await self.print_hero_list(player.hero_options)
         await self.connection.send("please choose a hero: ")
         user_text = await self.connection.receive_line()
@@ -69,8 +71,9 @@ class TextAgent(Agent):
         return check_list
 
     async def buy_phase_action(self, player: 'Player') -> Action:
-
         await self.connection.send(f"\n\nplayer {player.name} ({player.hero}), it is your buy phase.\n")
+        await self.connection.send(
+            f"available monster types: {[monster_type.name for monster_type in player.tavern.available_types]}\n")
         await self.print_player_card_list("store", player.store)
         await self.print_player_card_list("board", player.in_play)
         await self.print_player_card_list("hand", player.hand)
