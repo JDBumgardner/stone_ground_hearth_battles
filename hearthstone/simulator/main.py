@@ -2,8 +2,8 @@ from hearthstone.battlebots.cheapo_bot import CheapoBot
 from hearthstone.battlebots.early_game_bot import EarlyGameBot
 from hearthstone.battlebots.priority_bot import PriorityBot
 from hearthstone.battlebots.priority_functions import PriorityFunctions
+from hearthstone.simulator.host.async_host import AsyncHost
 
-from hearthstone.simulator.host import AsyncHost
 from hearthstone.text_agent.stdio import StdIOTransport
 from hearthstone.text_agent.text_agent import TextAgent
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES

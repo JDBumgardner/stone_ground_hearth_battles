@@ -2094,3 +2094,51 @@ class NomiKitchenNightmare(MonsterCard):
     def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.SUMMON_BUY and event.card.check_type(MONSTER_TYPES.ELEMENTAL):
             context.owner.nomi_bonus += 2 if self.golden else 1
+
+
+class RefreshingAnomaly(MonsterCard):
+    tier = 1
+    monster_type = MONSTER_TYPES.ELEMENTAL
+    base_attack = 1
+    base_health = 3
+    pool = MONSTER_TYPES.ELEMENTAL
+
+    def base_battlecry(self, targets: List['MonsterCard'], context: 'BuyPhaseContext'):
+        context.owner.free_refreshes = max((2 if self.golden else 1), context.owner.free_refreshes)
+
+
+class MajordomoExecutus(MonsterCard):
+    tier = 4
+    monster_type = None
+    base_attack = 6
+    base_health = 3
+    pool = MONSTER_TYPES.ELEMENTAL
+
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.BUY_END:
+            multiplier = 2 if self.golden else 1
+            played_elementals = [card_type for card_type in context.owner.played_minions if
+                                 card_type.check_type(MONSTER_TYPES.ELEMENTAL)]
+            bonus = len(played_elementals) * multiplier
+            context.owner.in_play[0].attack += bonus
+            context.owner.in_play[0].health += bonus
+
+
+class WildfireElemental(MonsterCard):
+    tier = 4
+    monster_type = MONSTER_TYPES.ELEMENTAL
+    base_attack = 7
+    base_health = 3
+    pool = MONSTER_TYPES.ELEMENTAL
+
+    def handle_event_powers(self, event: CardEvent, context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.AFTER_ATTACK_DAMAGE and self == event.card and event.foe.is_dying():
+            excess_damage = max(event.foe.health * -1, 0)
+            defender_index = context.enemy_war_party.live_minions().index(event.foe)
+            adjacent_enemies = [card for card in context.enemy_war_party.live_minions() if
+                                abs(context.enemy_war_party.live_minions().index(card) - defender_index) == 1]
+            if adjacent_enemies:
+                adjacent_targets = adjacent_enemies if self.golden else [context.randomizer.select_enemy_minion(adjacent_enemies)]
+                for card in adjacent_targets:
+                    card.take_damage(excess_damage, context, foe=self)
+                    card.resolve_death(context, foe=self)

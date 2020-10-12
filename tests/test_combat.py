@@ -1057,6 +1057,7 @@ class CombatTests(unittest.TestCase):
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [CracklingCyclone(), VulgarHomunculus()]
         ethans_war_party.board = [BloodsailCannoneer(), VulgarHomunculus(), VulgarHomunculus()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
 
@@ -1067,6 +1068,7 @@ class CombatTests(unittest.TestCase):
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [DeadlySpore()]
         ethans_war_party.board = [KalecgosArcaneAspect()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
 
@@ -1090,6 +1092,32 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
         self.assertEqual(adam.hand_size(), 1)
         self.assertEqual(type(adam.hand[0]), Sellemental)
+
+    def test_wildfire_elemental(self):
+        tavern = Tavern()
+        adam = tavern.add_player_with_hero("Adam")
+        ethan = tavern.add_player_with_hero("Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [WildfireElemental(), CapnHoggarr(), VulgarHomunculus()]
+        ethans_war_party.board = [BloodsailCannoneer(), CapnHoggarr(), LieutenantGarr(), CapnHoggarr()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+
+    def test_golden_wildfire_elemental(self):
+        tavern = Tavern()
+        adam = tavern.add_player_with_hero("Adam")
+        ethan = tavern.add_player_with_hero("Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        wildfire_elemental = WildfireElemental()
+        wildfire_elemental.golden_transformation([])
+        adams_war_party.board = [wildfire_elemental, VulgarHomunculus()]
+        ethans_war_party.board = [BloodsailCannoneer(), CapnHoggarr(), LieutenantGarr(), CapnHoggarr()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
 
 
 if __name__ == '__main__':

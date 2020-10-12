@@ -498,3 +498,9 @@ class MrBigglesworth(Hero):  # TODO: tokens discovered will enter the pool when 
                     event.player.remove_board_card(enemy_minion)  # TODO: need to keep these three minions on the board
                     discovered_cards.append(enemy_minion)
             context.owner.discover_queue.append(discovered_cards)
+
+
+class Nozdormu(Hero):
+    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.BUY_START:
+            context.owner.free_refreshes = max(1, context.owner.free_refreshes)

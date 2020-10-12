@@ -2,7 +2,7 @@ from typing import Optional, List
 
 from hearthstone.simulator.agent import SummonAction, SellAction, EndPhaseAction, RerollAction, TavernUpgradeAction, \
     HeroPowerAction, TripleRewardsAction, RedeemGoldCoinAction, BuyAction, StandardAction, Agent, BananaAction, \
-    DiscoverChoiceAction
+    DiscoverChoiceAction, HeroChoiceAction, RearrangeCardsAction
 from hearthstone.simulator.core.cards import CardLocation, MonsterCard
 from hearthstone.simulator.core.hero import Hero
 from hearthstone.simulator.core.player import HandIndex, BoardIndex, StoreIndex, Player
@@ -20,7 +20,7 @@ class TextAgent(Agent):
     def __init__(self, connection: TextAgentProtocol):
         self.connection = connection
 
-    async def hero_choice_action(self, player: 'Player') -> 'Hero':
+    async def hero_choice_action(self, player: 'Player') -> 'HeroChoiceAction':
         await self.connection.send(f"player {player.name}, it is your turn to choose a hero.\n")
         await self.connection.send(
             f"available monster types: {[monster_type.name for monster_type in player.tavern.available_types]}\n")
@@ -28,22 +28,22 @@ class TextAgent(Agent):
         await self.connection.send("please choose a hero: ")
         user_text = await self.connection.receive_line()
         while True:
-            hero = self.convert_to_hero(user_text, player)
-            if hero is not None:
-                return hero
+            hero_choice_action = self.convert_to_hero(user_text, player)
+            if hero_choice_action is not None:
+                return hero_choice_action
             await self.connection.send("you fucked up, try again: ")
             user_text = await self.connection.receive_line()
 
-    def convert_to_hero(self, text: str, player: 'Player') -> Optional['Hero']:
+    def convert_to_hero(self, text: str, player: 'Player') -> Optional['HeroChoiceAction']:
         try:
             index = int(text)
         except ValueError:
             return None
         if index in range(len(player.hero_options)):
-            return player.hero_options[index]
+            return HeroChoiceAction(index)
         return None
 
-    async def rearrange_cards(self, player: 'Player'):
+    async def rearrange_cards(self, player: 'Player') -> 'RearrangeCardsAction':
         await self.connection.send(f"player {player.name}, it is your combat prephase.\n")
         await self.print_player_card_list("board", player.in_play)
         await self.connection.send("please rearrange your cards by specifying the ordering\n")
@@ -53,7 +53,7 @@ class TextAgent(Agent):
         while True:
             arrangement = self.parse_rearrange_input(user_text, player)
             if arrangement:
-                return [player.in_play[i] for i in arrangement]
+                return RearrangeCardsAction(arrangement)
             await self.connection.send("you fucked up, try again: ")
             user_text = await self.connection.receive_line()
 

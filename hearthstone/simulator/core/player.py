@@ -55,9 +55,11 @@ class Player:
         self.gold_coins = 0
         self.bananas = 0
         self.purchased_minions: List['Type'] = []
+        self.played_minions: List['Type'] = []
         self.last_opponent_warband: List['MonsterCard'] = []
         self.dead = False
         self.nomi_bonus = 0
+        self.free_refreshes = 0
 
     @property
     def coins(self):
@@ -97,6 +99,7 @@ class Player:
 
     def buying_step(self):
         self.reset_purchased_minions_list()
+        self.reset_played_minions_list()
         self.apply_turn_start_income()
         self.draw()
         self.hero.on_buy_step()
@@ -104,6 +107,9 @@ class Player:
 
     def reset_purchased_minions_list(self):
         self.purchased_minions = []
+
+    def reset_played_minions_list(self):
+        self.played_minions = []
 
     def apply_turn_start_income(self):
         self.coins = self.coin_income_rate
@@ -136,6 +142,7 @@ class Player:
             self.triple_rewards.append(TripleRewardCard(min(self.tavern_tier + 1, 6)))
         target_cards = [self.in_play[target] for target in targets]
         self.broadcast_buy_phase_event(events.SummonBuyEvent(card, target_cards))
+        self.played_minions.append(type(card))
 
     def valid_summon_from_hand(self, index: HandIndex, targets: Optional[List[BoardIndex]] = None) -> bool:
         if targets is None:
@@ -250,12 +257,15 @@ class Player:
 
     def reroll_store(self):
         assert self.valid_reroll()
-        self.coins -= self.refresh_store_cost
+        if self.free_refreshes >= 1:
+            self.free_refreshes -= 1
+        else:
+            self.coins -= self.refresh_store_cost
         self.draw()
         self.broadcast_buy_phase_event(events.RefreshStoreEvent())
 
     def valid_reroll(self) -> bool:
-        return self.coins >= self.refresh_store_cost
+        return self.coins >= self.refresh_store_cost or self.free_refreshes >= 1
 
     def return_cards(self):
         self.tavern.deck.return_cards(itertools.chain.from_iterable([card.dissolve() for card in self.store]))
