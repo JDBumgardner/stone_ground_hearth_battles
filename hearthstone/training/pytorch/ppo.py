@@ -1,4 +1,6 @@
 import logging
+import os
+import random
 import time
 from datetime import datetime
 from typing import List, Dict, Union, NewType
@@ -17,7 +19,8 @@ from hearthstone.training.pytorch.hearthstone_state_encoder import get_indexed_a
 from hearthstone.training.pytorch.networks.feedforward_net import HearthstoneFFNet
 from hearthstone.training.pytorch.networks.transformer_net import HearthstoneTransformerNet
 from hearthstone.training.pytorch.normalization import ObservationNormalizer, PPONormalizer
-from hearthstone.training.pytorch.policy_gradient import tensorize_batch, easy_contestants
+from hearthstone.training.pytorch.policy_gradient import tensorize_batch, easy_contestants, easiest_contestants, \
+    easier_contestants
 from hearthstone.training.pytorch.pytorch_bot import PytorchBot
 from hearthstone.training.pytorch.replay import ActorCriticGameStepInfo
 from hearthstone.training.pytorch.replay_buffer import EpochBuffer
@@ -52,6 +55,8 @@ class PPOLearner(GlobalStepContext):
         self.global_step = 0
         # Number of games we have plotted
         self.games_plotted = 0
+
+        self.export_path = "../../../data/learning/pytorch/saved_models/{}.saved_model".format(self.hparams['export.path'])
 
     def get_global_step(self) -> int:
         return self.global_step
@@ -122,10 +127,11 @@ class PPOLearner(GlobalStepContext):
         valid_action_tensor = torch.cat(
             (transition_batch.valid_actions.player_action_tensor.flatten(1),
              transition_batch.valid_actions.card_action_tensor.flatten(1)), dim=1)
-        masked_policy = policy.masked_select(valid_action_tensor)
-        entropy_loss = entropy_weight * torch.sum(masked_policy * torch.exp(masked_policy))
+
+        entropy_loss = entropy_weight * torch.sum(valid_action_tensor.float() * policy * torch.exp(policy), dim=1).mean()
 
         if self.histogram_tensorboard:
+            masked_policy = policy.masked_select(valid_action_tensor)
             tensorboard.add_histogram("policy", torch.exp(masked_policy), self.global_step)
             masked_reward = transition_batch.reward.masked_select(transition_batch.is_terminal)
             if masked_reward.size()[0]:
@@ -196,6 +202,46 @@ class PPOLearner(GlobalStepContext):
                                                             EncodedActionSet(
                                                                 valid_actions_mask.player_action_tensor.unsqueeze(0),
                                                                 valid_actions_mask.card_action_tensor.unsqueeze(0))))
+    def create_net(self) -> nn.Module:
+        if self.hparams["nn_architecture"] == "feedforward":
+            return HearthstoneFFNet(DEFAULT_PLAYER_ENCODING, DEFAULT_CARDS_ENCODING,
+                                            self.hparams["nn_hidden_layers"],
+                                            self.hparams.get("nn_hidden_size") or 0,
+                                            self.hparams.get("nn_shared") or False,
+                                            self.hparams.get("nn_activation") or "")
+        elif self.hparams["nn_architecture"] == "transformer":
+            return HearthstoneTransformerNet(DEFAULT_PLAYER_ENCODING, DEFAULT_CARDS_ENCODING,
+                                            self.hparams["nn_hidden_layers"],
+                                            self.hparams.get("nn_hidden_size") or 0,
+                                            self.hparams.get("nn_shared") or False,
+                                            self.hparams.get("nn_activation") or "")
+
+    def get_initial_contestants(self) -> List[Contestant]:
+        if self.hparams['opponents.initial'] == "easiest":
+            return easiest_contestants()
+        if self.hparams['opponents.initial'] == "easier":
+            return easier_contestants()
+        if self.hparams['opponents.initial'] == "easy":
+            return easy_contestants()
+        assert False
+
+    def handle_export(self, learning_bot_name, learning_net, other_contestants):
+        if self.global_step % self.hparams['export.period_epochs'] == 0:
+            if self.hparams['export.enabled']:
+                state_dict = learning_net.state_dict()
+                torch.save(state_dict, os.path.join(self.export_path, str(self.global_step)))
+                if self.hparams['opponents.self_play.enabled']:
+                    frozen_clone = self.create_net()
+                    frozen_clone.load_state_dict(state_dict)
+                    frozen_clone.eval()
+                    while len(other_contestants) + 1 > self.hparams['opponents.max_pool_size']:
+                        other_contestants.pop(random.randrange(0, len(other_contestants)))
+                    other_contestants.append(Contestant(
+                        "{}_{}".format(learning_bot_name, self.global_step),
+                        lambda: PytorchBot(net=frozen_clone,
+                                           annotate=False,
+                                           device=self.get_device())
+                    ))
 
     def run(self):
         start_time = time.time()
@@ -206,18 +252,10 @@ class PPOLearner(GlobalStepContext):
         tensorboard = SummaryWriter(f"../../../data/learning/pytorch/tensorboard/{datetime.now().isoformat()}")
         logging.getLogger().setLevel(logging.INFO)
 
-        if self.hparams["nn_architecture"] == "feedforward":
-            learning_net = HearthstoneFFNet(DEFAULT_PLAYER_ENCODING, DEFAULT_CARDS_ENCODING,
-                                            self.hparams["nn_hidden_layers"],
-                                            self.hparams.get("nn_hidden_size") or 0,
-                                            self.hparams.get("nn_shared") or False,
-                                            self.hparams.get("nn_activation") or "")
-        elif self.hparams["nn_architecture"] == "transformer":
-            learning_net = HearthstoneTransformerNet(DEFAULT_PLAYER_ENCODING, DEFAULT_CARDS_ENCODING,
-                                            self.hparams["nn_hidden_layers"],
-                                            self.hparams.get("nn_hidden_size") or 0,
-                                            self.hparams.get("nn_shared") or False,
-                                            self.hparams.get("nn_activation") or "")
+        if self.hparams['export.enabled']:
+            os.mkdir(self.export_path)
+
+        learning_net = self.create_net()
 
         if not self.hparams["cuda"]:
             # This is broken on CUDA and we are too lazy to debug.
@@ -252,7 +290,8 @@ class PPOLearner(GlobalStepContext):
         # Rating starts a 14, which is how the randomly initialized pytorch bot performs.
         learning_bot_contestant.trueskill = trueskill.Rating(14)
         # Reuse standings from the current leaderboard.
-        other_contestants = easy_contestants()
+
+        other_contestants = self.get_initial_contestants()
         load_ratings(other_contestants, "../../../data/standings.json")
 
         gae_annotator = GAEAnnotator(learning_bot_name, self.hparams['gae_gamma'], self.hparams['gae_lambda'])
@@ -265,14 +304,16 @@ class PPOLearner(GlobalStepContext):
             for worker in workers:
                 worker.play_game()
             if len(replay_buffer) >= batch_size:
+                self.handle_export(learning_bot_name, learning_net, other_contestants)
                 for i in range(self.hparams["ppo_epochs"]):
                     self.learn_epoch(tensorboard, optimizer, learning_net, replay_buffer,
                                      self.hparams['minibatch_size'],
-                               self.hparams["policy_weight"],
-                               self.hparams["entropy_weight"], self.hparams["ppo_epsilon"],
-                               self.hparams["gradient_clipping"],
-                               self.hparams["normalize_advantage"])
+                                     self.hparams["policy_weight"],
+                                     self.hparams["entropy_weight"], self.hparams["ppo_epsilon"],
+                                     self.hparams["gradient_clipping"],
+                                     self.hparams["normalize_advantage"])
                 replay_buffer.clear()
+
             time_elapsed = int(time.time() - start_time)
             tensorboard.add_scalar("rating/elo", learning_bot_contestant.elo, global_step=self.global_step)
             tensorboard.add_scalar("rating/trueskill_mu", learning_bot_contestant.trueskill.mu, global_step=self.global_step)
@@ -294,14 +335,20 @@ class PPOLearner(GlobalStepContext):
 
 def main():
     ppo_learner = PPOLearner(PPOHyperparameters({
+        'export.enabled': True,
+        'export.period_epochs': 100,
+        'export.path': datetime.now().isoformat(),
+        'opponents.initial': 'easiest',
+        'opponents.self_play.enabled': True,
+        'opponents.max_pool_size': 7,
         'adam_lr': 0.0000698178899316577,
         'batch_size': 1024,
         'minibatch_size': 1024,
         'cuda': True,
-        'entropy_weight': 0.000001,
+        'entropy_weight': 0.001,
         'gae_gamma': 0.999,
         'gae_lambda': 0.9,
-        'game_size': 2,
+        'game_size': 8,
         'gradient_clipping': 0.5,
         'nn_architecture': 'transformer',
         'nn_hidden_layers': 1,
