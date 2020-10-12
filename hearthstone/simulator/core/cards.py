@@ -34,15 +34,12 @@ class PrintingPress:
     cards_per_tier = {1: 16, 2: 15, 3: 13, 4: 11, 5: 9, 6: 7}
 
     @classmethod
-    def make_cards(cls, randomizer: 'Randomizer') -> Tuple['CardList', List['MONSTER_TYPES']]:
-        available_types = MONSTER_TYPES.single_types()
-        for _ in range(2):
-            available_types.remove(randomizer.select_monster_type(available_types, 0))
+    def make_cards(cls, available_types: List['MONSTER_TYPES']) -> 'CardList':
         cardlist = []
         for card in cls.cards:
             if not card.token and (card.pool in available_types or card.pool == MONSTER_TYPES.ALL):
                 cardlist.extend([card() for _ in range(cls.cards_per_tier[card.tier])])
-        return CardList(cardlist), available_types
+        return CardList(cardlist)
 
     @classmethod
     def add_card(cls, card_class):

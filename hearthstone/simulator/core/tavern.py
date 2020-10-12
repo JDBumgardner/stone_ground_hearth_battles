@@ -1,5 +1,5 @@
 import enum
-from typing import Dict
+from typing import Dict, Optional
 
 from hearthstone.simulator.core import hero, combat, events
 from hearthstone.simulator.core.cards import CardList, PrintingPress
@@ -11,15 +11,17 @@ from hearthstone.simulator.core.randomizer import DefaultRandomizer
 
 
 class Tavern:
-    def __init__(self):
+    def __init__(self, restrict_types: Optional[bool] = True):
         self.players: Dict[str, Player] = {}
         self.turn_count = 0
         self._max_turn_count = 50
         self.current_player_pairings = []
         self.randomizer = DefaultRandomizer()
-        deck, available_types = PrintingPress.make_cards(self.randomizer)
-        self.deck: 'CardList' = deck
-        self.available_types = available_types
+        self.available_types = MONSTER_TYPES.single_types()
+        if restrict_types:
+            for _ in range(2):
+                self.available_types.remove(self.randomizer.select_monster_type(self.available_types, 0))
+        self.deck: 'CardList' = PrintingPress.make_cards(self.available_types)
         self.hero_pool = [hero_type() for hero_type in hero.VALHALLA if
                           hero_type.pool in self.available_types or hero_type.pool == MONSTER_TYPES.ALL]
         self.losers = []
