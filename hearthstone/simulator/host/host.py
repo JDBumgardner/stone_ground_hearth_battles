@@ -27,8 +27,9 @@ class Host:
         for player_name in sorted(agents.keys()):  # Sorting is important for replays to be exact with RNG.
             self.tavern.add_player(player_name)
         self.replay = Replay(self.tavern.randomizer.seed, list(self.tavern.players.keys()))
-        if observers:
-            self.observers = FrozenList(observers)
+        if not observers:
+            observers = []
+        self.observers = FrozenList(observers)
 
     def _apply_and_record(self, player_name: str, action: 'Action', agent_annotation: agent.Annotation = None):
         observer_annotations = {}

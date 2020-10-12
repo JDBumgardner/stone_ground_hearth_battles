@@ -18,7 +18,7 @@ class GameplayTests(unittest.TestCase):
             "racist_priority_bot_murloc": PriorityFunctions.racist_priority_bot(4, EarlyGameBot, MONSTER_TYPES.MURLOC),
             "priority_adaptive_tripler_bot": PriorityFunctions.priority_adaptive_tripler_bot(5, EarlyGameBot),
             "priority_pogo_hopper_bot": PriorityFunctions.priority_pogo_hopper_bot(7, PriorityBot),
-        }, DefaultRandomizer(107))
+        }, randomizer=DefaultRandomizer(107))
 
         host.play_game()
 

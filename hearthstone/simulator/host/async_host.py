@@ -1,5 +1,5 @@
 import asyncio
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 
 from hearthstone.simulator import agent
 from hearthstone.simulator.agent import EndPhaseAction, Action, AnnotatingAgent, BuyAction
