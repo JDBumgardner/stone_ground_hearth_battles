@@ -56,7 +56,7 @@ class PPOLearner(GlobalStepContext):
         # Number of games we have plotted
         self.games_plotted = 0
 
-        self.export_path = "../../../data/learning/pytorch/saved_models/{}.saved_model".format(self.hparams['export.path'])
+        self.export_path = "../../../data/learning/pytorch/saved_models/{}".format(self.hparams['export.path'])
 
     def get_global_step(self) -> int:
         return self.global_step
@@ -73,7 +73,8 @@ class PPOLearner(GlobalStepContext):
                     normalize_advantage: bool
                     ):
         for minibatch in replay_buffer.sample_minibatches(minibatch_size):
-            self.learn_minibatch(tensorboard, optimizer, learning_net, minibatch, policy_weight, entropy_weight, ppo_epsilon,
+            self.learn_minibatch(tensorboard, optimizer, learning_net, minibatch, policy_weight, entropy_weight,
+                                 ppo_epsilon,
                                  gradient_clipping, normalize_advantage)
             self.global_step += 1
 
@@ -104,8 +105,8 @@ class PPOLearner(GlobalStepContext):
         advantage = transition_batch.gae_return - transition_batch.value
 
         ratio = torch.exp((policy - transition_batch.policy).gather(1,
-                                                                   transition_batch.action.unsqueeze(
-                                                                       -1))).squeeze(1)
+                                                                    transition_batch.action.unsqueeze(
+                                                                        -1))).squeeze(1)
         clipped_ratio = ratio.clamp(1 - ppo_epsilon, 1 + ppo_epsilon)
 
         normalized_advantage: torch.Tensor = advantage
@@ -118,8 +119,9 @@ class PPOLearner(GlobalStepContext):
 
         value_error = transition_batch.retn - value
         # Clip the value error to be within ppo_epsilon of the advantage at the time that the action was taken.
-        clipped_value_error = transition_batch.retn - transition_batch.value + torch.clamp(transition_batch.value - value,
-                                                                                -ppo_epsilon, ppo_epsilon)
+        clipped_value_error = transition_batch.retn - transition_batch.value + torch.clamp(
+            transition_batch.value - value,
+            -ppo_epsilon, ppo_epsilon)
 
         value_loss = torch.max(value_error.pow(2), clipped_value_error.pow(2)).mean()
 
@@ -128,7 +130,8 @@ class PPOLearner(GlobalStepContext):
             (transition_batch.valid_actions.player_action_tensor.flatten(1),
              transition_batch.valid_actions.card_action_tensor.flatten(1)), dim=1)
 
-        entropy_loss = entropy_weight * torch.sum(valid_action_tensor.float() * policy * torch.exp(policy), dim=1).mean()
+        entropy_loss = entropy_weight * torch.sum(valid_action_tensor.float() * policy * torch.exp(policy),
+                                                  dim=1).mean()
 
         if self.histogram_tensorboard:
             masked_policy = policy.masked_select(valid_action_tensor)
@@ -166,9 +169,9 @@ class PPOLearner(GlobalStepContext):
         mean_0_diff = transition_batch.retn - value
         mean_0_diff -= mean_0_diff.mean()
         tensorboard.add_scalar("critic_explanation/explained_variance", (1 - mean_0_diff.pow(2).mean()) /
-                    mean_0_return.pow(2).mean(), self.global_step)
+                               mean_0_return.pow(2).mean(), self.global_step)
         tensorboard.add_scalar("critic_explanation/correlation", (mean_0_return * mean_0_value).mean() / (
-                    mean_0_return.pow(2).mean() * mean_0_value.pow(2).mean()).sqrt(), self.global_step)
+                mean_0_return.pow(2).mean() * mean_0_value.pow(2).mean()).sqrt(), self.global_step)
 
         loss = policy_loss * policy_weight + value_loss + entropy_loss
 
@@ -187,7 +190,7 @@ class PPOLearner(GlobalStepContext):
         else:
             return torch.device('cpu')
 
-    def add_graph_to_tensorboard(self, tensorboard: SummaryWriter, learning_net:nn.Module):
+    def add_graph_to_tensorboard(self, tensorboard: SummaryWriter, learning_net: nn.Module):
         tavern = Tavern()
         tavern.add_player_with_hero("Dummy", EmptyHero())
         tavern.add_player_with_hero("Other", EmptyHero())
@@ -202,21 +205,43 @@ class PPOLearner(GlobalStepContext):
                                                             EncodedActionSet(
                                                                 valid_actions_mask.player_action_tensor.unsqueeze(0),
                                                                 valid_actions_mask.card_action_tensor.unsqueeze(0))))
+
     def create_net(self) -> nn.Module:
         if self.hparams["nn_architecture"] == "feedforward":
             return HearthstoneFFNet(DEFAULT_PLAYER_ENCODING, DEFAULT_CARDS_ENCODING,
-                                            self.hparams["nn_hidden_layers"],
-                                            self.hparams.get("nn_hidden_size") or 0,
-                                            self.hparams.get("nn_shared") or False,
-                                            self.hparams.get("nn_activation") or "")
+                                    self.hparams["nn_hidden_layers"],
+                                    self.hparams.get("nn_hidden_size") or 0,
+                                    self.hparams.get("nn_shared") or False,
+                                    self.hparams.get("nn_activation") or "")
         elif self.hparams["nn_architecture"] == "transformer":
             return HearthstoneTransformerNet(DEFAULT_PLAYER_ENCODING, DEFAULT_CARDS_ENCODING,
-                                            self.hparams["nn_hidden_layers"],
-                                            self.hparams.get("nn_hidden_size") or 0,
-                                            self.hparams.get("nn_shared") or False,
-                                            self.hparams.get("nn_activation") or "")
+                                             self.hparams["nn_hidden_layers"],
+                                             self.hparams.get("nn_hidden_size") or 0,
+                                             self.hparams.get("nn_shared") or False,
+                                             self.hparams.get("nn_activation") or "")
+
+    def load_from_saved(self, path) -> nn.Module:
+        net = self.create_net()
+        net.load_state_dict(torch.load(path))
+        net.eval()
+        return net
+
+    def load_latest_saved_versions(self, run, n) -> Dict[int, nn.Module]:
+        resume_from_dir = "../../../data/learning/pytorch/saved_models/{}".format(run)
+        models = os.listdir(resume_from_dir)
+        top_n_models = sorted([int(model) for model in models], reverse=True)[:n]
+        return {model: self.load_from_saved("{}/{}".format(resume_from_dir, model))
+                for model in top_n_models}
 
     def get_initial_contestants(self) -> List[Contestant]:
+        if self.hparams['resume']:
+            return [Contestant("LoadedBot_{}".format(model),
+                               lambda: PytorchBot(net=net,
+                                                  annotate=False,
+                                                  device=self.get_device(),
+                                                  )) for model, net in
+                    self.load_latest_saved_versions(self.hparams['resume.from'],
+                                                    self.hparams['opponents.max_pool_size']).items()]
         if self.hparams['opponents.initial'] == "easiest":
             return easiest_contestants()
         if self.hparams['opponents.initial'] == "easier":
@@ -229,7 +254,7 @@ class PPOLearner(GlobalStepContext):
         if self.global_step % self.hparams['export.period_epochs'] == 0:
             if self.hparams['export.enabled']:
                 state_dict = learning_net.state_dict()
-                torch.save(state_dict, os.path.join(self.export_path, str(self.global_step)))
+                torch.save(state_dict, "{}/{}".format(self.export_path, str(self.global_step)))
                 if self.hparams['opponents.self_play.enabled']:
                     frozen_clone = self.create_net()
                     frozen_clone.load_state_dict(state_dict)
@@ -255,7 +280,11 @@ class PPOLearner(GlobalStepContext):
         if self.hparams['export.enabled']:
             os.mkdir(self.export_path)
 
-        learning_net = self.create_net()
+        if self.hparams['resume']:
+            self.global_step, learning_net = \
+                list(self.load_latest_saved_versions(self.hparams['resume.from'], 1).items())[0]
+        else:
+            learning_net = self.create_net()
 
         if not self.hparams["cuda"]:
             # This is broken on CUDA and we are too lazy to debug.
@@ -304,8 +333,8 @@ class PPOLearner(GlobalStepContext):
             for worker in workers:
                 worker.play_game()
             if len(replay_buffer) >= batch_size:
-                self.handle_export(learning_bot_name, learning_net, other_contestants)
                 for i in range(self.hparams["ppo_epochs"]):
+                    self.handle_export(learning_bot_name, learning_net, other_contestants)
                     self.learn_epoch(tensorboard, optimizer, learning_net, replay_buffer,
                                      self.hparams['minibatch_size'],
                                      self.hparams["policy_weight"],
@@ -316,8 +345,10 @@ class PPOLearner(GlobalStepContext):
 
             time_elapsed = int(time.time() - start_time)
             tensorboard.add_scalar("rating/elo", learning_bot_contestant.elo, global_step=self.global_step)
-            tensorboard.add_scalar("rating/trueskill_mu", learning_bot_contestant.trueskill.mu, global_step=self.global_step)
-            tensorboard.add_scalar("rating/trueskill_sigma", learning_bot_contestant.trueskill.sigma, global_step=self.global_step)
+            tensorboard.add_scalar("rating/trueskill_mu", learning_bot_contestant.trueskill.mu,
+                                   global_step=self.global_step)
+            tensorboard.add_scalar("rating/trueskill_sigma", learning_bot_contestant.trueskill.sigma,
+                                   global_step=self.global_step)
             if self.early_stopper:
                 if time.time() - last_reported_time > 5:
                     last_reported_time = time.time()
@@ -335,8 +366,10 @@ class PPOLearner(GlobalStepContext):
 
 def main():
     ppo_learner = PPOLearner(PPOHyperparameters({
+        "resume": False,
+        'resume.from': '2020-10-11T23:24:28.100449.saved_model',
         'export.enabled': True,
-        'export.period_epochs': 100,
+        'export.period_epochs': 200,
         'export.path': datetime.now().isoformat(),
         'opponents.initial': 'easiest',
         'opponents.self_play.enabled': True,

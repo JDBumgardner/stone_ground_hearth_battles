@@ -8,7 +8,7 @@ import torch
 
 from hearthstone.simulator.agent import TripleRewardsAction, TavernUpgradeAction, RerollAction, \
     EndPhaseAction, SummonAction, BuyAction, SellAction, StandardAction
-from hearthstone.simulator.core.cards import MonsterCard, CardLocation
+from hearthstone.simulator.core.cards import MonsterCard, CardLocation, PrintingPress
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 from hearthstone.simulator.core.player import Player, StoreIndex, HandIndex, BoardIndex
 
@@ -170,6 +170,10 @@ def enum_to_int(value: Optional[enum.Enum]) -> int:
         return 0
 
 
+CARD_TYPE_TO_INT = {card_type: ind for ind, card_type in enumerate(PrintingPress.cards)}
+INT_TO_CARD_TYPE = {ind: card_type for ind, card_type in enumerate(PrintingPress.cards)}
+
+
 def default_card_encoding() -> Feature:
     """
     Default encoder for type `LocatedCard`.
@@ -188,6 +192,7 @@ def default_card_encoding() -> Feature:
         ScalarFeature(lambda card: float(card.card.reborn)),
         ScalarFeature(lambda card: float(bool(card.card.deathrattles))),
         ScalarFeature(lambda card: float(bool(card.card.battlecry))),
+        OnehotFeature(lambda card: CARD_TYPE_TO_INT[type(card.card)], len(PrintingPress.cards) + 1),
         OnehotFeature(lambda card: enum_to_int(card.card.monster_type), len(MONSTER_TYPES) + 1),
         OnehotFeature(lambda card: enum_to_int(card.location), len(CardLocation) + 1),
     ])
