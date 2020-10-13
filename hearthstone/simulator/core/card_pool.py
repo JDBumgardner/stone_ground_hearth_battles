@@ -2048,9 +2048,9 @@ class TavernTempest(MonsterCard):
             if context.owner.room_in_hand():
                 available_elementals = [card for card in context.owner.tavern.deck.unique_cards() if card.check_type(
                     MONSTER_TYPES.ELEMENTAL) and card.tier <= context.owner.tavern_tier and type(card) != type(self)]
-                random_elementals = context.randomizer.select_gain_card(available_elementals)
-                context.owner.tavern.deck.remove_card(random_elementals)
-                context.owner.gain_hand_card(random_elementals)
+                random_elemental = context.randomizer.select_gain_card(available_elementals)
+                context.owner.tavern.deck.remove_card(random_elemental)
+                context.owner.gain_hand_card(random_elemental)
 
 
 class GentleDjinni(MonsterCard):
@@ -2142,3 +2142,21 @@ class WildfireElemental(MonsterCard):
                 for card in adjacent_targets:
                     card.take_damage(excess_damage, context, foe=self)
                     card.resolve_death(context, foe=self)
+
+
+class StasisElemental(MonsterCard):
+    tier = 3
+    monster_type = MONSTER_TYPES.ELEMENTAL
+    base_attack = 4
+    base_health = 4
+    pool = MONSTER_TYPES.ELEMENTAL
+
+    def base_battlecry(self, targets: List['MonsterCard'], context: 'BuyPhaseContext'):
+        for _ in range(2 if self.golden else 1):
+            if len(context.owner.store) < 7:
+                available_elementals = [card for card in context.owner.tavern.deck.unique_cards() if card.check_type(
+                    MONSTER_TYPES.ELEMENTAL) and card.tier <= context.owner.tavern_tier and type(card) != type(self)]
+                random_elemental = context.randomizer.select_add_to_store(available_elementals)
+                context.owner.tavern.deck.remove_card(random_elemental)
+                context.owner.store.append(random_elemental)
+                random_elemental.frozen = True

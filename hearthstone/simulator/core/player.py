@@ -49,7 +49,6 @@ class Player:
         self._hand: List[MonsterCard] = []
         self._in_play: List[MonsterCard] = []
         self.store: List[MonsterCard] = []
-        self.frozen = False
         self.counted_cards = defaultdict(lambda: 0)
         self.minion_cost = 3
         self.gold_coins = 0
@@ -90,7 +89,7 @@ class Player:
         if hero is None:
             hero = EmptyHero()
         player = Player(tavern, name, [hero])
-        player.choose_hero(0)
+        player.choose_hero(HeroChoiceIndex(0))
         return player
 
     @property
@@ -212,10 +211,7 @@ class Player:
         return len(self.in_play) < self.maximum_board_size
 
     def draw(self):
-        if self.frozen:
-            self.frozen = False
-        else:
-            self.return_cards()
+        self.return_cards()
         number_of_cards = 3 + self.tavern_tier // 2 - len(self.store)
         self.store.extend(self.tavern.deck.draw(self, number_of_cards))
 
@@ -224,6 +220,7 @@ class Player:
         assert self.valid_purchase(index)
         card = self.store.pop(index)
         self.coins -= self.minion_cost
+        card.frozen = False
         if card.check_type(MONSTER_TYPES.ELEMENTAL):
             card.attack += self.nomi_bonus
             card.health += self.nomi_bonus
@@ -261,6 +258,7 @@ class Player:
             self.free_refreshes -= 1
         else:
             self.coins -= self.refresh_store_cost
+        self.unfreeze()
         self.draw()
         self.broadcast_buy_phase_event(events.RefreshStoreEvent())
 
@@ -268,11 +266,17 @@ class Player:
         return self.coins >= self.refresh_store_cost or self.free_refreshes >= 1
 
     def return_cards(self):
-        self.tavern.deck.return_cards(itertools.chain.from_iterable([card.dissolve() for card in self.store]))
-        self.store = []
+        self.tavern.deck.return_cards(itertools.chain.from_iterable([card.dissolve() for card in self.store if not card.frozen]))
+        self.store = [card for card in self.store if card.frozen]
+        self.unfreeze()
 
     def freeze(self):
-        self.frozen = True
+        for card in self.store:
+            card.frozen = True
+
+    def unfreeze(self):
+        for card in self.store:
+            card.frozen = False
 
     def sell_minion(self, index: BoardIndex):
         assert self.valid_sell_minion(index)

@@ -295,6 +295,7 @@ class JandiceBarov(Hero):
         board_minion = context.owner.pop_board_card(board_index)
         store_minion = context.randomizer.select_from_store(context.owner.store)
         context.owner.store.remove(store_minion)
+        store_minion.frozen = False
         if store_minion.check_type(MONSTER_TYPES.ELEMENTAL):
             store_minion.attack += context.owner.nomi_bonus
             store_minion.health += context.owner.nomi_bonus
@@ -504,3 +505,45 @@ class Nozdormu(Hero):
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_START:
             context.owner.free_refreshes = max(1, context.owner.free_refreshes)
+
+
+class Sindragosa(Hero):
+    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.BUY_END:
+            for card in context.owner.store:
+                if card.frozen:
+                    card.attack += 1
+                    card.health += 1
+
+
+class Galakrond(Hero):
+    power_cost = 1
+    power_target_location = CardLocation.STORE
+
+    def hero_power_valid_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                              store_index: Optional['StoreIndex'] = None):
+        return bool(context.owner.store)
+
+    def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                        store_index: Optional['StoreIndex'] = None):
+        store_minion = context.owner.store.pop(store_index)
+        context.owner.tavern.deck.return_cards(store_minion.dissolve())
+        higher_tier_minions = [card for card in context.owner.tavern.deck.unique_cards() if card.tier == min(store_minion.tier + 1, 6)]
+        higher_tier_minion = context.randomizer.select_add_to_store(higher_tier_minions)
+        context.owner.store.append(higher_tier_minion)
+        higher_tier_minion.frozen = True
+
+
+class InfiniteToki(Hero):
+    power_cost = 1
+
+    def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                        store_index: Optional['StoreIndex'] = None):
+        context.owner.return_cards()
+        number_of_cards = 3 + context.owner.tavern_tier // 2 - len(context.owner.store)
+        context.owner.store.extend(context.owner.tavern.deck.draw(context.owner, number_of_cards - 1))
+        higher_tier_minions = [card for card in context.owner.tavern.deck.unique_cards() if
+                               card.tier == min(context.owner.tavern_tier + 1, context.owner.max_tier())]
+        higher_tier_minion = context.randomizer.select_add_to_store(higher_tier_minions)
+        context.owner.store.append(higher_tier_minion)
+

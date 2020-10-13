@@ -188,7 +188,7 @@ class TextAgent(Agent):
             return None
 
     async def discover_choice_action(self, player: 'Player') -> DiscoverChoiceAction:
-        await self.transport.send(f"player {player.name}, you must choose a card to discover.\n")
+        await self.connection.send(f"player {player.name}, you must choose a card to discover.\n")
         await self.print_player_card_list("discovery choices", player.discover_queue[0])
         await self.connection.send("input card number to discover here: ")
         user_input = await self.connection.receive_line()
