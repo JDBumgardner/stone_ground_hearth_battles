@@ -1,15 +1,33 @@
 import asyncio
 import random
-import typing
+import ipaddress
 from typing import Optional, Dict, Tuple, Set
-
+from aioupnp.upnp import UPnP, UPnPError
 from hearthstone.text_agent.lighthouse_speech import LIGHTHOUSE_SPEECH
 from hearthstone.text_agent.text_agent import TextAgentProtocol
-if typing.TYPE_CHECKING:
-    from hearthstone.simulator.host import AsyncHost
+
 
 INSULTS = ['fucker', 'douchebag', 'sweetheart', 'incel', 'son of a hamster', 'foot sniffer', 'proud boy', 'hgh bull',
            'MAGA hatter', 'Shillary', 'sleepy', 'low energy', 'schmeeb', LIGHTHOUSE_SPEECH]
+
+TELNET_CTRL_C = b'\xff\xf4\xff\xfd\x06'
+
+
+CARRIER_GRADE_NAT_SUBNET = ipaddress.ip_network('100.64.0.0/10')
+IPV4_TO_6_RELAY_SUBNET = ipaddress.ip_network('192.88.99.0/24')
+
+
+def is_valid_public_ipv4(address):
+    try:
+        parsed_ip = ipaddress.ip_address(address)
+        if any((parsed_ip.version != 4, parsed_ip.is_unspecified, parsed_ip.is_link_local, parsed_ip.is_loopback,
+                parsed_ip.is_multicast, parsed_ip.is_reserved, parsed_ip.is_private, parsed_ip.is_reserved)):
+            return False
+        else:
+            return not any((CARRIER_GRADE_NAT_SUBNET.supernet_of(ipaddress.ip_network(f"{address}/32")),
+                            IPV4_TO_6_RELAY_SUBNET.supernet_of(ipaddress.ip_network(f"{address}/32"))))
+    except (ipaddress.AddressValueError, ValueError):
+        return False
 
 
 class GameServer:
@@ -20,6 +38,7 @@ class GameServer:
         self._max_sessions = max_sessions
         self.kill_event = kill_event
         self.connected = asyncio.Queue()
+        self._serve_task: Optional[asyncio.Task] = None
 
     def handle_connection(self):
         if self.connection_count < self._max_sessions:
@@ -47,6 +66,37 @@ class GameServer:
         if session.player_name and session.player_name in self.protocols:
             self.protocols.pop(session.player_name)
         self.connection_count -= 1
+
+    def serve_forever(self, interface: str = '0.0.0.0', port: int = 9998):
+        async def serve_forever():
+            set_port_mapping = False
+            u = None
+            try:
+                u = await UPnP.discover()
+            except UPnPError:
+                print("failed to set up port redirect with UPnP... proceeding anyway")
+                mapped_port = port
+            else:
+                external_ip = await u.get_external_ip()
+                if not is_valid_public_ipv4(external_ip):
+                    raise Exception("failed to get valid external address from UPnP, are you behind a double NAT?")
+                mapped_port = await u.get_next_mapping(port, 'TCP', 'cyborg arena')
+                set_port_mapping = True
+                print("set port mapping")
+            try:
+                server = await asyncio.get_event_loop().create_server(self.handle_connection, interface, mapped_port)
+                print(f"starting server on {interface}:{mapped_port}")
+                async with server:
+                    await server.serve_forever()
+            finally:
+                if set_port_mapping and u:
+                    await u.delete_port_mapping(mapped_port, 'TCP')
+                    print("deleted port mapping")
+
+        if self._serve_task:
+            raise Exception("fnord")
+
+        self._serve_task = asyncio.create_task(serve_forever())
 
 
 class StoneProtocol(asyncio.Protocol, TextAgentProtocol):
@@ -80,7 +130,7 @@ class StoneProtocol(asyncio.Protocol, TextAgentProtocol):
         self._connection_lost.set()
 
     def data_received(self, data: bytes) -> None:
-        if data == b'\xff\xf4\xff\xfd\x06':
+        if data == TELNET_CTRL_C:
             self._transport.close()
             return
         try:
@@ -110,7 +160,6 @@ class StoneProtocol(asyncio.Protocol, TextAgentProtocol):
         line_task = asyncio.create_task(self.lines_in.get())
         connection_lost_task = asyncio.create_task(self._connection_lost.wait())
         await asyncio.wait([line_task, connection_lost_task], return_when=asyncio.FIRST_COMPLETED)
-
         if connection_lost_task.done():
             raise ConnectionError
         line = await line_task

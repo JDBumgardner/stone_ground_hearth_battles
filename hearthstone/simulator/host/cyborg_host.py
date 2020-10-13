@@ -3,7 +3,7 @@ import asyncio
 from hearthstone.battlebots.early_game_bot import EarlyGameBot
 from hearthstone.battlebots.priority_functions import PriorityFunctions
 from hearthstone.simulator.agent import EndPhaseAction
-from hearthstone.simulator.host import AsyncHost
+from hearthstone.simulator.host.async_host import AsyncHost
 
 
 class CyborgArena(AsyncHost):
