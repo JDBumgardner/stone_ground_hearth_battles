@@ -1,0 +1,86 @@
+syntax = "proto3";
+
+package pb;
+
+
+//
+//# full player object state
+//# other player health, tavern turn count, other player heros, most popular card type for each player, on win/lose streak
+//# notifications: golden
+//# combat
+
+
+enum CardType {
+    ThneedThing = 0;
+}
+
+enum MonsterType {
+    Beast = 0;
+}
+
+enum HeroType {
+    Foo2 = 0;
+}
+
+message Hero {
+    HeroType type = 1;
+    bool active_power = 2;
+    bool used_this_turn = 3;
+}
+
+message OtherPlayerView {
+    HeroType hero_type = 1;
+    uint32 health = 2;
+    MonsterType most_common_minion = 3;
+    uint32 most_common_count = 4;
+    uint32 tavern_tier = 5;
+    bool streak = 6;
+    bool is_next_opponent = 7;
+    string name = 8;
+}
+
+message Card {
+    uint32 tier = 1;
+    uint32 attack = 2;
+    uint32 health = 3;
+    bool golden = 4;
+    bool taunt = 5;
+    bool divine_shield = 6;
+    bool poisonous = 7;
+    bool magnetic = 8;
+    bool windfury = 9;
+    bool reborn = 10;
+    bool deathrattle = 11;
+    bool battlecry = 12;
+    CardType card_type = 13;
+    MonsterType monster_type = 14;
+}
+
+message Player {
+    uint32 health = 1;
+    uint32 turn_count = 2;
+    uint32 coins = 3;
+    uint32 tavern_tier = 4;
+    Hero hero = 5;
+    repeated Card hand = 6;
+    repeated Card in_play = 7;
+    repeated Card store = 8;
+    string name = 9;
+}
+
+message SingleCombat {
+    uint32 self = 1;
+    uint32 opponent = 2;
+    PostCombatBoard post_combat = 3;
+}
+
+message PostCombatBoard {
+    repeated Card self = 1;
+    repeated Card opponent = 2;
+}
+
+message CombatResult {
+    string opponent_name = 1;
+    repeated Card opponent_warparty = 2;
+    repeated SingleCombat combat_events = 3;
+}
