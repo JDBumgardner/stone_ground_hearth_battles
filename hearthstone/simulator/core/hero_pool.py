@@ -334,7 +334,7 @@ class CaptainHooktusk(Hero):
 
 class Malygos(Hero):
     power_cost = 0
-    power_target_location = CardLocation.BOARD
+    power_target_location = CardLocation.BOARD  # TODO: hero power can also target store minions
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
@@ -547,3 +547,25 @@ class InfiniteToki(Hero):
         higher_tier_minion = context.randomizer.select_add_to_store(higher_tier_minions)
         context.owner.store.append(higher_tier_minion)
 
+
+class TheLichKing(Hero):
+    power_cost = 0
+    power_target_location = CardLocation.BOARD
+    target = None
+    target_index = None
+
+    def hero_power_valid_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                              store_index: Optional['StoreIndex'] = None):
+        return bool(context.owner.in_play)
+
+    def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                        store_index: Optional['StoreIndex'] = None):
+        self.target = context.owner.in_play[board_index]
+
+    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.BUY_END and self.target is not None:
+            self.target_index = context.owner.in_play.index(self.target)
+            self.target = None
+        if event.event is EVENTS.COMBAT_START and self.target_index is not None:
+            context.friendly_war_party.board[self.target_index].reborn = True
+            self.target_index = None

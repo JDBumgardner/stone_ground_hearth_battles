@@ -88,6 +88,7 @@ class MonsterCard(metaclass=CardType):
         self.poisonous = self.base_poisonous
         self.taunt = self.base_taunt
         self.windfury = self.base_windfury
+        self.mega_windfury = False
         self.cleave = self.base_cleave
         self.deathrattles: List[Callable[[CombatPhaseContext], None]] = []
         if self.base_deathrattle is not None:
@@ -98,10 +99,9 @@ class MonsterCard(metaclass=CardType):
         self.battlecry: Optional[Callable[[List[MonsterCard], CombatPhaseContext], None]] = self.base_battlecry
         self.bool_attribute_list = [
             "divine_shield", "magnetic", "poisonous", "taunt",
-            "windfury", "cleave", "reborn"
+            "windfury", "cleave", "reborn", "mega_windfury"
         ]
         self.attached_cards = []
-        self.mega_windfury = False
         self.frozen = False
 
     def __repr__(self):
@@ -195,7 +195,11 @@ class MonsterCard(metaclass=CardType):
                 self.deathrattles.extend(card.deathrattles)
             for attr in card.bool_attribute_list:
                 if getattr(card, attr):
-                    setattr(self, attr, True)
+                    if attr == "windfury":
+                        setattr(self, "mega_windfury", True)
+                        setattr(self, attr, False)
+                    else:
+                        setattr(self, attr, True)
 
     def magnetize(self, targets: List['MonsterCard'], context: 'BuyPhaseContext'):
         if targets:

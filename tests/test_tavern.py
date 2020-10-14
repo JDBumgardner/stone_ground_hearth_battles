@@ -3059,6 +3059,60 @@ class CardTests(unittest.TestCase):
             self.assertEqual(card.tier, 1)
             self.assertFalse(card.frozen)
 
+    def test_the_lich_king(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong", TheLichKing())
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.randomizer = RepeatedCardForcer([WrathWeaver, AlleyCat, AlleyCat])
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand((HandIndex(0)))
+        player_2.purchase(StoreIndex(1))
+        player_2.summon_from_hand((HandIndex(0)))
+        self.assertCardListEquals(player_1.in_play, [WrathWeaver])
+        self.assertCardListEquals(player_2.in_play, [AlleyCat, TabbyCat])
+        player_1.hero_power(board_index=BoardIndex(0))
+        tavern.combat_step()
+        self.assertEqual(player_1.health, 40)
+        self.assertEqual(player_2.health, 40)
+
+    def test_golden_goliath_transformation(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        self.upgrade_to_tier(tavern, 5)
+        tavern.randomizer = RepeatedCardForcer([SeabreakerGoliath, AlleyCat])
+        for _ in range(3):
+            tavern.buying_step()
+            player_1.purchase(StoreIndex(0))
+            player_1.summon_from_hand((HandIndex(0)))
+            tavern.combat_step()
+        self.assertCardListEquals(player_1.in_play, [SeabreakerGoliath])
+        self.assertTrue(player_1.in_play[0].golden)
+        self.assertTrue(player_1.in_play[0].mega_windfury)
+        self.assertFalse(player_1.in_play[0].windfury)
+
+    class TestGoldenAmalgadonRandomizer(DefaultRandomizer):
+        def select_adaptation(self, adaptation_types: List['Type']) -> 'Type':
+            if AdaptBuffs.LightningSpeed in adaptation_types:
+                return AdaptBuffs.LightningSpeed
+            else:
+                return adaptation_types[0]
+
+    def test_golden_amalgadon_windfury(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        self.upgrade_to_tier(tavern, 6)
+        tavern.randomizer = RepeatedCardForcer([Amalgadon, AlleyCat, AlleyCat])
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        tavern.randomizer = self.TestGoldenAmalgadonRandomizer()
+        player_1.summon_from_hand(HandIndex(0))
+        self.assertCardListEquals(player_1.in_play, [Amalgadon])
+        self.assertTrue(player_1.in_play[0].windfury)
+        self.assertFalse(player_1.in_play[0].mega_windfury)
+
 
 if __name__ == '__main__':
     unittest.main()

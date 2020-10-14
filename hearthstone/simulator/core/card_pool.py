@@ -1715,11 +1715,6 @@ class ZappSlywick(MonsterCard):
     base_windfury = True
     legendary = True
 
-    def golden_transformation(self, base_cards: List['MonsterCard']):
-        super().golden_transformation(base_cards)
-        self.windfury = False
-        self.mega_windfury = True
-
     def valid_attack_targets(self, live_enemies: List['MonsterCard']) -> List['MonsterCard']:
         if self.attack <= 0 or not live_enemies:
             return []
@@ -1775,6 +1770,12 @@ class Amalgadon(MonsterCard):
             available_adaptations = valid_adaptations(self)
             adaptation = context.randomizer.select_adaptation(available_adaptations)
             self.adapt(adaptation())
+
+    def golden_transformation(self, base_cards: List['MonsterCard']):
+        super().golden_transformation(base_cards)
+        if self.mega_windfury:
+            self.mega_windfury = False
+            self.windfury = True
 
 
 class AnnoyOModule(MonsterCard):
