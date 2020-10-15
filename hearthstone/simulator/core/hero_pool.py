@@ -33,7 +33,7 @@ class LordJaraxxus(Hero):
 
 class PatchWerk(Hero):
     def starting_health(self) -> int:
-        return 50
+        return 55
 
 
 class Nefarian(Hero):
@@ -201,11 +201,6 @@ class Ysera(Hero):
                 card = context.randomizer.select_add_to_store(dragons)
                 context.owner.tavern.deck.remove_card(card)
                 context.owner.store.append(card)
-
-
-class Bartendotron(Hero):
-    def tavern_upgrade_costs(self) -> Tuple[int, int, int, int, int, int]:
-        return (0, 4, 6, 7, 8, 9)
 
 
 class MillhouseManastorm(Hero):
@@ -411,7 +406,7 @@ class KingMukla(Hero):
                         store_index: Optional['StoreIndex'] = None):
         for _ in range(2):
             if context.owner.room_in_hand():
-                context.owner.bananas += 1
+                context.owner.bananas += 1  # TODO: chance for a BIG BANANA (1 in 5?)
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_END and self.hero_power_used:
@@ -456,7 +451,7 @@ class Chenvaala(Hero):
         if event.event is EVENTS.SUMMON_BUY and event.card.check_type(MONSTER_TYPES.ELEMENTAL):
             self.play_counter += 1
             if self.play_counter == 3:
-                context.owner.tavern_upgrade_cost -= 2
+                context.owner.tavern_upgrade_cost -= 3
                 self.play_counter = 0
 
 
@@ -467,12 +462,12 @@ class RagnarosTheFirelord(Hero):
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.DIES and event.card in context.enemy_war_party.board:
             self.minions_killed += 1
-            if self.minions_killed == 20:
+            if self.minions_killed == 25:
                 self.sulfuras = True
         if event.event is EVENTS.BUY_END and self.sulfuras and len(context.owner.in_play) >= 1:
             for i in [0, -1]:  # TODO: not 100% sure this is correct with only 1 minion in play
-                context.owner.in_play[i].attack += 4
-                context.owner.in_play[i].health += 4
+                context.owner.in_play[i].attack += 3
+                context.owner.in_play[i].health += 3
 
 
 class Rakanishu(Hero):
@@ -512,7 +507,7 @@ class Sindragosa(Hero):
         if event.event is EVENTS.BUY_END:
             for card in context.owner.store:
                 if card.frozen:
-                    card.attack += 1
+                    card.attack += 2
                     card.health += 1
 
 
@@ -563,9 +558,29 @@ class TheLichKing(Hero):
         self.target = context.owner.in_play[board_index]
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.SELL and event.card == self.target:
+            self.target = None
         if event.event is EVENTS.BUY_END and self.target is not None:
             self.target_index = context.owner.in_play.index(self.target)
             self.target = None
         if event.event is EVENTS.COMBAT_START and self.target_index is not None:
             context.friendly_war_party.board[self.target_index].reborn = True
             self.target_index = None
+
+
+class TessGreymane(Hero):
+    power_cost = 1
+
+    def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                        store_index: Optional['StoreIndex'] = None):
+        context.owner.return_cards()
+        available_minions = [type(card)() for card in context.owner.last_opponent_warband]
+        number_of_cards = 3 + context.owner.tavern_tier // 2 - len(context.owner.store)
+        for _ in range(number_of_cards):
+            if available_minions:
+                card = context.randomizer.select_add_to_store(available_minions)
+                available_minions.remove(card)
+                context.owner.tavern.deck.remove_card_of_type(type(card))
+                context.owner.store.append(card)
+            else:
+                context.owner.store.extend(context.owner.tavern.deck.draw(context.owner, 1))

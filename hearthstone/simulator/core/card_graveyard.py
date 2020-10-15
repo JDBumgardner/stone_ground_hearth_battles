@@ -85,3 +85,17 @@ class JoEBot(MonsterCard):
     monster_type = MONSTER_TYPES.MECH
     base_attack = 1
     base_health = 1
+
+
+class PogoHopper(MonsterCard):
+    tier = 2
+    monster_type = MONSTER_TYPES.MECH
+    pool = MONSTER_TYPES.MECH
+    base_attack = 1
+    base_health = 1
+    tracked = True
+
+    def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
+        bonus = 4 if self.golden else 2
+        self.attack += context.owner.counted_cards[type(self)] * bonus
+        self.health += context.owner.counted_cards[type(self)] * bonus

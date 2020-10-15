@@ -100,7 +100,7 @@ class Player:
         self.reset_purchased_minions_list()
         self.reset_played_minions_list()
         self.apply_turn_start_income()
-        self.draw()
+        self.draw(unfreeze=False)
         self.hero.on_buy_step()
         self.broadcast_buy_phase_event(events.BuyStartEvent())
 
@@ -210,8 +210,8 @@ class Player:
     def room_on_board(self):
         return len(self.in_play) < self.maximum_board_size
 
-    def draw(self):
-        self.return_cards()
+    def draw(self, unfreeze: Optional[bool] = True):
+        self.return_cards(unfreeze)
         number_of_cards = 3 + self.tavern_tier // 2 - len(self.store)
         self.store.extend(self.tavern.deck.draw(self, number_of_cards))
 
@@ -258,14 +258,15 @@ class Player:
             self.free_refreshes -= 1
         else:
             self.coins -= self.refresh_store_cost
-        self.unfreeze()
         self.draw()
         self.broadcast_buy_phase_event(events.RefreshStoreEvent())
 
     def valid_reroll(self) -> bool:
         return self.coins >= self.refresh_store_cost or self.free_refreshes >= 1
 
-    def return_cards(self):
+    def return_cards(self, unfreeze: Optional[bool] = True):
+        if unfreeze:
+            self.unfreeze()
         self.tavern.deck.return_cards(itertools.chain.from_iterable([card.dissolve() for card in self.store if not card.frozen]))
         self.store = [card for card in self.store if card.frozen]
         self.unfreeze()

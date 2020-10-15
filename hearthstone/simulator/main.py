@@ -1,6 +1,5 @@
 from hearthstone.battlebots.cheapo_bot import CheapoBot
 from hearthstone.battlebots.early_game_bot import EarlyGameBot
-from hearthstone.battlebots.priority_bot import PriorityBot
 from hearthstone.battlebots.priority_functions import PriorityFunctions
 from hearthstone.simulator.host.async_host import AsyncHost
 
@@ -15,12 +14,12 @@ def main():
     logging.basicConfig(level=logging.DEBUG)
     host = AsyncHost({"dante_kong": TextAgent(StdIOTransport()),
                       "david_stolfo": CheapoBot(1),
-                      "battlerattler_priority_bot": PriorityFunctions.battlerattler_priority_bot(1, EarlyGameBot),
-                      "priority_saurolisk_buff_bot": PriorityFunctions.priority_saurolisk_buff_bot(2, EarlyGameBot),
-                      "racist_priority_bot_mech": PriorityFunctions.racist_priority_bot(3, EarlyGameBot, MONSTER_TYPES.MECH),
-                      "racist_priority_bot_murloc": PriorityFunctions.racist_priority_bot(4, EarlyGameBot, MONSTER_TYPES.MURLOC),
-                      "priority_adaptive_tripler_bot": PriorityFunctions.priority_adaptive_tripler_bot(5, EarlyGameBot),
-                      "priority_pogo_hopper_bot": PriorityFunctions.priority_pogo_hopper_bot(7, PriorityBot),
+                      "battlerattler_priority_bot": PriorityFunctions.battlerattler_priority_bot(2, EarlyGameBot),
+                      "priority_saurolisk_buff_bot": PriorityFunctions.priority_saurolisk_buff_bot(3, EarlyGameBot),
+                      "racist_priority_bot_mech": PriorityFunctions.racist_priority_bot(4, EarlyGameBot, MONSTER_TYPES.MECH),
+                      "racist_priority_bot_murloc": PriorityFunctions.racist_priority_bot(5, EarlyGameBot, MONSTER_TYPES.MURLOC),
+                      "racist_priority_bot_elemental": PriorityFunctions.racist_priority_bot(6, EarlyGameBot, MONSTER_TYPES.ELEMENTAL),
+                      "priority_adaptive_tripler_bot": PriorityFunctions.priority_adaptive_tripler_bot(7, EarlyGameBot),
                       })
     host.play_game()
 

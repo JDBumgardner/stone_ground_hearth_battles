@@ -72,6 +72,18 @@ class WarParty:
     def room_on_board(self) -> bool:
         return len(self.live_minions()) < self.owner.maximum_board_size
 
+    def adjacent_minions(self, minion: 'MonsterCard') -> List['MonsterCard']:
+        return [card for card in self.live_minions() if abs(
+            self.get_index(card) - self.get_index(minion)) == 1]
+
+    def get_defenders(self, attacker: 'MonsterCard', defender: 'MonsterCard') -> List['MonsterCard']:
+        if attacker.cleave:
+            defenders = self.adjacent_minions(defender)
+            defenders.insert(1, defender)
+        else:
+            defenders = [defender]
+        return defenders
+
 
 def fight_boards(war_party_1: 'WarParty', war_party_2: 'WarParty', randomizer: 'Randomizer'):
     #  Currently we are not randomizing the first to fight here
@@ -148,11 +160,10 @@ def start_attack(attacker: 'MonsterCard', defender: 'MonsterCard', attacking_war
     combat_phase_context = CombatPhaseContext(attacking_war_party, defending_war_party, randomizer)
     combat_phase_context.broadcast_combat_event(on_attack_event)
     attacker.take_damage(defender.attack, combat_phase_context, defender, defending=False)
-    defender.take_damage(attacker.attack, combat_phase_context.enemy_context(), attacker)
+    for enemy in defending_war_party.get_defenders(attacker, defender):
+        enemy.take_damage(attacker.attack, combat_phase_context.enemy_context(), attacker)
     # handle "after combat" events here
     combat_phase_context.broadcast_combat_event(events.AfterAttackDamageEvent(attacker, foe=defender))
-    # attacker.resolve_death(CombatPhaseContext(attacking_war_party, defending_war_party, randomizer), defender)
-    # defender.resolve_death(CombatPhaseContext(defending_war_party, attacking_war_party, randomizer), attacker)
     resolve_combat_deaths(attacker, defender, attacking_war_party, defending_war_party, randomizer)
     combat_phase_context.broadcast_combat_event(events.AfterAttackDeathrattleEvent(defender, foe=attacker))
     logger.debug(f'{attacker} has just attacked {defender}')
@@ -160,18 +171,21 @@ def start_attack(attacker: 'MonsterCard', defender: 'MonsterCard', attacking_war
 
 def resolve_combat_deaths(attacker: 'MonsterCard', defender: 'MonsterCard', attacking_war_party: 'WarParty',
                           defending_war_party: 'WarParty', randomizer: 'Randomizer'):
+    defenders = defending_war_party.get_defenders(attacker, defender)
     # need to check if both combatants are dead before broadcasting events
     if attacker.health <= 0 and not attacker.dead:
         attacker.dead = True
-    if defender.health <= 0 and not defender.dead:
-        defender.dead = True
+    for enemy in defenders:
+        if enemy.health <= 0 and not enemy.dead:
+            enemy.dead = True
     if attacker.dead:
         attacking_war_party.dead_minions.append(attacker)
         context = CombatPhaseContext(attacking_war_party, defending_war_party, randomizer)
         card_death_event = events.DiesEvent(attacker, foe=defender)
         context.broadcast_combat_event(card_death_event)
-    if defender.dead:
-        defending_war_party.dead_minions.append(defender)
-        context = CombatPhaseContext(defending_war_party, attacking_war_party, randomizer)
-        card_death_event = events.DiesEvent(defender, foe=attacker)
-        context.broadcast_combat_event(card_death_event)
+    for enemy in defenders:
+        if enemy.dead:
+            defending_war_party.dead_minions.append(enemy)
+            context = CombatPhaseContext(defending_war_party, attacking_war_party, randomizer)
+            card_death_event = events.DiesEvent(enemy, foe=attacker)
+            context.broadcast_combat_event(card_death_event)

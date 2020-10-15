@@ -215,7 +215,7 @@ class MurlocScout(MonsterCard):
 
 
 class SelflessHero(MonsterCard):
-    tier = 1
+    tier = 2
     monster_type = None
     base_attack = 2
     base_health = 1
@@ -639,20 +639,6 @@ class Robosaur(MonsterCard):
     base_health = 8
 
 
-class PogoHopper(MonsterCard):
-    tier = 2
-    monster_type = MONSTER_TYPES.MECH
-    pool = MONSTER_TYPES.MECH
-    base_attack = 1
-    base_health = 1
-    tracked = True
-
-    def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
-        bonus = 4 if self.golden else 2
-        self.attack += context.owner.counted_cards[type(self)] * bonus
-        self.health += context.owner.counted_cards[type(self)] * bonus
-
-
 class Goldgrubber(MonsterCard):
     tier = 4
     monster_type = MONSTER_TYPES.PIRATE
@@ -686,7 +672,7 @@ class BloodsailCannoneer(MonsterCard):
     monster_type = MONSTER_TYPES.PIRATE
     pool = MONSTER_TYPES.PIRATE
     base_attack = 4
-    base_health = 2
+    base_health = 3
 
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
         bonus = 6 if self.golden else 3
@@ -885,8 +871,8 @@ class PilotedShredder(MonsterCard):
 
 class SaltyLooter(MonsterCard):
     tier = 3
-    base_attack = 3
-    base_health = 3
+    base_attack = 4
+    base_health = 4
     monster_type = MONSTER_TYPES.PIRATE
     pool = MONSTER_TYPES.PIRATE
 
@@ -1487,7 +1473,8 @@ class NatPagleExtremeAngler(MonsterCard):
         if event.event is EVENTS.AFTER_ATTACK_DAMAGE and self == event.card and event.foe.is_dying():
             for _ in range(2 if self.golden else 1):
                 if context.friendly_war_party.owner.room_in_hand():
-                    random_minion = context.randomizer.select_gain_card(context.friendly_war_party.owner.tavern.deck.unique_cards())
+                    available_cards = [card for card in context.friendly_war_party.owner.tavern.deck.unique_cards() if card.tier <= context.friendly_war_party.owner.tavern_tier]
+                    random_minion = context.randomizer.select_gain_card(available_cards)
                     context.friendly_war_party.owner.tavern.deck.remove_card(random_minion)
                     context.friendly_war_party.owner.gain_hand_card(random_minion)
 
@@ -1745,17 +1732,8 @@ class FoeReaper4000(MonsterCard):
     pool = MONSTER_TYPES.MECH
     base_attack = 6
     base_health = 9
-    base_cleave = True  # TODO: need to implement cleave as an on-damage effect
+    base_cleave = True
     legendary = True
-
-    def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
-        if event.event == EVENTS.ON_ATTACK and event.card == self:
-            live_enemy_board = [card for card in context.enemy_war_party.board if not card.dead]
-            foe_index = live_enemy_board.index(event.foe)
-            splash_damage_targets = [card for i, card in enumerate(live_enemy_board) if abs(i - foe_index) == 1]
-            for target in splash_damage_targets:
-                target.take_damage(self.attack, context.enemy_context(), self)
-                target.resolve_death(context.enemy_context(), self)
 
 
 class Amalgadon(MonsterCard):
@@ -1770,12 +1748,6 @@ class Amalgadon(MonsterCard):
             available_adaptations = valid_adaptations(self)
             adaptation = context.randomizer.select_adaptation(available_adaptations)
             self.adapt(adaptation())
-
-    def golden_transformation(self, base_cards: List['MonsterCard']):
-        super().golden_transformation(base_cards)
-        if self.mega_windfury:
-            self.mega_windfury = False
-            self.windfury = True
 
 
 class AnnoyOModule(MonsterCard):
@@ -1877,9 +1849,7 @@ class CaveHydra(MonsterCard):
     pool = MONSTER_TYPES.BEAST
     base_attack = 2
     base_health = 4
-    base_cleave = True  # TODO: need to implement cleave as an on-damage effect
-
-    # TODO: combat test
+    base_cleave = True
 
 
 class PrimalfinLookout(MonsterCard):
@@ -1917,7 +1887,7 @@ class PartyElemental(MonsterCard):
     tier = 2
     monster_type = MONSTER_TYPES.ELEMENTAL
     pool = MONSTER_TYPES.ELEMENTAL
-    base_attack = 2
+    base_attack = 3
     base_health = 2
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
@@ -1948,7 +1918,7 @@ class ArcaneAssistant(MonsterCard):
     monster_type = MONSTER_TYPES.ELEMENTAL
     pool = MONSTER_TYPES.ELEMENTAL
     base_attack = 3
-    base_health = 2
+    base_health = 3
 
     def base_battlecry(self, targets: List['MonsterCard'], context: 'BuyPhaseContext'):
         bonus = 2 if self.golden else 1
@@ -1974,7 +1944,7 @@ class CracklingCyclone(MonsterCard):
 
 
 class DeadlySpore(MonsterCard):
-    tier = 4
+    tier = 5
     monster_type = None
     base_attack = 1
     base_health = 1
@@ -2021,11 +1991,11 @@ class WaterDroplet(MonsterCard):
 
 
 class LilRag(MonsterCard):
-    tier = 5
+    tier = 6
     monster_type = MONSTER_TYPES.ELEMENTAL
     pool = MONSTER_TYPES.ELEMENTAL
-    base_attack = 4
-    base_health = 4
+    base_attack = 6
+    base_health = 6
     legendary = True
 
     def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', CombatPhaseContext]):
@@ -2055,11 +2025,11 @@ class TavernTempest(MonsterCard):
 
 
 class GentleDjinni(MonsterCard):
-    tier = 6
+    tier = 5
     monster_type = MONSTER_TYPES.ELEMENTAL
     pool = MONSTER_TYPES.ELEMENTAL
-    base_attack = 6
-    base_health = 8
+    base_attack = 4
+    base_health = 5
     base_taunt = True
     legendary = True
 
@@ -2120,7 +2090,7 @@ class MajordomoExecutus(MonsterCard):
             multiplier = 2 if self.golden else 1
             played_elementals = [card_type for card_type in context.owner.played_minions if
                                  card_type.check_type(MONSTER_TYPES.ELEMENTAL)]
-            bonus = len(played_elementals) * multiplier
+            bonus = len(played_elementals) * multiplier + 1
             context.owner.in_play[0].attack += bonus
             context.owner.in_play[0].health += bonus
 
@@ -2135,9 +2105,7 @@ class WildfireElemental(MonsterCard):
     def handle_event_powers(self, event: CardEvent, context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.AFTER_ATTACK_DAMAGE and self == event.card and event.foe.is_dying():
             excess_damage = max(event.foe.health * -1, 0)
-            defender_index = context.enemy_war_party.live_minions().index(event.foe)
-            adjacent_enemies = [card for card in context.enemy_war_party.live_minions() if
-                                abs(context.enemy_war_party.live_minions().index(card) - defender_index) == 1]
+            adjacent_enemies = context.enemy_war_party.adjacent_minions(event.foe)
             if adjacent_enemies:
                 adjacent_targets = adjacent_enemies if self.golden else [context.randomizer.select_enemy_minion(adjacent_enemies)]
                 for card in adjacent_targets:

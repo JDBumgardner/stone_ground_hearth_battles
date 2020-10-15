@@ -5,6 +5,7 @@ from hearthstone.simulator.core.adaptations import AdaptBuffs
 from hearthstone.simulator.core.card_graveyard import *
 from hearthstone.simulator.core.card_pool import *
 from hearthstone.simulator.core.cards import MonsterCard, CardType
+from hearthstone.simulator.core.hero_graveyard import *
 from hearthstone.simulator.core.hero_pool import *
 from hearthstone.simulator.core.player import StoreIndex, HandIndex, BoardIndex
 from hearthstone.simulator.core.randomizer import DefaultRandomizer
@@ -288,7 +289,7 @@ class CardTests(unittest.TestCase):
         player_1 = tavern.add_player_with_hero("Dante_Kong", PatchWerk())
         player_2 = tavern.add_player_with_hero("lucy")
         tavern.buying_step()
-        self.assertEqual(player_1.health, 50)
+        self.assertEqual(player_1.health, 55)
         self.assertEqual(player_2.health, 40)
 
     def test_nefarian(self):
@@ -1055,12 +1056,12 @@ class CardTests(unittest.TestCase):
         tavern.buying_step()
         player_1.purchase(StoreIndex(0))
         self.assertCardListEquals(player_1.in_play, [SaltyLooter])
-        self.assertEqual(player_1.in_play[0].attack, 3)
-        self.assertEqual(player_1.in_play[0].health, 3)
-        player_1.summon_from_hand(HandIndex(0))
-        self.assertCardListEquals(player_1.in_play, [SaltyLooter, Scallywag])
         self.assertEqual(player_1.in_play[0].attack, 4)
         self.assertEqual(player_1.in_play[0].health, 4)
+        player_1.summon_from_hand(HandIndex(0))
+        self.assertCardListEquals(player_1.in_play, [SaltyLooter, Scallywag])
+        self.assertEqual(player_1.in_play[0].attack, 5)
+        self.assertEqual(player_1.in_play[0].health, 5)
         self.assertEqual(player_1.in_play[1].attack, 2)
         self.assertEqual(player_1.in_play[1].health, 1)
 
@@ -2608,7 +2609,7 @@ class CardTests(unittest.TestCase):
         player_1.sell_minion(BoardIndex(0))
         player_1.summon_from_hand(HandIndex(0))
         self.assertCardListEquals(player_1.in_play, [Sellemental, WaterDroplet])
-        self.assertEqual(player_1.tavern_upgrade_cost, 2)
+        self.assertEqual(player_1.tavern_upgrade_cost, 1)
 
     def test_ragnaros_the_firelord(self):
         tavern = Tavern(restrict_types=False)
@@ -2622,7 +2623,7 @@ class CardTests(unittest.TestCase):
         player_2.summon_from_hand(HandIndex(0))
         self.assertCardListEquals(player_1.in_play, [AlleyCat, TabbyCat])
         self.assertCardListEquals(player_2.in_play, [AlleyCat, TabbyCat])
-        for _ in range(10):
+        for _ in range(13):
             self.assertFalse(player_1.hero.sulfuras)
             tavern.combat_step()
             tavern.buying_step()
@@ -2632,10 +2633,10 @@ class CardTests(unittest.TestCase):
         self.assertEqual(player_1.in_play[1].attack, player_1.in_play[1].base_attack)
         self.assertEqual(player_1.in_play[1].health, player_1.in_play[1].base_health)
         tavern.combat_step()
-        self.assertEqual(player_1.in_play[0].attack, player_1.in_play[0].base_attack + 4)
-        self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health + 4)
-        self.assertEqual(player_1.in_play[1].attack, player_1.in_play[1].base_attack + 4)
-        self.assertEqual(player_1.in_play[1].health, player_1.in_play[1].base_health + 4)
+        self.assertEqual(player_1.in_play[0].attack, player_1.in_play[0].base_attack + 3)
+        self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health + 3)
+        self.assertEqual(player_1.in_play[1].attack, player_1.in_play[1].base_attack + 3)
+        self.assertEqual(player_1.in_play[1].health, player_1.in_play[1].base_health + 3)
 
     def test_rakanishu(self):
         tavern = Tavern(restrict_types=False)
@@ -2725,7 +2726,7 @@ class CardTests(unittest.TestCase):
         player_2.summon_from_hand(HandIndex(0))
         self.assertCardListEquals(player_1.in_play, [AlleyCat, TabbyCat])
         self.assertCardListEquals(player_2.in_play, [AlleyCat, TabbyCat])
-        for _ in range(10):
+        for _ in range(13):
             self.assertFalse(player_1.hero.sulfuras)
             tavern.combat_step()
             tavern.buying_step()
@@ -2734,8 +2735,8 @@ class CardTests(unittest.TestCase):
         self.assertEqual(player_1.in_play[0].attack, player_1.in_play[0].base_attack)
         self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health)
         tavern.combat_step()
-        self.assertEqual(player_1.in_play[0].attack, player_1.in_play[0].base_attack + 8)
-        self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health + 8)
+        self.assertEqual(player_1.in_play[0].attack, player_1.in_play[0].base_attack + 6)
+        self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health + 6)
 
     def test_triple_water_droplet(self):
         tavern = Tavern(restrict_types=False)
@@ -2778,7 +2779,7 @@ class CardTests(unittest.TestCase):
         tavern = Tavern(restrict_types=False)
         player_1 = tavern.add_player_with_hero("Dante_Kong")
         player_2 = tavern.add_player_with_hero("lucy")
-        self.upgrade_to_tier(tavern, 5)
+        self.upgrade_to_tier(tavern, 6)
         tavern.randomizer = RepeatedCardForcer([AlleyCat, LilRag, Sellemental])
         tavern.buying_step()
         for _ in range(3):
@@ -2954,8 +2955,8 @@ class CardTests(unittest.TestCase):
         player_1.summon_from_hand((HandIndex(0)))
         self.assertEqual(len(player_1.played_minions), 2)
         tavern.combat_step()
-        self.assertEqual(player_1.in_play[0].attack, player_1.in_play[0].base_attack + 1)
-        self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health + 1)
+        self.assertEqual(player_1.in_play[0].attack, player_1.in_play[0].base_attack + 2)
+        self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health + 2)
         self.assertEqual(player_1.in_play[1].attack, player_1.in_play[1].base_attack)
         self.assertEqual(player_1.in_play[1].health, player_1.in_play[1].base_health)
 
@@ -2999,11 +3000,11 @@ class CardTests(unittest.TestCase):
         player_1.freeze()
         tavern.combat_step()
         tavern.buying_step()
-        self.assertEqual(player_1.store[0].attack, player_1.store[0].base_attack + 1)
+        self.assertEqual(player_1.store[0].attack, player_1.store[0].base_attack + 2)
         self.assertEqual(player_1.store[0].health, player_1.store[0].base_health + 1)
-        self.assertEqual(player_1.store[1].attack, player_1.store[1].base_attack + 1)
+        self.assertEqual(player_1.store[1].attack, player_1.store[1].base_attack + 2)
         self.assertEqual(player_1.store[1].health, player_1.store[1].base_health + 1)
-        self.assertEqual(player_1.store[2].attack, player_1.store[2].base_attack + 1)
+        self.assertEqual(player_1.store[2].attack, player_1.store[2].base_attack + 2)
         self.assertEqual(player_1.store[2].health, player_1.store[2].base_health + 1)
 
     def test_galakrond(self):
@@ -3112,6 +3113,34 @@ class CardTests(unittest.TestCase):
         self.assertCardListEquals(player_1.in_play, [Amalgadon])
         self.assertTrue(player_1.in_play[0].windfury)
         self.assertFalse(player_1.in_play[0].mega_windfury)
+
+    class TestTessGreymaneRandomizer(DefaultRandomizer):
+        def select_add_to_store(self, cards: List['MonsterCard']) -> 'MonsterCard':
+            minion_types = [type(card) for card in cards]
+            if AlleyCat in minion_types:
+                return force_card(cards, AlleyCat)
+            elif MurlocTidehunter in minion_types:
+                return force_card(cards, MurlocTidehunter)
+            elif DragonspawnLieutenant in minion_types:
+                return force_card(cards, DragonspawnLieutenant)
+            else:
+                return cards[0]
+
+    def test_tess_greymane(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong", TessGreymane())
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.randomizer = RepeatedCardForcer([AlleyCat, MurlocTidehunter, DragonspawnLieutenant])
+        for i in range(3):
+            tavern.buying_step()
+            player_2.purchase(StoreIndex(i))
+            player_2.summon_from_hand(HandIndex(0))
+            tavern.combat_step()
+        self.assertCardListEquals(player_2.in_play, [AlleyCat, TabbyCat, MurlocTidehunter, MurlocScout, DragonspawnLieutenant])
+        tavern.buying_step()
+        tavern.randomizer = self.TestTessGreymaneRandomizer()
+        player_1.hero_power()
+        self.assertCardListEquals(player_1.store, [AlleyCat,MurlocTidehunter, DragonspawnLieutenant])
 
 
 if __name__ == '__main__':

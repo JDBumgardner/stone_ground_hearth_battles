@@ -2,7 +2,7 @@ import enum
 import itertools
 import typing
 from collections import defaultdict
-from typing import Set, List, Optional, Callable, Type, Union, Iterator, Tuple
+from typing import Set, List, Optional, Callable, Type, Union, Iterator
 
 from hearthstone.simulator.core import events
 from hearthstone.simulator.core.card_factory import make_metaclass
@@ -12,6 +12,7 @@ from hearthstone.simulator.core.randomizer import Randomizer
 
 if typing.TYPE_CHECKING:
     from hearthstone.simulator.core.adaptations import Adaptation
+    from hearthstone.simulator.core.player import Player
 
 
 def one_minion_per_type(cards: List['MonsterCard'], randomizer: 'Randomizer') -> List['MonsterCard']:
@@ -195,7 +196,7 @@ class MonsterCard(metaclass=CardType):
                 self.deathrattles.extend(card.deathrattles)
             for attr in card.bool_attribute_list:
                 if getattr(card, attr):
-                    if attr == "windfury":
+                    if attr == "windfury" and card.base_windfury:
                         setattr(self, "mega_windfury", True)
                         setattr(self, attr, False)
                     else:
@@ -313,6 +314,10 @@ class CardList:
 
     def remove_card(self, card: MonsterCard):
         self.cards_by_tier[card.tier].remove(card)
+
+    def remove_card_of_type(self, card_type: 'Type'):
+        cards_of_type = [card for card in self.cards_by_tier[card_type.tier] if type(card) == card_type]
+        self.cards_by_tier[card_type.tier].remove(cards_of_type[0])
 
     def all_cards(self):
         return itertools.chain.from_iterable(self.cards_by_tier.values())
