@@ -1119,6 +1119,18 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
 
+    def test_baron_doesnt_stack(self):
+        tavern = Tavern()
+        adam = tavern.add_player_with_hero("Adam")
+        ethan = tavern.add_player_with_hero("Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [UnstableGhoul(), BaronRivendare(), BaronRivendare()]
+        ethans_war_party.board = [FreedealingGambler(), MoltenRock(), MoltenRock(), MoltenRock(), MoltenRock(), MoltenRock(), MoltenRock()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+
 
 if __name__ == '__main__':
     unittest.main()

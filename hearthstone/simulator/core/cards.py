@@ -239,8 +239,7 @@ class MonsterCard(metaclass=CardType):
         return 1
 
     def zerus_shift(self, context: 'BuyPhaseContext'):
-        all_minions = PrintingPress.all_types()
-        random_minion = context.randomizer.select_random_minion(all_minions, context.owner.tavern.turn_count)()
+        random_minion = context.randomizer.select_random_minion(PrintingPress.all_types(), context.owner.tavern.turn_count)()
         if self.golden:
             random_minion.golden_transformation([])
         random_minion.attack += self.attack - self.base_attack * (2 if self.golden else 1)

@@ -159,10 +159,7 @@ class BuyPhaseContext:
         return summon_multiplier
 
     def battlecry_multiplier(self) -> int:
-        battlecry_multiplier = 1
-        for card in self.owner.in_play:
-            battlecry_multiplier *= card.battlecry_multiplier()
-        return battlecry_multiplier
+        return max([card.battlecry_multiplier() for card in self.owner.in_play] + [self.owner.hero.battlecry_multiplier()])
 
 
 class CombatPhaseContext:
@@ -192,7 +189,7 @@ class CombatPhaseContext:
         return summon_multiplier
 
     def deathrattle_multiplier(self) -> int:
-        deathrattle_multiplier = 1
-        for card in self.friendly_war_party.board:
-            deathrattle_multiplier *= card.deathrattle_multiplier()
-        return deathrattle_multiplier
+        try:
+            return max(card.deathrattle_multiplier() for card in self.friendly_war_party.live_minions())
+        except ValueError:
+            return 1

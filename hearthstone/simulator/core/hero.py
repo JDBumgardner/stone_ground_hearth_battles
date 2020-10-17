@@ -1,5 +1,5 @@
 import typing
-from typing import Union, Tuple, Optional
+from typing import Union, Tuple, Optional, List
 
 from hearthstone.simulator.core.card_factory import make_metaclass
 from hearthstone.simulator.core.cards import CardLocation
@@ -19,7 +19,7 @@ class Hero(metaclass=HeroType):
     power_cost: Optional[int] = None  # default value is for heroes with passive hero powers
     hero_power_used = False
     can_use_power = True
-    power_target_location: Optional['CardLocation'] = None
+    power_target_location: Optional[List['CardLocation']] = None
     multiple_power_uses_per_turn = False
     pool: 'MONSTER_TYPES' = MONSTER_TYPES.ALL
 
@@ -63,14 +63,15 @@ class Hero(metaclass=HeroType):
                 return False
         if not self.can_use_power:
             return False
-        if board_index is None and store_index is None and self.power_target_location is not None:
-            return False
-        if board_index is not None:
-            if self.power_target_location != CardLocation.BOARD or not context.owner.valid_board_index(board_index):
+        if self.power_target_location is not None:
+            if board_index is None and store_index is None:
                 return False
-        if store_index is not None:
-            if self.power_target_location != CardLocation.STORE or not context.owner.valid_store_index(store_index):
-                return False
+            if board_index is not None:
+                if CardLocation.BOARD not in self.power_target_location or not context.owner.valid_board_index(board_index):
+                    return False
+            if store_index is not None:
+                if CardLocation.STORE not in self.power_target_location or not context.owner.valid_store_index(store_index):
+                    return False
         if not self.hero_power_valid_impl(context, board_index, store_index):
             return False
         return True
@@ -81,6 +82,9 @@ class Hero(metaclass=HeroType):
 
     def on_buy_step(self):
         self.hero_power_used = False
+
+    def battlecry_multiplier(self) -> int:
+        return 1
 
 
 class EmptyHero(Hero):

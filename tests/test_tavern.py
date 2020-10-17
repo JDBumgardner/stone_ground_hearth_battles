@@ -3140,7 +3140,45 @@ class CardTests(unittest.TestCase):
         tavern.buying_step()
         tavern.randomizer = self.TestTessGreymaneRandomizer()
         player_1.hero_power()
-        self.assertCardListEquals(player_1.store, [AlleyCat,MurlocTidehunter, DragonspawnLieutenant])
+        self.assertCardListEquals(player_1.store, [AlleyCat, MurlocTidehunter, DragonspawnLieutenant])
+
+    def test_malygos_store_target(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong", Malygos())
+        player_2 = tavern.add_player_with_hero("lucy")
+        self.upgrade_to_tier(tavern, 6)
+        tavern.buying_step()
+        noted_tier = player_1.store[0].tier
+        player_1.hero_power(store_index=StoreIndex(0))
+        self.assertEqual(player_1.store[5].tier, noted_tier)
+
+    def test_shudderwock(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong", Shudderwock())
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.randomizer = RepeatedCardForcer([AlleyCat, MurlocTidehunter, VulgarHomunculus])
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        tavern.combat_step()
+        tavern.buying_step()
+        player_1.hero_power()
+        player_1.purchase(StoreIndex(1))
+        player_1.summon_from_hand(HandIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        self.assertCardListEquals(player_1.in_play, [AlleyCat, TabbyCat, TabbyCat, MurlocTidehunter, MurlocScout])
+
+    def test_brann_shudderwock_doesnt_stack(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong", Shudderwock())
+        player_2 = tavern.add_player_with_hero("lucy")
+        self.upgrade_to_tier(tavern, 6)
+        tavern.randomizer = RepeatedCardForcer([BrannBronzebeard, BrannBronzebeard, AlleyCat])
+        tavern.buying_step()
+        player_1.hero_power()
+        for _ in range(3):
+            player_1.purchase(StoreIndex(0))
+            player_1.summon_from_hand(HandIndex(0))
+        self.assertCardListEquals(player_1.in_play, [BrannBronzebeard, BrannBronzebeard, AlleyCat, TabbyCat, TabbyCat])
 
 
 if __name__ == '__main__':

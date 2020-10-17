@@ -34,7 +34,6 @@ class ShifterZerus(MonsterCard):
 
     def handle_event_in_hand(self, event: CardEvent, context: BuyPhaseContext):
         if event.event is EVENTS.BUY_START:
-            # TODO: can this turn into a token?
             self.zerus_shift(context)
 
 
@@ -149,6 +148,7 @@ class WrathWeaver(MonsterCard):
     monster_type = None
     base_attack = 1
     base_health = 1
+    pool = MONSTER_TYPES.DEMON
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         if event.event is EVENTS.SUMMON_BUY and event.card.check_type(MONSTER_TYPES.DEMON):
@@ -1329,7 +1329,6 @@ class ImpMama(MonsterCard):
             i = 0
             for _ in range(count):
                 for _ in range(context.summon_minion_multiplier()):
-                    # TODO: can this summon tokens? Can this summon itself?
                     demons = [card_type for card_type in PrintingPress.all_types() if
                               card_type.check_type(MONSTER_TYPES.DEMON) and card_type != type(self)]
                     random_minion_type = context.randomizer.select_summon_minion(demons)
@@ -1383,7 +1382,6 @@ class TheTideRazor(MonsterCard):
         i = 0
         for _ in range(count):
             for _ in range(context.summon_minion_multiplier()):
-                # TODO: can this summon tokens?
                 pirates = [card_type for card_type in PrintingPress.all_types() if card_type.check_type(MONSTER_TYPES.PIRATE)]
                 random_minion_type = context.randomizer.select_summon_minion(pirates)
                 context.friendly_war_party.summon_in_combat(random_minion_type(), context, summon_index + i + 1)
@@ -2041,7 +2039,8 @@ class GentleDjinni(MonsterCard):
             for _ in range(context.summon_minion_multiplier()):
                 if context.friendly_war_party.room_on_board():
                     elementals = [card_type for card_type in PrintingPress.all_types() if
-                                  card_type.check_type(MONSTER_TYPES.ELEMENTAL) and card_type != type(self)]
+                                  card_type.check_type(MONSTER_TYPES.ELEMENTAL) and card_type != type(
+                                      self) and card_type.tier <= context.friendly_war_party.owner.tavern_tier]
                     random_elemental_type = context.randomizer.select_summon_minion(elementals)
                     context.friendly_war_party.summon_in_combat(random_elemental_type(), context, summon_index + i + 1)
                     i += 1
@@ -2090,7 +2089,7 @@ class MajordomoExecutus(MonsterCard):
             multiplier = 2 if self.golden else 1
             played_elementals = [card_type for card_type in context.owner.played_minions if
                                  card_type.check_type(MONSTER_TYPES.ELEMENTAL)]
-            bonus = len(played_elementals) * multiplier + 1
+            bonus = len(played_elementals) * multiplier + multiplier
             context.owner.in_play[0].attack += bonus
             context.owner.in_play[0].health += bonus
 

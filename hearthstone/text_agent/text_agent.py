@@ -61,7 +61,7 @@ class TextAgent(Agent):
     def parse_rearrange_input(user_text: str, player: 'Player') -> Optional[List[int]]:
         split_list = user_text.split(',')
         if split_list == ["a"]:
-           return list(range(len(player.in_play)))
+            return list(range(len(player.in_play)))
         try:
             check_list = [int(i) for i in split_list]
         except ValueError:
@@ -91,7 +91,7 @@ class TextAgent(Agent):
         await self.connection.send('redeem: "r 1" sells the 1 indexed monster from the board\n')
         await self.connection.send('reroll store: "R" will reroll the store\n')
         await self.connection.send(f'upgrade tavern: "u" will upgrade the tavern (current upgrade cost: {player.tavern_upgrade_cost if player.tavern_tier < 6 else 0})\n')
-        await self.connection.send('hero power: "h [0]" will activate your hero power with ability target index 0 on the board or in the store\n')
+        await self.connection.send('hero power: "h [b] [0]" will activate your hero power with ability target index 0 on the board\n')
         await self.connection.send('triple rewards: "t" will use your highest tavern tier triple rewards\n')
         if player.gold_coins >= 1:
             await self.connection.send('coin tokens: "c" will use a coin token\n')
@@ -152,22 +152,25 @@ class TextAgent(Agent):
         elif split_list[0] == "u":
             return TavernUpgradeAction()
         elif split_list[0] == "h":
-            if not 1 <= len(split_list) < 3:
+            if not 1 <= len(split_list) < 4:
                 return None
             try:
-                index = int(split_list[1])
+                location = split_list[1]
             except IndexError:
                 return HeroPowerAction()
-            except ValueError:
+            try:
+                index = int(split_list[2])
+            except (ValueError, IndexError):
                 return None
-            if player.hero.power_target_location == CardLocation.BOARD and index is not None:
-                if not player.valid_board_index(index):
-                    return None
-                return HeroPowerAction(board_target=BoardIndex(index))
-            elif player.hero.power_target_location == CardLocation.STORE and index is not None:
-                if not player.valid_store_index(index):
-                    return None
-                return HeroPowerAction(store_target=StoreIndex(index))
+            if player.hero.power_target_location is not None:
+                if CardLocation.BOARD in player.hero.power_target_location and location == "b":
+                    if not player.valid_board_index(index):
+                        return None
+                    return HeroPowerAction(board_target=BoardIndex(index))
+                elif CardLocation.STORE in player.hero.power_target_location and location == "s":
+                    if not player.valid_store_index(index):
+                        return None
+                    return HeroPowerAction(store_target=StoreIndex(index))
         elif split_list[0] == "t":
             return TripleRewardsAction()
         elif split_list[0] == "c":

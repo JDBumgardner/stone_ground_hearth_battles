@@ -252,7 +252,7 @@ class ForestWardenOmu(Hero):
 
 class GeorgeTheFallen(Hero):
     power_cost = 3
-    power_target_location = CardLocation.BOARD
+    power_target_location = [CardLocation.BOARD]
 
     def hero_power_valid_impl(self, context: BuyPhaseContext, board_index: Optional['BoardIndex'] = None,
                               store_index: Optional['StoreIndex'] = None):
@@ -265,7 +265,7 @@ class GeorgeTheFallen(Hero):
 
 class RenoJackson(Hero):
     power_cost = 0
-    power_target_location = CardLocation.BOARD
+    power_target_location = [CardLocation.BOARD]
 
     def hero_power_valid_impl(self, context: BuyPhaseContext, board_index: Optional['BoardIndex'] = None,
                               store_index: Optional['StoreIndex'] = None):
@@ -279,7 +279,7 @@ class RenoJackson(Hero):
 
 class JandiceBarov(Hero):
     power_cost = 0
-    power_target_location = CardLocation.BOARD
+    power_target_location = [CardLocation.BOARD]
 
     def hero_power_valid_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                               store_index: Optional['StoreIndex'] = None):
@@ -309,7 +309,7 @@ class ArchVillianRafaam(Hero):  # TODO: tokens gained will enter the pool when s
 
 class CaptainHooktusk(Hero):
     power_cost = 0
-    power_target_location = CardLocation.BOARD
+    power_target_location = [CardLocation.BOARD]
 
     def hero_power_valid_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                               store_index: Optional['StoreIndex'] = None):
@@ -329,17 +329,23 @@ class CaptainHooktusk(Hero):
 
 class Malygos(Hero):
     power_cost = 0
-    power_target_location = CardLocation.BOARD  # TODO: hero power can also target store minions
+    power_target_location = [CardLocation.BOARD, CardLocation.STORE]  # TODO: are there other hero powers with multiple target locations?
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
-        board_minion = context.owner.pop_board_card(board_index)
-        context.owner.tavern.deck.return_cards(board_minion.dissolve())
-        predicate = lambda card: card.tier == board_minion.tier and type(card) != type(board_minion)
+        if board_index is not None:
+            minion = context.owner.pop_board_card(board_index)
+        elif store_index is not None:
+            minion = context.owner.store.pop(store_index)
+        context.owner.tavern.deck.return_cards(minion.dissolve())
+        predicate = lambda card: card.tier == minion.tier and type(card) != type(minion)
         same_tier_minions = [card for card in context.owner.tavern.deck.unique_cards() if predicate(card)]
         random_minion = context.randomizer.select_gain_card(same_tier_minions)
         context.owner.tavern.deck.remove_card(random_minion)
-        context.owner.gain_board_card(random_minion)
+        if board_index is not None:
+            context.owner.gain_board_card(random_minion)
+        elif store_index is not None:
+            context.owner.store.append(random_minion)
 
 
 class AFKay(Hero):
@@ -354,7 +360,7 @@ class AFKay(Hero):
 
 class EdwinVanCleef(Hero):
     power_cost = 1
-    power_target_location = CardLocation.BOARD
+    power_target_location = [CardLocation.BOARD]  # TODO: can this target minions in the store?
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
@@ -367,8 +373,8 @@ class ArannaStarseeker(Hero):
     total_rerolls = 0
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
-        if event.event is EVENTS.REFRESHED_STORE:
-            self.total_rerolls += 1
+        if event.event is EVENTS.REFRESHED_STORE or event.event is EVENTS.BUY_START:
+            self.total_rerolls += 1 if event.event is EVENTS.REFRESHED_STORE else 0
             if self.total_rerolls >= 4:
                 context.owner.store.extend(context.owner.tavern.deck.draw(context.owner, 7 - len(context.owner.store)))
 
@@ -513,7 +519,7 @@ class Sindragosa(Hero):
 
 class Galakrond(Hero):
     power_cost = 1
-    power_target_location = CardLocation.STORE
+    power_target_location = [CardLocation.STORE]
 
     def hero_power_valid_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                               store_index: Optional['StoreIndex'] = None):
@@ -545,7 +551,7 @@ class InfiniteToki(Hero):
 
 class TheLichKing(Hero):
     power_cost = 0
-    power_target_location = CardLocation.BOARD
+    power_target_location = [CardLocation.BOARD]
     target = None
     target_index = None
 
@@ -584,3 +590,21 @@ class TessGreymane(Hero):
                 context.owner.store.append(card)
             else:
                 context.owner.store.extend(context.owner.tavern.deck.draw(context.owner, 1))
+
+
+class Shudderwock(Hero):
+    power_cost = 1
+    battlecries_counted = 0
+
+    def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                        store_index: Optional['StoreIndex'] = None):
+        self.battlecries_counted = 0
+
+    def battlecry_multiplier(self) -> int:
+        if self.hero_power_used and self.battlecries_counted == 1:
+            return 2
+        return 1
+
+    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.SUMMON_BUY and event.card.battlecry and self.hero_power_used:
+            self.battlecries_counted += 1
