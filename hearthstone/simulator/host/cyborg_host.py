@@ -11,7 +11,7 @@ class CyborgArena(AsyncHost):
         self.tavern.buying_step()
 
         async def perform_player_actions(agent, player):
-            for _ in range(20):
+            for _ in range(40):
                 if player.discover_queue:
                     try:
                         discovered_card = await agent.discover_choice_action(player)
@@ -45,7 +45,7 @@ class CyborgArena(AsyncHost):
                     agent = PriorityFunctions.battlerattler_priority_bot(3, EarlyGameBot)
                     self.agents[player.name] = agent
                     arrangement = await agent.rearrange_cards(player)
-                player.rearrange_cards(arrangement)
+                player.rearrange_cards(arrangement.permutation)
 
         perform_player_action_tasks = []
         for player_name, player in self.tavern.players.items():

@@ -14,8 +14,6 @@ from hearthstone.simulator.core import hero_pool
 
 
 
-
-
 async def open_client_streams(max_players: int) -> Dict[str, Agent]:
     kill_event = asyncio.Event()
     game_server = GameServer(max_players, kill_event)
@@ -36,9 +34,12 @@ def main():
     logging.basicConfig(level=logging.DEBUG)
     agents = {
         "battlerattler_priority_bot": PriorityFunctions.battlerattler_priority_bot(1, EarlyGameBot),
-        "priority_saurolisk_buff_bot": PriorityFunctions.priority_saurolisk_buff_bot(2, EarlyGameBot),
         "battlerattler_priority_bot2": PriorityFunctions.battlerattler_priority_bot(3, EarlyGameBot),
         "battlerattler_priority_bot3": PriorityFunctions.battlerattler_priority_bot(4, EarlyGameBot),
+        "battlerattler_priority_bot4": PriorityFunctions.battlerattler_priority_bot(5, EarlyGameBot),
+        "battlerattler_priority_bot5": PriorityFunctions.battlerattler_priority_bot(6, EarlyGameBot),
+        "battlerattler_priority_bot6": PriorityFunctions.battlerattler_priority_bot(7, EarlyGameBot),
+        "battlerattler_priority_bot7": PriorityFunctions.battlerattler_priority_bot(8, EarlyGameBot),
     }
     agents.update(asyncio.get_event_loop().run_until_complete(open_client_streams(MAX_PLAYERS-len(agents))))
     host = CyborgArena(agents)
