@@ -471,7 +471,7 @@ class RagnarosTheFirelord(Hero):
             if self.minions_killed == 25:
                 self.sulfuras = True
         if event.event is EVENTS.BUY_END and self.sulfuras and len(context.owner.in_play) >= 1:
-            for i in [0, -1]:  # TODO: not 100% sure this is correct with only 1 minion in play
+            for i in [0, -1]:
                 context.owner.in_play[i].attack += 3
                 context.owner.in_play[i].health += 3
 

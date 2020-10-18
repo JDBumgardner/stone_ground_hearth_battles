@@ -3180,6 +3180,44 @@ class CardTests(unittest.TestCase):
             player_1.summon_from_hand(HandIndex(0))
         self.assertCardListEquals(player_1.in_play, [BrannBronzebeard, BrannBronzebeard, AlleyCat, TabbyCat, TabbyCat])
 
+    class TestZerusNotBuggedRandomizer(DefaultRandomizer):
+        def select_draw_card(self, cards: List['MonsterCard'], player_name: str, round_number: int) -> 'MonsterCard':
+            if round_number <= 3:
+                return force_card(cards, AlleyCat)
+            return force_card(cards, ShifterZerus)
+
+        def select_random_minion(self, cards: List['Type'], round_number: int) -> 'Type':
+            if round_number == 5:
+                return AlleyCat
+            elif round_number == 6:
+                return DragonspawnLieutenant
+            elif round_number == 7:
+                return ShifterZerus
+            else:
+                return cards[0]
+
+    def test_zerus_not_bugged(self):
+        tavern = Tavern(restrict_types=False)
+        tavern.randomizer = self.TestZerusNotBuggedRandomizer()
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        self.upgrade_to_tier(tavern, 3)
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        self.assertCardListEquals(player_1.hand, [ShifterZerus])
+        tavern.combat_step()
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        self.assertCardListEquals(player_1.hand, [AlleyCat, ShifterZerus])
+        tavern.combat_step()
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        self.assertCardListEquals(player_1.hand, [DragonspawnLieutenant, DragonspawnLieutenant, ShifterZerus])
+        tavern.combat_step()
+        tavern.buying_step()
+        self.assertCardListEquals(player_1.hand, [ShifterZerus])
+        self.assertTrue(player_1.hand[0].golden)
+
 
 if __name__ == '__main__':
     unittest.main()

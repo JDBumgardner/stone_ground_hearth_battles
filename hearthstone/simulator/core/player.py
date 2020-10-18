@@ -300,9 +300,11 @@ class Player:
     def broadcast_buy_phase_event(self, event: CardEvent, randomizer: Optional['Randomizer'] = None):
         self.hero.handle_event(event, BuyPhaseContext(self, randomizer or self.tavern.randomizer))
         for card in self.in_play.copy():
-            card.handle_event(event, BuyPhaseContext(self, randomizer or self.tavern.randomizer))
+            if card in self.in_play:
+                card.handle_event(event, BuyPhaseContext(self, randomizer or self.tavern.randomizer))
         for card in self.hand.copy():
-            card.handle_event_in_hand(event, BuyPhaseContext(self, randomizer or self.tavern.randomizer))
+            if card in self.hand:
+                card.handle_event_in_hand(event, BuyPhaseContext(self, randomizer or self.tavern.randomizer))
 
     def valid_rearrange_cards(self, permutation: List[int]) -> bool:
         return len(permutation) == len(self.in_play) and set(permutation) == set(range(len(self.in_play)))
@@ -388,6 +390,8 @@ class Player:
             self.store[store_index].health += 1
 
     def valid_use_banana(self, board_index: Optional['BoardIndex'] = None, store_index: Optional['StoreIndex'] = None):
+        if self.bananas <= 0:
+            return False
         if board_index == store_index:
             return False
         if board_index is not None and not self.in_play:
