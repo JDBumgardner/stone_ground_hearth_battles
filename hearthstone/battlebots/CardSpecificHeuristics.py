@@ -42,11 +42,11 @@ class MamasLove(CardHeuristic):
         return 10 * len([player_card for player_card in itertools.chain(player.in_play, player.hand) if type(player_card) == MamaBear])
 
 
-class HoppingMad(CardHeuristic):
-    cards_to_add = [PogoHopper]
-
-    def modification_value(self, player:'Player', card: 'MonsterCard'):
-        return 5 * len([player_card for player_card in itertools.chain(player.in_play, player.hand) if type(player_card) == PogoHopper])
+# class HoppingMad(CardHeuristic):
+#     cards_to_add = [PogoHopper]
+#
+#     def modification_value(self, player:'Player', card: 'MonsterCard'):
+#         return 5 * len([player_card for player_card in itertools.chain(player.in_play, player.hand) if type(player_card) == PogoHopper])
 
 
 class DragonPayoffs(CardHeuristic):

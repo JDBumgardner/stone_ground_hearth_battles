@@ -40,7 +40,7 @@ def get_priority_heuristics_bot_contestant_tuples():
     for bot in priority_bots:
         for function in function_list:
             if function is PriorityFunctions.priority_callables_bot:
-                contestant_tuples.append((f"{bot.__name__}-{function.__name__}", function(seed, bot, None, [MamasLove(), SameTypeAdvantage(), HoppingMad(),
+                contestant_tuples.append((f"{bot.__name__}-{function.__name__}", function(seed, bot, None, [MamasLove(), SameTypeAdvantage(),
                                                                                                             DragonPayoffs(), MonstrousMacawPower()])))
                 seed +=1
     return contestant_tuples
