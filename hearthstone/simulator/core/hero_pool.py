@@ -567,7 +567,8 @@ class TheLichKing(Hero):
         if event.event is EVENTS.SELL and event.card == self.target:
             self.target = None
         if event.event is EVENTS.BUY_END and self.target is not None:
-            self.target_index = context.owner.in_play.index(self.target)
+            if self.target in context.owner.in_play:
+                self.target_index = context.owner.in_play.index(self.target)
             self.target = None
         if event.event is EVENTS.COMBAT_START and self.target_index is not None:
             context.friendly_war_party.board[self.target_index].reborn = True
