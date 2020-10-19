@@ -2,6 +2,7 @@ import itertools
 
 from typing import Optional
 
+from hearthstone.simulator.core.card_graveyard import PogoHopper
 from hearthstone.simulator.core.card_pool import *
 from hearthstone.simulator.core.cards import MonsterCard, PrintingPress
 from hearthstone.simulator.core.player import Player
