@@ -131,9 +131,10 @@ class AfterAttackDeathrattleEvent(CardEvent):
 
 
 class EndCombatEvent(CardEvent):
-    def __init__(self, won_combat: bool):
+    def __init__(self, won_combat: bool, damage_taken: Optional[int] = 0):
         super().__init__(EVENTS.END_COMBAT)
         self.won_combat = won_combat
+        self.damage_taken = damage_taken
 
 
 class TavernUpgradeEvent(CardEvent):

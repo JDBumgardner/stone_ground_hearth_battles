@@ -2131,3 +2131,22 @@ class StasisElemental(MonsterCard):
                     context.owner.tavern.deck.remove_card(random_elemental)
                     context.owner.store.append(random_elemental)
                     random_elemental.frozen = True
+
+
+class EmperorCobra(MonsterCard):
+    tier = 1
+    monster_type = MONSTER_TYPES.BEAST
+    pool = MONSTER_TYPES.BEAST
+    base_attack = 2
+    base_health = 3
+    base_poisonous = True
+    token = True
+
+
+class Snake(MonsterCard):
+    tier = 1
+    monster_type = MONSTER_TYPES.BEAST
+    pool = MONSTER_TYPES.BEAST
+    base_attack = 1
+    base_health = 1
+    token = True

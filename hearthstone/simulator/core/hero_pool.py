@@ -1,11 +1,12 @@
 from typing import Union, Tuple, Optional
 
-from hearthstone.simulator.core.card_pool import Amalgam
-from hearthstone.simulator.core.cards import one_minion_per_type, CardLocation
+from hearthstone.simulator.core.card_pool import Amalgam, EmperorCobra, Snake
+from hearthstone.simulator.core.cards import one_minion_per_type, CardLocation, PrintingPress
 from hearthstone.simulator.core.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
 from hearthstone.simulator.core.hero import Hero
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 from hearthstone.simulator.core.player import BoardIndex, StoreIndex
+from hearthstone.simulator.core.secrets import SECRETS
 from hearthstone.simulator.core.triple_reward_card import TripleRewardCard
 
 
@@ -611,3 +612,58 @@ class Shudderwock(Hero):
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.SUMMON_BUY and event.card.battlecry and self.hero_power_used:
             self.battlecries_counted += 1
+
+
+class TheGreatAkazamarak(Hero):
+    power_cost = 2
+    secrets = []
+
+    def hero_power_valid_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                              store_index: Optional['StoreIndex'] = None):
+        return bool(SECRETS.remaining_secrets(context.owner))
+
+    def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                        store_index: Optional['StoreIndex'] = None):
+        pass  # TODO: add some sort of discover_secret() function for player class
+
+    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.BUY_END:
+            self.give_immunity = False
+        if event.event is EVENTS.END_COMBAT and context.owner.health <= 0 and SECRETS.ICE_BLOCK in self.secrets:
+            context.owner.health += event.damage_taken
+            self.give_immunity = True
+            self.secrets.remove(SECRETS.ICE_BLOCK)
+        if event.event is EVENTS.ON_ATTACK and event.foe in context.friendly_war_party.board:
+            if SECRETS.SPLITTING_IMAGE in self.secrets:
+                context.friendly_war_party.summon_in_combat(type(event.foe)(), context)
+                self.secrets.remove(SECRETS.SPLITTING_IMAGE)
+            if SECRETS.AUTODEFENSE_MATRIX in self.secrets:
+                event.foe.divine_shield = True
+                self.secrets.remove(SECRETS.AUTODEFENSE_MATRIX)
+            if SECRETS.VENOMSTRIKE_TRAP in self.secrets:
+                cobra = EmperorCobra()
+                context.friendly_war_party.summon_in_combat(cobra, context)  # TODO: does Khadgar double this?
+                self.secrets.remove(SECRETS.VENOMSTRIKE_TRAP)
+            if SECRETS.SNAKE_TRAP in self.secrets:
+                for _ in range(3):
+                    snake = Snake()
+                    context.friendly_war_party.summon_in_combat(snake, context)
+                self.secrets.remove(SECRETS.SNAKE_TRAP)
+        if event.event is EVENTS.DIES and event.card in context.friendly_war_party.board:
+            if SECRETS.EFFIGY in self.secrets:
+                summon_index = context.friendly_war_party.get_index(event.card)
+                same_cost_minions = [card_type for card_type in PrintingPress.all_types() if card_type.mana_cost == event.card.mana_cost]  # TODO: update mana costs for all minions (grrrrrr)
+                random_minion = context.randomizer.select_summon_minion(same_cost_minions)()
+                context.friendly_war_party.summon_in_combat(random_minion, context, summon_index+1)
+                self.secrets.remove(SECRETS.EFFIGY)
+            if SECRETS.REDEMPTION in self.secrets:
+                summon_index = context.friendly_war_party.get_index(event.card)
+                new_copy = event.card.unbuffed_copy()
+                new_copy.health = 1
+                context.friendly_war_party.summon_in_combat(new_copy, context, summon_index+1)
+                self.secrets.remove(SECRETS.REDEMPTION)
+            if SECRETS.AVENGE in self.secrets:
+                random_friend = context.randomizer.select_friendly_minion(context.friendly_war_party.live_minions())
+                random_friend.attack += 3
+                random_friend.health += 2
+                self.secrets.remove(SECRETS.AVENGE)

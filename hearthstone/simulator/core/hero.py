@@ -22,6 +22,7 @@ class Hero(metaclass=HeroType):
     power_target_location: Optional[List['CardLocation']] = None
     multiple_power_uses_per_turn = False
     pool: 'MONSTER_TYPES' = MONSTER_TYPES.ALL
+    give_immunity = False
 
     def __repr__(self):
         return str(type(self).__name__)

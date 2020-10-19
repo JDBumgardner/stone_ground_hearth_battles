@@ -336,7 +336,7 @@ class Player:
         return hero_index in range(len(self.hero_options))
 
     def take_damage(self, damage: int):
-        if not any(card.give_immunity for card in self.in_play):
+        if not any(card.give_immunity for card in self.in_play) and not self.hero.give_immunity:
             self.health -= damage
             self.broadcast_buy_phase_event(events.PlayerDamagedEvent())
 

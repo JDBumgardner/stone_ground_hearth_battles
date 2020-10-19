@@ -137,15 +137,17 @@ def damage(half_board_1: 'WarParty', half_board_2: 'WarParty', randomizer: 'Rand
         logger.debug(f'{half_board_1.owner.name} has won the fight')
         logger.debug(f'{half_board_2.owner.name} took {monster_damage_1 + half_board_1.owner.tavern_tier} damage.')
         logger.debug(f"{half_board_1.owner.name}'s remaining board: {[card for card in half_board_1.board if not card.dead]}")
-        half_board_2.owner.health -= monster_damage_1 + half_board_1.owner.tavern_tier
+        damage_dealt = monster_damage_1 + half_board_1.owner.tavern_tier
+        half_board_2.owner.health -= damage_dealt
         half_board_1.owner.broadcast_buy_phase_event(events.EndCombatEvent(won_combat=True), randomizer)
-        half_board_2.owner.broadcast_buy_phase_event(events.EndCombatEvent(won_combat=False), randomizer)
+        half_board_2.owner.broadcast_buy_phase_event(events.EndCombatEvent(won_combat=False, damage_taken=damage_dealt), randomizer)
     elif monster_damage_2 > 0:
         logger.debug(f'{half_board_2.owner.name} has won the fight')
         logger.debug(f'{half_board_1.owner.name} took {monster_damage_2 + half_board_2.owner.tavern_tier} damage.')
         logger.debug(f"{half_board_2.owner.name}'s remaining board: {[card for card in half_board_2.board if not card.dead]}")
-        half_board_1.owner.health -= monster_damage_2 + half_board_2.owner.tavern_tier
-        half_board_1.owner.broadcast_buy_phase_event(events.EndCombatEvent(won_combat=False), randomizer)
+        damage_dealt = monster_damage_2 + half_board_2.owner.tavern_tier
+        half_board_1.owner.health -= damage_dealt
+        half_board_1.owner.broadcast_buy_phase_event(events.EndCombatEvent(won_combat=False, damage_taken=damage_dealt), randomizer)
         half_board_2.owner.broadcast_buy_phase_event(events.EndCombatEvent(won_combat=True), randomizer)
     else:
         logger.debug('neither player won (no minions left)')
