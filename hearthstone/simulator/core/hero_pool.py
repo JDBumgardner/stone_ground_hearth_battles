@@ -586,7 +586,9 @@ class TessGreymane(Hero):
             if available_minions:
                 card = context.randomizer.select_add_to_store(available_minions)
                 available_minions.remove(card)
-                context.owner.tavern.deck.remove_card_of_type(type(card))
+                # TODO See github issue #9, to determine the correct behavior, but it's very easy to not have any more
+                # cards of a given type in the deck.
+                # context.owner.tavern.deck.remove_card_of_type(type(card))
                 context.owner.store.append(card)
             else:
                 context.owner.store.extend(context.owner.tavern.deck.draw(context.owner, 1))
