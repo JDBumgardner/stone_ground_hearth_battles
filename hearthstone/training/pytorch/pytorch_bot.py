@@ -54,6 +54,7 @@ class PytorchBot(AnnotatingAgent):
                 value=float(value),
                 gae_info=None
             )
+
         return action, ac_game_step_info
 
     # TODO handle learning card and discover choice actions

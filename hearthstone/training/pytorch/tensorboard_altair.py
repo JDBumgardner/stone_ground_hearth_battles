@@ -156,10 +156,13 @@ def plot_replay(replay: Replay, player_name: str, tensorboard: SummaryWriter, gl
     columns.update({
         "critic_value": [step.agent_annotation.value for step in game_steps if
                          valid_step(step)],
-        "reward": [step.agent_annotation.gae_info.reward if step.agent_annotation.gae_info.is_terminal else None for step in game_steps if
+        "reward": [step.agent_annotation.gae_info.reward if step.agent_annotation.gae_info.is_terminal else None for
+                   step in game_steps if
                    valid_step(step)],
         "critic_value_gae_return": [step.agent_annotation.gae_info.gae_return for step in game_steps if
                                     valid_step(step)],
+        "advantage": [step.agent_annotation.gae_info.gae_return - step.agent_annotation.value for step in game_steps if
+                      valid_step(step)],
         "return": [step.agent_annotation.gae_info.retrn for step in game_steps if
                    valid_step(step)],
     })

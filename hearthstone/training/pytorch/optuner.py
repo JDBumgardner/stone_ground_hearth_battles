@@ -12,7 +12,7 @@ def objective(trial: optuna.Trial):
         "ppo_epsilon": trial.suggest_float("ppo_epsilon", 0.01, 0.5, log=True),
         "policy_weight": trial.suggest_float("policy_weight", 0.3, 3, log=True),
         "entropy_weight": trial.suggest_float("entropy_weight", 1e-7, 1e-2, log=True),
-        "nn_hidden_layers": trial.suggest_int("nn_hidden_layers", 0, 3),
+        "nn.hidden_layers": trial.suggest_int("nn.hidden_layers", 0, 3),
         "normalize_observations": trial.suggest_categorical("normalize_observations", [True, False]),
         "gradient_clipping": trial.suggest_float("gradient_clipping", 0.5, 0.5),
         "normalize_advantage": trial.suggest_categorical("normalize_advantage", [True, False]),
@@ -25,10 +25,10 @@ def objective(trial: optuna.Trial):
         hparams["sgd_lr"] = trial.suggest_float("sgd_lr", 1e-6, 1e-3, log=True)
         hparams["sgd_momentum"] = trial.suggest_float("sgd_momentum", 0.0, 1.0)
 
-    if hparams["nn_hidden_layers"] > 0:
-        hparams["nn_hidden_size"] = trial.suggest_int("nn_hidden_size", 32, 2048)
-        hparams["nn_shared"] = trial.suggest_categorical("nn_shared", [True, False])
-        hparams["nn_activation"] = trial.suggest_categorical("nn_activation", ["relu", "gelu", "tanh"])
+    if hparams["nn.hidden_layers"] > 0:
+        hparams["nn.hidden_size"] = trial.suggest_int("nn.hidden_size", 32, 2048)
+        hparams["nn.shared"] = trial.suggest_categorical("nn.shared", [True, False])
+        hparams["nn.activation"] = trial.suggest_categorical("nn.activation", ["relu", "gelu", "tanh"])
 
     ppo_learner = PPOLearner(hparams, 600, trial)
     return ppo_learner.run()

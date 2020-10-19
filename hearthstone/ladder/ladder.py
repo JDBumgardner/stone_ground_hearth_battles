@@ -19,11 +19,11 @@ from hearthstone.simulator.host.round_robin_host import RoundRobinHost
 
 
 class Contestant:
-    def __init__(self, name,  agent_generator: Callable[[], AnnotatingAgent]):
+    def __init__(self, name,  agent_generator: Callable[[], AnnotatingAgent], initial_trueskill=None):
         self.name = name
         self.agent_generator = agent_generator
         self.elo = 1200
-        self.trueskill = trueskill.Rating()
+        self.trueskill = initial_trueskill or trueskill.Rating()
         self.games_played = 0
 
     def __repr__(self):
@@ -56,10 +56,10 @@ def print_standings(contestants: List[Contestant]):
     print(contestants)
 
 
-def run_tournament(contestants: List[Contestant], num_rounds=10):
+def run_tournament(contestants: List[Contestant], num_rounds=10, game_size=8):
     agents = {contestant.name: contestant.agent_generator() for contestant in contestants}
     for _ in range(num_rounds):
-        round_contestants = random.sample(contestants, k=8)
+        round_contestants = random.sample(contestants, k=game_size)
         host = RoundRobinHost({c.name: agents[c.name] for c in round_contestants})
         host.play_game()
         winner_names = list(reversed([name for name, player in host.tavern.losers]))

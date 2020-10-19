@@ -3,24 +3,81 @@ from typing import Tuple
 import torch
 import torch.nn.functional as F
 from torch import nn
+from torch.nn import LayerNorm
+from torch.nn.init import xavier_uniform_
 
 from hearthstone.training.pytorch import hearthstone_state_encoder
 from hearthstone.training.pytorch.hearthstone_state_encoder import Feature, State, EncodedActionSet
 
 
-class TransformerWithContextEncoder(nn.Module):
-    def __init__(self, player_encoding: Feature, card_encoding: Feature, width: int, num_layers: int, activation: str):
+
+def _get_activation_fn(activation):
+    if activation == "relu":
+        return F.relu
+    elif activation == "gelu":
+        return F.gelu
+
+    raise RuntimeError("activation should be relu/gelu, not {}".format(activation))
+
+
+class TransformerEncoderPostNormLayer(nn.Module):
+    def __init__(self, d_model, nhead, dim_feedforward=2048, dropout=0.0, activation="relu"):
         super().__init__()
+        assert dropout == 0.0
+        self.self_attn = nn.MultiheadAttention(d_model, nhead)
+        # Implementation of Feedforward model
+        self.linear1 = nn.Linear(d_model, dim_feedforward)
+        self.linear2 = nn.Linear(dim_feedforward, d_model)
+
+        self.norm1 = LayerNorm(d_model)
+        self.norm2 = LayerNorm(d_model)
+
+        self.activation = _get_activation_fn(activation)
+
+    def __setstate__(self, state):
+        if 'activation' not in state:
+            state['activation'] = F.relu
+        super().__setstate__(state)
+
+    def forward(self, src, src_mask=None, src_key_padding_mask=None):
+        norm_src = self.norm1(src)
+
+        src2 = self.self_attn(norm_src, norm_src, norm_src, attn_mask=src_mask,
+                              key_padding_mask=src_key_padding_mask)[0]
+        src = src + src2
+
+        norm_src = self.norm2(src)
+        src2 = self.linear2(self.activation(self.linear1(norm_src)))
+        src = src + src2
+        return src
+
+
+class TransformerWithContextEncoder(nn.Module):
+    # TODO "redundant" arg should be implemented as a different state encoding instead
+    def __init__(self, player_encoding: Feature, card_encoding: Feature, width: int, num_layers: int, activation: str, redundant=False):
+        super().__init__()
+        self.redundant = redundant
         self.width = width
         # TODO Orthogonal initialization?
         self.fc_player = nn.Linear(player_encoding.size()[0], self.width - 1)
-        self.fc_card = nn.Linear(card_encoding.size()[1], self.width - 1)
-        self.encoder_layer = nn.TransformerEncoderLayer(d_model=width, dim_feedforward=width*4, nhead=4, dropout=0.0, activation=activation)
-        self.transformer_encoder = nn.TransformerEncoder(self.encoder_layer, num_layers=num_layers)
+        card_encoding_size = card_encoding.size()[1]
+        if redundant:
+            card_encoding_size += player_encoding.size()[0]
+        self.fc_cards = nn.Linear(card_encoding_size, self.width - 1)
+        encoder_layer_type = TransformerEncoderPostNormLayer if redundant else nn.TransformerEncoderLayer
+        self.encoder_layer = encoder_layer_type(d_model=width, dim_feedforward=width*4, nhead=4, dropout=0.0, activation=activation)
+        self.transformer_encoder = nn.TransformerEncoder(self.encoder_layer, num_layers=num_layers, norm=LayerNorm(width))
+        self._reset_parameters()
 
     def forward(self, state: State) -> Tuple[torch.Tensor, torch.Tensor]:
         player_rep = self.fc_player(state.player_tensor).unsqueeze(1)
-        card_rep = self.fc_card(state.cards_tensor)
+        card_rep = state.cards_tensor
+        if self.redundant:
+            # Concatenate the player representation to each card representation.
+            card_rep = torch.cat(
+                (card_rep, state.player_tensor.unsqueeze(1).expand(-1, state.cards_tensor.size()[1], -1)), dim=2)
+        card_rep = self.fc_cards(card_rep)
+
         # We add an indicator dimension to distinguish the player representation from the card representation.
         player_rep = F.pad(player_rep, [1, 0], value=1.0)
         card_rep = F.pad(card_rep, [1, 0], value=0.0)
@@ -29,9 +86,14 @@ class TransformerWithContextEncoder(nn.Module):
         full_rep: torch.Tensor = self.transformer_encoder(full_rep)
         return full_rep[:, 0], full_rep[:, 1:]
 
+    def _reset_parameters(self):
+        for p in self.parameters():
+            if p.dim() > 1:
+                xavier_uniform_(p)
+
 
 class HearthstoneTransformerNet(nn.Module):
-    def __init__(self, player_encoding: Feature, card_encoding: Feature, hidden_layers=1, hidden_size=16, shared=False, activation_function="gelu"):
+    def __init__(self, player_encoding: Feature, card_encoding: Feature, hidden_layers=1, hidden_size=16, shared=False, activation_function="gelu", redundant=False):
         super().__init__()
 
         self.player_hidden_size = hidden_size
@@ -42,12 +104,12 @@ class HearthstoneTransformerNet(nn.Module):
             self.card_hidden_size = card_encoding.size()[1]
 
         self.policy_encoder = TransformerWithContextEncoder(player_encoding, card_encoding, hidden_size, hidden_layers,
-                                                            activation_function)
+                                                            activation_function, redundant=redundant)
         if shared:
             self.value_encoder = self.policy_encoder
         else:
             self.value_encoder = TransformerWithContextEncoder(player_encoding, card_encoding, hidden_size,
-                                                               hidden_layers, activation_function)
+                                                               hidden_layers, activation_function, redundant=redundant)
 
         # Output layers
         self.fc_player_policy = nn.Linear(self.player_hidden_size,
@@ -69,6 +131,7 @@ class HearthstoneTransformerNet(nn.Module):
             state = State(state[0], state[1])
         if not isinstance(valid_actions, EncodedActionSet):
             valid_actions = EncodedActionSet(valid_actions[0], valid_actions[1])
+
         policy_encoded_player, policy_encoded_cards = self.policy_encoder(state)
         value_encoded_player, value_encoded_cards = self.value_encoder(state)
 
