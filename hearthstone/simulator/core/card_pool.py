@@ -2018,9 +2018,10 @@ class TavernTempest(MonsterCard):
             if context.owner.room_in_hand():
                 available_elementals = [card for card in context.owner.tavern.deck.unique_cards() if card.check_type(
                     MONSTER_TYPES.ELEMENTAL) and card.tier <= context.owner.tavern_tier and type(card) != type(self)]
-                random_elemental = context.randomizer.select_gain_card(available_elementals)
-                context.owner.tavern.deck.remove_card(random_elemental)
-                context.owner.gain_hand_card(random_elemental)
+                if available_elementals:
+                    random_elemental = context.randomizer.select_gain_card(available_elementals)
+                    context.owner.tavern.deck.remove_card(random_elemental)
+                    context.owner.gain_hand_card(random_elemental)
 
 
 class GentleDjinni(MonsterCard):
