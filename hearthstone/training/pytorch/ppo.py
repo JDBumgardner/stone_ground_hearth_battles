@@ -75,16 +75,18 @@ class PPOLearner(GlobalStepContext):
                     normalize_advantage: bool
                     ):
         for minibatch in replay_buffer.sample_minibatches(minibatch_size):
-            self.learn_minibatch(tensorboard, optimizer, learning_net, minibatch, policy_weight, entropy_weight,
+            stop_early = self.learn_minibatch(tensorboard, optimizer, learning_net, minibatch, policy_weight, entropy_weight,
                                  ppo_epsilon,
                                  gradient_clipping, normalize_advantage)
             self.global_step += 1
+            if stop_early:
+                return
 
     def learn_minibatch(self, tensorboard: SummaryWriter, optimizer: optim.Optimizer, learning_net: nn.Module,
                         minibatch: List[ActorCriticGameStepInfo],
                         policy_weight: float, entropy_weight: float, ppo_epsilon: float,
                         gradient_clipping: float,
-                        normalize_advantage: bool):
+                        normalize_advantage: bool) -> bool:
         """
         This does one step of gradient descent on a mini batch of transitions.
 
@@ -98,6 +100,7 @@ class PPOLearner(GlobalStepContext):
             ppo_epsilon: Clips the difference between the current and next value between +/- ppo_epsilon.
             gradient_clipping: Clip the norm of the gradient if it's above this threshold.
             normalize_advantage: Whether to batch normal the advantage with a mean of 0 and stdev of 1.
+        :returns Bool, whether to stop early due to kl constraint being exceeded
         """
         transition_batch = tensorize_batch(minibatch, self.get_device())
 
@@ -188,6 +191,7 @@ class PPOLearner(GlobalStepContext):
         if self.expensive_tensorboard:
             for tag, parm in learning_net.named_parameters():
                 tensorboard.add_histogram(f"gradients_{tag}/train", parm.grad.data, self.global_step)
+        return approx_kl_divergence > self.hparams['approx_kl_limit']
 
     def get_device(self) -> torch.device:
         if self.hparams['cuda'] and torch.cuda.is_available():
@@ -376,7 +380,7 @@ def main():
         'gae_lambda': 0.9,
         'game_size': 2,
         'gradient_clipping': 0.5,
-        'approx_kl_limit': 0.01,
+        'approx_kl_limit': 0.015,
         'nn.architecture': 'transformer',
         'nn.hidden_layers': 1,
         'nn.hidden_size': 32,
