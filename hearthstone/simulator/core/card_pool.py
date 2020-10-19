@@ -1892,10 +1892,11 @@ class PartyElemental(MonsterCard):
         if event.event is EVENTS.SUMMON_BUY and event.card.check_type(MONSTER_TYPES.ELEMENTAL) and event.card != self:
             other_elementals = [card for card in context.owner.in_play if card.check_type(MONSTER_TYPES.ELEMENTAL) and card != self]
             num_buffs = 2 if self.golden else 1
-            for _ in range(num_buffs):
-                random_elemental = context.randomizer.select_friendly_minion(other_elementals)
-                random_elemental.attack += 1
-                random_elemental.health += 1
+            if other_elementals:
+                for _ in range(num_buffs):
+                    random_elemental = context.randomizer.select_friendly_minion(other_elementals)
+                    random_elemental.attack += 1
+                    random_elemental.health += 1
 
 
 class MoltenRock(MonsterCard):
