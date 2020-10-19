@@ -73,14 +73,15 @@ class PPOLearner(GlobalStepContext):
                     minibatch_size: int, policy_weight: float, entropy_weight: float, ppo_epsilon: float,
                     gradient_clipping: float,
                     normalize_advantage: bool
-                    ):
+                    ) -> bool:
         for minibatch in replay_buffer.sample_minibatches(minibatch_size):
             stop_early = self.learn_minibatch(tensorboard, optimizer, learning_net, minibatch, policy_weight, entropy_weight,
                                  ppo_epsilon,
                                  gradient_clipping, normalize_advantage)
             self.global_step += 1
             if stop_early:
-                return
+                return True
+        return False
 
     def learn_minibatch(self, tensorboard: SummaryWriter, optimizer: optim.Optimizer, learning_net: nn.Module,
                         minibatch: List[ActorCriticGameStepInfo],
@@ -330,12 +331,14 @@ class PPOLearner(GlobalStepContext):
             if len(replay_buffer) >= batch_size:
                 for i in range(self.hparams["ppo_epochs"]):
                     self.handle_export(learning_bot_contestant, learning_net, other_contestants)
-                    self.learn_epoch(tensorboard, optimizer, learning_net, replay_buffer,
+                    stop_early = self.learn_epoch(tensorboard, optimizer, learning_net, replay_buffer,
                                      self.hparams['minibatch_size'],
                                      self.hparams["policy_weight"],
                                      self.hparams["entropy_weight"], self.hparams["ppo_epsilon"],
                                      self.hparams["gradient_clipping"],
                                      self.hparams["normalize_advantage"])
+                    if stop_early:
+                        break
 
                 replay_buffer.clear()
 
