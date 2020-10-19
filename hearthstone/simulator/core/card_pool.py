@@ -2125,7 +2125,8 @@ class StasisElemental(MonsterCard):
             if len(context.owner.store) < 7:
                 available_elementals = [card for card in context.owner.tavern.deck.unique_cards() if card.check_type(
                     MONSTER_TYPES.ELEMENTAL) and card.tier <= context.owner.tavern_tier and type(card) != type(self)]
-                random_elemental = context.randomizer.select_add_to_store(available_elementals)
-                context.owner.tavern.deck.remove_card(random_elemental)
-                context.owner.store.append(random_elemental)
-                random_elemental.frozen = True
+                if available_elementals:
+                    random_elemental = context.randomizer.select_add_to_store(available_elementals)
+                    context.owner.tavern.deck.remove_card(random_elemental)
+                    context.owner.store.append(random_elemental)
+                    random_elemental.frozen = True
