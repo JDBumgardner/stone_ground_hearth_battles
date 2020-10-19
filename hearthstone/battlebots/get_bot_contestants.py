@@ -1,6 +1,6 @@
 from inspect import getmembers, isfunction
 
-from hearthstone.battlebots.CardSpecificHeuristics import MamasLove, SameTypeAdvantage, HoppingMad, DragonPayoffs, \
+from hearthstone.battlebots.CardSpecificHeuristics import MamasLove, SameTypeAdvantage, DragonPayoffs, \
     MonstrousMacawPower
 from hearthstone.battlebots.early_game_bot import EarlyGameBot
 from hearthstone.battlebots.priority_functions import PriorityFunctions
