@@ -17,7 +17,7 @@ class GameplayTests(unittest.TestCase):
             "racist_priority_bot_mech": PriorityFunctions.racist_priority_bot(3, EarlyGameBot, MONSTER_TYPES.MECH),
             "racist_priority_bot_murloc": PriorityFunctions.racist_priority_bot(4, EarlyGameBot, MONSTER_TYPES.MURLOC),
             "priority_adaptive_tripler_bot": PriorityFunctions.priority_adaptive_tripler_bot(5, EarlyGameBot),
-            "priority_pogo_hopper_bot": PriorityFunctions.priority_pogo_hopper_bot(7, PriorityBot),
+            "priority_pack_leader_bot": PriorityFunctions.priority_pack_leader_bot(7, PriorityBot),
         }, randomizer=DefaultRandomizer(107))
 
         host.play_game()
@@ -31,7 +31,7 @@ class GameplayTests(unittest.TestCase):
             "racist_priority_bot_mech": PriorityFunctions.racist_priority_bot(3, EarlyGameBot, MONSTER_TYPES.MECH),
             "racist_priority_bot_murloc": PriorityFunctions.racist_priority_bot(4, EarlyGameBot, MONSTER_TYPES.MURLOC),
             "priority_adaptive_tripler_bot": PriorityFunctions.priority_adaptive_tripler_bot(5, EarlyGameBot),
-            "priority_pogo_hopper_bot": PriorityFunctions.priority_pogo_hopper_bot(7, PriorityBot),
+            "priority_pack_leader_bot": PriorityFunctions.priority_pack_leader_bot(7, PriorityBot),
         })
         host.play_game()
         replay = host.get_replay()

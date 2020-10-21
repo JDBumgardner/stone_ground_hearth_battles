@@ -2,13 +2,13 @@ from hearthstone.simulator.agent import RearrangeCardsAction
 from hearthstone.simulator.core.card_pool import *
 from hearthstone.simulator.core.tavern import Player
 
+
 def rate_position(card: 'MonsterCard') -> float:
     if type(card) is MonstrousMacaw:
         return 0.0
     if type(card) is UnstableGhoul or type(card) is SpawnOfNzoth:
         return 1.0
-    if type(card) is SelflessHero or type(card) is GlyphGuardian or type(card) is ArcaneCannon or type(
-            card) is DeflectOBot:
+    if type(card) is SelflessHero or type(card) is GlyphGuardian or type(card) is DeflectOBot:
         return 2.0
     if type(card) is OldMurkeye:
         return 3.0

@@ -11,7 +11,6 @@ if typing.TYPE_CHECKING:
     from hearthstone.simulator.agent import StandardAction
 
 
-
 class PriorityBot(PriorityFunctionBot):
     async def rearrange_cards(self, player: 'Player') -> RearrangeCardsAction:
         permutation = list(range(len(player.in_play)))

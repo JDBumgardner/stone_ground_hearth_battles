@@ -143,18 +143,6 @@ class PriorityFunctions:
         return priority_function_bot(["Jake Bumgardner"], priority, seed)
 
     @staticmethod
-    def priority_pogo_hopper_bot(seed: int, priority_function_bot: Callable, monster_type: str = None):
-        def priority(player: 'Player', card: 'MonsterCard'):
-            if type(card) is PogoHopper:
-                return 100
-
-            score = card.health + card.attack + card.tier
-
-            return score
-
-        return priority_function_bot(["Ethan Saxenian"], priority, seed)
-
-    @staticmethod
     def priority_jessie_bot(seed: int, priority_function_bot: Callable, monster_type: str = None):
         def priority(player: 'Player', card: 'MonsterCard'):
             if type(card) is WrathWeaver:

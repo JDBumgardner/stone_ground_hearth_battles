@@ -29,7 +29,6 @@ def get_priority_bot_contestant_tuples():
     return contestant_tuples
 
 
-
 def get_priority_heuristics_bot_contestant_tuples():
     priority_bots = [PriorityBot, HeroBot, EarlyGameBot]
 
