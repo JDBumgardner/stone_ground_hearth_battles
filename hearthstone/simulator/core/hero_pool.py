@@ -614,17 +614,18 @@ class Shudderwock(Hero):
             self.battlecries_counted += 1
 
 
-class TheGreatAkazamarak(Hero):
+class TheGreatAkazamzarak(Hero):
     power_cost = 2
     secrets = []
 
     def hero_power_valid_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                               store_index: Optional['StoreIndex'] = None):
-        return bool(SECRETS.remaining_secrets(context.owner))
+        return len(self.secrets) <= 5
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
         pass  # TODO: add some sort of discover_secret() function for player class
+        # also the probabilities of getting certain secrets may be hardcoded
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_END:
@@ -634,21 +635,23 @@ class TheGreatAkazamarak(Hero):
             self.give_immunity = True
             self.secrets.remove(SECRETS.ICE_BLOCK)
         if event.event is EVENTS.ON_ATTACK and event.foe in context.friendly_war_party.board:
-            if SECRETS.SPLITTING_IMAGE in self.secrets:
-                context.friendly_war_party.summon_in_combat(type(event.foe)(), context)
-                self.secrets.remove(SECRETS.SPLITTING_IMAGE)
-            if SECRETS.AUTODEFENSE_MATRIX in self.secrets:
+            if context.friendly_war_party.room_on_board():
+                if SECRETS.SPLITTING_IMAGE in self.secrets:
+                    summon_index = context.friendly_war_party.get_index(event.card)
+                    context.friendly_war_party.summon_in_combat(type(event.foe)(), context, summon_index+1)
+                    self.secrets.remove(SECRETS.SPLITTING_IMAGE)
+                if SECRETS.VENOMSTRIKE_TRAP in self.secrets:
+                    cobra = EmperorCobra()
+                    context.friendly_war_party.summon_in_combat(cobra, context)  # TODO: does Khadgar double this?
+                    self.secrets.remove(SECRETS.VENOMSTRIKE_TRAP)
+                if SECRETS.SNAKE_TRAP in self.secrets:
+                    for _ in range(3):
+                        snake = Snake()
+                        context.friendly_war_party.summon_in_combat(snake, context)
+                    self.secrets.remove(SECRETS.SNAKE_TRAP)
+            if SECRETS.AUTODEFENSE_MATRIX in self.secrets and not event.foe.divine_shield:
                 event.foe.divine_shield = True
                 self.secrets.remove(SECRETS.AUTODEFENSE_MATRIX)
-            if SECRETS.VENOMSTRIKE_TRAP in self.secrets:
-                cobra = EmperorCobra()
-                context.friendly_war_party.summon_in_combat(cobra, context)  # TODO: does Khadgar double this?
-                self.secrets.remove(SECRETS.VENOMSTRIKE_TRAP)
-            if SECRETS.SNAKE_TRAP in self.secrets:
-                for _ in range(3):
-                    snake = Snake()
-                    context.friendly_war_party.summon_in_combat(snake, context)
-                self.secrets.remove(SECRETS.SNAKE_TRAP)
         if event.event is EVENTS.DIES and event.card in context.friendly_war_party.board:
             if SECRETS.EFFIGY in self.secrets:
                 summon_index = context.friendly_war_party.get_index(event.card)

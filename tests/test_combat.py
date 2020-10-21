@@ -2,7 +2,6 @@ import unittest
 from typing import Type
 
 from hearthstone.simulator.core.adaptations import AdaptBuffs
-from hearthstone.simulator.core.card_graveyard import *
 from hearthstone.simulator.core.card_pool import *
 
 from hearthstone.simulator.core.combat import WarParty, fight_boards
@@ -37,8 +36,8 @@ class CombatTests(unittest.TestCase):
         jeremy = Player.new_player_with_hero(None, "Jeremy")
         dianas_war_party = WarParty(diana)
         jeremys_war_party = WarParty(jeremy)
-        dianas_war_party.board = [MechaRoo(), DragonspawnLieutenant()]
-        jeremys_war_party.board = [DragonspawnLieutenant(), ScavengingHyena()]
+        dianas_war_party.board = [Imprisoner()]
+        jeremys_war_party.board = [CrystalWeaver()]
         fight_boards(dianas_war_party, jeremys_war_party, DefaultRandomizer())
         self.assertEqual(diana.health, 40)
         self.assertEqual(jeremy.health, 40)
@@ -65,17 +64,6 @@ class CombatTests(unittest.TestCase):
         jeremys_war_party = WarParty(jeremy)
         dianas_war_party.board = [DragonspawnLieutenant(), DragonspawnLieutenant()]
         jeremys_war_party.board = [FiendishServant(), FiendishServant()]
-        fight_boards(jeremys_war_party, dianas_war_party, DefaultRandomizer())
-        self.assertEqual(diana.health, 40)
-        self.assertEqual(jeremy.health, 38)
-
-    def test_mech_roo(self):
-        diana = Player.new_player_with_hero(None, "Diana")
-        jeremy = Player.new_player_with_hero(None, "Jeremy")
-        dianas_war_party = WarParty(diana)
-        jeremys_war_party = WarParty(jeremy)
-        dianas_war_party.board = [MechaRoo()]
-        jeremys_war_party.board = [TabbyCat()]
         fight_boards(jeremys_war_party, dianas_war_party, DefaultRandomizer())
         self.assertEqual(diana.health, 40)
         self.assertEqual(jeremy.health, 38)
@@ -130,10 +118,10 @@ class CombatTests(unittest.TestCase):
         dianas_war_party = WarParty(diana)
         jeremys_war_party = WarParty(jeremy)
         dianas_war_party.board = [KindlyGrandmother()]
-        jeremys_war_party.board = [MechaRoo()]
+        jeremys_war_party.board = [CrystalWeaver()]
         fight_boards(jeremys_war_party, dianas_war_party, DefaultRandomizer())
         self.assertEqual(diana.health, 40)
-        self.assertEqual(jeremy.health, 38)
+        self.assertEqual(jeremy.health, 40)
 
     def test_glyph_guardian(self):
         adam = Player.new_player_with_hero(None, "Adam")
@@ -266,18 +254,6 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(adam.health, 37)
         self.assertEqual(ethan.health, 40)
 
-    def test_arcane_cannon(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
-        adams_war_party = WarParty(adam)
-        ethans_war_party = WarParty(ethan)
-        adams_war_party.board = [ArcaneCannon(), TwilightEmissary()]
-        ethans_war_party.board = [DeckSwabbie(), DeckSwabbie(), DeckSwabbie(), DragonspawnLieutenant()]
-        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
-        self.assertEqual(adam.health, 40)
-        self.assertEqual(ethan.health, 40)
-
-
     def test_mechano_egg(self):
         adam = Player.new_player_with_hero(None, "Adam")
         ethan = Player.new_player_with_hero(None, "Ethan")
@@ -295,7 +271,7 @@ class CombatTests(unittest.TestCase):
         ethan = Player.new_player_with_hero(None, "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
-        adams_war_party.board = [SpawnOfNzoth(), PogoHopper()]
+        adams_war_party.board = [SpawnOfNzoth(), AlleyCat()]
         ethans_war_party.board = [VulgarHomunculus()]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
@@ -347,8 +323,8 @@ class CombatTests(unittest.TestCase):
         ethan = Player.new_player_with_hero(None, "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
-        adams_war_party.board = [MonstrousMacaw(), MechaRoo(), AlleyCat()]
-        ethans_war_party.board = [TwilightEmissary(), StewardOfTime()]
+        adams_war_party.board = [MonstrousMacaw(), Imprisoner(), AlleyCat()]
+        ethans_war_party.board = [TwilightEmissary(), CapnHoggarr()]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
