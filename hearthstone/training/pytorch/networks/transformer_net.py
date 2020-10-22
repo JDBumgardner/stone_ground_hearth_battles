@@ -82,8 +82,8 @@ class TransformerWithContextEncoder(nn.Module):
         player_rep = F.pad(player_rep, [1, 0], value=1.0)
         card_rep = F.pad(card_rep, [1, 0], value=0.0)
 
-        full_rep = torch.cat((player_rep, card_rep), dim=1)
-        full_rep: torch.Tensor = self.transformer_encoder(full_rep)
+        full_rep = torch.cat((player_rep, card_rep), dim=1).permute(1, 0, 2)
+        full_rep: torch.Tensor = self.transformer_encoder(full_rep).permute(1, 0, 2)
         return full_rep[:, 0], full_rep[:, 1:]
 
     def _reset_parameters(self):

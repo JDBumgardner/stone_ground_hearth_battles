@@ -17,9 +17,7 @@ from hearthstone.training.pytorch.gae import GAEAnnotator
 from hearthstone.training.pytorch.hearthstone_state_encoder import get_indexed_action, \
     DEFAULT_PLAYER_ENCODING, DEFAULT_CARDS_ENCODING, State, EncodedActionSet, encode_player, encode_valid_actions
 from hearthstone.training.pytorch.networks import save_load
-from hearthstone.training.pytorch.networks.feedforward_net import HearthstoneFFNet
 from hearthstone.training.pytorch.networks.save_load import create_net, load_from_saved
-from hearthstone.training.pytorch.networks.transformer_net import HearthstoneTransformerNet
 from hearthstone.training.pytorch.normalization import ObservationNormalizer, PPONormalizer
 from hearthstone.training.pytorch.policy_gradient import tensorize_batch, easy_contestants, easiest_contestants, \
     easier_contestants
@@ -27,7 +25,7 @@ from hearthstone.training.pytorch.pytorch_bot import PytorchBot
 from hearthstone.training.pytorch.replay import ActorCriticGameStepInfo
 from hearthstone.training.pytorch.replay_buffer import EpochBuffer
 from hearthstone.training.pytorch.surveillance import GlobalStepContext
-from hearthstone.training.pytorch.worker import Worker
+from hearthstone.training.pytorch.worker.worker import Worker
 
 PPOHyperparameters = NewType('PPOHyperparameters', Dict[str, Union[str, int, float]])
 
@@ -68,14 +66,21 @@ class PPOLearner(GlobalStepContext):
         self.games_plotted += 1
         return do_plot
 
-    def learn_epoch(self, tensorboard: SummaryWriter, optimizer: optim.Optimizer, learning_net: nn.Module,
+    def learn_epoch(self,
+                    epoch: int,
+                    tensorboard: SummaryWriter,
+                    optimizer: optim.Optimizer,
+                    learning_net: nn.Module,
                     replay_buffer: EpochBuffer,
-                    minibatch_size: int, policy_weight: float, entropy_weight: float, ppo_epsilon: float,
+                    minibatch_size: int,
+                    policy_weight: float,
+                    entropy_weight: float,
+                    ppo_epsilon: float,
                     gradient_clipping: float,
                     normalize_advantage: bool
                     ) -> bool:
-        for minibatch in replay_buffer.sample_minibatches(minibatch_size):
-            stop_early = self.learn_minibatch(tensorboard, optimizer, learning_net, minibatch, policy_weight, entropy_weight,
+        for minibatch_idx, minibatch in enumerate(replay_buffer.sample_minibatches(minibatch_size)):
+            stop_early = self.learn_minibatch(epoch, minibatch_idx, tensorboard, optimizer, learning_net, minibatch, policy_weight, entropy_weight,
                                  ppo_epsilon,
                                  gradient_clipping, normalize_advantage)
             self.global_step += 1
@@ -83,9 +88,16 @@ class PPOLearner(GlobalStepContext):
                 return True
         return False
 
-    def learn_minibatch(self, tensorboard: SummaryWriter, optimizer: optim.Optimizer, learning_net: nn.Module,
+    def learn_minibatch(self,
+                        epoch: int,
+                        minibatch_idx: int,
+                        tensorboard: SummaryWriter,
+                        optimizer: optim.Optimizer,
+                        learning_net: nn.Module,
                         minibatch: List[ActorCriticGameStepInfo],
-                        policy_weight: float, entropy_weight: float, ppo_epsilon: float,
+                        policy_weight: float,
+                        entropy_weight: float,
+                        ppo_epsilon: float,
                         gradient_clipping: float,
                         normalize_advantage: bool) -> bool:
         """
@@ -171,6 +183,13 @@ class PPOLearner(GlobalStepContext):
         tensorboard.add_scalar("loss/entropy", entropy_loss, self.global_step)
         tensorboard.add_scalar("kl_divergence/exact", kl_divergence, self.global_step)
         tensorboard.add_scalar("kl_divergence/approx", approx_kl_divergence, self.global_step)
+        if epoch == 0 and minibatch_idx == 0:
+            tensorboard.add_scalar("kl_divergence/before_learning_exact", kl_divergence, self.global_step)
+            tensorboard.add_scalar("kl_divergence/before_learning_approx", approx_kl_divergence, self.global_step)
+        if approx_kl_divergence > self.hparams['approx_kl_limit']:
+            tensorboard.add_scalar("kl_divergence/early_stopped_epoch", epoch, self.global_step)
+            tensorboard.add_scalar("kl_divergence/early_stopped_exact", kl_divergence, self.global_step)
+            tensorboard.add_scalar("kl_divergence/early_stopped_approx", approx_kl_divergence, self.global_step)
         tensorboard.add_scalar("avg_policy_loss/unclipped", unclipped_policy_loss.mean(), self.global_step)
         tensorboard.add_scalar("avg_policy_loss/clipped", clipped_policy_loss.mean(), self.global_step)
 
@@ -331,7 +350,7 @@ class PPOLearner(GlobalStepContext):
             if len(replay_buffer) >= batch_size:
                 for i in range(self.hparams["ppo_epochs"]):
                     self.handle_export(learning_bot_contestant, learning_net, other_contestants)
-                    stop_early = self.learn_epoch(tensorboard, optimizer, learning_net, replay_buffer,
+                    stop_early = self.learn_epoch(i, tensorboard, optimizer, learning_net, replay_buffer,
                                      self.hparams['minibatch_size'],
                                      self.hparams["policy_weight"],
                                      self.hparams["entropy_weight"], self.hparams["ppo_epsilon"],
