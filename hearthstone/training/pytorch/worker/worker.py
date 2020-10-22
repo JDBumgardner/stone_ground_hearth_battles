@@ -5,6 +5,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 from hearthstone.ladder.ladder import Contestant, update_ratings, print_standings
 from hearthstone.simulator.host.round_robin_host import RoundRobinHost
+from hearthstone.simulator.replay.replay import Replay
 from hearthstone.training.pytorch.gae import GAEAnnotator
 from hearthstone.training.pytorch.replay_buffer import EpochBuffer
 from hearthstone.training.pytorch.surveillance import GlobalStepContext
