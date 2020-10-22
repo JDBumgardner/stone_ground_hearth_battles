@@ -678,12 +678,13 @@ class TheGreatAkazamzarak(Hero):
 class IllidanStormrage(Hero):
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.COMBAT_START:
-            for i in [0, -1]:  # TODO: how does this work with only 1 minion in play?
-                attacking_war_party = context.friendly_war_party
-                defending_war_party = context.enemy_war_party
-                attacker = context.friendly_war_party.board[i]
-                defender = defending_war_party.get_attack_target(context.randomizer, attacker)
-                if not defender:
-                    return
-                logging.debug(f'{attacking_war_party.owner.name} is attacking {defending_war_party.owner.name} from Illidan Stormrage\'s effect')
-                combat.start_attack(attacker, defender, attacking_war_party, defending_war_party, context.randomizer)
+            if context.friendly_war_party.board:
+                for i in {0, len(context.friendly_war_party.board) - 1}:
+                    attacking_war_party = context.friendly_war_party
+                    defending_war_party = context.enemy_war_party
+                    attacker = context.friendly_war_party.board[i]
+                    defender = defending_war_party.get_attack_target(context.randomizer, attacker)
+                    if not defender:
+                        return
+                    logging.debug(f'{attacking_war_party.owner.name} is attacking {defending_war_party.owner.name} from Illidan Stormrage\'s effect')
+                    combat.start_attack(attacker, defender, attacking_war_party, defending_war_party, context.randomizer)
