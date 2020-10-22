@@ -56,7 +56,7 @@ CardType = make_metaclass(PrintingPress.add_card, ("MonsterCard",))
 
 class MonsterCard(metaclass=CardType):
     coin_cost = 3
-    mana_cost: Optional[int] = None
+    mana_cost: Optional[int] = None  # TODO: what about tokens?
     base_health: int
     base_attack: int
     monster_type = None

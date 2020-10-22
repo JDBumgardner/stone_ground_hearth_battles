@@ -1,5 +1,7 @@
+import logging
 from typing import Union, Tuple, Optional
 
+from hearthstone.simulator.core import combat
 from hearthstone.simulator.core.card_pool import Amalgam, EmperorCobra, Snake
 from hearthstone.simulator.core.cards import one_minion_per_type, CardLocation, PrintingPress
 from hearthstone.simulator.core.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
@@ -655,7 +657,8 @@ class TheGreatAkazamzarak(Hero):
         if event.event is EVENTS.DIES and event.card in context.friendly_war_party.board:
             if SECRETS.EFFIGY in self.secrets:
                 summon_index = context.friendly_war_party.get_index(event.card)
-                same_cost_minions = [card_type for card_type in PrintingPress.all_types() if card_type.mana_cost == event.card.mana_cost]  # TODO: update mana costs for all minions (grrrrrr)
+                same_cost_minions = [card_type for card_type in PrintingPress.all_types() if
+                                     card_type.mana_cost == event.card.mana_cost and card_type != type(event.card)]
                 random_minion = context.randomizer.select_summon_minion(same_cost_minions)()
                 context.friendly_war_party.summon_in_combat(random_minion, context, summon_index+1)
                 self.secrets.remove(SECRETS.EFFIGY)
@@ -670,3 +673,17 @@ class TheGreatAkazamzarak(Hero):
                 random_friend.attack += 3
                 random_friend.health += 2
                 self.secrets.remove(SECRETS.AVENGE)
+
+
+class IllidanStormrage(Hero):
+    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.COMBAT_START:
+            for i in [0, -1]:  # TODO: how does this work with only 1 minion in play?
+                attacking_war_party = context.friendly_war_party
+                defending_war_party = context.enemy_war_party
+                attacker = context.friendly_war_party.board[i]
+                defender = defending_war_party.get_attack_target(context.randomizer, attacker)
+                if not defender:
+                    return
+                logging.debug(f'{attacking_war_party.owner.name} is attacking {defending_war_party.owner.name} from Illidan Stormrage\'s effect')
+                combat.start_attack(attacker, defender, attacking_war_party, defending_war_party, context.randomizer)

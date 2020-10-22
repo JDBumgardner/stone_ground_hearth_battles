@@ -201,16 +201,16 @@ class CardTests(unittest.TestCase):
         player_1.summon_from_hand(HandIndex(0))
         self.assertListEqual([AlleyCat, TabbyCat], self.type_of_cards(player_1.in_play))
 
-    class TestRaftWeaverRandomizer(DefaultRandomizer):
+    class TestWrathWeaverRandomizer(DefaultRandomizer):
         def select_draw_card(self, cards: List[MonsterCard], player_name: str, round_number: int) -> MonsterCard:
             if round_number == 0:
                 return [card for card in cards if type(card) is WrathWeaver][0]
             else:
                 return [card for card in cards if type(card) is FiendishServant][0]
 
-    def test_raft_weaver(self):  # TODO: rename
+    def test_wrath_weaver(self):
         tavern = Tavern(restrict_types=False)
-        tavern.randomizer = self.TestRaftWeaverRandomizer()
+        tavern.randomizer = self.TestWrathWeaverRandomizer()
         player_1 = tavern.add_player_with_hero("Dante_Kong")
         player_2 = tavern.add_player_with_hero("lucy")
         tavern.buying_step()

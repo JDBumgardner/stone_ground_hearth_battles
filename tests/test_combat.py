@@ -1107,6 +1107,19 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
 
+    def test_illidan_stormrage(self):
+        logging.basicConfig(level=logging.DEBUG)
+        tavern = Tavern()
+        adam = tavern.add_player_with_hero("Adam", IllidanStormrage())
+        ethan = tavern.add_player_with_hero("Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [GlyphGuardian(), VulgarHomunculus(), DeadlySpore()]
+        ethans_war_party.board = [RabidSaurolisk(), Robosaur(), VulgarHomunculus(), VulgarHomunculus()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+
 
 if __name__ == '__main__':
     unittest.main()
