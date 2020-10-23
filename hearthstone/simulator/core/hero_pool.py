@@ -295,8 +295,9 @@ class JandiceBarov(Hero):
         context.owner.store.remove(store_minion)
         store_minion.frozen = False
         if store_minion.check_type(MONSTER_TYPES.ELEMENTAL):
-            store_minion.attack += context.owner.nomi_bonus
-            store_minion.health += context.owner.nomi_bonus
+            store_minion.attack += (-store_minion.nomi_buff + context.owner.nomi_bonus)
+            store_minion.health += (-store_minion.nomi_buff + context.owner.nomi_bonus)
+            store_minion.nomi_buff = context.owner.nomi_bonus
         context.owner.gain_board_card(store_minion)
         context.owner.store.append(board_minion)
 
@@ -560,7 +561,7 @@ class TheLichKing(Hero):
 
     def hero_power_valid_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                               store_index: Optional['StoreIndex'] = None):
-        return bool(context.owner.in_play)
+        return not context.owner.in_play[board_index].reborn
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):

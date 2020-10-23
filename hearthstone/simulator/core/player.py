@@ -222,8 +222,9 @@ class Player:
         self.coins -= self.minion_cost
         card.frozen = False
         if card.check_type(MONSTER_TYPES.ELEMENTAL):
-            card.attack += self.nomi_bonus
-            card.health += self.nomi_bonus
+            card.attack += (-card.nomi_buff + self.nomi_bonus)
+            card.health += (-card.nomi_buff + self.nomi_bonus)
+            card.nomi_buff = self.nomi_bonus
         self._hand.append(card)
         event = events.BuyEvent(card)
         self.broadcast_buy_phase_event(event)
