@@ -3139,6 +3139,24 @@ class CardTests(unittest.TestCase):
         self.assertCardListEquals(player_1.hand, [ShifterZerus])
         self.assertTrue(player_1.hand[0].golden)
 
+    def test_zephyrs_the_great(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong", ZephyrsTheGreat())
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.randomizer = RepeatedCardForcer([Sellemental])
+        for _ in range(2):
+            tavern.buying_step()
+            player_1.purchase(StoreIndex(0))
+            player_1.summon_from_hand(HandIndex(0))
+            tavern.combat_step()
+        tavern.buying_step()
+        self.assertCardListEquals(player_1.in_play, [Sellemental, Sellemental])
+        player_1.hero_power()
+        self.assertEqual(player_1.hero.wishes_left, 2)
+        self.assertCardListEquals(player_1.in_play, [])
+        self.assertCardListEquals(player_1.hand, [Sellemental])
+        self.assertTrue(player_1.hand[0].golden)
+
 
 if __name__ == '__main__':
     unittest.main()

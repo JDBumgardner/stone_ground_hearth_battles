@@ -295,8 +295,8 @@ class JandiceBarov(Hero):
         context.owner.store.remove(store_minion)
         store_minion.frozen = False
         if store_minion.check_type(MONSTER_TYPES.ELEMENTAL):
-            store_minion.attack += (-store_minion.nomi_buff + context.owner.nomi_bonus)
-            store_minion.health += (-store_minion.nomi_buff + context.owner.nomi_bonus)
+            store_minion.attack += (context.owner.nomi_bonus - store_minion.nomi_buff)
+            store_minion.health += (context.owner.nomi_bonus - store_minion.nomi_buff)
             store_minion.nomi_buff = context.owner.nomi_bonus
         context.owner.gain_board_card(store_minion)
         context.owner.store.append(board_minion)
@@ -594,7 +594,7 @@ class TessGreymane(Hero):
                 # TODO See github issue #9, to determine the correct behavior, but it's very easy to not have any more
                 # cards of a given type in the deck.
                 # context.owner.tavern.deck.remove_card_of_type(type(card))
-                context.owner.store.append(card)
+                context.owner.store.append(type(card)())
             else:
                 context.owner.store.extend(context.owner.tavern.deck.draw(context.owner, 1))
 
@@ -689,3 +689,22 @@ class IllidanStormrage(Hero):
                         return
                     logging.debug(f'{attacking_war_party.owner.name} is attacking {defending_war_party.owner.name} from Illidan Stormrage\'s effect')
                     combat.start_attack(attacker, defender, attacking_war_party, defending_war_party, context.randomizer)
+
+
+class ZephyrsTheGreat(Hero):
+    power_cost = 4
+    wishes_left = 3
+
+    def hero_power_valid_impl(self, context: BuyPhaseContext, board_index: Optional['BoardIndex'] = None,
+                              store_index: Optional['StoreIndex'] = None):
+        return self.wishes_left > 0
+
+    def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                        store_index: Optional['StoreIndex'] = None):
+        pairs = [minion for minion in context.owner.in_play if
+                 not minion.golden and len([card for card in context.owner.in_play if type(card) == type(minion)]) == 2]
+        if pairs:
+            pair = context.randomizer.select_friendly_minion(pairs)  # TODO: what is supposed to happen with multiple pairs?
+            context.owner.gain_hand_card(type(pair)())  # TODO: How does this interact with the minion pool?
+        self.wishes_left -= 1
+
