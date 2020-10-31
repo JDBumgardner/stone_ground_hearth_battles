@@ -122,9 +122,8 @@ class PPOLearner(GlobalStepContext):
         # The advantage is the difference between the expected value before taking the action and the value after updating
         advantage = transition_batch.gae_return - transition_batch.value
 
-        ratio = torch.exp((policy - transition_batch.policy).gather(1,
-                                                                    transition_batch.action.unsqueeze(
-                                                                        -1))).squeeze(1)
+        log_ratio = (policy - transition_batch.policy).gather(1, transition_batch.action.unsqueeze(-1)).squeeze(1)
+        ratio = torch.exp(log_ratio)
         clipped_ratio = ratio.clamp(1 - ppo_epsilon, 1 + ppo_epsilon)
 
         normalized_advantage: torch.Tensor = advantage
@@ -151,8 +150,7 @@ class PPOLearner(GlobalStepContext):
         entropy_loss = entropy_weight * torch.sum(valid_action_tensor.float() * policy * torch.exp(policy),
                                                   dim=1).mean()
         kl_divergence = (policy.exp() * (policy - transition_batch.policy)).sum(dim=1).mean()
-
-        approx_kl_divergence = (transition_batch.policy - policy).sum(dim=1).mean()
+        approx_kl_divergence = -log_ratio.mean()
         if self.histogram_tensorboard:
             masked_policy = policy.masked_select(valid_action_tensor)
             tensorboard.add_histogram("policy", torch.exp(masked_policy), self.global_step)
