@@ -16,6 +16,8 @@ from hearthstone.battlebots.supremacy_bot import SupremacyBot
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 import hearthstone.simulator.core.hero_pool
 from hearthstone.simulator.host.round_robin_host import RoundRobinHost
+from hearthstone.training.pytorch.networks.save_load import load_from_saved
+from hearthstone.training.pytorch.pytorch_bot import PytorchBot
 
 
 class Contestant:
@@ -85,6 +87,49 @@ def all_contestants():
     return all_bots
 
 
+def saved_learningbot_1v1_contestants() -> List[Contestant]:
+    hparams = {
+        "resume": False,
+        'resume.from': '2020-10-18T02:14:22.530381',
+        'export.enabled': True,
+        'export.period_epochs': 200,
+        'export.path': datetime.now().isoformat(),
+        'opponents.initial': 'easiest',
+        'opponents.self_play.enabled': True,
+        'opponents.self_play.only_champions': True,
+        'opponents.max_pool_size': 7,
+        'adam_lr': 0.0001,
+        'batch_size': 1024,
+        'minibatch_size': 1024,
+        'cuda': True,
+        'entropy_weight': 0.001,
+        'gae_gamma': 0.999,
+        'gae_lambda': 0.9,
+        'game_size': 2,
+        'gradient_clipping': 0.5,
+        'approx_kl_limit': 0.015,
+        'nn.architecture': 'transformer',
+        'nn.hidden_layers': 1,
+        'nn.hidden_size': 32,
+        'nn.activation': 'gelu',
+        'nn.shared': False,
+        'nn.encoding.redundant': True,
+        'normalize_advantage': True,
+        'normalize_observations': False,
+        'num_workers': 1,
+        'optimizer': 'adam',
+        'policy_weight': 0.581166675499831,
+        'ppo_epochs': 8,
+        'ppo_epsilon': 0.1}
+
+    all_bots = []
+    # Jeremy has this bot, ask him for it!
+    all_bots += [Contestant("LearningBot94200", lambda: PytorchBot(
+        load_from_saved("../../data/learning/pytorch/saved_models/2020-10-30T20:50:44.311231/94200", hparams),
+        annotate=False))]
+    return all_bots
+
+
 def load_ratings(contestants: List[Contestant], path):
     with open(path) as f:
         standings = json.load(f)
@@ -109,14 +154,3 @@ def save_ratings(contestants: List[Contestant], path):
     with open(path, "w") as f:
         json.dump(standings, f, indent=4)
 
-
-def main():
-    contestants = all_contestants()
-    standings_path = "../../data/standings.json"
-    load_ratings(contestants, standings_path)
-    run_tournament(contestants, 100)
-    save_ratings(contestants, standings_path)
-
-
-if __name__ == "__main__":
-    main()

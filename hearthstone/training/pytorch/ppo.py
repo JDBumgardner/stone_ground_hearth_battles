@@ -331,7 +331,7 @@ class PPOLearner(GlobalStepContext):
         # Reuse standings from the current leaderboard.
 
         other_contestants = self.get_initial_contestants()
-        load_ratings(other_contestants, "../../../data/standings.json")
+        load_ratings(other_contestants, "../../../data/standings/8p.json")
 
         gae_annotator = GAEAnnotator(learning_bot_name, self.hparams['gae_gamma'], self.hparams['gae_lambda'])
         workers = [
