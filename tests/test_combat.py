@@ -1120,6 +1120,31 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
 
+    def test_hipster_pirate_build(self):  # TODO: probably more to test here but it seems to be working
+        logging.basicConfig(level=logging.DEBUG)
+        tavern = Tavern()
+        adam = tavern.add_player_with_hero("Adam")
+        ethan = tavern.add_player_with_hero("Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [ImpMama() for _ in range(7)]
+        scally1 = Scallywag()
+        scally1.taunt = True
+        scally2 = Scallywag()
+        scally2.taunt = True
+        chad1 = Khadgar()
+        chad1.golden_transformation([])
+        chad2 = Khadgar()
+        chad2.golden_transformation([])
+        baron = BaronRivendare()
+        baron.golden_transformation([])
+        ethans_war_party.board = [scally1, scally2, DreadAdmiralEliza(), chad1, chad2, baron]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        print(adams_war_party.board)
+        print(ethans_war_party.board)
+        self.assertNotEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+
 
 if __name__ == '__main__':
     unittest.main()
