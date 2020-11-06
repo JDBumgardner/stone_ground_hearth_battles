@@ -15,11 +15,14 @@ if typing.TYPE_CHECKING:
     from hearthstone.simulator.core.player import Player
 
 
-def one_minion_per_type(cards: List['MonsterCard'], randomizer: 'Randomizer') -> List['MonsterCard']:
+def one_minion_per_type(cards: List['MonsterCard'], randomizer: 'Randomizer', excluded_card: Optional['MonsterCard'] = None) -> List['MonsterCard']:
     minions = []
-    filler_minions = [card for card in cards if card.monster_type == MONSTER_TYPES.ALL]
+    restricted_cards = [card for card in cards]
+    if excluded_card is not None:
+        restricted_cards.remove(excluded_card)
+    filler_minions = [card for card in restricted_cards if card.monster_type == MONSTER_TYPES.ALL]
     for minion_type in MONSTER_TYPES.single_types():
-        minions_by_type = [card for card in cards if card.monster_type == minion_type]
+        minions_by_type = [card for card in restricted_cards if card.monster_type == minion_type]
         if minions_by_type:
             card = randomizer.select_friendly_minion(minions_by_type)
             minions.append(card)

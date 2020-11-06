@@ -8,10 +8,9 @@ class SECRETS(enum.Enum):
     SPLITTING_IMAGE = 2
     AUTODEFENSE_MATRIX = 3
     VENOMSTRIKE_TRAP = 4
-    EFFIGY = 5
-    REDEMPTION = 6
-    AVENGE = 7
-    SNAKE_TRAP = 8
+    REDEMPTION = 5
+    AVENGE = 6
+    SNAKE_TRAP = 7
 
     @classmethod
     def remaining_secrets(cls, player: 'Player'):

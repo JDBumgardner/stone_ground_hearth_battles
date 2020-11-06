@@ -175,7 +175,7 @@ class CombatTests(unittest.TestCase):
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [UnstableGhoul()]
-        ethans_war_party.board = [RabidSaurolisk(), WrathWeaver()]
+        ethans_war_party.board = [RabidSaurolisk(), FiendishServant()]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
@@ -185,7 +185,7 @@ class CombatTests(unittest.TestCase):
         ethan = Player.new_player_with_hero(None, "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
-        adams_war_party.board = [UnstableGhoul(), WrathWeaver(), WrathWeaver(), WrathWeaver(), WrathWeaver()]
+        adams_war_party.board = [UnstableGhoul(), FiendishServant(), FiendishServant(), FiendishServant(), FiendishServant()]
         ethans_war_party.board = [RabidSaurolisk()]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
@@ -210,7 +210,7 @@ class CombatTests(unittest.TestCase):
         rat_pack = RatPack()
         rat_pack.attack += 1
         adams_war_party.board = [rat_pack]
-        ethans_war_party.board = [DragonspawnLieutenant(), WrathWeaver(), WrathWeaver(), WrathWeaver()]
+        ethans_war_party.board = [DragonspawnLieutenant(), FiendishServant(), FiendishServant(), FiendishServant()]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
@@ -586,9 +586,9 @@ class CombatTests(unittest.TestCase):
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [DeckSwabbie(), DreadAdmiralEliza()]
-        ironhide_runt = IronhideRunt()
-        ironhide_runt.golden_transformation([])
-        ethans_war_party.board = [ironhide_runt]
+        hoggarr = CapnHoggarr()
+        hoggarr.golden_transformation([])
+        ethans_war_party.board = [hoggarr]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
@@ -1078,7 +1078,7 @@ class CombatTests(unittest.TestCase):
         wildfire_elemental = WildfireElemental()
         wildfire_elemental.golden_transformation([])
         adams_war_party.board = [wildfire_elemental, VulgarHomunculus()]
-        ethans_war_party.board = [RabidSaurolisk(), CapnHoggarr(), LieutenantGarr(), CapnHoggarr()]
+        ethans_war_party.board = [RabidSaurolisk(), CapnHoggarr(), LieutenantGarr(), CapnHoggarr(), AlleyCat()]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)

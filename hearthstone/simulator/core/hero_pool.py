@@ -189,7 +189,7 @@ class TheRatKing(Hero):
             self.current_type = context.randomizer.select_monster_type(available_types, context.owner.tavern.turn_count)
 
         if event.event is EVENTS.BUY and event.card.monster_type == self.current_type:
-            event.card.attack += 1
+            event.card.attack += 2
             event.card.health += 2
 
 
@@ -197,7 +197,7 @@ class Ysera(Hero):
     pool = MONSTER_TYPES.DRAGON
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
-        if event.event is EVENTS.BUY_START and len(context.owner.store) < 7:
+        if event.event is EVENTS.REFRESHED_STORE and len(context.owner.store) < 7:
             dragons = [card for card in context.owner.tavern.deck.unique_cards() if
                        card.check_type(MONSTER_TYPES.DRAGON) and card.tier <= context.owner.tavern_tier]
             if dragons:
@@ -245,6 +245,7 @@ class QueenWagtoggle(Hero):
                         store_index: Optional['StoreIndex'] = None):
         for card in one_minion_per_type(context.owner.in_play, context.randomizer):
             card.attack += 2
+            card.health += 1
 
 
 class ForestWardenOmu(Hero):
@@ -254,7 +255,7 @@ class ForestWardenOmu(Hero):
 
 
 class GeorgeTheFallen(Hero):
-    power_cost = 3
+    power_cost = 2
     power_target_location = [CardLocation.BOARD]
 
     def hero_power_valid_impl(self, context: BuyPhaseContext, board_index: Optional['BoardIndex'] = None,
@@ -312,7 +313,7 @@ class ArchVillianRafaam(Hero):  # TODO: tokens gained will enter the pool when s
 
 
 class CaptainHooktusk(Hero):
-    power_cost = 0
+    power_cost = 1
     power_target_location = [CardLocation.BOARD]
 
     def hero_power_valid_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
@@ -323,12 +324,9 @@ class CaptainHooktusk(Hero):
                         store_index: Optional['StoreIndex'] = None):
         board_minion = context.owner.pop_board_card(board_index)
         context.owner.tavern.deck.return_cards(board_minion.dissolve())
-        predicate = lambda card: (card.tier < board_minion.tier if board_minion.tier > 1 else card.tier == 1) and type(
+        predicate = lambda card: (card.tier == board_minion.tier-1 if board_minion.tier > 1 else card.tier == 1) and type(
             card) != type(board_minion)
-        lower_tier_minions = [card for card in context.owner.tavern.deck.unique_cards() if predicate(card)]
-        random_minion = context.randomizer.select_gain_card(lower_tier_minions)
-        context.owner.tavern.deck.remove_card(random_minion)
-        context.owner.gain_hand_card(random_minion)
+        context.owner.draw_discover(predicate)
 
 
 class Malygos(Hero):
@@ -426,7 +424,7 @@ class KingMukla(Hero):
 
 
 class EliseStarseeker(Hero):
-    power_cost = 3
+    power_cost = 2
     multiple_power_uses_per_turn = True
     recruitment_maps = []
 
@@ -482,16 +480,13 @@ class RagnarosTheFirelord(Hero):
 
 class Rakanishu(Hero):
     power_cost = 2
-
-    def hero_power_valid_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
-                              store_index: Optional['StoreIndex'] = None):
-        return bool(context.owner.in_play)
+    power_target_location = [CardLocation.BOARD]
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
-        random_minion = context.randomizer.select_friendly_minion(context.owner.in_play)
-        random_minion.attack += context.owner.tavern_tier
-        random_minion.health += context.owner.tavern_tier
+        board_minion = context.owner.in_play[board_index]
+        board_minion.attack += context.owner.tavern_tier
+        board_minion.health += context.owner.tavern_tier
 
 
 class MrBigglesworth(Hero):  # TODO: tokens discovered will enter the pool when sold
@@ -522,7 +517,7 @@ class Sindragosa(Hero):
 
 
 class Galakrond(Hero):
-    power_cost = 1
+    power_cost = 0
     power_target_location = [CardLocation.STORE]
 
     def hero_power_valid_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
@@ -536,7 +531,6 @@ class Galakrond(Hero):
         higher_tier_minions = [card for card in context.owner.tavern.deck.unique_cards() if card.tier == min(store_minion.tier + 1, 6)]
         higher_tier_minion = context.randomizer.select_add_to_store(higher_tier_minions)
         context.owner.store.append(higher_tier_minion)
-        higher_tier_minion.frozen = True
 
 
 class InfiniteToki(Hero):
@@ -585,18 +579,12 @@ class TessGreymane(Hero):
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
         context.owner.return_cards()
-        available_minions = [type(card)() for card in context.owner.last_opponent_warband]
-        number_of_cards = 3 + context.owner.tavern_tier // 2 - len(context.owner.store)
-        for _ in range(number_of_cards):
-            if available_minions:
-                card = context.randomizer.select_add_to_store(available_minions)
-                available_minions.remove(card)
+        if context.owner.last_opponent_warband:
+            for card in context.owner.last_opponent_warband:
                 # TODO See github issue #9, to determine the correct behavior, but it's very easy to not have any more
                 # cards of a given type in the deck.
                 # context.owner.tavern.deck.remove_card_of_type(type(card))
                 context.owner.store.append(type(card)())
-            else:
-                context.owner.store.extend(context.owner.tavern.deck.draw(context.owner, 1))
 
 
 class Shudderwock(Hero):
@@ -618,7 +606,7 @@ class Shudderwock(Hero):
 
 
 class TheGreatAkazamzarak(Hero):
-    power_cost = 2
+    power_cost = 1
     secrets = []
 
     def hero_power_valid_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
@@ -656,13 +644,6 @@ class TheGreatAkazamzarak(Hero):
                 event.foe.divine_shield = True
                 self.secrets.remove(SECRETS.AUTODEFENSE_MATRIX)
         if event.event is EVENTS.DIES and event.card in context.friendly_war_party.board:
-            if SECRETS.EFFIGY in self.secrets:
-                summon_index = context.friendly_war_party.get_index(event.card)
-                same_cost_minions = [card_type for card_type in PrintingPress.all_types() if
-                                     card_type.mana_cost == event.card.mana_cost and card_type != type(event.card)]
-                random_minion = context.randomizer.select_summon_minion(same_cost_minions)()
-                context.friendly_war_party.summon_in_combat(random_minion, context, summon_index+1)
-                self.secrets.remove(SECRETS.EFFIGY)
             if SECRETS.REDEMPTION in self.secrets:
                 summon_index = context.friendly_war_party.get_index(event.card)
                 new_copy = event.card.unbuffed_copy()

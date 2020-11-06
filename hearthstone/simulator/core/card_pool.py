@@ -154,7 +154,7 @@ class WrathWeaver(MonsterCard):
     tier = 1
     monster_type = None
     base_attack = 1
-    base_health = 1
+    base_health = 3
     pool = MONSTER_TYPES.DEMON
     mana_cost = 1
 
@@ -1051,8 +1051,8 @@ class VirmenSensei(MonsterCard):
 
 class RipsnarlCaptain(MonsterCard):
     tier = 4
-    base_attack = 3
-    base_health = 4
+    base_attack = 4
+    base_health = 5
     monster_type = MONSTER_TYPES.PIRATE
     pool = MONSTER_TYPES.PIRATE
     mana_cost = 4
@@ -1156,7 +1156,7 @@ class Amalgam(MonsterCard):
     tier = 1
     monster_type = MONSTER_TYPES.ALL
     base_attack = 1
-    base_health = 1
+    base_health = 2
     token = True
 
     # TODO: this can't be sold on the first round
@@ -1355,10 +1355,9 @@ class DreadAdmiralEliza(MonsterCard):
     def handle_event_powers(self, event: CardEvent, context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.ON_ATTACK and event.card in context.friendly_war_party.board and event.card.check_type(
                 MONSTER_TYPES.PIRATE):
-            bonus = 2 if self.golden else 1
             for card in context.friendly_war_party.board:
-                card.attack += bonus
-                card.health += bonus
+                card.attack += 4 if self.golden else 2
+                card.health += 2 if self.golden else 1
 
 
 class GoldrinnTheGreatWolf(MonsterCard):
@@ -1620,7 +1619,7 @@ class BrannBronzebeard(MonsterCard):
 
 
 class IronSensei(MonsterCard):
-    tier = 4
+    tier = 3
     monster_type = MONSTER_TYPES.MECH
     pool = MONSTER_TYPES.MECH
     base_attack = 2
@@ -1639,11 +1638,11 @@ class IronSensei(MonsterCard):
 
 
 class YoHoOgre(MonsterCard):
-    tier = 3
+    tier = 2
     monster_type = MONSTER_TYPES.PIRATE
     pool = MONSTER_TYPES.PIRATE
     base_attack = 2
-    base_health = 8
+    base_health = 5
     base_taunt = True
     mana_cost = 6
 
@@ -1699,9 +1698,10 @@ class LightfangEnforcer(MonsterCard):
 
     def handle_event_powers(self, event: CardEvent, context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_END:
+            bonus = 4 if self.golden else 2
             for card in one_minion_per_type(context.owner.in_play, context.randomizer):
-                card.attack += 4 if self.golden else 2
-                card.health += 2 if self.golden else 1
+                card.attack += bonus
+                card.health += bonus
 
 
 class MenagerieMug(MonsterCard):
@@ -1829,7 +1829,7 @@ class Amalgadon(MonsterCard):
     mana_cost = 8
 
     def base_battlecry(self, targets: List['MonsterCard'], context: 'BuyPhaseContext'):
-        count = len(one_minion_per_type(context.owner.in_play, context.randomizer)) * (2 if self.golden else 1)
+        count = len(one_minion_per_type(context.owner.in_play, context.randomizer, excluded_card=self)) * (2 if self.golden else 1)
         for _ in range(count):
             available_adaptations = valid_adaptations(self)
             adaptation = context.randomizer.select_adaptation(available_adaptations)
@@ -1914,11 +1914,11 @@ class FinkleEinhorn(MonsterCard):
 
 
 class SouthseaStrongarm(MonsterCard):
-    tier = 4
+    tier = 3
     monster_type = MONSTER_TYPES.PIRATE
     pool = MONSTER_TYPES.PIRATE
-    base_attack = 5
-    base_health = 4
+    base_attack = 4
+    base_health = 3
     num_battlecry_targets = [1]
     mana_cost = 5
 
@@ -2055,7 +2055,7 @@ class LieutenantGarr(MonsterCard):
     tier = 6
     monster_type = MONSTER_TYPES.ELEMENTAL
     pool = MONSTER_TYPES.ELEMENTAL
-    base_attack = 8
+    base_attack = 5
     base_health = 1
     base_taunt = True
     mana_cost = 8
@@ -2096,8 +2096,8 @@ class LilRag(MonsterCard):
     tier = 6
     monster_type = MONSTER_TYPES.ELEMENTAL
     pool = MONSTER_TYPES.ELEMENTAL
-    base_attack = 6
-    base_health = 6
+    base_attack = 4
+    base_health = 4
     legendary = True
     mana_cost = 6
 
@@ -2130,7 +2130,7 @@ class TavernTempest(MonsterCard):
 
 
 class GentleDjinni(MonsterCard):
-    tier = 5
+    tier = 6
     monster_type = MONSTER_TYPES.ELEMENTAL
     pool = MONSTER_TYPES.ELEMENTAL
     base_attack = 4
