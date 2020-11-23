@@ -3150,6 +3150,24 @@ class CardTests(unittest.TestCase):
         self.assertCardListEquals(player_1.hand, [Sellemental])
         self.assertTrue(player_1.hand[0].golden)
 
+    class TestSilasDarkmoonRandomizer(DefaultRandomizer):
+        def select_random_bool(self) -> bool:
+            return True
+
+    def test_silas_darkmoon(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong", SilasDarkmoon())
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.randomizer = self.TestSilasDarkmoonRandomizer()
+        for i in range(3):
+            tavern.buying_step()
+            self.assertEqual(player_1.hero.tickets_purchased, i)
+            player_1.purchase(StoreIndex(0))
+            tavern.combat_step()
+        self.assertEqual(player_1.hero.tickets_purchased, 0)
+        self.assertEqual(len(player_1.triple_rewards), 1)
+        self.assertEqual(player_1.triple_rewards[0].level, 1)
+
 
 if __name__ == '__main__':
     unittest.main()

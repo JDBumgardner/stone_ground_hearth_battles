@@ -108,6 +108,7 @@ class MonsterCard(metaclass=CardType):
         self.attached_cards = []
         self.frozen = False
         self.nomi_buff = 0
+        self.ticket = False
 
     def __repr__(self):
         rep = f"{type(self).__name__} {self.attack}/{self.health} (t{self.tier})" #  TODO: add a proper enum to the monster typing
@@ -126,6 +127,8 @@ class MonsterCard(metaclass=CardType):
             rep += ", [shifting]"
         if self.frozen:
             rep += ", [frozen]"
+        if self.ticket:
+            rep += ", [ticket]"
 
         return "{" + rep + "}"
 

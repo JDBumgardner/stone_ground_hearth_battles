@@ -39,19 +39,6 @@ class PatchWerk(Hero):
         return 55
 
 
-class Nefarian(Hero):
-    power_cost = 1
-
-    # hero power is called nefarious fire
-
-    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
-        if event.event == EVENTS.COMBAT_START:
-            if self.hero_power_used:
-                for card in context.enemy_war_party.board:
-                    card.take_damage(1, context.enemy_context())
-                    card.resolve_death(context.enemy_context())
-
-
 class Deathwing(Hero):
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.COMBAT_START:
@@ -688,4 +675,22 @@ class ZephyrsTheGreat(Hero):
             pair = context.randomizer.select_friendly_minion(pairs)  # TODO: what is supposed to happen with multiple pairs?
             context.owner.gain_hand_card(type(pair)())  # TODO: How does this interact with the minion pool?
         self.wishes_left -= 1
+
+
+class SilasDarkmoon(Hero):
+    tickets_purchased = 0
+
+    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event in (EVENTS.REFRESHED_STORE, EVENTS.BUY_START):
+            for card in context.owner.store:
+                card.ticket = context.randomizer.select_random_bool()  # TODO: what should the odds be?
+        if event.event is EVENTS.BUY:
+            if event.card.ticket:
+                self.tickets_purchased += 1
+                event.card.ticket = False
+                if self.tickets_purchased == 3:
+                    self.tickets_purchased = 0
+                    context.owner.triple_rewards.append(TripleRewardCard(context.owner.tavern_tier))
+
+
 
