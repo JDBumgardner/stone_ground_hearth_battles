@@ -10,7 +10,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 from hearthstone.simulator.agent import StandardAction, SellAction, SummonAction, BuyAction, Action
 from hearthstone.simulator.core.tavern import Tavern
-from hearthstone.simulator.observer import Observer, Annotation
+from hearthstone.simulator.replay.observer import Observer, Annotation
 from hearthstone.simulator.replay.replay import Replay, ReplayStep
 from hearthstone.training.pytorch import hearthstone_state_encoder
 from hearthstone.training.pytorch.hearthstone_state_encoder import EncodedActionSet

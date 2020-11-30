@@ -9,7 +9,7 @@ from hearthstone.simulator.replay.replay import Replay, ReplayStep
 if typing.TYPE_CHECKING:
     from hearthstone.simulator.agent import Action, AnnotatingAgent
     from hearthstone.simulator.core.randomizer import Randomizer
-    from hearthstone.simulator.observer import Observer
+    from hearthstone.simulator.replay.observer import Observer
 
 
 class Host:

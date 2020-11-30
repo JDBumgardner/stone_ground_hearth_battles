@@ -2,13 +2,11 @@ import asyncio
 import typing
 from typing import Dict, List, Optional
 
-from hearthstone.simulator import agent
-from hearthstone.simulator.agent import EndPhaseAction, Action, AnnotatingAgent
+from hearthstone.simulator.agent import EndPhaseAction, AnnotatingAgent
 from hearthstone.simulator.core.randomizer import Randomizer
-from hearthstone.simulator.core.tavern import Tavern
 from hearthstone.simulator.host.host import Host
-from hearthstone.simulator.observer import Observer
-from hearthstone.simulator.replay.replay import Replay, ReplayStep
+from hearthstone.simulator.replay.observer import Observer
+from hearthstone.simulator.replay.replay import Replay
 
 
 class RoundRobinHost(Host):

@@ -10,7 +10,7 @@ import trueskill
 from torch import optim, nn
 from torch.utils.tensorboard import SummaryWriter
 
-from hearthstone.ladder.ladder import Contestant, load_ratings
+from hearthstone.ladder.ladder import Contestant, load_ratings, ContestantAgentGenerator
 from hearthstone.simulator.core.hero import EmptyHero
 from hearthstone.simulator.core.tavern import Tavern
 from hearthstone.training.pytorch.gae import GAEAnnotator
@@ -26,6 +26,7 @@ from hearthstone.training.pytorch.replay import ActorCriticGameStepInfo
 from hearthstone.training.pytorch.replay_buffer import EpochBuffer
 from hearthstone.training.pytorch.surveillance import GlobalStepContext
 from hearthstone.training.pytorch.worker.worker import Worker
+from hearthstone.training.pytorch.worker.worker_pool import WorkerPool
 
 PPOHyperparameters = NewType('PPOHyperparameters', Dict[str, Union[str, int, float]])
 
@@ -243,10 +244,11 @@ class PPOLearner(GlobalStepContext):
     def get_initial_contestants(self) -> List[Contestant]:
         if self.hparams['resume']:
             return [Contestant("LoadedBot_{}".format(model),
-                               lambda: PytorchBot(net=net,
-                                                  annotate=False,
-                                                  device=self.get_device(),
-                                                  )) for model, net in
+                               ContestantAgentGenerator(PytorchBot,
+                                                        net=net,
+                                                        annotate=False,
+                                                        device=self.get_device(),
+                                                        )) for model, net in
                     self.load_latest_saved_versions(self.hparams['resume.from'],
                                                     self.hparams['opponents.max_pool_size']).items()]
         if self.hparams['opponents.initial'] == "easiest":
@@ -272,10 +274,10 @@ class PPOLearner(GlobalStepContext):
                             other_contestants.pop(random.randrange(0, len(other_contestants)))
                         other_contestants.append(Contestant(
                             "{}_{}".format(learning_bot_contestant.name, self.global_step),
-                            lambda: PytorchBot(net=frozen_clone,
-                                               annotate=False,
-                                               device=self.get_device()),
-                            trueskill.Rating(learning_bot_contestant.trueskill)
+                            ContestantAgentGenerator(PytorchBot,
+                                                     net=frozen_clone,
+                                                     annotate=False,
+                                                     device=self.get_device())
                         ))
 
     def run(self):
@@ -295,10 +297,8 @@ class PPOLearner(GlobalStepContext):
                 list(self.load_latest_saved_versions(self.hparams['resume.from'], 1).items())[0]
         else:
             learning_net = create_net(self.hparams)
-
-        # if not self.hparams["cuda"]:
-        #     # This is broken on CUDA and we are too lazy to debug.
-        #     self.add_graph_to_tensorboard(tensorboard, learning_net)
+        # This is broken on CUDA and we are too lazy to debug.
+        # self.add_graph_to_tensorboard(tensorboard, learning_net)
 
         # Set gradient descent algorithm
         if self.hparams["optimizer"] == "adam":
@@ -322,9 +322,10 @@ class PPOLearner(GlobalStepContext):
         replay_buffer = EpochBuffer(learning_bot_name, observation_normalizer)
         learning_bot_contestant = Contestant(
             learning_bot_name,
-            lambda: PytorchBot(net=learning_net,
-                               annotate=True,
-                               device=device)
+            ContestantAgentGenerator(PytorchBot,
+                                     net=learning_net,
+                                     annotate=True,
+                                     device=device)
         )
         # Rating starts a 14, which is how the randomly initialized pytorch bot performs.
         learning_bot_contestant.trueskill = trueskill.Rating(14)
@@ -334,18 +335,19 @@ class PPOLearner(GlobalStepContext):
         load_ratings(other_contestants, "../../../data/standings/8p.json")
 
         gae_annotator = GAEAnnotator(learning_bot_name, self.hparams['gae_gamma'], self.hparams['gae_lambda'])
-        workers = [
-            Worker(learning_bot_contestant, other_contestants, self.hparams["game_size"], replay_buffer, gae_annotator,
-                   tensorboard, self) for _ in
-            range(self.hparams['num_workers'])]
+        worker_pool = WorkerPool(self.hparams['num_workers'],
+                                 replay_buffer,
+                                 gae_annotator,
+                                 tensorboard,
+                                 self
+                                 )
 
         for _ in range(1000000):
             learning_net.eval()
-            with torch.no_grad():
-                for worker in workers:
-                    worker.play_game()
+            worker_pool.play_games(learning_bot_contestant, other_contestants, self.hparams['game_size'])
             learning_net.train()
             if len(replay_buffer) >= batch_size:
+                print(f"Running {self.hparams['ppo_epochs']} epochs of PPO optimization...")
                 for i in range(self.hparams["ppo_epochs"]):
                     self.handle_export(learning_bot_contestant, learning_net, other_contestants)
                     stop_early = self.learn_epoch(i, tensorboard, optimizer, learning_net, replay_buffer,
@@ -394,7 +396,7 @@ def main():
         'adam_lr': 0.0001,
         'batch_size': 1024,
         'minibatch_size': 1024,
-        'cuda': True,
+        'cuda': False,
         'entropy_weight': 0.001,
         'gae_gamma': 0.999,
         'gae_lambda': 0.9,
@@ -409,7 +411,7 @@ def main():
         'nn.encoding.redundant': True,
         'normalize_advantage': True,
         'normalize_observations': False,
-        'num_workers': 1,
+        'num_workers': 8,
         'optimizer': 'adam',
         'policy_weight': 0.581166675499831,
         'ppo_epochs': 8,

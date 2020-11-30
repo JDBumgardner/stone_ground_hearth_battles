@@ -20,6 +20,16 @@ from hearthstone.training.pytorch.networks.save_load import load_from_saved
 from hearthstone.training.pytorch.pytorch_bot import PytorchBot
 
 
+class ContestantAgentGenerator:
+    def __init__(self, function, *args, **kwargs):
+        self.function = function
+        self.args = args
+        self.kwargs = kwargs
+
+    def __call__(self, *args, **kwargs):
+        return self.function(*self.args, **self.kwargs)
+
+
 class Contestant:
     def __init__(self, name,  agent_generator: Callable[[], AnnotatingAgent], initial_trueskill=None):
         self.name = name

@@ -14,7 +14,7 @@ from hearthstone.battlebots.saurolisk_bot import SauroliskBot
 from hearthstone.battlebots.supremacy_bot import SupremacyBot
 
 from hearthstone.simulator.core.hero import EmptyHero
-from hearthstone.ladder.ladder import Contestant
+from hearthstone.ladder.ladder import Contestant, ContestantAgentGenerator
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 from hearthstone.simulator.core.tavern import Tavern
 from hearthstone.training.pytorch.hearthstone_state_encoder import encode_player, encode_valid_actions, \
@@ -34,37 +34,37 @@ def add_net_to_tensorboard(tensorboard: SummaryWriter, net: nn.Module):
 
 
 def easiest_contestants():
-    all_bots = [Contestant(f"RandomBot {i}", lambda: RandomBot(i)) for i in range(20)]
-    all_bots += [Contestant(f"NoActionBot ", lambda: NoActionBot())]
-    all_bots += [Contestant(f"CheapoBot", lambda: CheapoBot(3))]
+    all_bots = [Contestant(f"RandomBot {i}", ContestantAgentGenerator(RandomBot,i)) for i in range(20)]
+    all_bots += [Contestant(f"NoActionBot ", ContestantAgentGenerator(NoActionBot))]
+    all_bots += [Contestant(f"CheapoBot", ContestantAgentGenerator(CheapoBot,3))]
     return all_bots
 
 
 def easier_contestants():
-    all_bots = [Contestant(f"RandomBot {i}", lambda: RandomBot(i)) for i in range(20)]
-    all_bots += [Contestant(f"NoActionBot ", lambda: NoActionBot())]
-    all_bots += [Contestant(f"CheapoBot", lambda: CheapoBot(3))]
-    all_bots += [Contestant(f"SupremacyBot {t}", lambda: SupremacyBot(t, False, i)) for i, t in
+    all_bots = [Contestant(f"RandomBot {i}", ContestantAgentGenerator(RandomBot,i)) for i in range(20)]
+    all_bots += [Contestant(f"NoActionBot ", ContestantAgentGenerator(NoActionBot))]
+    all_bots += [Contestant(f"CheapoBot", ContestantAgentGenerator(CheapoBot,3))]
+    all_bots += [Contestant(f"SupremacyBot {t}", ContestantAgentGenerator(SupremacyBot,t, False, i)) for i, t in
                  enumerate([MONSTER_TYPES.MURLOC, MONSTER_TYPES.BEAST, MONSTER_TYPES.MECH, MONSTER_TYPES.DRAGON,
                             MONSTER_TYPES.DEMON, MONSTER_TYPES.PIRATE])]
-    all_bots += [Contestant(f"SupremacyUpgradeBot {t}", lambda: SupremacyBot(t, True, i)) for i, t in
+    all_bots += [Contestant(f"SupremacyUpgradeBot {t}", ContestantAgentGenerator(SupremacyBot,t, True, i)) for i, t in
                  enumerate([MONSTER_TYPES.MURLOC, MONSTER_TYPES.BEAST, MONSTER_TYPES.MECH, MONSTER_TYPES.DRAGON,
                             MONSTER_TYPES.DEMON, MONSTER_TYPES.PIRATE])]
-    all_bots += [Contestant("SauroliskBot", lambda: SauroliskBot(5))]
+    all_bots += [Contestant("SauroliskBot", ContestantAgentGenerator(SauroliskBot,5))]
     return all_bots
 
 
 def easy_contestants():
-    all_bots = [Contestant(f"RandomBot",lambda: RandomBot(1))]
-    all_bots += [Contestant(f"NoActionBot ", lambda: NoActionBot())]
-    all_bots += [Contestant(f"CheapoBot", lambda: CheapoBot(3))]
-    all_bots += [Contestant(f"SupremacyBot {t}", lambda: SupremacyBot(t, False, i)) for i, t in
+    all_bots = [Contestant(f"RandomBot",ContestantAgentGenerator(RandomBot,1))]
+    all_bots += [Contestant(f"NoActionBot ", ContestantAgentGenerator(NoActionBot))]
+    all_bots += [Contestant(f"CheapoBot", ContestantAgentGenerator(CheapoBot,3))]
+    all_bots += [Contestant(f"SupremacyBot {t}", ContestantAgentGenerator(SupremacyBot,t, False, i)) for i, t in
                  enumerate([MONSTER_TYPES.MURLOC, MONSTER_TYPES.BEAST, MONSTER_TYPES.MECH, MONSTER_TYPES.DRAGON,
                             MONSTER_TYPES.DEMON, MONSTER_TYPES.PIRATE])]
-    all_bots += [Contestant(f"SupremacyUpgradeBot {t}", lambda: SupremacyBot(t, True, i)) for i, t in
+    all_bots += [Contestant(f"SupremacyUpgradeBot {t}", ContestantAgentGenerator(SupremacyBot,t, True, i)) for i, t in
                  enumerate([MONSTER_TYPES.MURLOC, MONSTER_TYPES.BEAST, MONSTER_TYPES.MECH, MONSTER_TYPES.DRAGON,
                             MONSTER_TYPES.DEMON, MONSTER_TYPES.PIRATE])]
-    all_bots += [Contestant("SauroliskBot", lambda: SauroliskBot(5))]
+    all_bots += [Contestant("SauroliskBot", ContestantAgentGenerator(SauroliskBot,5))]
     all_bots += [Contestant("PriorityHealthAttackBot", lambda:  PriorityFunctions.attack_health_priority_bot(10, PriorityBot))]
     return all_bots
 

@@ -1,0 +1,86 @@
+import random
+import time
+from typing import List
+
+import torch
+from torch.utils.tensorboard import SummaryWriter
+
+from hearthstone.ladder.ladder import Contestant, update_ratings, print_standings
+from hearthstone.simulator.host.round_robin_host import RoundRobinHost
+from hearthstone.simulator.replay.annotators.final_board_annotator import FinalBoardAnnotator
+from hearthstone.simulator.replay.annotators.ranking_annotator import RankingAnnotator
+from hearthstone.training.pytorch import tensorboard_altair
+from hearthstone.training.pytorch.gae import GAEAnnotator
+from hearthstone.training.pytorch.pytorch_bot import PytorchBot
+from hearthstone.training.pytorch.replay_buffer import EpochBuffer
+from hearthstone.training.pytorch.surveillance import GlobalStepContext
+from hearthstone.training.pytorch.tensorboard_altair import TensorboardAltairAnnotator
+
+
+def play_game(learning_bot_contestant: Contestant,
+              other_contestants: List[Contestant],
+              game_size: int,
+              annotator: GAEAnnotator):
+    torch.set_num_threads(1)  # This is really important, otherwise OpenMP messes things up.
+    with torch.no_grad():
+        round_contestants = [learning_bot_contestant] + random.sample(other_contestants,
+                                                                      k=game_size - 1)
+        host = RoundRobinHost(
+            {contestant.name: contestant.agent_generator() for contestant in round_contestants},
+            [RankingAnnotator(),
+             FinalBoardAnnotator(),
+             TensorboardAltairAnnotator([learning_bot_contestant.name])]
+        )
+        start = time.time()
+        host.play_game()
+        print(f"Worker played 1 game. Time taken: {time.time() - start} seconds.")
+        replay = host.get_replay()
+        annotator.annotate(replay)
+        return replay
+
+
+class WorkerPool:
+    def __init__(self, num_workers,
+                 epoch_buffer: EpochBuffer,
+                 annotator: GAEAnnotator,
+                 tensorboard: SummaryWriter,
+                 global_step_context: GlobalStepContext
+                 ):
+        self.num_workers = num_workers
+        self.pool = torch.multiprocessing.Pool(processes=num_workers)
+        self.epoch_buffer = epoch_buffer
+        self.annotator = annotator
+        self.tensorboard = tensorboard
+        self.global_step_context = global_step_context
+
+    def play_games(self, learning_bot_contestant: Contestant, other_contestants: List[Contestant], game_size: int):
+        all_contestants = [learning_bot_contestant] + other_contestants
+        for contestant in all_contestants:
+            if contestant.agent_generator.function == PytorchBot:
+                contestant.agent_generator().net.share_memory()
+                print(contestant)
+        with torch.no_grad():
+            awaitables = [
+                self.pool.apply_async(play_game, (learning_bot_contestant, other_contestants, game_size, self.annotator))
+                for _ in
+                range(self.num_workers)]
+            for promise in awaitables:
+                replay = promise.get()
+                tensorboard_altair.plot_replay(replay, learning_bot_contestant.name, self.tensorboard,
+                                               self.global_step_context)
+                self._update_ratings(learning_bot_contestant, all_contestants, replay)
+                self.epoch_buffer.add_replay(replay)
+
+    @staticmethod
+    def _update_ratings(learning_bot_contestant, all_contestants, replay):
+        winner_names = replay.observer_annotations["RankingAnnotator"]
+        final_boards = replay.observer_annotations["FinalBoardAnnotator"]
+        print("---------------------------------------------------------------")
+        print(winner_names)
+        print("["+", ".join(final_boards[learning_bot_contestant.name])+"]")
+        ranked_contestants = sorted([c for c in all_contestants if c.name in winner_names],
+                                    key=lambda c: winner_names.index(c.name))
+        update_ratings(ranked_contestants)
+        print_standings(all_contestants)
+        for contestant in ranked_contestants:
+            contestant.games_played += 1
