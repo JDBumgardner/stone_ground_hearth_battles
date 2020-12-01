@@ -17,7 +17,7 @@ from hearthstone.simulator.core.hero import EmptyHero
 from hearthstone.ladder.ladder import Contestant, ContestantAgentGenerator
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 from hearthstone.simulator.core.tavern import Tavern
-from hearthstone.training.pytorch.hearthstone_state_encoder import encode_player, encode_valid_actions, \
+from hearthstone.training.pytorch.encoding.default_encoder import \
     EncodedActionSet
 from hearthstone.training.pytorch.replay import ActorCriticGameStepInfo
 

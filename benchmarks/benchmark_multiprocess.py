@@ -6,10 +6,10 @@ import torch.nn.functional as F
 
 from hearthstone.battlebots.no_action_bot import NoActionBot
 from hearthstone.simulator.host.round_robin_host import RoundRobinHost
-from hearthstone.training.pytorch.hearthstone_state_encoder import DEFAULT_PLAYER_ENCODING, DEFAULT_CARDS_ENCODING
+from hearthstone.training.pytorch.encoding.default_encoder import DEFAULT_PLAYER_ENCODING, DEFAULT_CARDS_ENCODING, \
+    DefaultEncoder
 from hearthstone.training.pytorch.networks.transformer_net import HearthstoneTransformerNet
 from hearthstone.training.pytorch.pytorch_bot import PytorchBot
-import hearthstone.simulator.core.hero_pool
 
 
 class MyNet(nn.Module):
@@ -38,7 +38,8 @@ def process_hearthstone():
     torch.set_num_threads(1)
     with torch.no_grad():
         host = RoundRobinHost(
-            {"Bot1": PytorchBot(HearthstoneTransformerNet(DEFAULT_PLAYER_ENCODING, DEFAULT_CARDS_ENCODING, hidden_layers=1, hidden_size=32, ), True),
+            {"Bot1": PytorchBot(HearthstoneTransformerNet(DefaultEncoder(),
+                                                          hidden_layers=1, hidden_size=32), DefaultEncoder(), True),
              "Bot2": NoActionBot()},
             []
         )

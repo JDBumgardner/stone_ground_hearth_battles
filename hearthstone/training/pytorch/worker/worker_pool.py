@@ -1,3 +1,4 @@
+import queue
 import random
 import time
 from typing import List
@@ -10,6 +11,7 @@ from hearthstone.simulator.host.round_robin_host import RoundRobinHost
 from hearthstone.simulator.replay.annotators.final_board_annotator import FinalBoardAnnotator
 from hearthstone.simulator.replay.annotators.ranking_annotator import RankingAnnotator
 from hearthstone.training.pytorch import tensorboard_altair
+from hearthstone.training.pytorch.encoding.shared_tensor_pool_encoder import SharedTensorPoolEncoder
 from hearthstone.training.pytorch.gae import GAEAnnotator
 from hearthstone.training.pytorch.pytorch_bot import PytorchBot
 from hearthstone.training.pytorch.replay_buffer import EpochBuffer
@@ -43,13 +45,17 @@ class WorkerPool:
     def __init__(self, num_workers,
                  epoch_buffer: EpochBuffer,
                  annotator: GAEAnnotator,
+                 encoder: SharedTensorPoolEncoder,
                  tensorboard: SummaryWriter,
                  global_step_context: GlobalStepContext
                  ):
         self.num_workers = num_workers
-        self.pool = torch.multiprocessing.Pool(processes=num_workers)
+        def assign_queue(q):
+            encoder.queue=q
+        self.pool = torch.multiprocessing.Pool(initializer=assign_queue, initargs=(encoder.queue, ), processes=num_workers)
         self.epoch_buffer = epoch_buffer
         self.annotator = annotator
+        self.encoder = encoder
         self.tensorboard = tensorboard
         self.global_step_context = global_step_context
 
@@ -60,6 +66,8 @@ class WorkerPool:
                 contestant.agent_generator().net.share_memory()
                 print(contestant)
         with torch.no_grad():
+            q = self.encoder.queue
+            self.encoder.queue = None
             awaitables = [
                 self.pool.apply_async(play_game, (learning_bot_contestant, other_contestants, game_size, self.annotator))
                 for _ in
@@ -70,6 +78,7 @@ class WorkerPool:
                                                self.global_step_context)
                 self._update_ratings(learning_bot_contestant, all_contestants, replay)
                 self.epoch_buffer.add_replay(replay)
+            self.encoder.queue=q
 
     @staticmethod
     def _update_ratings(learning_bot_contestant, all_contestants, replay):

@@ -6,9 +6,9 @@ from torch import nn
 from torch.nn import LayerNorm
 from torch.nn.init import xavier_uniform_
 
-from hearthstone.training.pytorch import hearthstone_state_encoder
-from hearthstone.training.pytorch.hearthstone_state_encoder import Feature, State, EncodedActionSet
-
+from hearthstone.training.pytorch.encoding import default_encoder
+from hearthstone.training.pytorch.encoding.default_encoder import EncodedActionSet
+from hearthstone.training.pytorch.encoding.state_encoding import State, Feature, Encoder
 
 
 def _get_activation_fn(activation):
@@ -54,15 +54,15 @@ class TransformerEncoderPostNormLayer(nn.Module):
 
 class TransformerWithContextEncoder(nn.Module):
     # TODO "redundant" arg should be implemented as a different state encoding instead
-    def __init__(self, player_encoding: Feature, card_encoding: Feature, width: int, num_layers: int, activation: str, redundant=False):
+    def __init__(self, encoding: Encoder, width: int, num_layers: int, activation: str, redundant=False):
         super().__init__()
         self.redundant = redundant
         self.width = width
         # TODO Orthogonal initialization?
-        self.fc_player = nn.Linear(player_encoding.size()[0], self.width - 1)
-        card_encoding_size = card_encoding.size()[1]
+        self.fc_player = nn.Linear(encoding.player_encoding().size()[0], self.width - 1)
+        card_encoding_size = encoding.cards_encoding().size()[1]
         if redundant:
-            card_encoding_size += player_encoding.size()[0]
+            card_encoding_size += encoding.player_encoding().size()[0]
         self.fc_cards = nn.Linear(card_encoding_size, self.width - 1)
         encoder_layer_type = TransformerEncoderPostNormLayer if redundant else nn.TransformerEncoderLayer
         self.encoder_layer = encoder_layer_type(d_model=width, dim_feedforward=width*4, nhead=4, dropout=0.0, activation=activation)
@@ -93,29 +93,29 @@ class TransformerWithContextEncoder(nn.Module):
 
 
 class HearthstoneTransformerNet(nn.Module):
-    def __init__(self, player_encoding: Feature, card_encoding: Feature, hidden_layers=1, hidden_size=16, shared=False, activation_function="gelu", redundant=False):
+    def __init__(self, encoding:Encoder, hidden_layers=1, hidden_size=16, shared=False, activation_function="gelu", redundant=False):
         super().__init__()
 
         self.player_hidden_size = hidden_size
         self.card_hidden_size = hidden_size
         if hidden_layers == 0:
             # If there are no hidden layers, just connect directly to output layers.
-            self.player_hidden_size = player_encoding.size()[0]
-            self.card_hidden_size = card_encoding.size()[1]
+            self.player_hidden_size = encoding.player_encoding().size()[0]
+            self.card_hidden_size = encoding.cards_encoding().size()[1]
 
-        self.policy_encoder = TransformerWithContextEncoder(player_encoding, card_encoding, hidden_size, hidden_layers,
+        self.policy_encoder = TransformerWithContextEncoder(encoding, hidden_size, hidden_layers,
                                                             activation_function, redundant=redundant)
         if shared:
             self.value_encoder = self.policy_encoder
         else:
-            self.value_encoder = TransformerWithContextEncoder(player_encoding, card_encoding, hidden_size,
+            self.value_encoder = TransformerWithContextEncoder(encoding, hidden_size,
                                                                hidden_layers, activation_function, redundant=redundant)
 
         # Output layers
         self.fc_player_policy = nn.Linear(self.player_hidden_size,
-                                          len(hearthstone_state_encoder.ALL_ACTIONS.player_action_set))
+                                          len(default_encoder.ALL_ACTIONS.player_action_set))
         self.fc_card_policy = nn.Linear(self.card_hidden_size,
-                                        len(hearthstone_state_encoder.ALL_ACTIONS.card_action_set[1]))
+                                        len(default_encoder.ALL_ACTIONS.card_action_set[1]))
         nn.init.constant_(self.fc_player_policy.weight, 0)
         nn.init.constant_(self.fc_player_policy.bias, 0)
         nn.init.constant_(self.fc_card_policy.weight, 0)
@@ -123,7 +123,7 @@ class HearthstoneTransformerNet(nn.Module):
 
         self.fc_value = nn.Linear(self.player_hidden_size, 1)
 
-        self.value_hack1 = nn.Linear(player_encoding.flattened_size(), 16)
+        self.value_hack1 = nn.Linear(encoding.player_encoding().flattened_size(), 16)
         self.value_hack2 = nn.Linear(16, 1)
 
     def forward(self, state: State, valid_actions: EncodedActionSet):

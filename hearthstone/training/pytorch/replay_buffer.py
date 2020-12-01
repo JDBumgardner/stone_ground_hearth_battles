@@ -1,5 +1,6 @@
 import logging
 import random
+from queue import Queue
 from typing import List, Generator, Optional
 
 from hearthstone.simulator.replay.replay import Replay
@@ -27,6 +28,11 @@ class EpochBuffer:
 
     def clear(self):
         self.transitions.clear()
+
+    def recycle(self, queue: Queue):
+        for transition in self.transitions:
+            queue.put_nowait(transition)
+        self.clear()
 
     def add_replay(self, replay: Replay):
         for replay_step in replay.steps:

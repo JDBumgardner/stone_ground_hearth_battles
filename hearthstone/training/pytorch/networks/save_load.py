@@ -3,20 +3,22 @@ from typing import Dict
 import torch
 from torch import nn
 
-from hearthstone.training.pytorch.hearthstone_state_encoder import DEFAULT_PLAYER_ENCODING, DEFAULT_CARDS_ENCODING
+from hearthstone.training.pytorch.encoding.default_encoder import DEFAULT_PLAYER_ENCODING, DEFAULT_CARDS_ENCODING, \
+    DefaultEncoder
 from hearthstone.training.pytorch.networks.feedforward_net import HearthstoneFFNet
 from hearthstone.training.pytorch.networks.transformer_net import HearthstoneTransformerNet
 
 
 def create_net(hparams: Dict) -> nn.Module:
+    assert hparams["nn.state_encoder"] == "Default"
     if hparams["nn.architecture"] == "feedforward":
-        return HearthstoneFFNet(DEFAULT_PLAYER_ENCODING, DEFAULT_CARDS_ENCODING,
+        return HearthstoneFFNet(DefaultEncoder(),
                                 hparams["nn.hidden_layers"],
                                 hparams.get("nn.hidden_size") or 0,
                                 hparams.get("nn.shared") or False,
-                               hparams.get("nn.activation") or "")
+                                hparams.get("nn.activation") or "")
     elif hparams["nn.architecture"] == "transformer":
-        return HearthstoneTransformerNet(DEFAULT_PLAYER_ENCODING, DEFAULT_CARDS_ENCODING,
+        return HearthstoneTransformerNet(DefaultEncoder(),
                                          hparams["nn.hidden_layers"],
                                          hparams.get("nn.hidden_size") or 0,
                                          hparams.get("nn.shared") or False,

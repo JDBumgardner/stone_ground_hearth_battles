@@ -3,7 +3,8 @@ from typing import Optional, NamedTuple
 
 import torch
 
-from hearthstone.training.pytorch.hearthstone_state_encoder import State, EncodedActionSet
+from hearthstone.training.pytorch.encoding.default_encoder import EncodedActionSet
+from hearthstone.training.pytorch.encoding.state_encoding import State
 
 
 @dataclass

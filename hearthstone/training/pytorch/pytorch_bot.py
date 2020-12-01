@@ -8,25 +8,28 @@ from torch.distributions import Categorical
 
 from hearthstone.simulator.agent import StandardAction, DiscoverChoiceAction, RearrangeCardsAction, \
     AnnotatingAgent
-from hearthstone.training.pytorch.hearthstone_state_encoder import encode_player, encode_valid_actions, State, \
-    EncodedActionSet, get_indexed_action
+from hearthstone.training.pytorch.encoding.default_encoder import \
+    EncodedActionSet
+from hearthstone.training.pytorch.encoding.state_encoding import State, Encoder
 from hearthstone.training.pytorch.replay import ActorCriticGameStepInfo
 
 logger = logging.getLogger(__name__)
 
 
 class PytorchBot(AnnotatingAgent):
-    def __init__(self, net: nn.Module, annotate: bool = True, device: Optional[torch.device] = None):
+    def __init__(self, net: nn.Module, encoder: Encoder, annotate: bool = True, device: Optional[torch.device] = None):
         self.authors = ["Jeremy Salwen"]
         self.net: nn.Module = net
+        self.encoder: Encoder = encoder
         self.annotate = annotate
         self.device = device
         if self.device:
             self.net.to(device)
 
     def policy_and_value(self, player: 'Player') -> Tuple[Tensor, float]:
-        encoded_state: State = encode_player(player, self.device)
-        valid_actions_mask: EncodedActionSet = encode_valid_actions(player, self.device)
+        encoded_state: State = self.encoder.encode_state(player).to(self.device)
+        valid_actions_mask: EncodedActionSet = self.encoder.encode_valid_actions(player).to(self.device)
+
         policy, value = self.net(State(encoded_state.player_tensor.unsqueeze(0),
                                        encoded_state.cards_tensor.unsqueeze(0)),
                                  EncodedActionSet(valid_actions_mask.player_action_tensor.unsqueeze(0),
@@ -34,15 +37,15 @@ class PytorchBot(AnnotatingAgent):
         return policy, value
 
     async def annotated_buy_phase_action(self, player: 'Player') -> (StandardAction, ActorCriticGameStepInfo):
-        encoded_state: State = encode_player(player, self.device)
-        valid_actions_mask: EncodedActionSet = encode_valid_actions(player, self.device)
+        encoded_state: State = self.encoder.encode_state(player).to(self.device)
+        valid_actions_mask: EncodedActionSet = self.encoder.encode_valid_actions(player).to(self.device)
         policy, value = self.net(State(encoded_state.player_tensor.unsqueeze(0),
                                        encoded_state.cards_tensor.unsqueeze(0)),
                                  EncodedActionSet(valid_actions_mask.player_action_tensor.unsqueeze(0),
                                                   valid_actions_mask.card_action_tensor.unsqueeze(0)))
         probs = torch.exp(policy[0])
         action_index = Categorical(probs).sample()
-        action = get_indexed_action(int(action_index))
+        action = self.encoder.get_indexed_action(int(action_index))
 
         ac_game_step_info = None
         if self.annotate:

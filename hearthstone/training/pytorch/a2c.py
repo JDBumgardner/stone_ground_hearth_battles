@@ -10,8 +10,9 @@ from torch.utils.tensorboard import SummaryWriter
 from hearthstone.simulator.host import RoundRobinHost
 from hearthstone.ladder.ladder import Contestant, update_ratings, print_standings, save_ratings
 from hearthstone.training.pytorch.networks.feedforward_net import HearthstoneFFNet
-from hearthstone.training.pytorch.hearthstone_state_encoder import Transition, get_indexed_action, \
-    DEFAULT_PLAYER_ENCODING, DEFAULT_CARDS_ENCODING
+from hearthstone.training.pytorch.encoding.default_encoder import get_indexed_action, \
+    DEFAULT_PLAYER_ENCODING, DEFAULT_CARDS_ENCODING, DefaultEncoder
+from hearthstone.training.pytorch.encoding.state_encoding import Transition
 from hearthstone.training.pytorch.policy_gradient import easier_contestants, tensorize_batch
 from hearthstone.training.pytorch.replay_buffer import ReplayBuffer
 from hearthstone.training.pytorch.surveillance import SurveiledPytorchBot, ReplayBufferSaver
@@ -67,7 +68,7 @@ def main():
     tensorboard = SummaryWriter(f"../../../data/learning/pytorch/tensorboard/{datetime.now().isoformat()}")
     logging.getLogger().setLevel(logging.INFO)
     other_contestants = easier_contestants()
-    learning_net = HearthstoneFFNet(DEFAULT_PLAYER_ENCODING, DEFAULT_CARDS_ENCODING)
+    learning_net = HearthstoneFFNet(DefaultEncoder())
     optimizer = optim.Adam(learning_net.parameters(), lr=0.0001)
     replay_buffer = ReplayBuffer(100000)
     learning_bot_contestant = Contestant("LearningBot", lambda:  SurveiledPytorchBot(learning_net, [ReplayBufferSaver(replay_buffer)]))

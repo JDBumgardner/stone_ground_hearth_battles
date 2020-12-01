@@ -13,9 +13,12 @@ from torch.utils.tensorboard import SummaryWriter
 from hearthstone.ladder.ladder import Contestant, load_ratings, ContestantAgentGenerator
 from hearthstone.simulator.core.hero import EmptyHero
 from hearthstone.simulator.core.tavern import Tavern
+from hearthstone.training.pytorch.encoding.shared_tensor_pool_encoder import SharedTensorPoolEncoder
 from hearthstone.training.pytorch.gae import GAEAnnotator
-from hearthstone.training.pytorch.hearthstone_state_encoder import get_indexed_action, \
-    DEFAULT_PLAYER_ENCODING, DEFAULT_CARDS_ENCODING, State, EncodedActionSet, encode_player, encode_valid_actions
+from hearthstone.training.pytorch.encoding.default_encoder import  \
+    DEFAULT_PLAYER_ENCODING, DEFAULT_CARDS_ENCODING, EncodedActionSet, \
+    DefaultEncoder
+from hearthstone.training.pytorch.encoding.state_encoding import State
 from hearthstone.training.pytorch.networks import save_load
 from hearthstone.training.pytorch.networks.save_load import create_net, load_from_saved
 from hearthstone.training.pytorch.normalization import ObservationNormalizer, PPONormalizer
@@ -25,7 +28,6 @@ from hearthstone.training.pytorch.pytorch_bot import PytorchBot
 from hearthstone.training.pytorch.replay import ActorCriticGameStepInfo
 from hearthstone.training.pytorch.replay_buffer import EpochBuffer
 from hearthstone.training.pytorch.surveillance import GlobalStepContext
-from hearthstone.training.pytorch.worker.worker import Worker
 from hearthstone.training.pytorch.worker.worker_pool import WorkerPool
 
 PPOHyperparameters = NewType('PPOHyperparameters', Dict[str, Union[str, int, float]])
@@ -58,6 +60,9 @@ class PPOLearner(GlobalStepContext):
         self.games_plotted = 0
 
         self.export_path = "../../../data/learning/pytorch/saved_models/{}".format(self.hparams['export.path'])
+
+        # Encoder is shared to reuse tensors passed between processes
+        self.encoder = SharedTensorPoolEncoder(DefaultEncoder(), torch.multiprocessing.Queue())
 
     def get_global_step(self) -> int:
         return self.global_step
@@ -169,7 +174,7 @@ class PPOLearner(GlobalStepContext):
             tensorboard.add_histogram("policy_loss/clipped", clipped_policy_loss, self.global_step)
             tensorboard.add_histogram("policy_ratio/unclipped", ratio, self.global_step)
             tensorboard.add_histogram("policy_ratio/clipped", clipped_ratio, self.global_step)
-        tensorboard.add_text("action/train", str(get_indexed_action(int(transition_batch.action[0]))), self.global_step)
+        tensorboard.add_text("action/train", str(self.encoder.get_indexed_action(int(transition_batch.action[0]))), self.global_step)
         tensorboard.add_scalar("avg_reward",
                                transition_batch.reward.masked_select(transition_batch.is_terminal).float().mean(),
                                self.global_step)
@@ -246,6 +251,7 @@ class PPOLearner(GlobalStepContext):
             return [Contestant("LoadedBot_{}".format(model),
                                ContestantAgentGenerator(PytorchBot,
                                                         net=net,
+                                                        encoder=self.encoder,
                                                         annotate=False,
                                                         device=self.get_device(),
                                                         )) for model, net in
@@ -276,6 +282,7 @@ class PPOLearner(GlobalStepContext):
                             "{}_{}".format(learning_bot_contestant.name, self.global_step),
                             ContestantAgentGenerator(PytorchBot,
                                                      net=frozen_clone,
+                                                     encoder=self.encoder,
                                                      annotate=False,
                                                      device=self.get_device())
                         ))
@@ -324,6 +331,7 @@ class PPOLearner(GlobalStepContext):
             learning_bot_name,
             ContestantAgentGenerator(PytorchBot,
                                      net=learning_net,
+                                     encoder=self.encoder,
                                      annotate=True,
                                      device=device)
         )
@@ -338,6 +346,7 @@ class PPOLearner(GlobalStepContext):
         worker_pool = WorkerPool(self.hparams['num_workers'],
                                  replay_buffer,
                                  gae_annotator,
+                                 self.encoder,
                                  tensorboard,
                                  self
                                  )
@@ -346,6 +355,7 @@ class PPOLearner(GlobalStepContext):
             learning_net.eval()
             worker_pool.play_games(learning_bot_contestant, other_contestants, self.hparams['game_size'])
             learning_net.train()
+            torch.set_num_threads(8)
             if len(replay_buffer) >= batch_size:
                 print(f"Running {self.hparams['ppo_epochs']} epochs of PPO optimization...")
                 for i in range(self.hparams["ppo_epochs"]):
@@ -359,7 +369,7 @@ class PPOLearner(GlobalStepContext):
                     if stop_early:
                         break
 
-                replay_buffer.clear()
+                replay_buffer.recycle(self.encoder.queue)
 
             time_elapsed = int(time.time() - start_time)
             tensorboard.add_scalar("rating/elo", learning_bot_contestant.elo, global_step=self.global_step)
@@ -404,6 +414,7 @@ def main():
         'gradient_clipping': 0.5,
         'approx_kl_limit': 0.015,
         'nn.architecture': 'transformer',
+        'nn.state_encoder': 'Default',
         'nn.hidden_layers': 1,
         'nn.hidden_size': 32,
         'nn.activation': 'gelu',

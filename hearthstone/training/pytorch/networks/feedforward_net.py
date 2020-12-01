@@ -1,27 +1,26 @@
 import torch
 from torch import nn
 
-from hearthstone.training.pytorch.hearthstone_state_encoder import action_encoding_size, State, \
-    Feature, EncodedActionSet
+from hearthstone.training.pytorch.encoding.default_encoder import EncodedActionSet
+from hearthstone.training.pytorch.encoding.state_encoding import State, Feature, Encoder
 import torch.nn.functional as F
 
 
 class HearthstoneFFNet(nn.Module):
-    def __init__(self, player_encoding: Feature, card_encoding: Feature, hidden_layers=1, hidden_size=1024, shared=False, activation_function="gelu"):
+    def __init__(self, encoding: Encoder, hidden_layers=1, hidden_size=1024, shared=False, activation_function="gelu"):
         ''' This is a generic, fully connected feed-forward neural net.
 
            This is a pytorch module: https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module
 
            Args:
-             player_encoding (Feature): [link to doc]
-             card_encoding (Feature): [link to doc]
+             encoding (Encoder): [link to doc]
              hidden_layers (int): The number of hidden layers.
              hidden_size (int): The width of the hidden layers.
              shared (bool): Whether the policy and value NNs share the same weights in the hidden layers.
              activation_function (string): The activation function between layers.
         '''
         super().__init__()
-        input_size = player_encoding.flattened_size() + card_encoding.flattened_size()
+        input_size = encoding.player_encoding().flattened_size() + encoding.cards_encoding().flattened_size()
         if hidden_layers == 0:
             # If there are no hidden layers, just connect directly to output layers.
             hidden_size = input_size
@@ -41,7 +40,7 @@ class HearthstoneFFNet(nn.Module):
                 nn.init.orthogonal_(self.value_hidden_layers[-1].weight)
 
         # Output layers
-        self.fc_policy = nn.Linear(hidden_size, action_encoding_size())
+        self.fc_policy = nn.Linear(hidden_size, encoding.action_encoding_size())
         nn.init.constant_(self.fc_policy.weight, 0)
         nn.init.constant_(self.fc_policy.bias, 0)
         self.fc_value = nn.Linear(hidden_size, 1)

@@ -16,6 +16,7 @@ from hearthstone.battlebots.supremacy_bot import SupremacyBot
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 import hearthstone.simulator.core.hero_pool
 from hearthstone.simulator.host.round_robin_host import RoundRobinHost
+from hearthstone.training.pytorch.encoding.default_encoder import DefaultEncoder
 from hearthstone.training.pytorch.networks.save_load import load_from_saved
 from hearthstone.training.pytorch.pytorch_bot import PytorchBot
 
@@ -136,6 +137,7 @@ def saved_learningbot_1v1_contestants() -> List[Contestant]:
     # Jeremy has this bot, ask him for it!
     all_bots += [Contestant("LearningBot94200", lambda: PytorchBot(
         load_from_saved("../../data/learning/pytorch/saved_models/2020-10-30T20:50:44.311231/94200", hparams),
+        DefaultEncoder(),
         annotate=False))]
     return all_bots
 

@@ -4,7 +4,7 @@ import torch
 from torch.distributions import Categorical
 
 from hearthstone.simulator.core.tavern import Tavern
-from hearthstone.training.pytorch.hearthstone_state_encoder import encode_player, encode_valid_actions
+from hearthstone.training.pytorch.encoding.default_encoder import encode_player, encode_valid_actions
 
 
 class PytorchTests(unittest.TestCase):
