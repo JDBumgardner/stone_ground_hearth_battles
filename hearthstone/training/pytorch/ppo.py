@@ -425,7 +425,7 @@ def main():
         'nn.encoding.redundant': True,
         'normalize_advantage': True,
         'normalize_observations': False,
-        'parallelism.num_workers': 2,
+        'parallelism.num_workers': 8,
         'parallelism.use_processes': False,
         'optimizer': 'adam',
         'policy_weight': 0.581166675499831,
