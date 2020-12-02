@@ -63,7 +63,9 @@ class PPOLearner(GlobalStepContext):
         self.export_path = "../../../data/learning/pytorch/saved_models/{}".format(self.hparams['export.path'])
 
         # Encoder is shared to reuse tensors passed between processes
-        self.encoder = SharedTensorPoolEncoder(DefaultEncoder())
+        self.encoder = DefaultEncoder()
+        if self.hparams['parallelism.use_processes']:
+            self.encoder = SharedTensorPoolEncoder(self.encoder)
 
     def get_global_step(self) -> int:
         return self.global_step
@@ -343,12 +345,13 @@ class PPOLearner(GlobalStepContext):
         load_ratings(other_contestants, "../../../data/standings/8p.json")
 
         gae_annotator = GAEAnnotator(learning_bot_name, self.hparams['gae_gamma'], self.hparams['gae_lambda'])
-        worker_pool = WorkerPool(self.hparams['num_workers'],
+        worker_pool = WorkerPool(self.hparams['parallelism.num_workers'],
                                  replay_buffer,
                                  gae_annotator,
                                  self.encoder,
                                  tensorboard,
-                                 self
+                                 self,
+                                 self.hparams['parallelism.use_processes']
                                  )
 
         for _ in range(1000000):
@@ -422,7 +425,8 @@ def main():
         'nn.encoding.redundant': True,
         'normalize_advantage': True,
         'normalize_observations': False,
-        'num_workers': 4,
+        'parallelism.num_workers': 2,
+        'parallelism.use_processes': False,
         'optimizer': 'adam',
         'policy_weight': 0.581166675499831,
         'ppo_epochs': 8,

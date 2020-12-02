@@ -84,7 +84,7 @@ class GameServer:
                 set_port_mapping = True
                 print("set port mapping")
             try:
-                server = await asyncio.get_event_loop().create_server(self.handle_connection, interface, mapped_port)
+                server = await asyncio_utils.get_or_create_event_loop().create_server(self.handle_connection, interface, mapped_port)
                 print(f"starting server on {interface}:{mapped_port}")
                 async with server:
                     await server.serve_forever()

@@ -1,4 +1,5 @@
-import queue
+import concurrent.futures
+import multiprocessing.pool
 import random
 import time
 from typing import List
@@ -24,7 +25,6 @@ def play_game(learning_bot_contestant: Contestant,
               other_contestants: List[Contestant],
               game_size: int,
               annotator: GAEAnnotator):
-    torch.set_num_threads(1)  # This is really important, otherwise OpenMP messes things up.
     with torch.no_grad():
         round_contestants = [learning_bot_contestant] + random.sample(other_contestants,
                                                                       k=game_size - 1)
@@ -48,36 +48,61 @@ class WorkerPool:
                  annotator: GAEAnnotator,
                  encoder: SharedTensorPoolEncoder,
                  tensorboard: SummaryWriter,
-                 global_step_context: GlobalStepContext
+                 global_step_context: GlobalStepContext,
+                 use_processes: bool
                  ):
         self.num_workers = num_workers
-        def assign_queue(q):
-            """Copies the global queue from the parent process to the child processes, overwriting the child's"""
-            shared_tensor_pool_encoder.gloabal_tensor_queue = q
-        self.pool = torch.multiprocessing.Pool(initializer=assign_queue, initargs=(shared_tensor_pool_encoder.global_tensor_queue, ), processes=num_workers)
+        self.use_processes = use_processes
+        if use_processes:
+            def setup_worker_process(q):
+                """Copies the global queue from the parent process to the child processes, overwriting the child's"""
+                torch.set_num_threads(1)  # This is really important, otherwise OpenMP messes things up.
+                shared_tensor_pool_encoder.gloabal_tensor_queue = q
+
+            self.pool = torch.multiprocessing.Pool(initializer=setup_worker_process(),
+                                              initargs=(shared_tensor_pool_encoder.global_tensor_queue,),
+                                              processes=num_workers)
+        else:
+            self.pool = concurrent.futures.ThreadPoolExecutor(max_workers=num_workers)
         self.epoch_buffer = epoch_buffer
         self.annotator = annotator
         self.encoder = encoder
         self.tensorboard = tensorboard
         self.global_step_context = global_step_context
 
+    def _submit_task(self, fn, args):
+        if self.use_processes:
+            return self.pool.apply_async(fn, args)
+        else:
+            return self.pool.submit(fn, *args)
+
+    def _get_task_result(self, promise):
+        if self.use_processes:
+            return promise.get()
+        else:
+            return promise.result()
+
     def play_games(self, learning_bot_contestant: Contestant, other_contestants: List[Contestant], game_size: int):
+        num_torch_threads = torch.get_num_threads()
+        torch.set_num_threads(1)
         all_contestants = [learning_bot_contestant] + other_contestants
-        for contestant in all_contestants:
-            if contestant.agent_generator.function == PytorchBot:
-                contestant.agent_generator().net.share_memory()
-                print(contestant)
+        if self.use_processes:
+            for contestant in all_contestants:
+                if contestant.agent_generator.function == PytorchBot:
+                    contestant.agent_generator().net.share_memory()
+                    print(contestant)
         with torch.no_grad():
             awaitables = [
-                self.pool.apply_async(play_game, (learning_bot_contestant, other_contestants, game_size, self.annotator))
+                self._submit_task(play_game, (learning_bot_contestant, other_contestants, game_size, self.annotator))
                 for _ in
                 range(self.num_workers)]
             for promise in awaitables:
-                replay = promise.get()
+                replay = self._get_task_result(promise)
                 tensorboard_altair.plot_replay(replay, learning_bot_contestant.name, self.tensorboard,
                                                self.global_step_context)
                 self._update_ratings(learning_bot_contestant, all_contestants, replay)
                 self.epoch_buffer.add_replay(replay)
+        torch.set_num_threads(num_torch_threads)
 
     @staticmethod
     def _update_ratings(learning_bot_contestant, all_contestants, replay):

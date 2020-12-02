@@ -2,6 +2,7 @@ import asyncio
 import typing
 from typing import Dict, List, Optional
 
+from hearthstone.asyncio import asyncio_utils
 from hearthstone.simulator.agent import EndPhaseAction, AnnotatingAgent
 from hearthstone.simulator.core.randomizer import Randomizer
 from hearthstone.simulator.host.host import Host
@@ -17,7 +18,7 @@ class RoundRobinHost(Host):
 
     def start_game(self):
         for player_name, player in self.tavern.players.items():
-            hero_choice_action = asyncio.get_event_loop().run_until_complete(
+            hero_choice_action = asyncio_utils.get_or_create_event_loop().run_until_complete(
                 self.agents[player_name].hero_choice_action(player))
             self._apply_and_record(player_name, hero_choice_action)
 
@@ -28,21 +29,21 @@ class RoundRobinHost(Host):
                 continue
             agent = self.agents[player_name]
             for _ in range(40):
-                action, agent_annotation = asyncio.get_event_loop().run_until_complete(agent.annotated_buy_phase_action(player))
+                action, agent_annotation = asyncio_utils.get_or_create_event_loop().run_until_complete(agent.annotated_buy_phase_action(player))
                 yield
                 self._apply_and_record(player_name, action, agent_annotation)
                 if player.discover_queue:
-                    discover_choice_action = asyncio.get_event_loop().run_until_complete(agent.discover_choice_action(player))
+                    discover_choice_action = asyncio_utils.get_or_create_event_loop().run_until_complete(agent.discover_choice_action(player))
                     self._apply_and_record(player_name, discover_choice_action)
                 if type(action) is EndPhaseAction:
                     break
             if len(player.in_play) > 1:
-                rearrange_action = asyncio.get_event_loop().run_until_complete(agent.rearrange_cards(player))
+                rearrange_action = asyncio_utils.get_or_create_event_loop().run_until_complete(agent.rearrange_cards(player))
                 self._apply_and_record(player_name, rearrange_action)
         self.tavern.combat_step()
         if self.tavern.game_over():
             for position, (name, player) in enumerate(reversed(self.tavern.losers)):
-                annotation = asyncio.get_event_loop().run_until_complete(self.agents[name].game_over(player, position))
+                annotation = asyncio_utils.get_or_create_event_loop().run_until_complete(self.agents[name].game_over(player, position))
                 self.replay.agent_annotate(name, annotation)
             self._on_game_over()
 

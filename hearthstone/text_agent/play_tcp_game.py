@@ -40,7 +40,7 @@ def main():
         "battlerattler_priority_bot5": PriorityFunctions.battlerattler_priority_bot(6, EarlyGameBot),
         "battlerattler_priority_bot6": PriorityFunctions.battlerattler_priority_bot(7, EarlyGameBot),
     }
-    agents.update(asyncio.get_event_loop().run_until_complete(open_client_streams(MAX_PLAYERS-len(agents))))
+    agents.update(asyncio_utils.get_or_create_event_loop().run_until_complete(open_client_streams(MAX_PLAYERS-len(agents))))
     host = CyborgArena(agents)
     host.play_game()
 

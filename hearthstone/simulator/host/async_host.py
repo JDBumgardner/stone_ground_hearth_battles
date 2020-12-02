@@ -1,6 +1,7 @@
 import asyncio
 from typing import Dict, Optional, List
 
+from hearthstone.asyncio import asyncio_utils
 from hearthstone.simulator import agent
 from hearthstone.simulator.agent import EndPhaseAction, Action, AnnotatingAgent, BuyAction
 from hearthstone.simulator.core.randomizer import Randomizer
@@ -16,7 +17,7 @@ class AsyncHost(Host):
         super().__init__(agents, observers, randomizer)
 
     def start_game(self):
-        asyncio.get_event_loop().run_until_complete(self._async_start_game())
+        asyncio_utils.get_or_create_event_loop().run_until_complete(self._async_start_game())
 
     async def _async_start_game(self):
         player_choices = {}
@@ -33,7 +34,7 @@ class AsyncHost(Host):
             self._apply_and_record(player_name, player_choices[player_name])
 
     def play_round(self):
-        return asyncio.get_event_loop().run_until_complete(self._async_play_round())
+        return asyncio_utils.get_or_create_event_loop().run_until_complete(self._async_play_round())
 
     async def _async_play_round(self):
         self.tavern.buying_step()
