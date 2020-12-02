@@ -13,6 +13,7 @@ from torch.utils.tensorboard import SummaryWriter
 from hearthstone.ladder.ladder import Contestant, load_ratings, ContestantAgentGenerator
 from hearthstone.simulator.core.hero import EmptyHero
 from hearthstone.simulator.core.tavern import Tavern
+from hearthstone.training.pytorch.encoding import shared_tensor_pool_encoder
 from hearthstone.training.pytorch.encoding.shared_tensor_pool_encoder import SharedTensorPoolEncoder
 from hearthstone.training.pytorch.gae import GAEAnnotator
 from hearthstone.training.pytorch.encoding.default_encoder import  \
@@ -62,7 +63,7 @@ class PPOLearner(GlobalStepContext):
         self.export_path = "../../../data/learning/pytorch/saved_models/{}".format(self.hparams['export.path'])
 
         # Encoder is shared to reuse tensors passed between processes
-        self.encoder = SharedTensorPoolEncoder(DefaultEncoder(), torch.multiprocessing.Queue())
+        self.encoder = SharedTensorPoolEncoder(DefaultEncoder())
 
     def get_global_step(self) -> int:
         return self.global_step
@@ -174,7 +175,6 @@ class PPOLearner(GlobalStepContext):
             tensorboard.add_histogram("policy_loss/clipped", clipped_policy_loss, self.global_step)
             tensorboard.add_histogram("policy_ratio/unclipped", ratio, self.global_step)
             tensorboard.add_histogram("policy_ratio/clipped", clipped_ratio, self.global_step)
-        tensorboard.add_text("action/train", str(self.encoder.get_indexed_action(int(transition_batch.action[0]))), self.global_step)
         tensorboard.add_scalar("avg_reward",
                                transition_batch.reward.masked_select(transition_batch.is_terminal).float().mean(),
                                self.global_step)
@@ -369,7 +369,7 @@ class PPOLearner(GlobalStepContext):
                     if stop_early:
                         break
 
-                replay_buffer.recycle(self.encoder.queue)
+                replay_buffer.recycle(shared_tensor_pool_encoder.global_tensor_queue)
 
             time_elapsed = int(time.time() - start_time)
             tensorboard.add_scalar("rating/elo", learning_bot_contestant.elo, global_step=self.global_step)
@@ -422,7 +422,7 @@ def main():
         'nn.encoding.redundant': True,
         'normalize_advantage': True,
         'normalize_observations': False,
-        'num_workers': 8,
+        'num_workers': 4,
         'optimizer': 'adam',
         'policy_weight': 0.581166675499831,
         'ppo_epochs': 8,

@@ -1,5 +1,5 @@
 import queue
-from typing import List
+from typing import List, Optional
 
 import torch
 
@@ -14,20 +14,22 @@ import numpy as np
 
 from hearthstone.training.pytorch.replay import ActorCriticGameStepInfo
 
+# A global singleton queue, since multiprocessing can't handle passing the queue through as a function argument.
+global_tensor_queue: queue.Queue = torch.multiprocessing.Queue()
 
 class SharedTensorPoolEncoder(Encoder):
-    def __init__(self, base_encoder: Encoder, queue: mp.Queue):
+    def __init__(self, base_encoder: Encoder):
         self.base_encoder: Encoder = base_encoder
-        self.queue = queue
         # Pools of tensors to reuse
         self._states_pool: List[State] = []
         self._valid_actions_pool: List[EncodedActionSet] = []
 
     def _fill_from_queue(self):
+        global global_tensor_queue
         if self._states_pool and self._valid_actions_pool:
             return
         try:
-            game_step_info: ActorCriticGameStepInfo = self.queue.get_nowait()
+            game_step_info: ActorCriticGameStepInfo = global_tensor_queue.get_nowait()
         except queue.Empty:
             return
         except AttributeError:
@@ -39,7 +41,6 @@ class SharedTensorPoolEncoder(Encoder):
         base_state = self.base_encoder.encode_state(player)
         self._fill_from_queue()
         if self._states_pool:
-            print("reused state")
             reused_state = self._states_pool.pop()
             reused_state.player_tensor[:] = base_state.player_tensor
             reused_state.cards_tensor[:] = base_state.cards_tensor
@@ -53,7 +54,7 @@ class SharedTensorPoolEncoder(Encoder):
         if self._valid_actions_pool:
             reused_action_set = self._valid_actions_pool.pop()
             reused_action_set.player_action_tensor[:] = base_action_set.player_action_tensor
-            reused_action_set.card_action_tensor[:] = base_action_set.cards_action_tensor
+            reused_action_set.card_action_tensor[:] = base_action_set.card_action_tensor
             return reused_action_set
         else:
             return base_action_set
