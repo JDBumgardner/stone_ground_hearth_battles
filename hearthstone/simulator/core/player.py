@@ -52,7 +52,8 @@ class Player:
         self.counted_cards = defaultdict(lambda: 0)
         self.minion_cost = 3
         self.gold_coins = 0
-        self.bananas = 0
+        self.bananas = 0  # tracks total number of bananas (big and small)
+        self.big_bananas = 0  # tracks how many bananas are big
         self.purchased_minions: List['Type'] = []
         self.played_minions: List['Type'] = []
         self.last_opponent_warband: List['MonsterCard'] = []
@@ -382,13 +383,18 @@ class Player:
 
     def use_banana(self, board_index: Optional['BoardIndex'] = None, store_index: Optional['StoreIndex'] = None):
         assert self.valid_use_banana(board_index, store_index)
+        assert self.big_bananas <= self.bananas
         self.bananas -= 1
+        bonus = 1
+        if self.big_bananas > 0:  # for now, big bananas will always be used first
+            self.big_bananas -= 1
+            bonus = 2
         if board_index is not None:
-            self.in_play[board_index].attack += 1
-            self.in_play[board_index].health += 1
+            self.in_play[board_index].attack += bonus
+            self.in_play[board_index].health += bonus
         if store_index is not None:
-            self.store[store_index].attack += 1
-            self.store[store_index].health += 1
+            self.store[store_index].attack += bonus
+            self.store[store_index].health += bonus
 
     def valid_use_banana(self, board_index: Optional['BoardIndex'] = None, store_index: Optional['StoreIndex'] = None):
         if self.bananas <= 0:

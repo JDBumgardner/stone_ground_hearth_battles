@@ -2369,8 +2369,13 @@ class CardTests(unittest.TestCase):
         self.assertEqual(len(player_1.hand), 2)
         self.assertEqual(len(player_1.discover_queue), 0)
 
+    class TestKingMuklaRandomizer(DefaultRandomizer):
+        def select_random_number(self, lo: int, hi: int) -> int:
+            return 1
+
     def test_king_mukla(self):
         tavern = Tavern(restrict_types=False)
+        tavern.randomizer = self.TestKingMuklaRandomizer()
         player_1 = tavern.add_player_with_hero("Dante_Kong", KingMukla())
         player_2 = tavern.add_player_with_hero("lucy")
         player_3 = tavern.add_player_with_hero("thing_1")
@@ -2378,17 +2383,20 @@ class CardTests(unittest.TestCase):
         tavern.buying_step()
         player_1.hero_power()
         self.assertEqual(player_1.bananas, 2)
-        self.assertEqual(player_2.bananas, 0)
-        self.assertEqual(player_3.bananas, 0)
-        self.assertEqual(player_4.bananas, 0)
+        self.assertEqual(player_1.big_bananas, 0)
+        for player in list(tavern.players.values())[1:]:
+            self.assertEqual(player.bananas, 0)
+            self.assertEqual(player.big_bananas, 0)
         tavern.combat_step()
         self.assertEqual(player_1.bananas, 2)
-        self.assertEqual(player_2.bananas, 1)
-        self.assertEqual(player_3.bananas, 1)
-        self.assertEqual(player_4.bananas, 1)
+        for player in list(tavern.players.values())[1:]:
+            self.assertEqual(player.bananas, 1)
+            self.assertEqual(player.big_bananas, 0)
+
         tavern.buying_step()
         player_1.use_banana(store_index=StoreIndex(0))
         player_1.use_banana(store_index=StoreIndex(0))
+        self.assertEqual(player_1.bananas, 0)
         self.assertEqual(player_1.store[0].attack, player_1.store[0].base_attack + 2)
         self.assertEqual(player_1.store[0].health, player_1.store[0].base_health + 2)
 
@@ -3151,8 +3159,8 @@ class CardTests(unittest.TestCase):
         self.assertTrue(player_1.hand[0].golden)
 
     class TestSilasDarkmoonRandomizer(DefaultRandomizer):
-        def select_random_bool(self) -> bool:
-            return True
+        def select_random_number(self, lo, hi) -> int:
+            return 1
 
     def test_silas_darkmoon(self):
         tavern = Tavern(restrict_types=False)
@@ -3167,6 +3175,39 @@ class CardTests(unittest.TestCase):
         self.assertEqual(player_1.hero.tickets_purchased, 0)
         self.assertEqual(len(player_1.triple_rewards), 1)
         self.assertEqual(player_1.triple_rewards[0].level, 1)
+
+    class TestBigBananaRandomizer(DefaultRandomizer):
+        def select_random_number(self, lo: int, hi: int) -> int:
+            return 5
+
+    def test_big_banana(self):
+        tavern = Tavern(restrict_types=False)
+        tavern.randomizer = self.TestBigBananaRandomizer()
+        player_1 = tavern.add_player_with_hero("Dante_Kong", KingMukla())
+        player_2 = tavern.add_player_with_hero("lucy")
+        player_3 = tavern.add_player_with_hero("thing_1")
+        player_4 = tavern.add_player_with_hero("thing_2")
+        tavern.buying_step()
+        player_1.hero_power()
+        self.assertEqual(player_1.bananas, 2)
+        self.assertEqual(player_1.big_bananas, 2)
+        for player in list(tavern.players.values())[1:]:
+            self.assertEqual(player.bananas, 0)
+            self.assertEqual(player.big_bananas, 0)
+        tavern.combat_step()
+        self.assertEqual(player_1.bananas, 2)
+        self.assertEqual(player_1.big_bananas, 2)
+        for player in list(tavern.players.values())[1:]:
+            self.assertEqual(player.bananas, 1)
+            self.assertEqual(player.big_bananas, 0)
+
+        tavern.buying_step()
+        player_1.use_banana(store_index=StoreIndex(0))
+        player_1.use_banana(store_index=StoreIndex(0))
+        self.assertEqual(player_1.bananas, 0)
+        self.assertEqual(player_1.big_bananas, 0)
+        self.assertEqual(player_1.store[0].attack, player_1.store[0].base_attack + 4)
+        self.assertEqual(player_1.store[0].health, player_1.store[0].base_health + 4)
 
 
 if __name__ == '__main__':

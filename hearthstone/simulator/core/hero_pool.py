@@ -401,7 +401,9 @@ class KingMukla(Hero):
                         store_index: Optional['StoreIndex'] = None):
         for _ in range(2):
             if context.owner.room_in_hand():
-                context.owner.bananas += 1  # TODO: chance for a BIG BANANA (1 in 5?)
+                context.owner.bananas += 1
+                if context.randomizer.select_random_number(1, 5) == 5:
+                    context.owner.big_bananas += 1
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_END and self.hero_power_used:
@@ -683,7 +685,7 @@ class SilasDarkmoon(Hero):
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event in (EVENTS.REFRESHED_STORE, EVENTS.BUY_START):
             for card in context.owner.store:
-                card.ticket = context.randomizer.select_random_bool()  # TODO: what should the odds be?
+                card.ticket = bool(context.randomizer.select_random_number(0, 1))  # TODO: what should the odds be?
         if event.event is EVENTS.BUY:
             if event.card.ticket:
                 self.tickets_purchased += 1

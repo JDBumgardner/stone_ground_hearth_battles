@@ -53,7 +53,7 @@ class Randomizer:
     def select_adaptation(self, adaptations: List['Type']) -> 'Type':
         raise NotImplementedError()
 
-    def select_random_bool(self) -> bool:
+    def select_random_number(self, lo: int, hi: int) -> int:
         raise NotImplementedError()
 
 
@@ -108,5 +108,5 @@ class DefaultRandomizer(Randomizer):
     def select_adaptation(self, adaptations: List['Type']) -> 'Type':
         return self.rand.choice(adaptations)
 
-    def select_random_bool(self) -> bool:
-        return self.rand.choice([True, False])
+    def select_random_number(self, lo: int, hi: int) -> int:
+        return self.rand.randint(lo, hi)
