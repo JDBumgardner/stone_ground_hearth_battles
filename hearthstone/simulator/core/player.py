@@ -1,3 +1,4 @@
+import copy
 import itertools
 import typing
 from collections import defaultdict
@@ -126,6 +127,8 @@ class Player:
         self.broadcast_buy_phase_event(events.TavernUpgradeEvent())
 
     def valid_upgrade_tavern(self) -> bool:
+        if self.dead:
+            return False
         if self.tavern_tier >= self.max_tier():
             return False
         if self.coins < self.tavern_upgrade_cost:
@@ -145,6 +148,8 @@ class Player:
         self.played_minions.append(type(card))
 
     def valid_summon_from_hand(self, index: HandIndex, targets: Optional[List[BoardIndex]] = None) -> bool:
+        if self.dead:
+            return False
         if targets is None:
             targets = []
         #  TODO: Jack num_battlecry_targets should only accept 0,1,2
@@ -182,7 +187,7 @@ class Player:
         self.draw_discover(lambda card: card.tier == discover_tier)
 
     def valid_triple_rewards(self) -> bool:
-        return bool(self.triple_rewards)
+        return bool(self.triple_rewards) and not self.dead
 
     def draw_discover(self, predicate: Callable[['MonsterCard'], bool]): #TODO: Jarett help make discoverables unique are cards with more copies in the deck more likely to be discovered?
         discoverables = [card for card in self.tavern.deck.all_cards() if predicate(card)] # Jeremy says: Hmm, we can run out of unique cards.  Changed to be all cards for now.
@@ -201,7 +206,7 @@ class Player:
         self.discover_queue.pop(0)
 
     def valid_select_discover(self, card_index: DiscoverIndex):
-        return self.discover_queue and card_index in range(len(self.discover_queue[0]))
+        return self.discover_queue and card_index in range(len(self.discover_queue[0])) and not self.dead
 
     def summon_from_void(self, monster: MonsterCard):
         if self.room_on_board():
@@ -233,6 +238,8 @@ class Player:
         self.purchased_minions.append(type(card))
 
     def valid_purchase(self, index: 'StoreIndex') -> bool:
+        if self.dead:
+            return False
         if not self.valid_store_index(index):
             return False
         if self.coins < self.minion_cost:
@@ -264,7 +271,7 @@ class Player:
         self.broadcast_buy_phase_event(events.RefreshStoreEvent())
 
     def valid_reroll(self) -> bool:
-        return self.coins >= self.refresh_store_cost or self.free_refreshes >= 1
+        return self.coins >= self.refresh_store_cost or self.free_refreshes >= 1 and not self.dead
 
     def return_cards(self, unfreeze: Optional[bool] = True):
         if unfreeze:
@@ -291,13 +298,13 @@ class Player:
         self.tavern.deck.return_cards(returned_cards)
 
     def valid_sell_minion(self, index: 'BoardIndex') -> bool:
-        return self.valid_board_index(index)
+        return self.valid_board_index(index) and not self.dead
 
     def hero_power(self, board_index: Optional['BoardIndex'] = None, store_index: Optional['StoreIndex'] = None):
         self.hero.hero_power(BuyPhaseContext(self, self.tavern.randomizer), board_index, store_index)
 
     def valid_hero_power(self, board_target: Optional['BoardIndex'] = None, store_target: Optional['StoreIndex'] = None) -> bool:
-        return self.hero.hero_power_valid(BuyPhaseContext(self, self.tavern.randomizer), board_target, store_target)
+        return self.hero.hero_power_valid(BuyPhaseContext(self, self.tavern.randomizer), board_target, store_target) and not self.dead
 
     def broadcast_buy_phase_event(self, event: CardEvent, randomizer: Optional['Randomizer'] = None):
         self.hero.handle_event(event, BuyPhaseContext(self, randomizer or self.tavern.randomizer))
@@ -309,7 +316,7 @@ class Player:
                 card.handle_event_in_hand(event, BuyPhaseContext(self, randomizer or self.tavern.randomizer))
 
     def valid_rearrange_cards(self, permutation: List[int]) -> bool:
-        return len(permutation) == len(self.in_play) and set(permutation) == set(range(len(self.in_play)))
+        return len(permutation) == len(self.in_play) and set(permutation) == set(range(len(self.in_play))) and not self.dead
 
     def rearrange_cards(self, permutation: List[int]):
         assert self.valid_rearrange_cards(permutation)
@@ -341,6 +348,8 @@ class Player:
         if not any(card.give_immunity for card in self.in_play) and not self.hero.give_immunity:
             self.health -= damage
             self.broadcast_buy_phase_event(events.PlayerDamagedEvent())
+            if self.health <= 0:
+                self.resolve_death()
 
     def redeem_gold_coin(self):
         if self.gold_coins >= 1:
@@ -397,6 +406,8 @@ class Player:
             self.store[store_index].health += bonus
 
     def valid_use_banana(self, board_index: Optional['BoardIndex'] = None, store_index: Optional['StoreIndex'] = None):
+        if self.dead:
+            return False
         if self.bananas <= 0:
             return False
         if board_index == store_index:

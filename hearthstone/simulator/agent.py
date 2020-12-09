@@ -138,7 +138,7 @@ class EndPhaseAction(StandardAction):
         return f"EndPhase({self.freeze})"
 
     def apply(self, player: 'Player'):
-        if self.freeze:
+        if self.freeze and not player.dead:
             player.freeze()
 
     def valid(self, player: 'Player') -> bool:
@@ -207,7 +207,7 @@ class RedeemGoldCoinAction(StandardAction):
         player.redeem_gold_coin()
 
     def valid(self, player: 'Player') -> bool:
-        return player.gold_coins >= 1
+        return player.gold_coins >= 1 and not player.dead
 
 
 class BananaAction(StandardAction):
@@ -230,7 +230,7 @@ Annotation = Any
 
 class AnnotatingAgent:
     async def hero_choice_action(self, player: 'Player') -> HeroChoiceAction:
-        return HeroChoiceAction(0)
+        return HeroChoiceAction(HeroChoiceIndex(0))
 
     async def rearrange_cards(self, player: 'Player') -> RearrangeCardsAction:
         """

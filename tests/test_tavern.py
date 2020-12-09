@@ -1,11 +1,12 @@
 import unittest
 from typing import Type
 
+from hearthstone.simulator.agent import generate_all_actions, EndPhaseAction
 from hearthstone.simulator.core.adaptations import AdaptBuffs
 from hearthstone.simulator.core.card_pool import *
 from hearthstone.simulator.core.cards import MonsterCard, CardType
 from hearthstone.simulator.core.hero_pool import *
-from hearthstone.simulator.core.player import StoreIndex, HandIndex, BoardIndex
+from hearthstone.simulator.core.player import StoreIndex, HandIndex, BoardIndex, DiscoverIndex
 from hearthstone.simulator.core.randomizer import DefaultRandomizer
 from hearthstone.simulator.core.tavern import Tavern
 
@@ -289,19 +290,6 @@ class CardTests(unittest.TestCase):
         player_2 = tavern.add_player_with_hero("lucy")
         tavern.buying_step()
         self.assertEqual(player_1.health, 55)
-        self.assertEqual(player_2.health, 40)
-
-    def test_nefarian(self):
-        tavern = Tavern(restrict_types=False)
-        tavern.randomizer = CardForcer([AlleyCat] * 6)
-        player_1 = tavern.add_player_with_hero("Dante_Kong", Nefarian())
-        player_2 = tavern.add_player_with_hero("lucy")
-        tavern.buying_step()
-        player_1.hero_power()
-        player_2.purchase(StoreIndex(0))
-        player_2.summon_from_hand(HandIndex(0))
-        tavern.combat_step()
-        self.assertEqual(player_1.health, 40)
         self.assertEqual(player_2.health, 40)
 
     def test_card_triple(self):
@@ -2283,7 +2271,7 @@ class CardTests(unittest.TestCase):
         player_1.play_triple_rewards()
         self.assertEqual(len(player_1.discover_queue), 3)
         for _ in range(3):
-            player_1.select_discover(0)
+            player_1.select_discover(DiscoverIndex(0))
         self.assertEqual(len(player_1.hand), 3)
         self.assertEqual(len(player_1.discover_queue), 0)
 
@@ -2365,7 +2353,7 @@ class CardTests(unittest.TestCase):
         self.assertEqual(len(player_1.discover_queue), 2)
         for _ in range(2):
             self.assertTrue(card.check_type(MONSTER_TYPES.DRAGON) for card in player_1.discover_queue[0])
-            player_1.select_discover(0)
+            player_1.select_discover(DiscoverIndex(0))
         self.assertEqual(len(player_1.hand), 2)
         self.assertEqual(len(player_1.discover_queue), 0)
 
@@ -2410,7 +2398,7 @@ class CardTests(unittest.TestCase):
         tavern.buying_step()
         player_1.hero_power()
         self.assertEqual(len(player_1.discover_queue), 1)
-        player_1.select_discover(0)
+        player_1.select_discover(DiscoverIndex(0))
         self.assertEqual(len(player_1.hand), 1)
         self.assertEqual(len(player_1.discover_queue), 0)
 
@@ -2599,7 +2587,7 @@ class CardTests(unittest.TestCase):
             tavern.combat_step()
             tavern.buying_step()
         self.assertTrue(player_2.dead)
-        self.assertFalse(bool(player_2.in_play))
+        self.assertEqual(len(player_2.in_play), 3)
         self.assertEqual(len(player_1.discover_queue), 1)
         self.assertEqual(len(player_1.discover_queue[0]), 3)
         for card in player_1.discover_queue[0]:
@@ -2607,7 +2595,7 @@ class CardTests(unittest.TestCase):
                 self.assertEqual(card.attack, card.base_attack + 1)
                 self.assertEqual(card.health, card.base_health + 1)
                 self.assertTrue(card.taunt)
-        player_1.select_discover(0)
+        player_1.select_discover(DiscoverIndex(0))
         self.assertEqual(len(player_1.hand), 1)
         self.assertEqual(len(player_1.discover_queue), 0)
         tavern.combat_step()
@@ -3140,9 +3128,9 @@ class CardTests(unittest.TestCase):
         self.assertCardListEquals(player_1.hand, [ShifterZerus])
         self.assertTrue(player_1.hand[0].golden)
 
-    def test_zephyrs_the_great(self):
+    def test_zephrys_the_great(self):
         tavern = Tavern(restrict_types=False)
-        player_1 = tavern.add_player_with_hero("Dante_Kong", ZephyrsTheGreat())
+        player_1 = tavern.add_player_with_hero("Dante_Kong", ZephrysTheGreat())
         player_2 = tavern.add_player_with_hero("lucy")
         tavern.randomizer = RepeatedCardForcer([Sellemental])
         for _ in range(2):
@@ -3208,6 +3196,20 @@ class CardTests(unittest.TestCase):
         self.assertEqual(player_1.big_bananas, 0)
         self.assertEqual(player_1.store[0].attack, player_1.store[0].base_attack + 4)
         self.assertEqual(player_1.store[0].health, player_1.store[0].base_health + 4)
+
+    def test_buy_phase_death(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong", LichBazhial())
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.buying_step()
+        player_1.health = 2
+        player_1.hero_power()
+        self.assertEqual(player_1.health, 0)
+        self.assertTrue(player_1.dead)
+        action_list = generate_all_actions(player_1)
+        for action in action_list:
+            if type(action) != EndPhaseAction:
+                self.assertFalse(action.valid(player_1))
 
 
 if __name__ == '__main__':

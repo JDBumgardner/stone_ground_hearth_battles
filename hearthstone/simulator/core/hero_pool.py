@@ -1,3 +1,4 @@
+import copy
 import logging
 from typing import Union, Tuple, Optional
 
@@ -482,10 +483,11 @@ class MrBigglesworth(Hero):  # TODO: tokens discovered will enter the pool when 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.PLAYER_DEAD and bool(event.player.in_play):
             discovered_cards = []
+            board = [copy.deepcopy(card) for card in event.player.in_play]
             for _ in range(3):
-                if event.player.in_play:
-                    enemy_minion = context.randomizer.select_enemy_minion(event.player.in_play)
-                    event.player.remove_board_card(enemy_minion)  # TODO: need to keep these three minions on the board
+                if board:
+                    enemy_minion = context.randomizer.select_enemy_minion(board)
+                    board.remove(enemy_minion)
                     discovered_cards.append(enemy_minion)
             context.owner.discover_queue.append(discovered_cards)
 
@@ -570,9 +572,6 @@ class TessGreymane(Hero):
         context.owner.return_cards()
         if context.owner.last_opponent_warband:
             for card in context.owner.last_opponent_warband:
-                # TODO See github issue #9, to determine the correct behavior, but it's very easy to not have any more
-                # cards of a given type in the deck.
-                # context.owner.tavern.deck.remove_card_of_type(type(card))
                 context.owner.store.append(type(card)())
 
 
@@ -661,7 +660,7 @@ class IllidanStormrage(Hero):
                     combat.start_attack(attacker, defender, attacking_war_party, defending_war_party, context.randomizer)
 
 
-class ZephyrsTheGreat(Hero):
+class ZephrysTheGreat(Hero):
     power_cost = 4
     wishes_left = 3
 
