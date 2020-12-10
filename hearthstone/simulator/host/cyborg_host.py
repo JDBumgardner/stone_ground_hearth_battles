@@ -23,6 +23,17 @@ class CyborgArena(AsyncHost):
                         discovered_card = await agent.discover_choice_action(player)
 
                     player.select_discover(discovered_card)
+                elif player.hero.discover_choices:
+                    try:
+                        discovered_choice = await agent.hero_discover_action(player)
+                    except ConnectionError:
+                        print("replace with a bot")
+                        # replace the agent and player
+                        agent = PriorityFunctions.battlerattler_priority_bot(3, EarlyGameBot)
+                        self.agents[player.name] = agent
+                        discovered_choice = await agent.hero_discover_action(player)
+
+                    player.hero_select_discover(discovered_choice)
                 else:
                     try:
                         action = await agent.buy_phase_action(player)

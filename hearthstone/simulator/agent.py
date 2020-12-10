@@ -39,7 +39,7 @@ class HeroChoiceAction(Action):
 
 
 class DiscoverChoiceAction(Action):
-    def __init__(self, card_index: DiscoverIndex):
+    def __init__(self, card_index: 'DiscoverIndex'):
         self.card_index = card_index
 
     def __repr__(self):
@@ -67,6 +67,23 @@ class RearrangeCardsAction(Action):
 
     def valid(self, player: 'Player') -> bool:
         return player.valid_rearrange_cards(self.permutation)
+
+
+class HeroDiscoverAction(Action):
+    def __init__(self, discover_index: 'DiscoverIndex'):
+        self.discover_index = discover_index
+
+    def __repr__(self):
+        return f"Choose({self.discover_index})"
+
+    def apply(self, player: 'Player'):
+        player.hero_select_discover(self.discover_index)
+
+    def valid(self, player: 'Player') -> bool:
+        return player.valid_hero_select_discover(self.discover_index) and not player.dead
+
+    def str_in_context(self, player: 'Player') -> str:
+        return f"Choose({player.hero.discover_choices[self.discover_index]})"
 
 
 class StandardAction(Action):
@@ -272,6 +289,17 @@ class AnnotatingAgent:
         """
         pass
 
+    async def hero_discover_action(self, player: 'Player') -> 'HeroDiscoverAction':
+        """
+
+        Args:
+            player: The player object controlled by this agent. This function should not modify it.
+
+        Returns:
+            Tuple of object to discover, and Annotation to attach to the action.
+        """
+        pass
+
     async def game_over(self, player: 'Player', ranking: int) -> Annotation:
         """
         Notifies the agent that the game is over and the agent has achieved a given rank
@@ -317,8 +345,8 @@ def generate_all_actions(player: 'Player') -> Generator[StandardAction, None, No
             possible_num_targets = [len(valid_target_indices)]
         for num_targets in possible_num_targets:
             for targets in itertools.combinations(valid_target_indices, num_targets):
-                yield SummonAction(index, list(targets))
+                yield SummonAction(HandIndex(index), list(targets))
         if card.magnetic:
             for target_index, target_card in enumerate(player.in_play):
                 if target_card.check_type(MONSTER_TYPES.MECH):
-                    yield SummonAction(index, [target_index])
+                    yield SummonAction(HandIndex(index), [target_index])

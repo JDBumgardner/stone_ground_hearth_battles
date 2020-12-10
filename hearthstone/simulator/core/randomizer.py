@@ -3,6 +3,7 @@ import typing
 from typing import List, Tuple, Type, Optional
 
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
+from hearthstone.simulator.core.secrets import SECRETS
 
 if typing.TYPE_CHECKING:
     from hearthstone.simulator.core.cards import MonsterCard
@@ -54,6 +55,12 @@ class Randomizer:
         raise NotImplementedError()
 
     def select_random_number(self, lo: int, hi: int) -> int:
+        raise NotImplementedError()
+
+    def select_secret(self, secrets: List['SECRETS']) -> 'SECRETS':
+        raise NotImplementedError()
+
+    def select_combat_matchup(self, pairings: List[Tuple['Player', 'Player']]) -> Tuple['Player', 'Player']:
         raise NotImplementedError()
 
 
@@ -110,3 +117,9 @@ class DefaultRandomizer(Randomizer):
 
     def select_random_number(self, lo: int, hi: int) -> int:
         return self.rand.randint(lo, hi)
+
+    def select_secret(self, secrets: List['SECRETS']) -> 'SECRETS':
+        return self.rand.choice(secrets)
+
+    def select_combat_matchup(self, pairings: List[Tuple['Player', 'Player']]) -> Tuple['Player', 'Player']:
+        return self.rand.choice(pairings)

@@ -35,6 +35,9 @@ class RoundRobinHost(Host):
                 if player.discover_queue:
                     discover_choice_action = asyncio_utils.get_or_create_event_loop().run_until_complete(agent.discover_choice_action(player))
                     self._apply_and_record(player_name, discover_choice_action)
+                if player.hero.discover_choices:
+                    hero_discover_action = asyncio_utils.get_or_create_event_loop().run_until_complete(agent.hero_discover_action(player))
+                    self._apply_and_record(player_name, hero_discover_action)
                 if type(action) is EndPhaseAction:
                     break
             if len(player.in_play) > 1:

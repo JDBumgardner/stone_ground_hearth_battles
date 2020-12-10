@@ -8,7 +8,7 @@ from hearthstone.simulator.core.cards import one_minion_per_type, CardLocation, 
 from hearthstone.simulator.core.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
 from hearthstone.simulator.core.hero import Hero
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
-from hearthstone.simulator.core.player import BoardIndex, StoreIndex
+from hearthstone.simulator.core.player import BoardIndex, StoreIndex, DiscoverIndex, HeroChoiceIndex
 from hearthstone.simulator.core.secrets import SECRETS
 from hearthstone.simulator.core.triple_reward_card import TripleRewardCard
 
@@ -202,7 +202,7 @@ class MillhouseManastorm(Hero):
         return 2
 
     def tavern_upgrade_costs(self) -> Tuple[int, int, int, int, int, int]:
-        return (0, 6, 8, 9, 10, 11)
+        return 0, 6, 8, 9, 10, 11
 
 
 class CaptainEudora(Hero):
@@ -595,6 +595,7 @@ class Shudderwock(Hero):
 
 class TheGreatAkazamzarak(Hero):
     power_cost = 1
+    discover_choices = []
     secrets = []
 
     def hero_power_valid_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
@@ -603,8 +604,15 @@ class TheGreatAkazamzarak(Hero):
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
-        pass  # TODO: add some sort of discover_secret() function for player class
-        # also the probabilities of getting certain secrets may be hardcoded
+        available_secrets = SECRETS.remaining_secrets(self)
+        for _ in range(3):
+            secret = context.randomizer.select_secret(available_secrets)
+            available_secrets.remove(secret)
+            self.discover_choices.append(secret)
+
+    def select_discover(self, discover_index: 'DiscoverIndex'):
+        self.secrets.append(self.discover_choices[discover_index])
+        self.discover_choices = []
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_END:
@@ -616,7 +624,7 @@ class TheGreatAkazamzarak(Hero):
         if event.event is EVENTS.ON_ATTACK and event.foe in context.friendly_war_party.board:
             if context.friendly_war_party.room_on_board():
                 if SECRETS.SPLITTING_IMAGE in self.secrets:
-                    summon_index = context.friendly_war_party.get_index(event.card)
+                    summon_index = context.friendly_war_party.get_index(event.foe)
                     context.friendly_war_party.summon_in_combat(type(event.foe)(), context, summon_index+1)
                     self.secrets.remove(SECRETS.SPLITTING_IMAGE)
                 if SECRETS.VENOMSTRIKE_TRAP in self.secrets:
@@ -694,4 +702,50 @@ class SilasDarkmoon(Hero):
                     context.owner.triple_rewards.append(TripleRewardCard(context.owner.tavern_tier))
 
 
+class SirFinleyMrrgglton(Hero):
+    discover_choices = []
+    player = None
 
+    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.BUY_START and context.owner.tavern.turn_count == 0:
+            available_heros = context.owner.tavern.hero_pool
+            for _ in range(3):
+                hero_option = context.randomizer.select_hero(available_heros)
+                available_heros.remove(hero_option)
+                self.discover_choices.append(hero_option)
+            self.player = context.owner
+
+    def select_discover(self, discover_index: 'DiscoverIndex'):
+        self.player.hero_options = self.discover_choices[:]
+        self.player.choose_hero(HeroChoiceIndex(discover_index))
+        self.discover_choices = []
+
+
+class LordBarov(Hero):
+    power_cost = 1
+    discover_choices = []
+    winning_pick = None
+
+    def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                        store_index: Optional['StoreIndex'] = None):
+        if len(context.owner.tavern.current_player_pairings) > 1:
+            available_pairings = [(a, b) for a, b in context.owner.tavern.current_player_pairings if a != context.owner and b != context.owner]
+            pairing = context.randomizer.select_combat_matchup(available_pairings)
+        else:
+            pairing = context.owner.tavern.current_player_pairings[0]
+        self.discover_choices.extend(list(pairing))
+
+    def select_discover(self, discover_index: 'DiscoverIndex'):
+        self.winning_pick = self.discover_choices[discover_index]
+        self.discover_choices = []
+
+    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.RESULTS_BROADCAST and self.winning_pick is not None:
+            if event.winner == self.winning_pick:
+                context.owner.gold_coins += 3
+                self.winning_pick = None
+            elif event.tie:
+                context.owner.gold_coins += 1
+                self.winning_pick = None
+            elif event.loser == self.winning_pick:
+                self.winning_pick = None

@@ -2,10 +2,10 @@ from typing import Optional, List
 
 from hearthstone.simulator.agent import SummonAction, SellAction, EndPhaseAction, RerollAction, TavernUpgradeAction, \
     HeroPowerAction, TripleRewardsAction, RedeemGoldCoinAction, BuyAction, StandardAction, Agent, BananaAction, \
-    DiscoverChoiceAction, HeroChoiceAction, RearrangeCardsAction
+    DiscoverChoiceAction, HeroChoiceAction, RearrangeCardsAction, HeroDiscoverAction
 from hearthstone.simulator.core.cards import CardLocation, MonsterCard
 from hearthstone.simulator.core.hero import Hero
-from hearthstone.simulator.core.player import HandIndex, BoardIndex, StoreIndex, Player
+from hearthstone.simulator.core.player import HandIndex, BoardIndex, StoreIndex, Player, DiscoverIndex, HeroChoiceIndex
 
 
 class TextAgentProtocol:
@@ -40,7 +40,7 @@ class TextAgent(Agent):
         except ValueError:
             return None
         if index in range(len(player.hero_options)):
-            return HeroChoiceAction(index)
+            return HeroChoiceAction(HeroChoiceIndex(index))
         return None
 
     async def rearrange_cards(self, player: 'Player') -> 'RearrangeCardsAction':
@@ -75,6 +75,7 @@ class TextAgent(Agent):
         await self.connection.send(f"\n\nplayer {player.name} ({player.hero}), it is your buy phase.\n")
         await self.connection.send(
             f"available monster types: {[monster_type.name for monster_type in player.tavern.available_types]}\n")
+        await self.connection.send(f"Your next opponent: {player.next_opponent().name}\n")
         await self.print_player_card_list("store", player.store)
         await self.print_player_card_list("board", player.in_play)
         await self.print_player_card_list("hand", player.hand)
@@ -117,7 +118,7 @@ class TextAgent(Agent):
                 store_index = int(split_list[1])
             except ValueError:
                 return None
-            if not player.valid_store_index(store_index) or player.coins < player.minion_cost:
+            if not player.valid_store_index(StoreIndex(store_index)) or player.coins < player.minion_cost:
                 return None
             return BuyAction(StoreIndex(store_index))
         elif split_list[0] == "s":
@@ -127,7 +128,7 @@ class TextAgent(Agent):
                 targets = [int(target) for target in split_list[1:]]
             except ValueError:
                 return None
-            if not player.valid_hand_index(targets[0]):
+            if not player.valid_hand_index(HandIndex(targets[0])):
                 return None
             for target in targets[1:]:
                 if not 0 <= target < len(player.in_play) + 1:
@@ -140,7 +141,7 @@ class TextAgent(Agent):
                 sell_index = int(split_list[1])
             except ValueError:
                 return None
-            if not player.valid_board_index(sell_index):
+            if not player.valid_board_index(BoardIndex(sell_index)):
                 return None
             return SellAction(BoardIndex(sell_index))
         elif split_list == ["e"]:
@@ -164,11 +165,11 @@ class TextAgent(Agent):
                 return None
             if player.hero.power_target_location is not None:
                 if CardLocation.BOARD in player.hero.power_target_location and location == "b":
-                    if not player.valid_board_index(index):
+                    if not player.valid_board_index(BoardIndex(index)):
                         return None
                     return HeroPowerAction(board_target=BoardIndex(index))
                 elif CardLocation.STORE in player.hero.power_target_location and location == "s":
-                    if not player.valid_store_index(index):
+                    if not player.valid_store_index(StoreIndex(index)):
                         return None
                     return HeroPowerAction(store_target=StoreIndex(index))
         elif split_list[0] == "t":
@@ -180,11 +181,11 @@ class TextAgent(Agent):
                 return None
             index = int(split_list[2])
             if split_list[1] == "b":
-                if not player.valid_board_index(index):
+                if not player.valid_board_index(BoardIndex(index)):
                     return None
                 return BananaAction(board_target=BoardIndex(index))
             elif split_list[1] == "s":
-                if not player.valid_store_index(index):
+                if not player.valid_store_index(StoreIndex(index)):
                     return None
                 return BananaAction(store_target=StoreIndex(index))
         else:
@@ -206,7 +207,27 @@ class TextAgent(Agent):
     def parse_discover_input(user_input: str, player: 'Player') -> Optional['DiscoverChoiceAction']:
         card_index = int(user_input)
         if card_index in range(len(player.discover_queue[0])):
-            return DiscoverChoiceAction(card_index)
+            return DiscoverChoiceAction(DiscoverIndex(card_index))
+        else:
+            return None
+
+    async def hero_discover_action(self, player: 'Player') -> 'HeroDiscoverAction':
+        await self.connection.send(f"player {player.name}, you must choose a discover option.\n")
+        await self.print_player_card_list("discovery choices", player.hero.discover_choices)
+        await self.connection.send("input index to discover here: ")
+        user_input = await self.connection.receive_line()
+        while True:
+            discover_choice = self.parse_hero_discover_input(user_input, player)
+            if discover_choice:
+                return discover_choice
+            await self.connection.send("oops, try again: ")
+            user_input = await self.connection.receive_line()
+
+    @staticmethod
+    def parse_hero_discover_input(user_input: str, player: 'Player') -> Optional['HeroDiscoverAction']:
+        choice_index = int(user_input)
+        if choice_index in range(len(player.hero.discover_choices)):
+            return HeroDiscoverAction(DiscoverIndex(choice_index))
         else:
             return None
 
