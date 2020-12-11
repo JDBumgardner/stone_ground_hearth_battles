@@ -3,7 +3,7 @@ import typing
 from typing import List
 
 from hearthstone.simulator.agent import Agent, generate_valid_actions, StandardAction, DiscoverChoiceAction, \
-    RearrangeCardsAction
+    RearrangeCardsAction, HeroDiscoverAction
 
 if typing.TYPE_CHECKING:
 
@@ -12,6 +12,7 @@ if typing.TYPE_CHECKING:
 
 class RandomBot(Agent):
     authors = ["Jeremy Salwen"]
+
     def __init__(self, seed: int):
         self.local_random = random.Random(seed)
 
@@ -26,3 +27,6 @@ class RandomBot(Agent):
 
     async def discover_choice_action(self, player: 'Player') -> DiscoverChoiceAction:
         return DiscoverChoiceAction(self.local_random.choice(range(len(player.discover_queue[0]))))
+
+    async def hero_discover_action(self, player: 'Player') -> 'HeroDiscoverAction':
+        return HeroDiscoverAction(self.local_random.choice(range(len(player.hero.discover_choices))))

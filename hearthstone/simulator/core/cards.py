@@ -41,7 +41,7 @@ class PrintingPress:
     def make_cards(cls, available_types: List['MONSTER_TYPES']) -> 'CardList':
         cardlist = []
         for card in cls.cards:
-            if not card.token and (card.pool in available_types or card.pool == MONSTER_TYPES.ALL):
+            if not card.base_token and (card.pool in available_types or card.pool == MONSTER_TYPES.ALL):
                 cardlist.extend([card() for _ in range(cls.cards_per_tier[card.tier])])
         return CardList(cardlist)
 
@@ -51,7 +51,7 @@ class PrintingPress:
 
     @classmethod
     def all_types(cls):
-        return [card_type for card_type in cls.cards if not card_type.token]
+        return [card_type for card_type in cls.cards if not card_type.base_token]
 
 
 CardType = make_metaclass(PrintingPress.add_card, ("MonsterCard",))
@@ -59,7 +59,7 @@ CardType = make_metaclass(PrintingPress.add_card, ("MonsterCard",))
 
 class MonsterCard(metaclass=CardType):
     coin_cost = 3
-    mana_cost: Optional[int] = None  # TODO: what about tokens?
+    mana_cost: Optional[int] = None
     base_health: int
     base_attack: int
     monster_type = None
@@ -75,7 +75,7 @@ class MonsterCard(metaclass=CardType):
     base_reborn = False
     redeem_rate = 1
     tier: int
-    token = False  # TODO: should this be an instance attribute so it can be manipulated by Rafaam/Bigglesworth?
+    base_token = False
     tracked = False
     cant_attack = False
     shifting = False
@@ -109,6 +109,8 @@ class MonsterCard(metaclass=CardType):
         self.frozen = False
         self.nomi_buff = 0
         self.ticket = False
+        self.dormant = False
+        self.token = self.base_token
 
     def __repr__(self):
         rep = f"{type(self).__name__} {self.attack}/{self.health} (t{self.tier})" #  TODO: add a proper enum to the monster typing
@@ -127,6 +129,8 @@ class MonsterCard(metaclass=CardType):
             rep += ", [shifting]"
         if self.frozen:
             rep += ", [frozen]"
+        if self.dormant:
+            rep += ", [dormant]"
         if self.ticket:
             rep += ", [ticket]"
 
@@ -232,7 +236,7 @@ class MonsterCard(metaclass=CardType):
         if self.token:
             return attached_cards
         else:
-            dissolving_cards = [type(self)()]*golden_modifier
+            dissolving_cards = [type(self)() for _ in range(golden_modifier)]
             dissolving_cards.extend(attached_cards)
             return dissolving_cards
 
@@ -280,6 +284,12 @@ class MonsterCard(metaclass=CardType):
             return taunt_monsters
         else:
             return live_enemies
+
+    def apply_nomi_buff(self, player: 'Player'):
+        if self.check_type(MONSTER_TYPES.ELEMENTAL):
+            self.attack += (player.nomi_bonus - self.nomi_buff)
+            self.health += (player.nomi_bonus - self.nomi_buff)
+            self.nomi_buff = player.nomi_bonus
 
 
 class CardList:

@@ -110,7 +110,7 @@ class AlleyCat(MonsterCard):
 
 
 class TabbyCat(MonsterCard):
-    token = True
+    base_token = True
     tier = 1
     monster_type = MONSTER_TYPES.BEAST
     pool = MONSTER_TYPES.BEAST
@@ -214,7 +214,7 @@ class MurlocTidehunter(MonsterCard):
 
 
 class MurlocScout(MonsterCard):
-    token = True
+    base_token = True
     tier = 1
     monster_type = MONSTER_TYPES.MURLOC
     pool = MONSTER_TYPES.MURLOC
@@ -295,7 +295,7 @@ class HarvestGolem(MonsterCard):
 
 
 class DamagedGolem(MonsterCard):
-    token = True
+    base_token = True
     tier = 1
     monster_type = MONSTER_TYPES.MECH
     pool = MONSTER_TYPES.MECH
@@ -340,7 +340,7 @@ class KindlyGrandmother(MonsterCard):
 
 
 class BigBadWolf(MonsterCard):
-    token = True
+    base_token = True
     tier = 1
     monster_type = MONSTER_TYPES.BEAST
     pool = MONSTER_TYPES.BEAST
@@ -413,7 +413,7 @@ class Imprisoner(MonsterCard):
 
 
 class Imp(MonsterCard):
-    token = True
+    base_token = True
     tier = 1
     monster_type = MONSTER_TYPES.DEMON
     pool = MONSTER_TYPES.DEMON
@@ -458,8 +458,9 @@ class StewardOfTime(MonsterCard):
         bonus = 2 if self.golden else 1
         if event.event is EVENTS.SELL and event.card == self:
             for card in context.owner.store:
-                card.attack += bonus
-                card.health += bonus
+                if not card.dormant:
+                    card.attack += bonus
+                    card.health += bonus
 
 
 class Scallywag(MonsterCard):
@@ -481,7 +482,7 @@ class Scallywag(MonsterCard):
 
 class SkyPirate(MonsterCard):
     tier = 1
-    token = True
+    base_token = True
     monster_type = MONSTER_TYPES.PIRATE
     pool = MONSTER_TYPES.PIRATE
     base_attack = 1
@@ -577,7 +578,7 @@ class Rat(MonsterCard):
     pool = MONSTER_TYPES.BEAST
     base_attack = 1
     base_health = 1
-    token = True
+    base_token = True
 
 
 class NathrezimOverseer(MonsterCard):
@@ -657,7 +658,7 @@ class MechanoEgg(MonsterCard):
 
 
 class Robosaur(MonsterCard):
-    token = True
+    base_token = True
     tier = 1
     monster_type = MONSTER_TYPES.MECH
     pool = MONSTER_TYPES.MECH
@@ -828,7 +829,7 @@ class Spider(MonsterCard):
     tier = 1
     base_attack = 1
     base_health = 1
-    token = True
+    base_token = True
     monster_type = MONSTER_TYPES.BEAST
     pool = MONSTER_TYPES.BEAST
 
@@ -999,7 +1000,7 @@ class Hyena(MonsterCard):
     base_health = 2
     monster_type = MONSTER_TYPES.BEAST
     pool = MONSTER_TYPES.BEAST
-    token = True
+    base_token = True
 
 
 class SecurityRover(MonsterCard):
@@ -1026,7 +1027,7 @@ class GuardBot(MonsterCard):
     base_health = 3
     monster_type = MONSTER_TYPES.MECH
     pool = MONSTER_TYPES.MECH
-    token = True
+    base_token = True
     base_taunt = True
 
 
@@ -1157,7 +1158,7 @@ class Amalgam(MonsterCard):
     monster_type = MONSTER_TYPES.ALL
     base_attack = 1
     base_health = 2
-    token = True
+    base_token = True
 
     # TODO: this can't be sold on the first round
 
@@ -1189,7 +1190,7 @@ class Microbot(MonsterCard):
     pool = MONSTER_TYPES.MECH
     base_attack = 1
     base_health = 1
-    token = True
+    base_token = True
 
 
 class Junkbot(MonsterCard):
@@ -1248,7 +1249,7 @@ class Demon(MonsterCard):
     base_attack = 1
     base_health = 3
     base_taunt = True
-    token = True
+    base_token = True
 
 
 class AnnihilanBattlemaster(MonsterCard):
@@ -1526,7 +1527,7 @@ class IronhideRunt(MonsterCard):
     pool = MONSTER_TYPES.BEAST
     base_attack = 5
     base_health = 5
-    token = True
+    base_token = True
 
 
 class NatPagleExtremeAngler(MonsterCard):
@@ -1910,7 +1911,7 @@ class FinkleEinhorn(MonsterCard):
     monster_type = None
     base_attack = 3
     base_health = 3
-    token = True
+    base_token = True
 
 
 class SouthseaStrongarm(MonsterCard):
@@ -2089,7 +2090,7 @@ class WaterDroplet(MonsterCard):
     pool = MONSTER_TYPES.ELEMENTAL
     base_attack = 2
     base_health = 2
-    token = True
+    base_token = True
 
 
 class LilRag(MonsterCard):
@@ -2171,7 +2172,7 @@ class NomiKitchenNightmare(MonsterCard):
     mana_cost = 7
 
     def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
-        if event.event is EVENTS.SUMMON_BUY and event.card.check_type(MONSTER_TYPES.ELEMENTAL):
+        if event.event is EVENTS.BUY and event.card.check_type(MONSTER_TYPES.ELEMENTAL):
             context.owner.nomi_bonus += 2 if self.golden else 1
 
 
@@ -2251,7 +2252,7 @@ class EmperorCobra(MonsterCard):
     base_attack = 2
     base_health = 3
     base_poisonous = True
-    token = True
+    base_token = True
 
 
 class Snake(MonsterCard):
@@ -2260,4 +2261,4 @@ class Snake(MonsterCard):
     pool = MONSTER_TYPES.BEAST
     base_attack = 1
     base_health = 1
-    token = True
+    base_token = True

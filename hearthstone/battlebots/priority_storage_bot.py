@@ -4,10 +4,9 @@ from typing import List, Callable
 
 from hearthstone.simulator.agent import Agent, StandardAction, generate_valid_actions, BuyAction, EndPhaseAction, \
     SummonAction, \
-    TavernUpgradeAction, RerollAction, SellAction, DiscoverChoiceAction, RearrangeCardsAction
+    TavernUpgradeAction, RerollAction, SellAction, DiscoverChoiceAction, RearrangeCardsAction, HeroDiscoverAction
 
 if typing.TYPE_CHECKING:
-    , MonsterCard
     from hearthstone.simulator.core.player import Player, StoreIndex
 
 
@@ -73,6 +72,9 @@ class PriorityStorageBot(Agent):
         discover_cards = player.discover_queue[0]
         discover_cards = sorted(discover_cards, key=lambda card: self.priority(player, card), reverse=True)
         return DiscoverChoiceAction(player.discover_queue[0].index(discover_cards[0]))
+
+    async def hero_discover_action(self, player: 'Player') -> 'HeroDiscoverAction':
+        return HeroDiscoverAction(self.local_random.choice(range(len(player.hero.discover_choices))))
 
 
 def priority_st_ad_tr_bot(seed: int):

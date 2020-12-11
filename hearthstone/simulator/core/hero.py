@@ -8,7 +8,7 @@ from hearthstone.simulator.core.events import BuyPhaseContext, CombatPhaseContex
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 
 if typing.TYPE_CHECKING:
-    from hearthstone.simulator.core.player import BoardIndex, StoreIndex
+    from hearthstone.simulator.core.player import BoardIndex, StoreIndex, DiscoverIndex
 
 VALHALLA = []
 
@@ -24,6 +24,9 @@ class Hero(metaclass=HeroType):
     pool: 'MONSTER_TYPES' = MONSTER_TYPES.ALL
     give_immunity = False
 
+    def __init__(self):
+        self.discover_choices = []  # needs to be an instance attribute as the contents may be modified
+
     def __repr__(self):
         return str(type(self).__name__)
 
@@ -37,7 +40,7 @@ class Hero(metaclass=HeroType):
         return 1
 
     def tavern_upgrade_costs(self) -> Tuple[int, int, int, int, int, int]:
-        return (0, 5, 7, 8, 9, 10)
+        return 0, 5, 7, 8, 9, 10
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         pass
@@ -86,6 +89,12 @@ class Hero(metaclass=HeroType):
 
     def battlecry_multiplier(self) -> int:
         return 1
+
+    def select_discover(self, discover_index: 'DiscoverIndex'):
+        pass
+
+    def valid_select_discover(self, discover_index: 'DiscoverIndex') -> bool:
+        return self.discover_choices and discover_index in range(len(self.discover_choices))
 
 
 class EmptyHero(Hero):

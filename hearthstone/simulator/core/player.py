@@ -1,4 +1,3 @@
-import copy
 import itertools
 import typing
 from collections import defaultdict
@@ -61,6 +60,9 @@ class Player:
         self.dead = False
         self.nomi_bonus = 0
         self.free_refreshes = 0
+
+    def __repr__(self):
+        return f"{self.hero} ({self.name})"
 
     @property
     def coins(self):
@@ -198,14 +200,15 @@ class Player:
             self.tavern.deck.remove_card(discovered_cards[-1])
         self.discover_queue.append(discovered_cards)
 
-    def select_discover(self, card_index: DiscoverIndex):
+    def select_discover(self, card_index: 'DiscoverIndex'):
         assert self.valid_select_discover(card_index)
         card = self.discover_queue[0].pop(card_index)
+        card.token = False  # for Bigglesworth (there is no other scenario where a token will be a discover option)
         self.gain_hand_card(card)
         self.tavern.deck.return_cards(itertools.chain.from_iterable([card.dissolve() for card in self.discover_queue[0]]))
         self.discover_queue.pop(0)
 
-    def valid_select_discover(self, card_index: DiscoverIndex):
+    def valid_select_discover(self, card_index: 'DiscoverIndex'):
         return self.discover_queue and card_index in range(len(self.discover_queue[0])) and not self.dead
 
     def summon_from_void(self, monster: MonsterCard):
@@ -227,10 +230,7 @@ class Player:
         card = self.store.pop(index)
         self.coins -= self.minion_cost
         card.frozen = False
-        if card.check_type(MONSTER_TYPES.ELEMENTAL):
-            card.attack += (self.nomi_bonus - card.nomi_buff)
-            card.health += (self.nomi_bonus - card.nomi_buff)
-            card.nomi_buff = self.nomi_bonus
+        card.apply_nomi_buff(self)
         self._hand.append(card)
         event = events.BuyEvent(card)
         self.broadcast_buy_phase_event(event)
@@ -245,6 +245,8 @@ class Player:
         if self.coins < self.minion_cost:
             return False
         if not self.room_in_hand():
+            return False
+        if self.store[index].dormant:
             return False
         return True
 
@@ -271,13 +273,13 @@ class Player:
         self.broadcast_buy_phase_event(events.RefreshStoreEvent())
 
     def valid_reroll(self) -> bool:
-        return self.coins >= self.refresh_store_cost or self.free_refreshes >= 1 and not self.dead
+        return (self.coins >= self.refresh_store_cost or self.free_refreshes >= 1) and not self.dead
 
     def return_cards(self, unfreeze: Optional[bool] = True):
         if unfreeze:
             self.unfreeze()
-        self.tavern.deck.return_cards(itertools.chain.from_iterable([card.dissolve() for card in self.store if not card.frozen]))
-        self.store = [card for card in self.store if card.frozen]
+        self.tavern.deck.return_cards(itertools.chain.from_iterable([card.dissolve() for card in self.store if not card.frozen and not card.dormant]))
+        self.store = [card for card in self.store if card.frozen or card.dormant]
         self.unfreeze()
 
     def freeze(self):
@@ -306,7 +308,7 @@ class Player:
     def valid_hero_power(self, board_target: Optional['BoardIndex'] = None, store_target: Optional['StoreIndex'] = None) -> bool:
         return self.hero.hero_power_valid(BuyPhaseContext(self, self.tavern.randomizer), board_target, store_target) and not self.dead
 
-    def broadcast_buy_phase_event(self, event: CardEvent, randomizer: Optional['Randomizer'] = None):
+    def broadcast_buy_phase_event(self, event: 'CardEvent', randomizer: Optional['Randomizer'] = None):
         self.hero.handle_event(event, BuyPhaseContext(self, randomizer or self.tavern.randomizer))
         for card in self.in_play.copy():
             if card in self.in_play:
@@ -333,7 +335,8 @@ class Player:
 
     def choose_hero(self, hero_index: HeroChoiceIndex):
         assert(self.valid_choose_hero(hero_index))
-        self.hero = self.hero_options[hero_index]
+        self.hero = self.hero_options.pop(hero_index)
+        self.tavern.hero_pool.extend(self.hero_options)
         self.hero_options = []
         self.health = self.hero.starting_health()
         self.minion_cost = self.hero.minion_cost()
@@ -372,7 +375,13 @@ class Player:
     def remove_board_card(self, card: 'MonsterCard'):
         self._in_play.remove(card)
 
-    def pop_hand_card(self, index:int) -> 'MonsterCard':
+    def remove_store_card(self, card: 'MonsterCard'):
+        card.frozen = False
+        card.dormant = False
+        card.apply_nomi_buff(self)
+        self.store.remove(card)
+
+    def pop_hand_card(self, index: int) -> 'MonsterCard':
         return self._hand.pop(index)
 
     def pop_board_card(self, index: int) -> 'MonsterCard':
@@ -405,7 +414,7 @@ class Player:
             self.store[store_index].attack += bonus
             self.store[store_index].health += bonus
 
-    def valid_use_banana(self, board_index: Optional['BoardIndex'] = None, store_index: Optional['StoreIndex'] = None):
+    def valid_use_banana(self, board_index: Optional['BoardIndex'] = None, store_index: Optional['StoreIndex'] = None) -> bool:
         if self.dead:
             return False
         if self.bananas <= 0:
@@ -421,10 +430,22 @@ class Player:
     def resolve_death(self):
         assert not self.dead and self.health <= 0
         self.dead = True
-        self.broadcast_self_death_event(events.PlayerDeadEvent(self))
+        self.broadcast_global_event(events.PlayerDeadEvent(self))
         self.tavern.deck.return_cards(itertools.chain.from_iterable([card.dissolve() for card in self.in_play]))
 
-    def broadcast_self_death_event(self, event: 'CardEvent'):
+    def broadcast_global_event(self, event: 'CardEvent'):
         for player in self.tavern.players.values():
             player.hero.handle_event(event, BuyPhaseContext(player, self.tavern.randomizer))
 
+    def next_opponent(self) -> 'Player':
+        for p, o in self.tavern.current_player_pairings:
+            if p == self:
+                return o
+            if o == self:
+                return p
+
+    def hero_select_discover(self, discover_index: 'DiscoverIndex'):
+        self.hero.select_discover(discover_index)
+
+    def valid_hero_select_discover(self, discover_index: 'DiscoverIndex'):
+        return self.hero.valid_select_discover(discover_index) and not self.dead

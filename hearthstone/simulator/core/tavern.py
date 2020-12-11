@@ -71,7 +71,7 @@ class Tavern:
         self.turn_count += 1
 
     def _generate_pairings(self): #TODO figure out algorithm for ded guy someone in the bottom 3 fights the last ded guy
-        fighting_players = [player for player in self.players.values() if player.health > 0]
+        fighting_players = [player for player in self.players.values() if not player.dead]
         if len(fighting_players) % 2 != 0:
             last_dead_player = self.losers[-1][1]
             fighting_players.append(last_dead_player)

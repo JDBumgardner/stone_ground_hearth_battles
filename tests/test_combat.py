@@ -21,8 +21,8 @@ class CombatTests(unittest.TestCase):
                 return defenders[0]
 
     def test_taunt(self):
-        diana = Player.new_player_with_hero(None, "Diana")
-        jeremy = Player.new_player_with_hero(None, "Jeremy")
+        diana = Player.new_player_with_hero(Tavern(), "Diana")
+        jeremy = Player.new_player_with_hero(Tavern(), "Jeremy")
         dianas_war_party = WarParty(diana)
         jeremys_war_party = WarParty(jeremy)
         dianas_war_party.board = [DragonspawnLieutenant()]
@@ -32,8 +32,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(jeremy.health, 40)
 
     def test_deathrattle_summon(self):
-        diana = Player.new_player_with_hero(None, "Diana")
-        jeremy = Player.new_player_with_hero(None, "Jeremy")
+        diana = Player.new_player_with_hero(Tavern(), "Diana")
+        jeremy = Player.new_player_with_hero(Tavern(), "Jeremy")
         dianas_war_party = WarParty(diana)
         jeremys_war_party = WarParty(jeremy)
         dianas_war_party.board = [Imprisoner()]
@@ -43,8 +43,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(jeremy.health, 40)
 
     def test_scavenging_hyena(self):
-        diana = Player.new_player_with_hero(None, "Diana")
-        jeremy = Player.new_player_with_hero(None, "Jeremy")
+        diana = Player.new_player_with_hero(Tavern(), "Diana")
+        jeremy = Player.new_player_with_hero(Tavern(), "Jeremy")
         dianas_war_party = WarParty(diana)
         jeremys_war_party = WarParty(jeremy)
         dianas_war_party.board = [DragonspawnLieutenant(), DragonspawnLieutenant()]
@@ -58,8 +58,8 @@ class CombatTests(unittest.TestCase):
             return defenders[-1]
 
     def test_fiendish_servant(self):
-        diana = Player.new_player_with_hero(None, "Diana")
-        jeremy = Player.new_player_with_hero(None, "Jeremy")
+        diana = Player.new_player_with_hero(Tavern(), "Diana")
+        jeremy = Player.new_player_with_hero(Tavern(), "Jeremy")
         dianas_war_party = WarParty(diana)
         jeremys_war_party = WarParty(jeremy)
         dianas_war_party.board = [DragonspawnLieutenant(), DragonspawnLieutenant()]
@@ -69,8 +69,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(jeremy.health, 38)
 
     def test_selfless_hero(self):
-        diana = Player.new_player_with_hero(None, "Diana")
-        jeremy = Player.new_player_with_hero(None, "Jeremy")
+        diana = Player.new_player_with_hero(Tavern(), "Diana")
+        jeremy = Player.new_player_with_hero(Tavern(), "Jeremy")
         dianas_war_party = WarParty(diana)
         jeremys_war_party = WarParty(jeremy)
         dianas_war_party.board = [SelflessHero(), TabbyCat()]
@@ -80,8 +80,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(jeremy.health, 38)
 
     def test_red_whelp(self):
-        diana = Player.new_player_with_hero(None, "Diana")
-        jeremy = Player.new_player_with_hero(None, "Jeremy")
+        diana = Player.new_player_with_hero(Tavern(), "Diana")
+        jeremy = Player.new_player_with_hero(Tavern(), "Jeremy")
         dianas_war_party = WarParty(diana)
         jeremys_war_party = WarParty(jeremy)
         dianas_war_party.board = [RedWhelp()]
@@ -91,8 +91,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(jeremy.health, 38)
 
     def test_harvest_golem(self):
-        diana = Player.new_player_with_hero(None, "Diana")
-        jeremy = Player.new_player_with_hero(None, "Jeremy")
+        diana = Player.new_player_with_hero(Tavern(), "Diana")
+        jeremy = Player.new_player_with_hero(Tavern(), "Jeremy")
         dianas_war_party = WarParty(diana)
         jeremys_war_party = WarParty(jeremy)
         dianas_war_party.board = [HarvestGolem()]
@@ -102,8 +102,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(jeremy.health, 40)
 
     def test_kaboom_bot(self):
-        diana = Player.new_player_with_hero(None, "Diana")
-        jeremy = Player.new_player_with_hero(None, "Jeremy")
+        diana = Player.new_player_with_hero(Tavern(), "Diana")
+        jeremy = Player.new_player_with_hero(Tavern(), "Jeremy")
         dianas_war_party = WarParty(diana)
         jeremys_war_party = WarParty(jeremy)
         dianas_war_party.board = [KaboomBot()]
@@ -113,8 +113,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(jeremy.health, 40)
 
     def test_kindly_grandmother(self):
-        diana = Player.new_player_with_hero(None, "Diana")
-        jeremy = Player.new_player_with_hero(None, "Jeremy")
+        diana = Player.new_player_with_hero(Tavern(), "Diana")
+        jeremy = Player.new_player_with_hero(Tavern(), "Jeremy")
         dianas_war_party = WarParty(diana)
         jeremys_war_party = WarParty(jeremy)
         dianas_war_party.board = [KindlyGrandmother()]
@@ -124,8 +124,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(jeremy.health, 40)
 
     def test_glyph_guardian(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [AlleyCat(), TabbyCat(), AlleyCat(), TabbyCat()]
@@ -136,8 +136,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_imprisoner(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [MetaltoothLeaper()]
@@ -147,8 +147,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_murloc_warleader(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [MurlocScout(), MurlocWarleader()]
@@ -159,8 +159,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_scallywag(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [Scallywag(), DragonspawnLieutenant()]
@@ -170,8 +170,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_unstable_ghoul(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [UnstableGhoul()]
@@ -181,8 +181,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_unstable_ghoul_friendly_fire(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [UnstableGhoul(), FiendishServant(), FiendishServant(), FiendishServant(), FiendishServant()]
@@ -192,8 +192,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_rat_pack(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [RatPack()]
@@ -203,8 +203,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 38)
 
     def test_buffed_rat_pack(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         rat_pack = RatPack()
@@ -216,8 +216,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_rat_pack_vs_unstable_ghoul(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         rat_pack = RatPack()
@@ -230,8 +230,8 @@ class CombatTests(unittest.TestCase):
         # TODO Jarett: outcome of fight depends on who is attacker and who is defender. What is supposed to happen?
 
     def test_deathwing(self):
-        adam = Player.new_player_with_hero(None, "Adam", Deathwing())
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam", Deathwing())
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [RatPack()]
@@ -242,8 +242,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_board_size_ignores_dead(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [RighteousProtector(), RighteousProtector(), RighteousProtector(), RighteousProtector(),
@@ -255,8 +255,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_mechano_egg(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [MechanoEgg()]
@@ -267,8 +267,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_spawn_of_nzoth(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [SpawnOfNzoth(), AlleyCat()]
@@ -283,8 +283,8 @@ class CombatTests(unittest.TestCase):
             return harvest_golem[0]
 
     def test_deflect_o_bot(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [DeflectOBot(), HarvestGolem()]
@@ -296,8 +296,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(adams_war_party.board[2].attack, 2)
 
     def test_imp_gang_boss(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [ImpGangBoss()]
@@ -308,8 +308,8 @@ class CombatTests(unittest.TestCase):
         self.assertTrue(isinstance(adams_war_party.board[1], Imp))
 
     def test_infested_wolf(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [InfestedWolf()]
@@ -319,8 +319,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_monstrous_macaw(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [MonstrousMacaw(), Imprisoner(), AlleyCat()]
@@ -331,8 +331,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(len(adams_war_party.board), 5)
 
     def test_piloted_shredder(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [PilotedShredder()]
@@ -344,8 +344,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(adams_war_party.board[1].mana_cost, 2)
 
     def test_soul_juggler(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [IronhideRunt()]
@@ -355,8 +355,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_golden_soul_juggler(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [PackLeader(), PackLeader()]
@@ -368,8 +368,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_khadgar(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [HarvestGolem(), Khadgar()]
@@ -385,8 +385,8 @@ class CombatTests(unittest.TestCase):
 
     def test_khadgar_piloted_shredder(self):
         logging.basicConfig(level=logging.DEBUG)
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         piloted_shredder = PilotedShredder()
@@ -398,8 +398,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 18)
 
     def test_savannah_highmane(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [SavannahHighmane()]
@@ -410,8 +410,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(len(adams_war_party.board), 3)
 
     def test_security_rover(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [SecurityRover()]
@@ -422,8 +422,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(len(adams_war_party.board), 3)
 
     def test_ripsnarl_captain(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [FreedealingGambler(), RipsnarlCaptain()]
@@ -433,8 +433,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 35)
 
     def test_southsea_captain(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [FreedealingGambler(), SouthseaCaptain()]
@@ -445,8 +445,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 37)
 
     def test_sneeds_old_shredder(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [SneedsOldShredder()]
@@ -458,8 +458,8 @@ class CombatTests(unittest.TestCase):
         self.assertTrue(adams_war_party.board[1].legendary)
 
     def test_bolvar_fireblood(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [BolvarFireblood()]
@@ -471,8 +471,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_drakonid_enforcer(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [RighteousProtector(), DrakonidEnforcer()]
@@ -484,8 +484,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_bronze_warden(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [SpawnOfNzoth(), BronzeWarden()]
@@ -499,8 +499,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(adams_war_party.board[2].health, 1)
 
     def test_golden_bronze_warden(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         bronze_warden = BronzeWarden()
@@ -516,8 +516,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(adams_war_party.board[1].health, 1)
 
     def test_replicating_menace(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [ReplicatingMenace()]
@@ -528,8 +528,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(len(adams_war_party.board), 4)
 
     def test_junkbot(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [KaboomBot(), Junkbot()]
@@ -539,8 +539,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_voidlord(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [Microbot(), Voidlord()]
@@ -552,8 +552,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_king_bagurgle(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [KingBagurgle(), MurlocScout(), AlleyCat()]
@@ -565,8 +565,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_ghastcoiler(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [Ghastcoiler()]
@@ -581,8 +581,8 @@ class CombatTests(unittest.TestCase):
             self.assertTrue(card.deathrattles)
 
     def test_dread_admiral_eliza(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [DeckSwabbie(), DreadAdmiralEliza()]
@@ -594,8 +594,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_goldrinn_the_great_wolf(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [GoldrinnTheGreatWolf(), ScavengingHyena()]
@@ -607,8 +607,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_imp_mama(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [ImpMama()]
@@ -621,8 +621,8 @@ class CombatTests(unittest.TestCase):
         self.assertTrue(adams_war_party.board[1].taunt)
 
     def test_nadina_the_red(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [NadinaTheRed(), StewardOfTime()]
@@ -632,8 +632,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_the_tide_razor(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [TheTideRazor()]
@@ -646,8 +646,8 @@ class CombatTests(unittest.TestCase):
             self.assertTrue(adams_war_party.board[i].check_type(MONSTER_TYPES.PIRATE))
 
     def test_maexxna(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [Maexxna()]
@@ -657,8 +657,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_herald_of_flame(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [HeraldOfFlame(), Rat(), Rat()]
@@ -668,8 +668,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_herald_of_flame_chain(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [HeraldOfFlame(), Rat(), Rat(), Rat(), Rat(), Rat(), Rat()]
@@ -680,8 +680,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 35)
 
     def test_herald_of_flame_defender(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         herald = HeraldOfFlame()
@@ -695,8 +695,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_ironhide_direhorn(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [IronhideDirehorn(), Rat()]
@@ -706,8 +706,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 37)
 
     def test_ironhide_direhorn_defender(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [IronhideDirehorn()]
@@ -731,8 +731,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(adam.hand_size(), 1)
 
     def test_nat_pagle_defender(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [NatPagleExtremeAngler()]
@@ -743,8 +743,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(adam.hand_size(), 0)
 
     def test_mal_ganis(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [Imp(), MalGanis()]
@@ -757,8 +757,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_old_murkeye(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [OldMurkeye()]
@@ -768,8 +768,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_baron_rivendare(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [KindlyGrandmother(), BaronRivendare()]
@@ -779,8 +779,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_macaw_goldrinn(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [MonstrousMacaw(), GoldrinnTheGreatWolf()]
@@ -794,8 +794,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(adams_war_party.board[1].health, 9)
 
     def test_macaw_baron(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [MonstrousMacaw(), GoldrinnTheGreatWolf(), BaronRivendare()]
@@ -809,8 +809,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(adams_war_party.board[1].health, 14)
 
     def test_zero_attack(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [MechanoEgg(), IronhideRunt()]
@@ -823,8 +823,8 @@ class CombatTests(unittest.TestCase):
 
     def test_yo_ho_ogre(self):
         logging.basicConfig(level=logging.DEBUG)
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [YoHoOgre(), RipsnarlCaptain()]
@@ -834,8 +834,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_waxrider_togwaggle(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [TwilightEmissary(), WaxriderTogwaggle()]
@@ -845,8 +845,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_herald_togwaggle(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         robosaur = Robosaur()
@@ -858,8 +858,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_mama_bear_in_combat(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [SavannahHighmane(), MamaBear(), VulgarHomunculus()]
@@ -869,8 +869,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_micro_mummy(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [MicroMummy()]
@@ -880,8 +880,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_amalgadon(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         amalgadon = Amalgadon()
@@ -904,8 +904,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_kangors_apprentice(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [SecurityRover(), KangorsApprentice()]
@@ -915,8 +915,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 35)
 
     def test_zapp_slywick(self): # TODO I don't think this actually tests everything about this card
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [ZappSlywick()]
@@ -926,8 +926,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_foe_reaper_4000(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [FoeReaper4000()]
@@ -937,8 +937,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 33)
 
     def test_macaw_multiple_deathrattles(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         amalgadon = Amalgadon()
@@ -952,8 +952,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 29)
 
     def test_golden_zapp(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         zapp = ZappSlywick()
@@ -965,8 +965,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_seabreaker_goliath(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [SeabreakerGoliath(), DeckSwabbie(), DeckSwabbie(), VulgarHomunculus()]
@@ -977,8 +977,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_siege_breaker(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [VulgarHomunculus(), Siegebreaker()]
@@ -988,8 +988,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_the_beast(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [TheBeast(), RabidSaurolisk()]
@@ -999,8 +999,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_khadgar_the_beast(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         twilight_emissary = TwilightEmissary()
@@ -1015,8 +1015,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(len(adams_war_party.board), 3)
 
     def test_crackling_cyclone(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [CracklingCyclone(), VulgarHomunculus()]
@@ -1026,8 +1026,8 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_deadly_spore(self):
-        adam = Player.new_player_with_hero(None, "Adam")
-        ethan = Player.new_player_with_hero(None, "Ethan")
+        adam = Player.new_player_with_hero(Tavern(), "Adam")
+        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [DeadlySpore()]
@@ -1144,6 +1144,107 @@ class CombatTests(unittest.TestCase):
         print(ethans_war_party.board)
         self.assertNotEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
+
+    def test_ice_block(self):
+        tavern = Tavern()
+        adam = tavern.add_player_with_hero("Adam", TheGreatAkazamzarak())
+        ethan = tavern.add_player_with_hero("Ethan")
+        adam.hero.secrets.append(SECRETS.ICE_BLOCK)
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adam.health = 1
+        ethans_war_party.board = [Amalgadon()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 1)
+        self.assertEqual(len(adam.hero.secrets), 0)
+        self.assertTrue(adam.hero.give_immunity)
+        self.assertFalse(adam.dead)
+
+    def test_splitting_image(self):
+        tavern = Tavern()
+        adam = tavern.add_player_with_hero("Adam", TheGreatAkazamzarak())
+        ethan = tavern.add_player_with_hero("Ethan")
+        adam.hero.secrets.append(SECRETS.SPLITTING_IMAGE)
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [VulgarHomunculus()]
+        ethans_war_party.board = [RabidSaurolisk(), RabidSaurolisk()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+        self.assertEqual(len(adam.hero.secrets), 0)
+
+    def test_snake_trap(self):
+        tavern = Tavern()
+        adam = tavern.add_player_with_hero("Adam", TheGreatAkazamzarak())
+        ethan = tavern.add_player_with_hero("Ethan")
+        adam.hero.secrets.append(SECRETS.SNAKE_TRAP)
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [AlleyCat()]
+        ethans_war_party.board = [MurlocTidehunter() for _ in range(4)]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        print(adams_war_party.board)
+        print(ethans_war_party.board)
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+        self.assertEqual(len(adam.hero.secrets), 0)
+
+    def test_venomstrike_trap(self):
+        tavern = Tavern()
+        adam = tavern.add_player_with_hero("Adam", TheGreatAkazamzarak())
+        ethan = tavern.add_player_with_hero("Ethan")
+        adam.hero.secrets.append(SECRETS.VENOMSTRIKE_TRAP)
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [MurlocScout()]
+        ethans_war_party.board = [AlleyCat(), KalecgosArcaneAspect()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+        self.assertEqual(len(adam.hero.secrets), 0)
+
+    def test_autodefense_matrix(self):
+        tavern = Tavern()
+        adam = tavern.add_player_with_hero("Adam", TheGreatAkazamzarak())
+        ethan = tavern.add_player_with_hero("Ethan")
+        adam.hero.secrets.append(SECRETS.AUTODEFENSE_MATRIX)
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [TabbyCat()]
+        ethans_war_party.board = [AlleyCat(), AlleyCat()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+        self.assertEqual(len(adam.hero.secrets), 0)
+
+    def test_redemption(self):
+        tavern = Tavern()
+        adam = tavern.add_player_with_hero("Adam", TheGreatAkazamzarak())
+        ethan = tavern.add_player_with_hero("Ethan")
+        adam.hero.secrets.append(SECRETS.REDEMPTION)
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [VulgarHomunculus()]
+        ethans_war_party.board = [RabidSaurolisk(), AlleyCat()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+        self.assertEqual(len(adam.hero.secrets), 0)
+
+    def test_avenge(self):
+        tavern = Tavern()
+        adam = tavern.add_player_with_hero("Adam", TheGreatAkazamzarak())
+        ethan = tavern.add_player_with_hero("Ethan")
+        adam.hero.secrets.append(SECRETS.AVENGE)
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [VulgarHomunculus(), AlleyCat()]
+        ethans_war_party.board = [RabidSaurolisk(), DeckSwabbie(), DeckSwabbie()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+        self.assertEqual(len(adam.hero.secrets), 0)
 
 
 if __name__ == '__main__':

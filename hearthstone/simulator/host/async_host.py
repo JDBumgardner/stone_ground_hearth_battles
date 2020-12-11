@@ -44,6 +44,9 @@ class AsyncHost(Host):
                 if player.discover_queue:
                     discover_card_action = await agent.discover_choice_action(player)
                     self._apply_and_record(player_name, discover_card_action)
+                elif player.hero.discover_choices:
+                    hero_discover_action = await agent.hero_discover_action(player)
+                    self._apply_and_record(player_name, hero_discover_action)
                 else:
                     action, agent_annotation = await agent.annotated_buy_phase_action(player)
                     self._apply_and_record(player_name, action, agent_annotation)

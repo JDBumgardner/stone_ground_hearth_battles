@@ -30,6 +30,7 @@ class EVENTS(enum.Enum):
     TAVERN_UPGRADE = 17
     REFRESHED_STORE = 18
     PLAYER_DEAD = 19
+    RESULTS_BROADCAST = 20
 
 
 class CardEvent:
@@ -146,6 +147,14 @@ class PlayerDeadEvent(CardEvent):
     def __init__(self, player: 'Player'):
         super().__init__(EVENTS.PLAYER_DEAD)
         self.player = player
+
+
+class ResultsBroadcastEvent(CardEvent):
+    def __init__(self, winner: Optional['Player'] = None, loser: Optional['Player'] = None, tie: Optional[bool] = False):
+        super().__init__(EVENTS.RESULTS_BROADCAST)
+        self.winner = winner
+        self.loser = loser
+        self.tie = tie
 
 
 class BuyPhaseContext:

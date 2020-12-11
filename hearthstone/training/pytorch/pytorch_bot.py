@@ -7,7 +7,7 @@ from torch import nn, Tensor
 from torch.distributions import Categorical
 
 from hearthstone.simulator.agent import StandardAction, DiscoverChoiceAction, RearrangeCardsAction, \
-    AnnotatingAgent
+    AnnotatingAgent, HeroDiscoverAction
 from hearthstone.training.pytorch.encoding.default_encoder import \
     EncodedActionSet
 from hearthstone.training.pytorch.encoding.state_encoding import State, Encoder
@@ -66,6 +66,9 @@ class PytorchBot(AnnotatingAgent):
 
     async def discover_choice_action(self, player: 'Player') -> DiscoverChoiceAction:
         return DiscoverChoiceAction(random.choice(range(len(player.discover_queue[0]))))
+
+    async def hero_discover_action(self, player: 'Player') -> 'HeroDiscoverAction':
+        return HeroDiscoverAction(random.choice(range(len(player.hero.discover_choices))))
 
     async def game_over(self, player: 'Player', ranking: int) -> Dict[str, Any]:
         return {'ranking': ranking}
