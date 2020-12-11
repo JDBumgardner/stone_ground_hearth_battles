@@ -90,9 +90,9 @@ def fight_boards(war_party_1: 'WarParty', war_party_2: 'WarParty', randomizer: '
     #  Expect to pass half boards into fight_boards in random order i.e. by shuffling players in combat step
     #  Half boards are copies, the originals state cannot be changed in the combat step
     logger.debug(
-        f"{war_party_1.owner.name} ({war_party_1.owner.hero}, tier {war_party_1.owner.tavern_tier}, {war_party_1.owner.health} health) is fighting {war_party_2.owner.name} ({war_party_2.owner.hero}, tier {war_party_2.owner.tavern_tier}, {war_party_2.owner.health} health)")
-    logger.debug(f"{war_party_1.owner.name}'s board is {war_party_1.board}")
-    logger.debug(f"{war_party_2.owner.name}'s board is {war_party_2.board}")
+        f"{war_party_1.owner} (tier {war_party_1.owner.tavern_tier}, {war_party_1.owner.health} health) is fighting {war_party_2.owner} (tier {war_party_2.owner.tavern_tier}, {war_party_2.owner.health} health)")
+    logger.debug(f"{war_party_1.owner}'s board is {war_party_1.board}")
+    logger.debug(f"{war_party_2.owner}'s board is {war_party_2.board}")
     attacking_war_party = war_party_1
     defending_war_party = war_party_2
     if war_party_2.num_cards() > war_party_1.num_cards():
@@ -112,7 +112,7 @@ def fight_boards(war_party_1: 'WarParty', war_party_2: 'WarParty', randomizer: '
             num_attacks = 1
         for _ in range(num_attacks):
             defender = defending_war_party.get_attack_target(randomizer, attacker)
-            logger.debug(f'{attacking_war_party.owner.name} is attacking {defending_war_party.owner.name}')
+            logger.debug(f'{attacking_war_party.owner.hero} is attacking {defending_war_party.owner.hero}')
             if defender is None:
                 break
             if attacker and not attacker.dead:
@@ -135,18 +135,18 @@ def damage(half_board_1: 'WarParty', half_board_2: 'WarParty', randomizer: 'Rand
         half_board_2.owner.broadcast_buy_phase_event(events.EndCombatEvent(won_combat=False), randomizer)
         half_board_1.owner.broadcast_global_event(events.ResultsBroadcastEvent(tie=True))
     elif monster_damage_1 > 0:
-        logger.debug(f'{half_board_1.owner.name} has won the fight')
-        logger.debug(f'{half_board_2.owner.name} took {monster_damage_1 + half_board_1.owner.tavern_tier} damage.')
-        logger.debug(f"{half_board_1.owner.name}'s remaining board: {[card for card in half_board_1.board if not card.dead]}")
+        logger.debug(f'{half_board_1.owner} has won the fight')
+        logger.debug(f'{half_board_2.owner} took {monster_damage_1 + half_board_1.owner.tavern_tier} damage.')
+        logger.debug(f"{half_board_1.owner}'s remaining board: {[card for card in half_board_1.board if not card.dead]}")
         damage_dealt = monster_damage_1 + half_board_1.owner.tavern_tier
         half_board_2.owner.health -= damage_dealt
         half_board_1.owner.broadcast_buy_phase_event(events.EndCombatEvent(won_combat=True), randomizer)
         half_board_2.owner.broadcast_buy_phase_event(events.EndCombatEvent(won_combat=False, damage_taken=damage_dealt), randomizer)
         half_board_1.owner.broadcast_global_event(events.ResultsBroadcastEvent(winner=half_board_1.owner, loser=half_board_2.owner))
     elif monster_damage_2 > 0:
-        logger.debug(f'{half_board_2.owner.name} has won the fight')
-        logger.debug(f'{half_board_1.owner.name} took {monster_damage_2 + half_board_2.owner.tavern_tier} damage.')
-        logger.debug(f"{half_board_2.owner.name}'s remaining board: {[card for card in half_board_2.board if not card.dead]}")
+        logger.debug(f'{half_board_2.owner} has won the fight')
+        logger.debug(f'{half_board_1.owner} took {monster_damage_2 + half_board_2.owner.tavern_tier} damage.')
+        logger.debug(f"{half_board_2.owner}'s remaining board: {[card for card in half_board_2.board if not card.dead]}")
         damage_dealt = monster_damage_2 + half_board_2.owner.tavern_tier
         half_board_1.owner.health -= damage_dealt
         half_board_1.owner.broadcast_buy_phase_event(events.EndCombatEvent(won_combat=False, damage_taken=damage_dealt), randomizer)

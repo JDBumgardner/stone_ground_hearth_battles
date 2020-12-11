@@ -1247,7 +1247,7 @@ class CardTests(unittest.TestCase):
         player_1 = tavern.add_player_with_hero("Dante_Kong", Ysera())
         player_2 = tavern.add_player_with_hero("lucy")
         tavern.buying_step()
-        self.assertEqual(len(player_1.store), 3)
+        self.assertEqual(len(player_1.store), 4)
         player_1.reroll_store()
         self.assertEqual(len(player_1.store), 4)
         self.assertEqual(type(player_1.store[3]), DragonspawnLieutenant)
@@ -3374,6 +3374,111 @@ class CardTests(unittest.TestCase):
         tavern.combat_step()
         self.assertEqual(player_1.gold_coins, 1)
         self.assertIsNone(player_1.hero.winning_pick)
+
+    class TestMrrggltonRatKingRandomizer(DefaultRandomizer):
+        def select_hero(self, hero_pool: List['Hero']) -> 'Hero':
+            if TheRatKing in [type(hero) for hero in hero_pool]:
+                return [hero for hero in hero_pool if isinstance(hero, TheRatKing)][0]
+            else:
+                return hero_pool[0]
+
+    def test_mrrgglton_choose_rat_king(self):
+        tavern = Tavern(restrict_types=False)
+        tavern.randomizer = self.TestMrrggltonRatKingRandomizer()
+        player_1 = tavern.add_player_with_hero("Dante_Kong", SirFinleyMrrgglton())
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.buying_step()
+        self.assertEqual(type(player_1.hero), SirFinleyMrrgglton)
+        player_1.hero_select_discover(DiscoverIndex(0))
+        self.assertEqual(type(player_1.hero), TheRatKing)
+        self.assertIsNotNone(player_1.hero.current_type)
+
+    class TestMrrggltonMillhouseRandomizer(DefaultRandomizer):
+        def select_hero(self, hero_pool: List['Hero']) -> 'Hero':
+            if MillhouseManastorm in [type(hero) for hero in hero_pool]:
+                return [hero for hero in hero_pool if isinstance(hero, MillhouseManastorm)][0]
+            else:
+                return hero_pool[0]
+
+    def test_mrrgglton_choose_millhouse(self):
+        tavern = Tavern(restrict_types=False)
+        tavern.randomizer = self.TestMrrggltonMillhouseRandomizer()
+        player_1 = tavern.add_player_with_hero("Dante_Kong", SirFinleyMrrgglton())
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.buying_step()
+        self.assertEqual(type(player_1.hero), SirFinleyMrrgglton)
+        player_1.hero_select_discover(DiscoverIndex(0))
+        self.assertEqual(type(player_1.hero), MillhouseManastorm)
+        self.assertEqual(player_1.minion_cost, 2)
+        self.assertEqual(player_1.refresh_store_cost, 2)
+        self.assertEqual(player_1.tavern_upgrade_cost, 6)
+
+    class TestMrrggltonCuratorRandomizer(DefaultRandomizer):
+        def select_hero(self, hero_pool: List['Hero']) -> 'Hero':
+            if TheCurator in [type(hero) for hero in hero_pool]:
+                return [hero for hero in hero_pool if isinstance(hero, TheCurator)][0]
+            else:
+                return hero_pool[0]
+
+    def test_mrrgglton_choose_curator(self):
+        tavern = Tavern(restrict_types=False)
+        tavern.randomizer = self.TestMrrggltonCuratorRandomizer()
+        player_1 = tavern.add_player_with_hero("Dante_Kong", SirFinleyMrrgglton())
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.buying_step()
+        self.assertEqual(type(player_1.hero), SirFinleyMrrgglton)
+        player_1.hero_select_discover(DiscoverIndex(0))
+        self.assertEqual(type(player_1.hero), TheCurator)
+        self.assertCardListEquals(player_1.in_play, [Amalgam])
+
+    def test_maiev_shadowsong(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong", MaievShadowsong())
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.buying_step()
+        player_1.hero_power(store_index=StoreIndex(0))
+        self.assertTrue(player_1.store[0].dormant)
+        player_1.reroll_store()
+        self.assertEqual(len(player_1.store), 4)
+        self.assertTrue(player_1.store[0].dormant)
+        tavern.combat_step()
+        tavern.buying_step()
+        self.assertEqual(len(player_1.store), 4)
+        self.assertTrue(player_1.store[0].dormant)
+        tavern.combat_step()
+        tavern.buying_step()
+        self.assertEqual(len(player_1.store), 3)
+        self.assertEqual(player_1.hand_size(), 1)
+        self.assertEqual(player_1.hand[0].attack, player_1.hand[0].base_attack + 1)
+        self.assertFalse(player_1.hand[0].dormant)
+        tavern.combat_step()
+        self.upgrade_to_tier(tavern, 6)
+        tavern.buying_step()
+        player_1.hero_power(store_index=StoreIndex(0))
+        self.assertTrue(player_1.store[0].dormant)
+        player_1.reroll_store()
+        self.assertEqual(len(player_1.store), 7)
+        tavern.combat_step()
+        tavern.buying_step()
+        self.assertEqual(len(player_1.store), 7)
+        self.assertTrue(player_1.store[0].dormant)
+        player_1.hero_power(store_index=StoreIndex(1))
+        self.assertTrue(player_1.store[1].dormant)
+        self.assertEqual(len(player_1.hero.dormant_minions), 2)
+        player_1.reroll_store()
+        self.assertEqual(len(player_1.store), 7)
+        self.assertTrue(player_1.store[0].dormant)
+        self.assertTrue(player_1.store[1].dormant)
+        for i in range(2, 7):
+            self.assertFalse(player_1.store[i].dormant)
+        tavern.combat_step()
+        tavern.buying_step()
+        self.assertEqual(len(player_1.hero.dormant_minions), 1)
+        self.assertEqual(player_1.hand_size(), 2)
+        tavern.combat_step()
+        tavern.buying_step()
+        self.assertEqual(len(player_1.hero.dormant_minions), 0)
+        self.assertEqual(player_1.hand_size(), 3)
 
 
 if __name__ == '__main__':

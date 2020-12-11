@@ -2,7 +2,7 @@ import copy
 import logging
 from typing import Union, Tuple, Optional
 
-from hearthstone.simulator.core import combat
+from hearthstone.simulator.core import combat, events
 from hearthstone.simulator.core.card_pool import Amalgam, EmperorCobra, Snake
 from hearthstone.simulator.core.cards import one_minion_per_type, CardLocation, PrintingPress
 from hearthstone.simulator.core.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
@@ -69,17 +69,15 @@ class YoggSaron(Hero):
         card = context.randomizer.select_from_store(context.owner.store)
         card.attack += 1
         card.health += 1
-        context.owner.store.remove(card)
+        context.owner.remove_store_card(card)
         context.owner.gain_hand_card(card)
 
     def hero_power_valid_impl(self, context: BuyPhaseContext, board_index: Optional['BoardIndex'] = None,
                               store_index: Optional['StoreIndex'] = None):
         if not context.owner.room_in_hand():
             return False
-
         if not context.owner.store:
             return False
-
         return True
 
 
@@ -185,7 +183,7 @@ class Ysera(Hero):
     pool = MONSTER_TYPES.DRAGON
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
-        if event.event is EVENTS.REFRESHED_STORE and len(context.owner.store) < 7:
+        if event.event is EVENTS.REFRESHED_STORE or event.event is EVENTS.BUY_START and len(context.owner.store) < 7:
             dragons = [card for card in context.owner.tavern.deck.unique_cards() if
                        card.check_type(MONSTER_TYPES.DRAGON) and card.tier <= context.owner.tavern_tier]
             if dragons:
@@ -281,23 +279,20 @@ class JandiceBarov(Hero):
                         store_index: Optional['StoreIndex'] = None):
         board_minion = context.owner.pop_board_card(board_index)
         store_minion = context.randomizer.select_from_store(context.owner.store)
-        context.owner.store.remove(store_minion)
-        store_minion.frozen = False
-        if store_minion.check_type(MONSTER_TYPES.ELEMENTAL):
-            store_minion.attack += (context.owner.nomi_bonus - store_minion.nomi_buff)
-            store_minion.health += (context.owner.nomi_bonus - store_minion.nomi_buff)
-            store_minion.nomi_buff = context.owner.nomi_bonus
+        context.owner.remove_store_card(store_minion)
         context.owner.gain_board_card(store_minion)
         context.owner.store.append(board_minion)
 
 
-class ArchVillianRafaam(Hero):  # TODO: tokens gained will enter the pool when sold
+class ArchVillianRafaam(Hero):
     power_cost = 1
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.DIES and event.card in context.enemy_war_party.board and self.hero_power_used:
             if len(context.enemy_war_party.dead_minions) == 1 and context.friendly_war_party.owner.room_in_hand():
-                context.friendly_war_party.owner.gain_hand_card(type(event.card)())
+                card_copy = type(event.card)()
+                card_copy.token = False
+                context.friendly_war_party.owner.gain_hand_card(card_copy)
 
 
 class CaptainHooktusk(Hero):
@@ -479,7 +474,7 @@ class Rakanishu(Hero):
         board_minion.health += context.owner.tavern_tier
 
 
-class MrBigglesworth(Hero):  # TODO: tokens discovered will enter the pool when sold
+class MrBigglesworth(Hero):
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.PLAYER_DEAD and bool(event.player.in_play):
             discovered_cards = []
@@ -566,13 +561,23 @@ class TheLichKing(Hero):
 
 class TessGreymane(Hero):
     power_cost = 1
+    add_purchases_to_pool = False
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
         context.owner.return_cards()
         if context.owner.last_opponent_warband:
+            self.add_purchases_to_pool = True
             for card in context.owner.last_opponent_warband:
-                context.owner.store.append(type(card)())
+                card_copy = type(card)()
+                card_copy.token = True
+                context.owner.store.append(card_copy)
+
+    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.BUY_START or EVENTS.REFRESHED_STORE:
+            self.add_purchases_to_pool = False
+        if event.event is EVENTS.BUY and self.add_purchases_to_pool:
+            event.card.token = False
 
 
 class Shudderwock(Hero):
@@ -595,7 +600,6 @@ class Shudderwock(Hero):
 
 class TheGreatAkazamzarak(Hero):
     power_cost = 1
-    discover_choices = []
     secrets = []
 
     def hero_power_valid_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
@@ -703,7 +707,6 @@ class SilasDarkmoon(Hero):
 
 
 class SirFinleyMrrgglton(Hero):
-    discover_choices = []
     player = None
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
@@ -718,12 +721,12 @@ class SirFinleyMrrgglton(Hero):
     def select_discover(self, discover_index: 'DiscoverIndex'):
         self.player.hero_options = self.discover_choices[:]
         self.player.choose_hero(HeroChoiceIndex(discover_index))
+        self.player.hero.handle_event(events.BuyStartEvent(), BuyPhaseContext(self.player, self.player.tavern.randomizer))
         self.discover_choices = []
 
 
 class LordBarov(Hero):
     power_cost = 1
-    discover_choices = []
     winning_pick = None
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
@@ -749,3 +752,36 @@ class LordBarov(Hero):
                 self.winning_pick = None
             elif event.loser == self.winning_pick:
                 self.winning_pick = None
+
+
+class MaievShadowsong(Hero):
+    power_cost = 1
+    power_target_location = [CardLocation.STORE]
+    dormant_minions = dict()
+
+    def hero_power_valid_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                              store_index: Optional['StoreIndex'] = None):
+        return not context.owner.store[store_index].dormant
+
+    def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                        store_index: Optional['StoreIndex'] = None):
+        store_minion = context.owner.store[store_index]
+        store_minion.dormant = True
+        self.dormant_minions[store_minion] = 2
+
+    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.REFRESHED_STORE or event.event is EVENTS.BUY_START:
+            number_of_cards = len([card for card in context.owner.store if card.dormant])
+            if number_of_cards + len(context.owner.store) > 7:
+                number_of_cards -= 7 - len(context.owner.store)
+            context.owner.store.extend(context.owner.tavern.deck.draw(context.owner, number_of_cards))
+        if event.event is EVENTS.BUY_START:
+            for card in list(self.dormant_minions.keys()):
+                assert card in context.owner.store
+                assert card.dormant
+                self.dormant_minions[card] -= 1
+                if self.dormant_minions[card] == 0:
+                    context.owner.remove_store_card(card)
+                    context.owner.gain_hand_card(card)
+                    card.attack += 1
+                    del self.dormant_minions[card]

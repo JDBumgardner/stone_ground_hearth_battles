@@ -23,7 +23,9 @@ class Hero(metaclass=HeroType):
     multiple_power_uses_per_turn = False
     pool: 'MONSTER_TYPES' = MONSTER_TYPES.ALL
     give_immunity = False
-    discover_choices = []
+
+    def __init__(self):
+        self.discover_choices = []  # needs to be an instance attribute as the contents may be modified
 
     def __repr__(self):
         return str(type(self).__name__)

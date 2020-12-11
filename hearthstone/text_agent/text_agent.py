@@ -75,7 +75,10 @@ class TextAgent(Agent):
         await self.connection.send(f"\n\nplayer {player.name} ({player.hero}), it is your buy phase.\n")
         await self.connection.send(
             f"available monster types: {[monster_type.name for monster_type in player.tavern.available_types]}\n")
-        await self.connection.send(f"Your next opponent: {player.next_opponent().name}\n")
+        await self.connection.send(f"\nCurrent standings:\n")
+        for i, contenstant in enumerate(sorted(player.tavern.players.values(), key=lambda plyr: plyr.health, reverse=True)):
+            await self.connection.send(f"{i+1}: {contenstant}, (tier {contenstant.tavern_tier}, {contenstant.health} health)\n")
+        await self.connection.send(f"\nYour next opponent: {player.next_opponent().hero}\n\n")
         await self.print_player_card_list("store", player.store)
         await self.print_player_card_list("board", player.in_play)
         await self.print_player_card_list("hand", player.hand)

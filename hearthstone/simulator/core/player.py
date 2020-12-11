@@ -62,7 +62,7 @@ class Player:
         self.free_refreshes = 0
 
     def __repr__(self):
-        return self.name
+        return f"{self.hero} ({self.name})"
 
     @property
     def coins(self):
@@ -203,6 +203,7 @@ class Player:
     def select_discover(self, card_index: 'DiscoverIndex'):
         assert self.valid_select_discover(card_index)
         card = self.discover_queue[0].pop(card_index)
+        card.token = False  # for Bigglesworth (there is no other scenario where a token will be a discover option)
         self.gain_hand_card(card)
         self.tavern.deck.return_cards(itertools.chain.from_iterable([card.dissolve() for card in self.discover_queue[0]]))
         self.discover_queue.pop(0)
@@ -229,10 +230,7 @@ class Player:
         card = self.store.pop(index)
         self.coins -= self.minion_cost
         card.frozen = False
-        if card.check_type(MONSTER_TYPES.ELEMENTAL):
-            card.attack += (self.nomi_bonus - card.nomi_buff)
-            card.health += (self.nomi_bonus - card.nomi_buff)
-            card.nomi_buff = self.nomi_bonus
+        card.apply_nomi_buff(self)
         self._hand.append(card)
         event = events.BuyEvent(card)
         self.broadcast_buy_phase_event(event)
@@ -247,6 +245,8 @@ class Player:
         if self.coins < self.minion_cost:
             return False
         if not self.room_in_hand():
+            return False
+        if self.store[index].dormant:
             return False
         return True
 
@@ -278,8 +278,8 @@ class Player:
     def return_cards(self, unfreeze: Optional[bool] = True):
         if unfreeze:
             self.unfreeze()
-        self.tavern.deck.return_cards(itertools.chain.from_iterable([card.dissolve() for card in self.store if not card.frozen]))
-        self.store = [card for card in self.store if card.frozen]
+        self.tavern.deck.return_cards(itertools.chain.from_iterable([card.dissolve() for card in self.store if not card.frozen and not card.dormant]))
+        self.store = [card for card in self.store if card.frozen or card.dormant]
         self.unfreeze()
 
     def freeze(self):
@@ -375,7 +375,13 @@ class Player:
     def remove_board_card(self, card: 'MonsterCard'):
         self._in_play.remove(card)
 
-    def pop_hand_card(self, index:int) -> 'MonsterCard':
+    def remove_store_card(self, card: 'MonsterCard'):
+        card.frozen = False
+        card.dormant = False
+        card.apply_nomi_buff(self)
+        self.store.remove(card)
+
+    def pop_hand_card(self, index: int) -> 'MonsterCard':
         return self._hand.pop(index)
 
     def pop_board_card(self, index: int) -> 'MonsterCard':
