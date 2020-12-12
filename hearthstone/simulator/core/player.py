@@ -1,7 +1,7 @@
 import itertools
 import typing
 from collections import defaultdict
-from typing import Optional, List, Callable, Type, Tuple
+from typing import Optional, List, Callable, Type
 
 from frozenlist.frozen_list import FrozenList
 
@@ -48,7 +48,7 @@ class Player:
         self._tavern_upgrade_cost = 5
         self._hand: List[MonsterCard] = []
         self._in_play: List[MonsterCard] = []
-        self.store: List[MonsterCard] = []
+        self._store: List[MonsterCard] = []
         self.counted_cards = defaultdict(lambda: 0)
         self.minion_cost = 3
         self.gold_coins = 0
@@ -87,6 +87,10 @@ class Player:
     @property
     def hand(self):
         return FrozenList(self._hand)
+
+    @property
+    def store(self):
+        return FrozenList(self._store)
 
     @staticmethod
     def new_player_with_hero(tavern: Optional['Tavern'], name: str, hero: Optional['Hero'] = None) -> 'Player':
@@ -227,7 +231,7 @@ class Player:
     def purchase(self, index: StoreIndex):
         # check if the index is valid
         assert self.valid_purchase(index)
-        card = self.store.pop(index)
+        card = self.pop_store_card(index)
         self.coins -= self.minion_cost
         card.frozen = False
         self._hand.append(card)
@@ -278,7 +282,7 @@ class Player:
         if unfreeze:
             self.unfreeze()
         self.tavern.deck.return_cards(itertools.chain.from_iterable([card.dissolve() for card in self.store if not card.frozen and not card.dormant]))
-        self.store = [card for card in self.store if card.frozen or card.dormant]
+        self._store = [card for card in self.store if card.frozen or card.dormant]
         self.unfreeze()
 
     def freeze(self):
@@ -370,7 +374,7 @@ class Player:
 
     def add_to_store(self, card: 'MonsterCard'):
         if len(self.store) < 7:
-            self.store.append(card)
+            self._store.append(card)
             card.apply_nomi_buff(self)
             self.broadcast_buy_phase_event(events.AddToStoreEvent(card))
 
@@ -387,13 +391,16 @@ class Player:
     def remove_store_card(self, card: 'MonsterCard'):
         card.frozen = False
         card.dormant = False
-        self.store.remove(card)
+        self._store.remove(card)
 
     def pop_hand_card(self, index: int) -> 'MonsterCard':
         return self._hand.pop(index)
 
     def pop_board_card(self, index: int) -> 'MonsterCard':
         return self._in_play.pop(index)
+
+    def pop_store_card(self, index: int) -> 'MonsterCard':
+        return self._store.pop(index)
 
     def valid_board_index(self, index: 'BoardIndex') -> bool:
         return 0 <= index < len(self.in_play)

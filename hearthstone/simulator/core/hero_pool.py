@@ -328,7 +328,7 @@ class Malygos(Hero):
         if board_index is not None:
             minion = context.owner.pop_board_card(board_index)
         elif store_index is not None:
-            minion = context.owner.store.pop(store_index)
+            minion = context.owner.pop_store_card(store_index)
         context.owner.tavern.deck.return_cards(minion.dissolve())
         predicate = lambda card: card.tier == minion.tier and type(card) != type(minion)
         same_tier_minions = [card for card in context.owner.tavern.deck.unique_cards() if predicate(card)]
@@ -520,7 +520,7 @@ class Galakrond(Hero):
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
-        store_minion = context.owner.store.pop(store_index)
+        store_minion = context.owner.pop_store_card(store_index)
         context.owner.tavern.deck.return_cards(store_minion.dissolve())
         higher_tier_minions = [card for card in context.owner.tavern.deck.unique_cards() if card.tier == min(store_minion.tier + 1, 6)]
         higher_tier_minion = context.randomizer.select_add_to_store(higher_tier_minions)
