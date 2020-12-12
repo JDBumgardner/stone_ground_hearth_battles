@@ -31,6 +31,7 @@ class EVENTS(enum.Enum):
     REFRESHED_STORE = 18
     PLAYER_DEAD = 19
     RESULTS_BROADCAST = 20
+    ADD_TO_STORE = 21
 
 
 class CardEvent:
@@ -157,6 +158,12 @@ class ResultsBroadcastEvent(CardEvent):
         self.tie = tie
 
 
+class AddToStoreEvent(CardEvent):
+    def __init__(self, card: 'MonsterCard'):
+        super().__init__(EVENTS.ADD_TO_STORE)
+        self.card = card
+
+
 class BuyPhaseContext:
     def __init__(self, owner: 'Player', randomizer: 'Randomizer'):
         self.owner = owner
@@ -181,10 +188,10 @@ class CombatPhaseContext:
     def broadcast_combat_event(self, event: 'CardEvent'):
         #  boards are copied to prevent reindexing lists while iterating over them
         self.friendly_war_party.owner.hero.handle_event(event, self)
+        self.enemy_war_party.owner.hero.handle_event(event, self.enemy_context())
         for card in self.friendly_war_party.board.copy():
             # it's ok for the card to be dead
             card.handle_event(event, self)
-        self.enemy_war_party.owner.hero.handle_event(event, self.enemy_context())
         for card in self.enemy_war_party.board.copy():
             card.handle_event(event, self.enemy_context())
 

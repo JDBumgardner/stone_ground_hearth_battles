@@ -77,7 +77,7 @@ class TextAgent(Agent):
             f"available monster types: {[monster_type.name for monster_type in player.tavern.available_types]}\n")
         await self.connection.send(f"\nCurrent standings:\n")
         for i, contenstant in enumerate(sorted(player.tavern.players.values(), key=lambda plyr: plyr.health, reverse=True)):
-            await self.connection.send(f"{i+1}: {contenstant}, (tier {contenstant.tavern_tier}, {contenstant.health} health)\n")
+            await self.connection.send(f"{i + 1}: {str(contenstant):<53} [{str(max(contenstant.health, 0)) + ' health,':<12} tier {contenstant.tavern_tier},\t {contenstant.current_build()}]\n")
         await self.connection.send(f"\nYour next opponent: {player.next_opponent().hero}\n\n")
         await self.print_player_card_list("store", player.store)
         await self.print_player_card_list("board", player.in_play)
@@ -87,7 +87,7 @@ class TextAgent(Agent):
         if player.gold_coins >= 1:
             await self.connection.send(f"you have {player.gold_coins} gold coins\n")
         if player.bananas >= 1:
-            await self.connection.send(f"you have {player.bananas} bananas\n")
+            await self.connection.send(f"you have {player.bananas - player.big_bananas} bananas and {player.big_bananas} big bananas\n")
         await self.connection.send("available actions are: \n")
         await self.connection.send('purchase: "p 0" purchases the 0th indexed monster from the store\n')
         await self.connection.send(

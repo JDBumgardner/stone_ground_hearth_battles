@@ -1,7 +1,7 @@
 import itertools
 import typing
 from collections import defaultdict
-from typing import Optional, List, Callable, Type
+from typing import Optional, List, Callable, Type, Tuple
 
 from frozenlist.frozen_list import FrozenList
 
@@ -221,8 +221,8 @@ class Player:
 
     def draw(self, unfreeze: Optional[bool] = True):
         self.return_cards(unfreeze)
-        number_of_cards = 3 + self.tavern_tier // 2 - len(self.store)
-        self.store.extend(self.tavern.deck.draw(self, number_of_cards))
+        number_of_cards = (3 + self.tavern_tier // 2 - len(self.store)) + len([card for card in self.store if card.dormant])
+        self.extend_store(self.tavern.deck.draw(self, number_of_cards))
 
     def purchase(self, index: StoreIndex):
         # check if the index is valid
@@ -230,7 +230,6 @@ class Player:
         card = self.store.pop(index)
         self.coins -= self.minion_cost
         card.frozen = False
-        card.apply_nomi_buff(self)
         self._hand.append(card)
         event = events.BuyEvent(card)
         self.broadcast_buy_phase_event(event)
@@ -369,6 +368,16 @@ class Player:
             self._in_play.append(card)
             self.check_golden(type(card))
 
+    def add_to_store(self, card: 'MonsterCard'):
+        if len(self.store) < 7:
+            self.store.append(card)
+            card.apply_nomi_buff(self)
+            self.broadcast_buy_phase_event(events.AddToStoreEvent(card))
+
+    def extend_store(self, cards: List['MonsterCard']):
+        for card in cards:
+            self.add_to_store(card)
+
     def remove_hand_card(self, card: 'MonsterCard'):
         self._hand.remove(card)
 
@@ -378,7 +387,6 @@ class Player:
     def remove_store_card(self, card: 'MonsterCard'):
         card.frozen = False
         card.dormant = False
-        card.apply_nomi_buff(self)
         self.store.remove(card)
 
     def pop_hand_card(self, index: int) -> 'MonsterCard':
@@ -449,3 +457,17 @@ class Player:
 
     def valid_hero_select_discover(self, discover_index: 'DiscoverIndex'):
         return self.hero.valid_select_discover(discover_index) and not self.dead
+
+    def current_build(self) -> str:
+        cards_by_type = {monster_type.name: 0 for monster_type in MONSTER_TYPES.single_types()}
+        for card in self.in_play:
+            if card.monster_type == MONSTER_TYPES.ALL:
+                for t in cards_by_type:
+                    cards_by_type[t] += 1
+            elif card.monster_type is not None:
+                cards_by_type[card.monster_type.name] += 1
+        ranked = sorted(cards_by_type.items(), key=lambda item: item[1], reverse=True)
+        if ranked[0][1] == ranked[1][1]:
+            return "Mixed Minions"
+        else:
+            return str(ranked[0][0]) + 'S: ' + str(ranked[0][1])

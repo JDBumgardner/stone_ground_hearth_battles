@@ -1160,8 +1160,6 @@ class Amalgam(MonsterCard):
     base_health = 2
     base_token = True
 
-    # TODO: this can't be sold on the first round
-
 
 class ReplicatingMenace(MonsterCard):
     tier = 3
@@ -1767,7 +1765,7 @@ class KangorsApprentice(MonsterCard):
     pool = MONSTER_TYPES.MECH
     mana_cost = 9
 
-    def base_deathrattle(self, context: CombatPhaseContext): #TODO does this get tokens?
+    def base_deathrattle(self, context: CombatPhaseContext):
         count = 4 if self.golden else 2
         summon_index = context.friendly_war_party.get_index(self)
         dead_mechs = [dead_minion for dead_minion in context.friendly_war_party.dead_minions if
@@ -1954,7 +1952,7 @@ class PrimalfinLookout(MonsterCard):
     mana_cost = 3
 
     def base_battlecry(self, targets: List['MonsterCard'], context: 'BuyPhaseContext'):
-        murloc_in_play = [card for card in context.owner.in_play if card.check_type(MONSTER_TYPES.MURLOC)]
+        murloc_in_play = [card for card in context.owner.in_play if card.check_type(MONSTER_TYPES.MURLOC) and card != self]
         if murloc_in_play:
             num_discovers = 2 if self.golden else 1
             for _ in range(num_discovers):
@@ -2172,8 +2170,10 @@ class NomiKitchenNightmare(MonsterCard):
     mana_cost = 7
 
     def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
-        if event.event is EVENTS.BUY and event.card.check_type(MONSTER_TYPES.ELEMENTAL):
+        if event.event is EVENTS.SUMMON_BUY and event.card.check_type(MONSTER_TYPES.ELEMENTAL):
             context.owner.nomi_bonus += 2 if self.golden else 1
+            for card in context.owner.store:
+                card.apply_nomi_buff(context.owner)
 
 
 class RefreshingAnomaly(MonsterCard):
@@ -2241,7 +2241,7 @@ class StasisElemental(MonsterCard):
                 if available_elementals:
                     random_elemental = context.randomizer.select_add_to_store(available_elementals)
                     context.owner.tavern.deck.remove_card(random_elemental)
-                    context.owner.store.append(random_elemental)
+                    context.owner.add_to_store(random_elemental)
                     random_elemental.frozen = True
 
 

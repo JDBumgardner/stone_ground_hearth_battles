@@ -19,13 +19,16 @@ class Tavern:
         self.randomizer = DefaultRandomizer()
         self.available_types = MONSTER_TYPES.single_types()
         if restrict_types:
-            for _ in range(2):
-                self.available_types.remove(self.randomizer.select_monster_type(self.available_types, 0))
+            self.restrict_monster_types()
         self.deck: 'CardList' = PrintingPress.make_cards(self.available_types)
         self.hero_pool = [hero_type() for hero_type in hero.VALHALLA if
                           hero_type.pool in self.available_types or hero_type.pool == MONSTER_TYPES.ALL]
         self.losers = []
         self.game_state = GameState.HERO_SELECTION
+
+    def restrict_monster_types(self):
+        for _ in range(2):
+            self.available_types.remove(self.randomizer.select_monster_type(self.available_types, 0))
 
     def select_three_heroes(self):
         hero_choices = []

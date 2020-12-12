@@ -1120,7 +1120,7 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
 
-    def test_hipster_pirate_build(self):  # TODO: probably more to test here but it seems to be working
+    def test_hipster_pirate_build(self):
         logging.basicConfig(level=logging.DEBUG)
         tavern = Tavern()
         adam = tavern.add_player_with_hero("Adam")
