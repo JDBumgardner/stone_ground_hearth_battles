@@ -77,7 +77,12 @@ class TextAgent(Agent):
             f"available monster types: {[monster_type.name for monster_type in player.tavern.available_types]}\n")
         await self.connection.send(f"\nCurrent standings:\n")
         for i, contenstant in enumerate(sorted(player.tavern.players.values(), key=lambda plyr: plyr.health, reverse=True)):
-            await self.connection.send(f"{i + 1}: {str(contenstant):<53} [{str(max(contenstant.health, 0)) + ' health,':<12} tier {contenstant.tavern_tier},\t {contenstant.current_build()}]\n")
+            build = contenstant.current_build()
+            if build == (None, None):
+                build = "Mixed Minions"
+            else:
+                build = str(build[0]) + 'S ' + str(build[1])
+            await self.connection.send(f"{i + 1}: {str(contenstant):<53} [{str(max(contenstant.health, 0)) + ' health,':<12} tier {contenstant.tavern_tier},\t {build}]\n")
         await self.connection.send(f"\nYour next opponent: {player.next_opponent().hero}\n\n")
         await self.print_player_card_list("store", player.store)
         await self.print_player_card_list("board", player.in_play)

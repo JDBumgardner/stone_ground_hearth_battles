@@ -42,7 +42,7 @@ class PatchWerk(Hero):
 
 class Deathwing(Hero):
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
-        if event.event is EVENTS.COMBAT_START:
+        if event.event is EVENTS.APPLY_STATIC_BUFFS:
             all_minions = context.friendly_war_party.board + context.enemy_war_party.board
             for minion in all_minions:
                 minion.attack += 2
@@ -562,7 +562,7 @@ class TheLichKing(Hero):
             if self.target in context.owner.in_play:
                 self.target_index = context.owner.in_play.index(self.target)
             self.target = None
-        if event.event is EVENTS.COMBAT_START and self.target_index is not None:
+        if event.event is EVENTS.APPLY_STATIC_BUFFS and self.target_index is not None:
             context.friendly_war_party.board[self.target_index].reborn = True
             self.target_index = None
 

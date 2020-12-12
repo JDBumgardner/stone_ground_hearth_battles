@@ -431,7 +431,7 @@ class MurlocWarleader(MonsterCard):
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         bonus = 4 if self.golden else 2
-        if event.event is EVENTS.COMBAT_START or (event.event is EVENTS.SUMMON_COMBAT and event.card == self):
+        if event.event is EVENTS.APPLY_STATIC_BUFFS or (event.event is EVENTS.SUMMON_COMBAT and event.card == self):
             murlocs = [card for card in context.friendly_war_party.board if
                        card != self and card.check_type(MONSTER_TYPES.MURLOC)]
             for murloc in murlocs:
@@ -613,7 +613,7 @@ class OldMurkeye(MonsterCard):
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         bonus = 2 if self.golden else 1
-        if event.event is EVENTS.COMBAT_START:
+        if event.event is EVENTS.APPLY_STATIC_BUFFS:
             self.attack += bonus * sum(
                 1 for murloc in context.friendly_war_party.board + context.enemy_war_party.board if
                 murloc.check_type(MONSTER_TYPES.MURLOC) and event.card != self)
@@ -1093,7 +1093,7 @@ class SouthseaCaptain(MonsterCard):
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         bonus = 2 if self.golden else 1
-        if event.event is EVENTS.COMBAT_START or (event.event is EVENTS.SUMMON_COMBAT and event.card == self):
+        if event.event is EVENTS.APPLY_STATIC_BUFFS or (event.event is EVENTS.SUMMON_COMBAT and event.card == self):
             pirates = [card for card in context.friendly_war_party.board if
                        card != self and card.check_type(MONSTER_TYPES.PIRATE)]
             for pirate in pirates:
@@ -1574,7 +1574,7 @@ class MalGanis(MonsterCard):
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         bonus = 4 if self.golden else 2
-        if event.event is EVENTS.COMBAT_START or (event.event is EVENTS.SUMMON_COMBAT and event.card == self):
+        if event.event is EVENTS.APPLY_STATIC_BUFFS or (event.event is EVENTS.SUMMON_COMBAT and event.card == self):
             demons = [card for card in context.friendly_war_party.board if
                       card != self and card.check_type(MONSTER_TYPES.DEMON)]
             for demon in demons:
@@ -1858,7 +1858,7 @@ class Siegebreaker(MonsterCard):
 
     def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         bonus = 2 if self.golden else 1
-        if event.event is EVENTS.COMBAT_START or (event.event is EVENTS.SUMMON_COMBAT and event.card == self):
+        if event.event is EVENTS.APPLY_STATIC_BUFFS or (event.event is EVENTS.SUMMON_COMBAT and event.card == self):
             demons = [card for card in context.friendly_war_party.board if
                       card != self and card.check_type(MONSTER_TYPES.DEMON)]
             for demon in demons:

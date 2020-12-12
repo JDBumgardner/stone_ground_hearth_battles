@@ -32,6 +32,7 @@ class EVENTS(enum.Enum):
     PLAYER_DEAD = 19
     RESULTS_BROADCAST = 20
     ADD_TO_STORE = 21
+    APPLY_STATIC_BUFFS = 22
 
 
 class CardEvent:
@@ -58,6 +59,11 @@ class DiesEvent(CardEvent):
         super().__init__(EVENTS.DIES)
         self.card = card
         self.foe = foe
+
+
+class ApplyStaticBuffsEvent(CardEvent):
+    def __init__(self):
+        super().__init__(EVENTS.APPLY_STATIC_BUFFS)
 
 
 class CombatStartEvent(CardEvent):

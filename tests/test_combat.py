@@ -1246,6 +1246,31 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
         self.assertEqual(len(adam.hero.secrets), 0)
 
+    def test_illidan_stormrage_triggers_before_red_whelp(self):
+        tavern = Tavern()
+        adam = tavern.add_player_with_hero("Adam", IllidanStormrage())
+        ethan = tavern.add_player_with_hero("Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [DeckSwabbie(), DeckSwabbie(), DeckSwabbie()]
+        ethans_war_party.board = [DragonspawnLieutenant(), RedWhelp()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+
+    def test_deathwing_buffs_before_illidan_stormrage(self):
+        logging.basicConfig(level=logging.DEBUG)
+        tavern = Tavern()
+        adam = tavern.add_player_with_hero("Adam", IllidanStormrage())
+        ethan = tavern.add_player_with_hero("Ethan", Deathwing())
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [TwilightEmissary(), TwilightEmissary()]
+        ethans_war_party.board = [DeckSwabbie(), DeckSwabbie()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+
 
 if __name__ == '__main__':
     unittest.main()

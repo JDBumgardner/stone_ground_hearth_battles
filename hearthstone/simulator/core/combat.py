@@ -89,6 +89,8 @@ def fight_boards(war_party_1: 'WarParty', war_party_2: 'WarParty', randomizer: '
     #  Currently we are not randomizing the first to fight here
     #  Expect to pass half boards into fight_boards in random order i.e. by shuffling players in combat step
     #  Half boards are copies, the originals state cannot be changed in the combat step
+    context = CombatPhaseContext(war_party_1, war_party_2, randomizer)
+    context.broadcast_combat_event(events.ApplyStaticBuffsEvent())
     logger.debug(
         f"{war_party_1.owner} (tier {war_party_1.owner.tavern_tier}, {war_party_1.owner.health} health) is fighting {war_party_2.owner} (tier {war_party_2.owner.tavern_tier}, {war_party_2.owner.health} health)")
     logger.debug(f"{war_party_1.owner}'s board is {war_party_1.board}")
@@ -98,9 +100,8 @@ def fight_boards(war_party_1: 'WarParty', war_party_2: 'WarParty', randomizer: '
     if war_party_2.num_cards() > war_party_1.num_cards():
         attacking_war_party, defending_war_party = defending_war_party, attacking_war_party
 
-    start_combat_event = events.CombatStartEvent()
     # Friendly vs enemy warparty does not matter for broadcast_combat_event
-    CombatPhaseContext(war_party_1, war_party_2, randomizer).broadcast_combat_event(start_combat_event)
+    context.broadcast_combat_event(events.CombatStartEvent())
 
     for _ in range(100):
         attacker = attacking_war_party.find_next()

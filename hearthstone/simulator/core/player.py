@@ -1,7 +1,7 @@
 import itertools
 import typing
 from collections import defaultdict
-from typing import Optional, List, Callable, Type
+from typing import Optional, List, Callable, Type, Tuple
 
 from frozenlist.frozen_list import FrozenList
 
@@ -465,7 +465,7 @@ class Player:
     def valid_hero_select_discover(self, discover_index: 'DiscoverIndex'):
         return self.hero.valid_select_discover(discover_index) and not self.dead
 
-    def current_build(self) -> str:
+    def current_build(self) -> Tuple[Optional['MONSTER_TYPES'], Optional[int]]:
         cards_by_type = {monster_type.name: 0 for monster_type in MONSTER_TYPES.single_types()}
         for card in self.in_play:
             if card.monster_type == MONSTER_TYPES.ALL:
@@ -475,6 +475,6 @@ class Player:
                 cards_by_type[card.monster_type.name] += 1
         ranked = sorted(cards_by_type.items(), key=lambda item: item[1], reverse=True)
         if ranked[0][1] == ranked[1][1]:
-            return "Mixed Minions"
+            return None, None
         else:
-            return str(ranked[0][0]) + 'S: ' + str(ranked[0][1])
+            return ranked[0][0], ranked[0][1]
