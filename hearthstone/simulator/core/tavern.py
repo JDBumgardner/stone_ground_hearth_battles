@@ -47,6 +47,8 @@ class Tavern:
 
     def add_player_with_hero(self, name: str, hero: Hero=None) -> Player:
         assert self.game_state == GameState.HERO_SELECTION
+        if hero is not None:
+            self.hero_pool = [remaining_hero for remaining_hero in self.hero_pool if type(remaining_hero) != type(hero)]
         player = Player.new_player_with_hero(self, name, hero)
         self.players[name] = player
         return player

@@ -3,8 +3,8 @@ import logging
 from typing import Union, Tuple, Optional
 
 from hearthstone.simulator.core import combat, events
-from hearthstone.simulator.core.card_pool import Amalgam, EmperorCobra, Snake
-from hearthstone.simulator.core.cards import one_minion_per_type, CardLocation, PrintingPress
+from hearthstone.simulator.core.card_pool import Amalgam, EmperorCobra, Snake, FishOfNZoth
+from hearthstone.simulator.core.cards import one_minion_per_type, CardLocation
 from hearthstone.simulator.core.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
 from hearthstone.simulator.core.hero import Hero
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
@@ -42,7 +42,7 @@ class PatchWerk(Hero):
 
 class Deathwing(Hero):
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
-        if event.event is EVENTS.APPLY_STATIC_BUFFS:
+        if event.event is EVENTS.COMBAT_PREPHASE:
             all_minions = context.friendly_war_party.board + context.enemy_war_party.board
             for minion in all_minions:
                 minion.attack += 2
@@ -82,7 +82,7 @@ class YoggSaron(Hero):
 
 
 class PatchesThePirate(Hero):
-    power_cost = 4
+    power_cost = 3
     pool = MONSTER_TYPES.PIRATE
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
@@ -97,7 +97,7 @@ class PatchesThePirate(Hero):
             card = context.randomizer.select_gain_card(pirates)
             context.owner.tavern.deck.remove_card(card)
             context.owner.gain_hand_card(card)
-        self.power_cost = 4
+        self.power_cost = 3
 
     def hero_power_valid_impl(self, context: BuyPhaseContext, board_index: Optional['BoardIndex'] = None,
                               store_index: Optional['StoreIndex'] = None):
@@ -135,6 +135,9 @@ class KaelthasSunstrider(Hero):
                 event.card.attack += 2
                 event.card.health += 2
                 self.buy_counter = 0
+
+    def hero_info(self) -> Optional[str]:
+        return f'{3-self.buy_counter} buys left until hero power bonus'
 
 
 class LichBazhial(Hero):
@@ -177,6 +180,9 @@ class TheRatKing(Hero):
         if event.event is EVENTS.BUY and event.card.monster_type == self.current_type:
             event.card.attack += 2
             event.card.health += 2
+
+    def hero_info(self) -> Optional[str]:
+        return f'current type bonus: {self.current_type}'
 
 
 class Ysera(Hero):
@@ -222,6 +228,9 @@ class CaptainEudora(Hero):
             random_minion.golden_transformation([])
             context.owner.gain_hand_card(random_minion)
             self.digs_left = 5
+
+    def hero_info(self) -> Optional[str]:
+        return f'{self.digs_left} digs left'
 
 
 class QueenWagtoggle(Hero):
@@ -370,6 +379,9 @@ class ArannaStarseeker(Hero):
             if self.total_rerolls >= 5:
                 context.owner.extend_store(context.owner.tavern.deck.draw(context.owner, 7 - len(context.owner.store)))
 
+    def hero_info(self) -> Optional[str]:
+        return f'{5-self.total_rerolls} refreshes left' if self.total_rerolls < 5 else None
+
 
 class DinotamerBrann(Hero):
     power_cost = 1
@@ -433,6 +445,9 @@ class EliseStarseeker(Hero):
         discover_tier = self.recruitment_maps.pop()
         context.owner.draw_discover(lambda card: card.tier == discover_tier)
 
+    def hero_info(self) -> Optional[str]:
+        return f'current recruitment maps: {["tier " + str(map) for map in self.recruitment_maps]}'
+
 
 class AlAkir(Hero):
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
@@ -454,6 +469,9 @@ class Chenvaala(Hero):
                 context.owner.tavern_upgrade_cost -= 3
                 self.play_counter = 0
 
+    def hero_info(self) -> Optional[str]:
+        return f'{3 - self.play_counter} elemental plays left until tavern discount'
+
 
 class RagnarosTheFirelord(Hero):
     minions_killed = 0
@@ -468,6 +486,9 @@ class RagnarosTheFirelord(Hero):
             for i in [0, -1]:
                 context.owner.in_play[i].attack += 3
                 context.owner.in_play[i].health += 3
+
+    def hero_info(self) -> Optional[str]:
+        return f'{25-self.minions_killed} minions left'
 
 
 class Rakanishu(Hero):
@@ -562,7 +583,7 @@ class TheLichKing(Hero):
             if self.target in context.owner.in_play:
                 self.target_index = context.owner.in_play.index(self.target)
             self.target = None
-        if event.event is EVENTS.APPLY_STATIC_BUFFS and self.target_index is not None:
+        if event.event is EVENTS.COMBAT_PREPHASE and self.target_index is not None:
             context.friendly_war_party.board[self.target_index].reborn = True
             self.target_index = None
 
@@ -629,6 +650,11 @@ class TheGreatAkazamzarak(Hero):
         self.discover_choices = []
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.BUY_START and SECRETS.COMPETETIVE_SPIRIT in self.secrets:
+            for card in context.owner.in_play:
+                card.attack += 1
+                card.health += 1
+            self.secrets.remove(SECRETS.COMPETETIVE_SPIRIT)
         if event.event is EVENTS.BUY_END:
             self.give_immunity = False
         if event.event is EVENTS.END_COMBAT and context.owner.health <= 0 and SECRETS.ICE_BLOCK in self.secrets:
@@ -666,6 +692,9 @@ class TheGreatAkazamzarak(Hero):
                 random_friend.health += 2
                 self.secrets.remove(SECRETS.AVENGE)
 
+    def hero_info(self) -> Optional[str]:
+        return f'active secrets: {[secret.name for secret in self.secrets]}'
+
 
 class IllidanStormrage(Hero):
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
@@ -683,7 +712,7 @@ class IllidanStormrage(Hero):
 
 
 class ZephrysTheGreat(Hero):
-    power_cost = 4
+    power_cost = 3
     wishes_left = 3
 
     def hero_power_valid_impl(self, context: BuyPhaseContext, board_index: Optional['BoardIndex'] = None,
@@ -699,6 +728,9 @@ class ZephrysTheGreat(Hero):
             context.owner.gain_hand_card(type(pair)())  # TODO: How does this interact with the minion pool?
         self.wishes_left -= 1
 
+    def hero_info(self) -> Optional[str]:
+        return f'{self.wishes_left} wishes left'
+
 
 class SilasDarkmoon(Hero):
     tickets_purchased = 0
@@ -713,6 +745,9 @@ class SilasDarkmoon(Hero):
                 if self.tickets_purchased == 3:
                     self.tickets_purchased = 0
                     context.owner.triple_rewards.append(TripleRewardCard(context.owner.tavern_tier))
+
+    def hero_info(self) -> Optional[str]:
+        return f'{3-self.tickets_purchased} ticket buys left until discover reward'
 
 
 class SirFinleyMrrgglton(Hero):
@@ -737,7 +772,9 @@ class LordBarov(Hero):
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
         if len(context.owner.tavern.current_player_pairings) > 1:
-            available_pairings = [(a, b) for a, b in context.owner.tavern.current_player_pairings if a != context.owner and b != context.owner]
+            available_pairings = [(player1, player2) for player1, player2 in
+                                  context.owner.tavern.current_player_pairings if
+                                  player1 != context.owner and player2 != context.owner]
             pairing = context.randomizer.select_combat_matchup(available_pairings)
         else:
             pairing = context.owner.tavern.current_player_pairings[0]
@@ -785,3 +822,40 @@ class MaievShadowsong(Hero):
                     context.owner.gain_hand_card(card)
                     card.attack += 1
                     del self.dormant_minions[card]
+
+
+class CThun(Hero):
+    power_cost = 2
+    power_uses = 0
+
+    def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                              store_index: Optional['StoreIndex'] = None):
+        self.power_uses += 1
+
+    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.BUY_END and context.owner.in_play:
+            for _ in range(self.power_uses):
+                random_minion = context.randomizer.select_friendly_minion(context.owner.in_play)
+                random_minion.attack += 1
+                random_minion.health += 1
+
+    def hero_info(self) -> Optional[str]:
+        return f'hero power repeats {self.power_uses + 1} times'
+
+
+class YShaarj(Hero):
+    power_cost = 2
+
+    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.COMBAT_START and self.hero_power_used and context.friendly_war_party.room_on_board():  # TODO: order of this vs other start of combat effects?
+            same_tier_options = [card for card in context.friendly_war_party.owner.tavern.deck.unique_cards() if
+                                 card.tier == context.friendly_war_party.owner.tavern_tier]
+            random_minion = context.randomizer.select_gain_card(same_tier_options)
+            context.friendly_war_party.summon_in_combat(type(random_minion)(), context)
+            context.friendly_war_party.owner.gain_board_card(random_minion)
+
+
+class NZoth(Hero):
+    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.BUY_START and context.owner.tavern.turn_count == 0:
+            context.owner.gain_board_card(FishOfNZoth())

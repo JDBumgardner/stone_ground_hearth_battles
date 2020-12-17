@@ -13,6 +13,7 @@ class SECRETS(enum.Enum):
     REDEMPTION = 5
     AVENGE = 6
     SNAKE_TRAP = 7
+    COMPETETIVE_SPIRIT = 8
 
     @classmethod
     def remaining_secrets(cls, hero: 'Hero'):

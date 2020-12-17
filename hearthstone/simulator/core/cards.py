@@ -78,10 +78,10 @@ class MonsterCard(metaclass=CardType):
     base_token = False
     tracked = False
     cant_attack = False
-    shifting = False
     give_immunity = False
     legendary = False
     pool: 'MONSTER_TYPES' = MONSTER_TYPES.ALL
+    divert_taunt_attack = False
 
     def __init__(self):
         super().__init__()
@@ -111,6 +111,7 @@ class MonsterCard(metaclass=CardType):
         self.ticket = False
         self.dormant = False
         self.token = self.base_token
+        self.link: Optional['MonsterCard'] = None  # links a card during combat to itself in the buy phase board
 
     def __repr__(self):
         rep = f"{type(self).__name__} {self.attack}/{self.health} (t{self.tier})" #  TODO: add a proper enum to the monster typing
@@ -125,8 +126,6 @@ class MonsterCard(metaclass=CardType):
             rep += ", [%s]" % ",".join([f"deathrattle-{i}" for i in range(len(self.deathrattles))])
         if self.golden:
             rep += ", [golden]"
-        if self.shifting:
-            rep += ", [shifting]"
         if self.frozen:
             rep += ", [frozen]"
         if self.dormant:
@@ -179,13 +178,11 @@ class MonsterCard(metaclass=CardType):
                         self.battlecry(event.targets, context)
                 if event.card.tracked:
                     context.owner.counted_cards[type(event.card)] += 1
-                self.shifting = False
         if not self.dead or self == event.card:  # minions will trigger their own death events
             self.handle_event_powers(event, context)
 
     def handle_event_in_hand(self, event: CardEvent, context: BuyPhaseContext):
-        if event.event is EVENTS.BUY_START and self.shifting:
-            self.zerus_shift(context)
+        return
 
     def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         return
@@ -249,16 +246,6 @@ class MonsterCard(metaclass=CardType):
     def battlecry_multiplier(self) -> int:
         return 1
 
-    def zerus_shift(self, context: 'BuyPhaseContext'):
-        random_minion = context.randomizer.select_random_minion(PrintingPress.all_types(), context.owner.tavern.turn_count)()
-        if self.golden:
-            random_minion.golden_transformation([])
-        random_minion.attack += self.attack - self.base_attack * (2 if self.golden else 1)
-        random_minion.health += self.health - self.base_health * (2 if self.golden else 1)
-        random_minion.shifting = True
-        context.owner.remove_hand_card(self)
-        context.owner.gain_hand_card(random_minion)
-
     @classmethod
     def check_type(cls, desired_type: 'MONSTER_TYPES') -> bool:
         return cls.monster_type in (desired_type, MONSTER_TYPES.ALL)
@@ -277,7 +264,7 @@ class MonsterCard(metaclass=CardType):
         return copy
 
     def valid_attack_targets(self, live_enemies: List['MonsterCard']) -> List['MonsterCard']:
-        if self.attack <= 0:
+        if self.attack <= 0 or not live_enemies:
             return []
         taunt_monsters = [card for card in live_enemies if card.taunt]
         if taunt_monsters:

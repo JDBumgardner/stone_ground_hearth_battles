@@ -100,7 +100,9 @@ class TextAgent(Agent):
         await self.connection.send('redeem: "r 1" sells the 1 indexed monster from the board\n')
         await self.connection.send('reroll store: "R" will reroll the store\n')
         await self.connection.send(f'upgrade tavern: "u" will upgrade the tavern (current upgrade cost: {player.tavern_upgrade_cost if player.tavern_tier < 6 else 0})\n')
-        await self.connection.send('hero power: "h [b] [0]" will activate your hero power with ability target index 0 on the board\n')
+        await self.connection.send(f'hero power: "h [b] [0]" will activate your hero power with ability target index 0 on the board (current cost: {player.hero.power_cost})\n')
+        if player.hero.hero_info() is not None:
+            await self.connection.send(f'hero info: {player.hero.hero_info()}\n')
         await self.connection.send('triple rewards: "t" will use your highest tavern tier triple rewards\n')
         if player.gold_coins >= 1:
             await self.connection.send('coin tokens: "c" will use a coin token\n')
@@ -213,6 +215,8 @@ class TextAgent(Agent):
 
     @staticmethod
     def parse_discover_input(user_input: str, player: 'Player') -> Optional['DiscoverChoiceAction']:
+        if not user_input.isnumeric():
+            return None
         card_index = int(user_input)
         if card_index in range(len(player.discover_queue[0])):
             return DiscoverChoiceAction(DiscoverIndex(card_index))
@@ -233,6 +237,8 @@ class TextAgent(Agent):
 
     @staticmethod
     def parse_hero_discover_input(user_input: str, player: 'Player') -> Optional['HeroDiscoverAction']:
+        if not user_input.isnumeric():
+            return None
         choice_index = int(user_input)
         if choice_index in range(len(player.hero.discover_choices)):
             return HeroDiscoverAction(DiscoverIndex(choice_index))

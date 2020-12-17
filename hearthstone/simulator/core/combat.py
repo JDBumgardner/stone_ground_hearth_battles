@@ -19,7 +19,11 @@ class WarParty:
     #  (HalfBoard)
     def __init__(self, player: 'Player'):
         self.owner = player
-        self.board = [copy.deepcopy(card) for card in player.in_play]
+        self.board = []
+        for card in player.in_play:  # TODO: better way to link cards in combat with cards in the buy phase?
+            card_copy = copy.deepcopy(card)
+            card_copy.link = card
+            self.board.append(card_copy)
         self.next_attacker_idx = 0
         self.dead_minions: List[MonsterCard] = []
 
@@ -73,8 +77,13 @@ class WarParty:
         return len(self.live_minions()) < self.owner.maximum_board_size
 
     def adjacent_minions(self, minion: 'MonsterCard') -> List['MonsterCard']:
-        return [card for card in self.live_minions() if abs(
-            self.get_index(card) - self.get_index(minion)) == 1]
+        if minion.dead:
+            living_with_minion = [card for card in self.board if not card.dead or card == minion]
+            return [card for card in living_with_minion if
+                    abs(living_with_minion.index(card) - living_with_minion.index(minion)) == 1]
+        else:
+            return [card for card in self.live_minions() if
+                    abs(self.live_minions().index(card) - self.live_minions().index(minion)) == 1]
 
     def get_defenders(self, attacker: 'MonsterCard', defender: 'MonsterCard') -> List['MonsterCard']:
         if attacker.cleave:
@@ -90,7 +99,7 @@ def fight_boards(war_party_1: 'WarParty', war_party_2: 'WarParty', randomizer: '
     #  Expect to pass half boards into fight_boards in random order i.e. by shuffling players in combat step
     #  Half boards are copies, the originals state cannot be changed in the combat step
     context = CombatPhaseContext(war_party_1, war_party_2, randomizer)
-    context.broadcast_combat_event(events.ApplyStaticBuffsEvent())
+    context.broadcast_combat_event(events.CombatPrePhaseEvent())
     logger.debug(
         f"{war_party_1.owner} (tier {war_party_1.owner.tavern_tier}, {war_party_1.owner.health} health) is fighting {war_party_2.owner} (tier {war_party_2.owner.tavern_tier}, {war_party_2.owner.health} health)")
     logger.debug(f"{war_party_1.owner}'s board is {war_party_1.board}")
@@ -113,10 +122,10 @@ def fight_boards(war_party_1: 'WarParty', war_party_2: 'WarParty', randomizer: '
             num_attacks = 1
         for _ in range(num_attacks):
             defender = defending_war_party.get_attack_target(randomizer, attacker)
-            logger.debug(f'{attacking_war_party.owner.hero} is attacking {defending_war_party.owner.hero}')
             if defender is None:
                 break
             if attacker and not attacker.dead:
+                logger.debug(f'{attacking_war_party.owner} is attacking {defending_war_party.owner}')
                 start_attack(attacker, defender, attacking_war_party, defending_war_party, randomizer)
         if not defending_war_party.attackers():
             break
@@ -166,6 +175,13 @@ def start_attack(attacker: 'MonsterCard', defender: 'MonsterCard', attacking_war
     on_attack_event = events.OnAttackEvent(attacker, foe=defender)
     combat_phase_context = CombatPhaseContext(attacking_war_party, defending_war_party, randomizer)
     combat_phase_context.broadcast_combat_event(on_attack_event)
+
+    taunt_diversions = [card for card in defending_war_party.live_minions() if card.divert_taunt_attack]
+    if defender.taunt and taunt_diversions:
+        new_defender = randomizer.select_attack_target(taunt_diversions)
+        logger.debug(f'{new_defender} has diverted an attack on {defender}')
+        defender = new_defender
+
     attacker.take_damage(defender.attack, combat_phase_context, defender, defending=False)
     for enemy in defending_war_party.get_defenders(attacker, defender):
         enemy.take_damage(attacker.attack, combat_phase_context.enemy_context(), attacker)
