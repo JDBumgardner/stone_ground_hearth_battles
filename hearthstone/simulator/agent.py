@@ -80,7 +80,7 @@ class HeroDiscoverAction(Action):
         player.hero_select_discover(self.discover_index)
 
     def valid(self, player: 'Player') -> bool:
-        return player.valid_hero_select_discover(self.discover_index) and not player.dead
+        return player.valid_hero_select_discover(self.discover_index)
 
     def str_in_context(self, player: 'Player') -> str:
         return f"Choose({player.hero.discover_choices[self.discover_index]})"
@@ -155,11 +155,11 @@ class EndPhaseAction(StandardAction):
         return f"EndPhase({self.freeze})"
 
     def apply(self, player: 'Player'):
-        if self.freeze and not player.dead:
+        if self.freeze:
             player.freeze()
 
     def valid(self, player: 'Player') -> bool:
-        return True
+        return not player.dead
 
 
 class RerollAction(StandardAction):

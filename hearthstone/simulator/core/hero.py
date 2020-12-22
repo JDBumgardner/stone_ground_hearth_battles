@@ -42,6 +42,12 @@ class Hero(metaclass=HeroType):
     def tavern_upgrade_costs(self) -> Tuple[int, int, int, int, int, int]:
         return 0, 5, 7, 8, 9, 10
 
+    def occupied_store_slots(self) -> int:
+        return 0
+
+    def occupied_hand_slots(self) -> int:
+        return 0
+
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         pass
 

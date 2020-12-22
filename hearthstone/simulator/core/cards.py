@@ -109,7 +109,6 @@ class MonsterCard(metaclass=CardType):
         self.frozen = False
         self.nomi_buff = 0
         self.ticket = False
-        self.dormant = False
         self.token = self.base_token
         self.link: Optional['MonsterCard'] = None  # links a card during combat to itself in the buy phase board
 
@@ -128,8 +127,6 @@ class MonsterCard(metaclass=CardType):
             rep += ", [golden]"
         if self.frozen:
             rep += ", [frozen]"
-        if self.dormant:
-            rep += ", [dormant]"
         if self.ticket:
             rep += ", [ticket]"
 

@@ -43,6 +43,7 @@ class Player:
         self.discover_queue: List[List['MonsterCard']] = []
         self.maximum_board_size = 7
         self.maximum_hand_size = 10
+        self.maximum_store_size = 7
         self.refresh_store_cost = 1
         self._tavern_upgrade_costs = (0, 5, 7, 8, 9, 10)
         self._tavern_upgrade_cost = 5
@@ -225,7 +226,8 @@ class Player:
 
     def draw(self, unfreeze: Optional[bool] = True):
         self.return_cards(unfreeze)
-        number_of_cards = (3 + self.tavern_tier // 2 - len(self.store)) + len([card for card in self.store if card.dormant])
+        number_of_cards = (3 + self.tavern_tier // 2 - len(self.store))
+        number_of_cards = min(number_of_cards, self.maximum_store_size-self.store_size())
         self.extend_store(self.tavern.deck.draw(self, number_of_cards))
 
     def purchase(self, index: StoreIndex):
@@ -248,8 +250,6 @@ class Player:
         if self.coins < self.minion_cost:
             return False
         if not self.room_in_hand():
-            return False
-        if self.store[index].dormant:
             return False
         return True
 
@@ -281,8 +281,8 @@ class Player:
     def return_cards(self, unfreeze: Optional[bool] = True):
         if unfreeze:
             self.unfreeze()
-        self.tavern.deck.return_cards(itertools.chain.from_iterable([card.dissolve() for card in self.store if not card.frozen and not card.dormant]))
-        self._store = [card for card in self.store if card.frozen or card.dormant]
+        self.tavern.deck.return_cards(itertools.chain.from_iterable([card.dissolve() for card in self.store if not card.frozen]))
+        self._store = [card for card in self.store if card.frozen]
         self.unfreeze()
 
     def freeze(self):
@@ -328,10 +328,13 @@ class Player:
         self._in_play = [self._in_play[i] for i in permutation]
 
     def hand_size(self):
-        return len(self.hand) + len(self.triple_rewards) + self.gold_coins + self.bananas + (len(self.hero.recruitment_maps) if hasattr(self.hero, 'recruitment_maps') else 0)
+        return len(self.hand) + len(self.triple_rewards) + self.gold_coins + self.bananas + self.hero.occupied_hand_slots()
 
     def room_in_hand(self):
         return self.hand_size() < self.maximum_hand_size
+
+    def store_size(self):
+        return len(self.store) + self.hero.occupied_store_slots()
 
     def max_tier(self):
         return len(self._tavern_upgrade_costs)
@@ -373,7 +376,7 @@ class Player:
             self.check_golden(type(card))
 
     def add_to_store(self, card: 'MonsterCard'):
-        if len(self.store) < 7:
+        if self.store_size() < self.maximum_store_size:
             self._store.append(card)
             card.apply_nomi_buff(self)
             self.broadcast_buy_phase_event(events.AddToStoreEvent(card))
@@ -390,7 +393,6 @@ class Player:
 
     def remove_store_card(self, card: 'MonsterCard'):
         card.frozen = False
-        card.dormant = False
         self._store.remove(card)
 
     def pop_hand_card(self, index: int) -> 'MonsterCard':

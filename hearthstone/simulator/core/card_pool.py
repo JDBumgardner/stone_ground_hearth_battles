@@ -439,9 +439,8 @@ class StewardOfTime(MonsterCard):
         bonus = 2 if self.golden else 1
         if event.event is EVENTS.SELL and event.card == self:
             for card in context.owner.store:
-                if not card.dormant:
-                    card.attack += bonus
-                    card.health += bonus
+                card.attack += bonus
+                card.health += bonus
 
 
 class Scallywag(MonsterCard):

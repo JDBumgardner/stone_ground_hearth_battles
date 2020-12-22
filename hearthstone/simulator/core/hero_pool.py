@@ -377,7 +377,7 @@ class ArannaStarseeker(Hero):
         if event.event is EVENTS.REFRESHED_STORE or event.event is EVENTS.BUY_START:
             self.total_rerolls += 1 if event.event is EVENTS.REFRESHED_STORE else 0
             if self.total_rerolls >= 5:
-                context.owner.extend_store(context.owner.tavern.deck.draw(context.owner, 7 - len(context.owner.store)))
+                context.owner.extend_store(context.owner.tavern.deck.draw(context.owner, 7 - context.owner.store_size()))
 
     def hero_info(self) -> Optional[str]:
         return f'{5-self.total_rerolls} refreshes left' if self.total_rerolls < 5 else None
@@ -431,6 +431,9 @@ class EliseStarseeker(Hero):
     power_cost = 2
     multiple_power_uses_per_turn = True
     recruitment_maps = []
+
+    def occupied_hand_slots(self) -> int:
+        return len(self.recruitment_maps)
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.TAVERN_UPGRADE and context.owner.room_in_hand():
@@ -555,11 +558,14 @@ class InfiniteToki(Hero):
                         store_index: Optional['StoreIndex'] = None):
         context.owner.return_cards()
         number_of_cards = 3 + context.owner.tavern_tier // 2 - len(context.owner.store)
+        number_of_cards = min(number_of_cards, context.owner.maximum_store_size - context.owner.store_size())
         context.owner.extend_store(context.owner.tavern.deck.draw(context.owner, number_of_cards - 1))
-        higher_tier_minions = [card for card in context.owner.tavern.deck.unique_cards() if
-                               card.tier == min(context.owner.tavern_tier + 1, context.owner.max_tier())]
-        higher_tier_minion = context.randomizer.select_add_to_store(higher_tier_minions)
-        context.owner.add_to_store(higher_tier_minion)
+        if context.owner.maximum_store_size > context.owner.store_size():
+            higher_tier_minions = [card for card in context.owner.tavern.deck.unique_cards() if
+                                   card.tier == min(context.owner.tavern_tier + 1, context.owner.max_tier())]
+            higher_tier_minion = context.randomizer.select_add_to_store(higher_tier_minions)
+            context.owner.tavern.deck.remove_card(higher_tier_minion)
+            context.owner.add_to_store(higher_tier_minion)
 
 
 class TheLichKing(Hero):
@@ -801,24 +807,19 @@ class MaievShadowsong(Hero):
     power_target_location = [CardLocation.STORE]
     dormant_minions = dict()
 
-    def hero_power_valid_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
-                              store_index: Optional['StoreIndex'] = None):
-        return not context.owner.store[store_index].dormant
+    def occupied_store_slots(self) -> int:
+        return len(self.dormant_minions)
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
-        store_minion = context.owner.store[store_index]
-        store_minion.dormant = True
+        store_minion = context.owner.pop_store_card(store_index)
         self.dormant_minions[store_minion] = 2
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_START:
             for card in list(self.dormant_minions.keys()):
-                assert card in context.owner.store
-                assert card.dormant
                 self.dormant_minions[card] -= 1
                 if self.dormant_minions[card] == 0:
-                    context.owner.remove_store_card(card)
                     context.owner.gain_hand_card(card)
                     card.attack += 1
                     del self.dormant_minions[card]
