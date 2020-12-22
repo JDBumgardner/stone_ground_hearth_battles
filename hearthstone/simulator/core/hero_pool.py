@@ -693,9 +693,11 @@ class TheGreatAkazamzarak(Hero):
                 context.friendly_war_party.summon_in_combat(new_copy, context, summon_index+1)
                 self.secrets.remove(SECRETS.REDEMPTION)
             if SECRETS.AVENGE in self.secrets:
-                random_friend = context.randomizer.select_friendly_minion(context.friendly_war_party.live_minions())
-                random_friend.attack += 3
-                random_friend.health += 2
+                live_minions = context.friendly_war_party.live_minions()
+                if live_minions:
+                    random_friend = context.randomizer.select_friendly_minion(live_minions)
+                    random_friend.attack += 3
+                    random_friend.health += 2
                 self.secrets.remove(SECRETS.AVENGE)
 
     def hero_info(self) -> Optional[str]:
