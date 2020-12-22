@@ -826,6 +826,8 @@ class MaievShadowsong(Hero):
                     card.attack += 1
                     del self.dormant_minions[card]
 
+    def hero_info(self) -> Optional[str]:
+        return f"dormant minions: {self.dormant_minions}"
 
 class CThun(Hero):
     power_cost = 2
