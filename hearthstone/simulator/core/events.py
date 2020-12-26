@@ -206,9 +206,8 @@ class CombatPhaseContext:
 
     def summon_minion_multiplier(self) -> int:
         summon_multiplier = 1
-        for card in self.friendly_war_party.board:
-            if not card.dead:
-                summon_multiplier *= card.summon_minion_multiplier()
+        for card in self.friendly_war_party.live_minions():
+            summon_multiplier *= card.summon_minion_multiplier()
         return summon_multiplier
 
     def deathrattle_multiplier(self) -> int:

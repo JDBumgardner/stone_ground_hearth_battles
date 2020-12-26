@@ -76,7 +76,6 @@ class MonsterCard(metaclass=CardType):
     redeem_rate = 1
     tier: int
     base_token = False
-    tracked = False
     cant_attack = False
     give_immunity = False
     legendary = False
@@ -173,8 +172,6 @@ class MonsterCard(metaclass=CardType):
                 if self.battlecry:
                     for _ in range(context.battlecry_multiplier()):
                         self.battlecry(event.targets, context)
-                if event.card.tracked:
-                    context.owner.counted_cards[type(event.card)] += 1
         if not self.dead or self == event.card:  # minions will trigger their own death events
             self.handle_event_powers(event, context)
 
@@ -268,6 +265,14 @@ class MonsterCard(metaclass=CardType):
             return taunt_monsters
         else:
             return live_enemies
+
+    def num_attacks(self):
+        if self.mega_windfury:
+            return 4
+        elif self.windfury:
+            return 2
+        else:
+            return 1
 
     def apply_nomi_buff(self, player: 'Player'):
         if self.check_type(MONSTER_TYPES.ELEMENTAL):

@@ -1247,6 +1247,18 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
         self.assertEqual(len(adam.hand), 1)
 
+    def test_illidan_triggers_windfury(self):
+        tavern = Tavern()
+        adam = tavern.add_player_with_hero("Adam", IllidanStormrage())
+        ethan = tavern.add_player_with_hero("Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [CracklingCyclone(), VulgarHomunculus(), CracklingCyclone()]
+        ethans_war_party.board = [TwilightEmissary(), TwilightEmissary(), TwilightEmissary(), TwilightEmissary()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 38)
+
     def test_acolyte_of_cthun(self):
         tavern = Tavern()
         adam = tavern.add_player_with_hero("Adam")
@@ -1367,6 +1379,102 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
 
+    class TestKhadgarSummonsRandomizer(DefaultRandomizer):
+        def select_summon_minion(self, card_types: List['Type']) -> 'Type':
+            if VulgarHomunculus in card_types:
+                return VulgarHomunculus  # Piloted Shredder, Imp Mama
+            elif LieutenantGarr in card_types:
+                return LieutenantGarr  # Sneeds Old Shredder, Gentle Djinni
+            elif DeckSwabbie in card_types:
+                return DeckSwabbie  # The Tide Razor
+            elif WardenOfOld in card_types:
+                return WardenOfOld  # Ghastcoiler
+            else:
+                return card_types[0]
+
+    def test_piloted_shredder_khadgar_same_minion(self):
+        tavern = Tavern()
+        adam = tavern.add_player_with_hero("Adam")
+        ethan = tavern.add_player_with_hero("Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        piloted_shredder = PilotedShredder()
+        piloted_shredder.taunt = True
+        adams_war_party.board = [piloted_shredder, Khadgar()]
+        ethans_war_party.board = [RabidSaurolisk(), RabidSaurolisk(), RabidSaurolisk(), RabidSaurolisk()]
+        fight_boards(adams_war_party, ethans_war_party, self.TestKhadgarSummonsRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+
+    def test_imp_mama_khadgar_same_minion(self):
+        tavern = Tavern()
+        adam = tavern.add_player_with_hero("Adam")
+        ethan = tavern.add_player_with_hero("Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        mama = ImpMama()
+        mama.taunt = True
+        adams_war_party.board = [mama, Khadgar()]
+        garr = LieutenantGarr()
+        garr.golden_transformation([])
+        ethans_war_party.board = [garr, LieutenantGarr(), LieutenantGarr(), LieutenantGarr()]
+        fight_boards(adams_war_party, ethans_war_party, self.TestKhadgarSummonsRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+
+    def test_sneeds_khadgar_same_minion(self):
+        tavern = Tavern()
+        adam = tavern.add_player_with_hero("Adam")
+        ethan = tavern.add_player_with_hero("Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        sneeds = SneedsOldShredder()
+        sneeds.taunt = True
+        adams_war_party.board = [sneeds, Khadgar()]
+        ethans_war_party.board = [NadinaTheRed(), NadinaTheRed(), NadinaTheRed()]
+        fight_boards(adams_war_party, ethans_war_party, self.TestKhadgarSummonsRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 36)
+
+    def test_djinni_khadgar_same_minion(self):
+        tavern = Tavern()
+        adam = tavern.add_player_with_hero("Adam")
+        ethan = tavern.add_player_with_hero("Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [GentleDjinni(), Khadgar()]
+        ethans_war_party.board = [LieutenantGarr(), LieutenantGarr(), LieutenantGarr(), LieutenantGarr()]
+        fight_boards(adams_war_party, ethans_war_party, self.TestKhadgarSummonsRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+
+    def test_boat_khadgar_same_minion(self):
+        tavern = Tavern()
+        adam = tavern.add_player_with_hero("Adam")
+        ethan = tavern.add_player_with_hero("Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        boat = TheTideRazor()
+        boat.taunt = True
+        adams_war_party.board = [boat, Khadgar()]
+        ethans_war_party.board = [LieutenantGarr(), DeckSwabbie(), VulgarHomunculus(), VulgarHomunculus(), VulgarHomunculus()]
+        fight_boards(adams_war_party, ethans_war_party, self.TestKhadgarSummonsRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+
+    def test_ghastcoiler_khadgar_same_minion(self):
+        tavern = Tavern()
+        adam = tavern.add_player_with_hero("Adam")
+        ethan = tavern.add_player_with_hero("Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        ghastcoiler = Ghastcoiler()
+        ghastcoiler.taunt = True
+        adams_war_party.board = [ghastcoiler, Khadgar()]
+        ethans_war_party.board = [NadinaTheRed(), RabidSaurolisk(), RabidSaurolisk(), RabidSaurolisk(), RabidSaurolisk(), RabidSaurolisk()]
+        fight_boards(adams_war_party, ethans_war_party, self.TestKhadgarSummonsRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
 
 
 if __name__ == '__main__':

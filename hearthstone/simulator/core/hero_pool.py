@@ -117,7 +117,7 @@ class FungalmancerFlurgl(Hero):
     pool = MONSTER_TYPES.MURLOC
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
-        if event.event is EVENTS.SELL and event.card.check_type(MONSTER_TYPES.MURLOC) and len(context.owner.store) < 7:
+        if event.event is EVENTS.SELL and event.card.check_type(MONSTER_TYPES.MURLOC) and context.owner.store_size() < context.owner.maximum_store_size:
             murlocs = [card for card in context.owner.tavern.deck.unique_cards() if
                        card.check_type(MONSTER_TYPES.MURLOC) and card.tier <= context.owner.tavern_tier]
             card = context.randomizer.select_add_to_store(murlocs)
@@ -189,7 +189,7 @@ class Ysera(Hero):
     pool = MONSTER_TYPES.DRAGON
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
-        if event.event is EVENTS.REFRESHED_STORE or event.event is EVENTS.BUY_START and len(context.owner.store) < 7:
+        if event.event is EVENTS.REFRESHED_STORE or event.event is EVENTS.BUY_START and context.owner.store_size() < context.owner.maximum_store_size:
             dragons = [card for card in context.owner.tavern.deck.unique_cards() if
                        card.check_type(MONSTER_TYPES.DRAGON) and card.tier <= context.owner.tavern_tier]
             if dragons:
@@ -289,7 +289,7 @@ class JandiceBarov(Hero):
 
     def hero_power_valid_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                               store_index: Optional['StoreIndex'] = None):
-        return not context.owner.in_play[board_index].golden and len(context.owner.store) > 0
+        return not context.owner.in_play[board_index].golden and context.owner.store_size() > 0
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
@@ -380,7 +380,7 @@ class ArannaStarseeker(Hero):
                 context.owner.extend_store(context.owner.tavern.deck.draw(context.owner, 7 - context.owner.store_size()))
 
     def hero_info(self) -> Optional[str]:
-        return f'{5-self.total_rerolls} refreshes left' if self.total_rerolls < 5 else None
+        return f'{max(5-self.total_rerolls, 0)} refreshes left'
 
 
 class DinotamerBrann(Hero):
@@ -389,7 +389,7 @@ class DinotamerBrann(Hero):
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
         context.owner.return_cards()
-        number_of_cards = 3 + context.owner.tavern_tier // 2 - len(context.owner.store)
+        number_of_cards = 3 + context.owner.tavern_tier // 2 - context.owner.store_size()
         predicate = lambda card: card.base_battlecry
         context.owner.extend_store(
             [context.owner.tavern.deck.draw_with_predicate(context.owner, predicate) for _ in range(number_of_cards)])
@@ -491,7 +491,7 @@ class RagnarosTheFirelord(Hero):
                 context.owner.in_play[i].health += 3
 
     def hero_info(self) -> Optional[str]:
-        return f'{25-self.minions_killed} minions left'
+        return f'{max(25-self.minions_killed, 0)} minions left'
 
 
 class Rakanishu(Hero):
@@ -557,7 +557,7 @@ class InfiniteToki(Hero):
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
         context.owner.return_cards()
-        number_of_cards = 3 + context.owner.tavern_tier // 2 - len(context.owner.store)
+        number_of_cards = 3 + context.owner.tavern_tier // 2 - context.owner.store_size()
         number_of_cards = min(number_of_cards, context.owner.maximum_store_size - context.owner.store_size())
         context.owner.extend_store(context.owner.tavern.deck.draw(context.owner, number_of_cards - 1))
         if context.owner.maximum_store_size > context.owner.store_size():
@@ -712,11 +712,13 @@ class IllidanStormrage(Hero):
                     attacking_war_party = context.friendly_war_party
                     defending_war_party = context.enemy_war_party
                     attacker = context.friendly_war_party.board[i]
-                    defender = defending_war_party.get_attack_target(context.randomizer, attacker)
-                    if not defender:
-                        return
-                    logging.debug(f'{attacking_war_party.owner.name} is attacking {defending_war_party.owner.name} from Illidan Stormrage\'s effect')
-                    combat.start_attack(attacker, defender, attacking_war_party, defending_war_party, context.randomizer)
+                    num_attacks = attacker.num_attacks() if attacker else 1
+                    for _ in range(num_attacks):
+                        defender = defending_war_party.get_attack_target(context.randomizer, attacker)
+                        if defender is None or attacker.dead:
+                            break
+                        logging.debug(f'{attacking_war_party.owner.name} is attacking {defending_war_party.owner.name} from Illidan Stormrage\'s effect')
+                        combat.start_attack(attacker, defender, attacking_war_party, defending_war_party, context.randomizer)
 
 
 class ZephrysTheGreat(Hero):
@@ -732,7 +734,7 @@ class ZephrysTheGreat(Hero):
         pairs = [minion for minion in context.owner.in_play if
                  not minion.golden and len([card for card in context.owner.in_play if type(card) == type(minion)]) == 2]
         if pairs:
-            pair = context.randomizer.select_friendly_minion(pairs)  # TODO: what is supposed to happen with multiple pairs?
+            pair = context.randomizer.select_friendly_minion(pairs)
             context.owner.gain_hand_card(type(pair)())  # TODO: How does this interact with the minion pool?
         self.wishes_left -= 1
 
@@ -829,6 +831,7 @@ class MaievShadowsong(Hero):
     def hero_info(self) -> Optional[str]:
         return f"dormant minions: {self.dormant_minions}"
 
+
 class CThun(Hero):
     power_cost = 2
     power_uses = 0
@@ -845,7 +848,7 @@ class CThun(Hero):
                 random_minion.health += 1
 
     def hero_info(self) -> Optional[str]:
-        return f'hero power repeats {self.power_uses + 1} times'
+        return f'hero power repeats {self.power_uses} times'
 
 
 class YShaarj(Hero):

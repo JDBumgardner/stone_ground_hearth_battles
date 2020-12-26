@@ -114,12 +114,7 @@ def fight_boards(war_party_1: 'WarParty', war_party_2: 'WarParty', randomizer: '
 
     for _ in range(100):
         attacker = attacking_war_party.find_next()
-        if attacker and attacker.mega_windfury:
-            num_attacks = 4
-        elif attacker and attacker.windfury:
-            num_attacks = 2
-        else:
-            num_attacks = 1
+        num_attacks = attacker.num_attacks() if attacker else 1
         for _ in range(num_attacks):
             defender = defending_war_party.get_attack_target(randomizer, attacker)
             if defender is None:
@@ -130,12 +125,12 @@ def fight_boards(war_party_1: 'WarParty', war_party_2: 'WarParty', randomizer: '
         if not defending_war_party.attackers():
             break
         attacking_war_party, defending_war_party = defending_war_party, attacking_war_party
-    damage(war_party_1, war_party_2, randomizer)
+    player_damage(war_party_1, war_party_2, randomizer)
     war_party_1.owner.last_opponent_warband = copy.deepcopy(war_party_2.owner.in_play)
     war_party_2.owner.last_opponent_warband = copy.deepcopy(war_party_1.owner.in_play)
 
 
-def damage(half_board_1: 'WarParty', half_board_2: 'WarParty', randomizer: 'Randomizer'):
+def player_damage(half_board_1: 'WarParty', half_board_2: 'WarParty', randomizer: 'Randomizer'):
     monster_damage_1 = sum([card.tier for card in half_board_1.board if not card.dead])
     monster_damage_2 = sum([card.tier for card in half_board_2.board if not card.dead])
     # Handle case where both players have cards left on board.

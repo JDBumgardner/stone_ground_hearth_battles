@@ -1,6 +1,5 @@
 import itertools
 import typing
-from collections import defaultdict
 from typing import Optional, List, Callable, Type, Tuple
 
 from frozenlist.frozen_list import FrozenList
@@ -50,7 +49,6 @@ class Player:
         self._hand: List[MonsterCard] = []
         self._in_play: List[MonsterCard] = []
         self._store: List[MonsterCard] = []
-        self.counted_cards = defaultdict(lambda: 0)
         self.minion_cost = 3
         self.gold_coins = 0
         self.bananas = 0  # tracks total number of bananas (big and small)

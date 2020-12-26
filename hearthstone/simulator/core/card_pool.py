@@ -32,6 +32,7 @@ class SneedsOldShredder(MonsterCard):
     pool = MONSTER_TYPES.MECH
     base_attack = 5
     base_health = 7
+    legendary = True
     mana_cost = 8
 
     def base_deathrattle(self, context: CombatPhaseContext):
@@ -39,10 +40,11 @@ class SneedsOldShredder(MonsterCard):
         summon_index = context.friendly_war_party.get_index(self)
         i = 0
         for _ in range(count):
+            legendary_minions = [card_type for card_type in PrintingPress.all_types() if
+                                 card_type.legendary and card_type != type(self)]
+            random_minion_type = context.randomizer.select_summon_minion(legendary_minions)
             for _ in range(context.summon_minion_multiplier()):
-                legendary_minions = [card_type for card_type in PrintingPress.all_types() if card_type.legendary]
-                random_minion = context.randomizer.select_summon_minion(legendary_minions)()
-                context.friendly_war_party.summon_in_combat(random_minion, context, summon_index + i + 1)
+                context.friendly_war_party.summon_in_combat(random_minion_type(), context, summon_index + i + 1)
                 i += 1
 
 
@@ -870,10 +872,10 @@ class PilotedShredder(MonsterCard):
         summon_index = context.friendly_war_party.get_index(self)
         i = 0
         for _ in range(count):
+            two_cost_minions = [card_type for card_type in PrintingPress.all_types() if card_type.mana_cost == 2]
+            random_minion_type = context.randomizer.select_summon_minion(two_cost_minions)
             for _ in range(context.summon_minion_multiplier()):
-                two_cost_minions = [card_type for card_type in PrintingPress.all_types() if card_type.mana_cost == 2]
-                random_minion = context.randomizer.select_summon_minion(two_cost_minions)()
-                context.friendly_war_party.summon_in_combat(random_minion, context, summon_index + i + 1)
+                context.friendly_war_party.summon_in_combat(random_minion_type(), context, summon_index + i + 1)
                 i += 1
 
 
@@ -1301,10 +1303,10 @@ class Ghastcoiler(MonsterCard):
         summon_index = context.friendly_war_party.get_index(self)
         i = 0
         for _ in range(count):
+            deathrattlers = [card_type for card_type in PrintingPress.all_types() if
+                             card_type.base_deathrattle and card_type != type(self)]
+            random_minion_type = context.randomizer.select_summon_minion(deathrattlers)
             for _ in range(context.summon_minion_multiplier()):
-                deathrattlers = [card_type for card_type in PrintingPress.all_types() if
-                                 card_type.base_deathrattle and card_type != type(self)]
-                random_minion_type = context.randomizer.select_summon_minion(deathrattlers)
                 context.friendly_war_party.summon_in_combat(random_minion_type(), context, summon_index + i + 1)
                 i += 1
 
@@ -1357,10 +1359,10 @@ class ImpMama(MonsterCard):
             summon_index = context.friendly_war_party.get_index(self)
             i = 0
             for _ in range(count):
+                demons = [card_type for card_type in PrintingPress.all_types() if
+                          card_type.check_type(MONSTER_TYPES.DEMON) and card_type != type(self)]
+                random_minion_type = context.randomizer.select_summon_minion(demons)
                 for _ in range(context.summon_minion_multiplier()):
-                    demons = [card_type for card_type in PrintingPress.all_types() if
-                              card_type.check_type(MONSTER_TYPES.DEMON) and card_type != type(self)]
-                    random_minion_type = context.randomizer.select_summon_minion(demons)
                     random_minion = random_minion_type()
                     random_minion.taunt = True
                     context.friendly_war_party.summon_in_combat(random_minion, context, summon_index + i + 1)
@@ -1413,9 +1415,9 @@ class TheTideRazor(MonsterCard):
         summon_index = context.friendly_war_party.get_index(self)
         i = 0
         for _ in range(count):
+            pirates = [card_type for card_type in PrintingPress.all_types() if card_type.check_type(MONSTER_TYPES.PIRATE)]
+            random_minion_type = context.randomizer.select_summon_minion(pirates)
             for _ in range(context.summon_minion_multiplier()):
-                pirates = [card_type for card_type in PrintingPress.all_types() if card_type.check_type(MONSTER_TYPES.PIRATE)]
-                random_minion_type = context.randomizer.select_summon_minion(pirates)
                 context.friendly_war_party.summon_in_combat(random_minion_type(), context, summon_index + i + 1)
                 i += 1
 
@@ -2011,6 +2013,7 @@ class LieutenantGarr(MonsterCard):
     base_attack = 5
     base_health = 1
     base_taunt = True
+    legendary = True
     mana_cost = 8
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
@@ -2097,12 +2100,12 @@ class GentleDjinni(MonsterCard):
         summon_index = context.friendly_war_party.get_index(self)
         i = 0
         for _ in range(count):
-            for _ in range(context.summon_minion_multiplier()):
-                if context.friendly_war_party.room_on_board():
-                    elementals = [card_type for card_type in PrintingPress.all_types() if
-                                  card_type.check_type(MONSTER_TYPES.ELEMENTAL) and card_type != type(
-                                      self) and card_type.tier <= context.friendly_war_party.owner.tavern_tier]
-                    random_elemental_type = context.randomizer.select_summon_minion(elementals)
+            if context.friendly_war_party.room_on_board():
+                elementals = [card_type for card_type in PrintingPress.all_types() if
+                              card_type.check_type(MONSTER_TYPES.ELEMENTAL) and card_type != type(
+                                  self) and card_type.tier <= context.friendly_war_party.owner.tavern_tier]
+                random_elemental_type = context.randomizer.select_summon_minion(elementals)
+                for _ in range(context.summon_minion_multiplier()):
                     context.friendly_war_party.summon_in_combat(random_elemental_type(), context, summon_index + i + 1)
                     i += 1
                     if context.friendly_war_party.owner.room_in_hand():
@@ -2148,6 +2151,7 @@ class MajordomoExecutus(MonsterCard):
     base_attack = 6
     base_health = 3
     pool = MONSTER_TYPES.ELEMENTAL
+    legendary = True
     mana_cost = 6
 
     def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
@@ -2189,7 +2193,7 @@ class StasisElemental(MonsterCard):
 
     def base_battlecry(self, targets: List['MonsterCard'], context: 'BuyPhaseContext'):
         for _ in range(2 if self.golden else 1):
-            if len(context.owner.store) < 7:
+            if context.owner.store_size() < context.owner.maximum_store_size:
                 available_elementals = [card for card in context.owner.tavern.deck.unique_cards() if card.check_type(
                     MONSTER_TYPES.ELEMENTAL) and card.tier <= context.owner.tavern_tier and type(card) != type(self)]
                 if available_elementals:
@@ -2276,7 +2280,7 @@ class Bigfernal(MonsterCard):
     def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if (event.event is EVENTS.SUMMON_BUY or (
                 event.event is EVENTS.SUMMON_COMBAT and event.card in context.friendly_war_party.board)) and event.card.check_type(
-                MONSTER_TYPES.DEMON):
+                MONSTER_TYPES.DEMON) and not event.card == self:
             bonus = 2 if self.golden else 1
             self.attack += bonus
             self.health += bonus
