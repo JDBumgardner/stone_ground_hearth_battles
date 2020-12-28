@@ -1476,6 +1476,126 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
 
+    def test_splitting_image_keeps_buffs(self):
+        tavern = Tavern()
+        adam = tavern.add_player_with_hero("Adam", TheGreatAkazamzarak())
+        ethan = tavern.add_player_with_hero("Ethan")
+        adam.hero.secrets.append(SECRETS.SPLITTING_IMAGE)
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        alleycat = AlleyCat()
+        alleycat.poisonous = True
+        adams_war_party.board = [alleycat]
+        ethans_war_party.board = [KalecgosArcaneAspect(), KalecgosArcaneAspect()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+
+    def test_splitting_image_waits(self):
+        tavern = Tavern()
+        adam = tavern.add_player_with_hero("Adam")
+        ethan = tavern.add_player_with_hero("Ethan", TheGreatAkazamzarak())
+        ethan.hero.secrets.append(SECRETS.SPLITTING_IMAGE)
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [AlleyCat() for _ in range(7)]
+        ethans_war_party.board = [AlleyCat() for _ in range(7)]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 38)
+        self.assertEqual(ethan.health, 40)
+
+    def test_splitting_image_khadgar(self):
+        tavern = Tavern()
+        adam = tavern.add_player_with_hero("Adam", TheGreatAkazamzarak())
+        ethan = tavern.add_player_with_hero("Ethan")
+        adam.hero.secrets.append(SECRETS.SPLITTING_IMAGE)
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [VulgarHomunculus(), Khadgar()]
+        ethans_war_party.board = [RabidSaurolisk(), RabidSaurolisk(), RabidSaurolisk(), RabidSaurolisk()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+
+    def test_autodefense_matrix_waits(self):
+        tavern = Tavern()
+        adam = tavern.add_player_with_hero("Adam", TheGreatAkazamzarak())
+        ethan = tavern.add_player_with_hero("Ethan")
+        adam.hero.secrets.append(SECRETS.AUTODEFENSE_MATRIX)
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [AlleyCat(), AnnoyOModule()]
+        ethans_war_party.board = [RabidSaurolisk(), RabidSaurolisk(), RabidSaurolisk()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+        self.assertEqual(len(adam.hero.secrets), 0)
+
+    def test_venomstrike_trap_waits(self):
+        tavern = Tavern()
+        adam = tavern.add_player_with_hero("Adam")
+        ethan = tavern.add_player_with_hero("Ethan", TheGreatAkazamzarak())
+        ethan.hero.secrets.append(SECRETS.VENOMSTRIKE_TRAP)
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [RabidSaurolisk() for _ in range(7)]
+        ethans_war_party.board = [VulgarHomunculus() for _ in range(7)]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 38)
+        self.assertEqual(ethan.health, 40)
+
+    def test_venomstrike_trap_khadgar(self):
+        tavern = Tavern()
+        adam = tavern.add_player_with_hero("Adam", TheGreatAkazamzarak())
+        ethan = tavern.add_player_with_hero("Ethan")
+        adam.hero.secrets.append(SECRETS.VENOMSTRIKE_TRAP)
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [Khadgar()]
+        ethans_war_party.board = [RabidSaurolisk(), RabidSaurolisk(), RabidSaurolisk()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+
+    def test_snake_trap_waits(self):
+        tavern = Tavern()
+        adam = tavern.add_player_with_hero("Adam")
+        ethan = tavern.add_player_with_hero("Ethan", TheGreatAkazamzarak())
+        ethan.hero.secrets.append(SECRETS.SNAKE_TRAP)
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [AlleyCat() for _ in range(7)]
+        ethans_war_party.board = [AlleyCat() for _ in range(7)]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 37)
+        self.assertEqual(ethan.health, 40)
+
+    def test_snake_trap_khadgar(self):
+        tavern = Tavern()
+        adam = tavern.add_player_with_hero("Adam", TheGreatAkazamzarak())
+        ethan = tavern.add_player_with_hero("Ethan")
+        adam.hero.secrets.append(SECRETS.SNAKE_TRAP)
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [Khadgar()]
+        ethans_war_party.board = [FiendishServant() for _ in range(7)]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+
+    def test_redemption_khadgar(self):
+        tavern = Tavern()
+        adam = tavern.add_player_with_hero("Adam", TheGreatAkazamzarak())
+        ethan = tavern.add_player_with_hero("Ethan")
+        adam.hero.secrets.append(SECRETS.REDEMPTION)
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [AlleyCat(), Khadgar()]
+        ethans_war_party.board = [IronhideRunt()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+
 
 if __name__ == '__main__':
     unittest.main()

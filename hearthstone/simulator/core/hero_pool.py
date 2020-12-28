@@ -657,6 +657,7 @@ class TheGreatAkazamzarak(Hero):
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_START and SECRETS.COMPETETIVE_SPIRIT in self.secrets:
+            logging.debug(f'{SECRETS.COMPETETIVE_SPIRIT} triggers')
             for card in context.owner.in_play:
                 card.attack += 1
                 card.health += 1
@@ -664,40 +665,48 @@ class TheGreatAkazamzarak(Hero):
         if event.event is EVENTS.BUY_END:
             self.give_immunity = False
         if event.event is EVENTS.END_COMBAT and context.owner.health <= 0 and SECRETS.ICE_BLOCK in self.secrets:
+            logging.debug(f'{SECRETS.ICE_BLOCK} triggers')
             context.owner.health += event.damage_taken
             self.give_immunity = True
             self.secrets.remove(SECRETS.ICE_BLOCK)
         if event.event is EVENTS.ON_ATTACK and event.foe in context.friendly_war_party.board:
             if context.friendly_war_party.room_on_board():
-                if SECRETS.SPLITTING_IMAGE in self.secrets:
+                if SECRETS.SPLITTING_IMAGE in self.secrets and context.friendly_war_party.room_on_board():
+                    logging.debug(f'{SECRETS.SPLITTING_IMAGE} triggers')
                     summon_index = context.friendly_war_party.get_index(event.foe)
-                    context.friendly_war_party.summon_in_combat(type(event.foe)(), context, summon_index+1)
+                    for i in range(context.summon_minion_multiplier()):
+                        context.friendly_war_party.summon_in_combat(copy.deepcopy(event.foe), context, summon_index+1+i)
                     self.secrets.remove(SECRETS.SPLITTING_IMAGE)
-                if SECRETS.VENOMSTRIKE_TRAP in self.secrets:
-                    cobra = EmperorCobra()
-                    context.friendly_war_party.summon_in_combat(cobra, context)  # TODO: does Khadgar double this?
+                if SECRETS.VENOMSTRIKE_TRAP in self.secrets and context.friendly_war_party.room_on_board():
+                    logging.debug(f'{SECRETS.VENOMSTRIKE_TRAP} triggers')
+                    for _ in range(context.summon_minion_multiplier()):
+                        cobra = EmperorCobra()
+                        context.friendly_war_party.summon_in_combat(cobra, context)
                     self.secrets.remove(SECRETS.VENOMSTRIKE_TRAP)
-                if SECRETS.SNAKE_TRAP in self.secrets:
-                    for _ in range(3):
+                if SECRETS.SNAKE_TRAP in self.secrets and context.friendly_war_party.room_on_board():
+                    logging.debug(f'{SECRETS.SNAKE_TRAP} triggers')
+                    for _ in range(3 * context.summon_minion_multiplier()):
                         snake = Snake()
                         context.friendly_war_party.summon_in_combat(snake, context)
                     self.secrets.remove(SECRETS.SNAKE_TRAP)
             if SECRETS.AUTODEFENSE_MATRIX in self.secrets and not event.foe.divine_shield:
+                logging.debug(f'{SECRETS.AUTODEFENSE_MATRIX} triggers')
                 event.foe.divine_shield = True
                 self.secrets.remove(SECRETS.AUTODEFENSE_MATRIX)
         if event.event is EVENTS.DIES and event.card in context.friendly_war_party.board:
             if SECRETS.REDEMPTION in self.secrets:
+                logging.debug(f'{SECRETS.REDEMPTION} triggers')
                 summon_index = context.friendly_war_party.get_index(event.card)
-                new_copy = event.card.unbuffed_copy()
-                new_copy.health = 1
-                context.friendly_war_party.summon_in_combat(new_copy, context, summon_index+1)
+                for i in range(context.summon_minion_multiplier()):
+                    new_copy = event.card.unbuffed_copy()
+                    new_copy.health = 1
+                    context.friendly_war_party.summon_in_combat(new_copy, context, summon_index+1+i)
                 self.secrets.remove(SECRETS.REDEMPTION)
-            if SECRETS.AVENGE in self.secrets:
-                live_minions = context.friendly_war_party.live_minions()
-                if live_minions:
-                    random_friend = context.randomizer.select_friendly_minion(live_minions)
-                    random_friend.attack += 3
-                    random_friend.health += 2
+            if SECRETS.AVENGE in self.secrets and context.friendly_war_party.live_minions():
+                logging.debug(f'{SECRETS.AVENGE} triggers')
+                random_friend = context.randomizer.select_friendly_minion(context.friendly_war_party.live_minions())
+                random_friend.attack += 3
+                random_friend.health += 2
                 self.secrets.remove(SECRETS.AVENGE)
 
     def hero_info(self) -> Optional[str]:
