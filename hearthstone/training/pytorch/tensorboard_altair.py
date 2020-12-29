@@ -101,9 +101,11 @@ def _card_list_chart(name: str, action_name: str, cards_list: List[List[str]], a
     df = pd.DataFrame({
         name: cards_list,
         "action_probability": action_probs,
-        "rearrange_logits": rearrange_logits,
     })
-    df = df.apply(pd.Series.explode).reset_index().rename(columns={'index': 'step_in_game'}).dropna()
+
+    if rearrange_logits:
+        df['rearrange_logits'] = rearrange_logits
+    df = df.apply(pd.Series.explode).reset_index().rename(columns={'index': 'step_in_game'}).dropna(subset=[name])
     return _action_chart(df, name, action_name, max_size)
 
 
