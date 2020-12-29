@@ -117,13 +117,15 @@ class HearthstoneTransformerNet(nn.Module):
 
         # Output layers
         self.fc_player_policy = nn.Linear(self.player_hidden_size,
-                                          len(default_encoder.ALL_ACTIONS.player_action_set), bias=False)
+                                          len(default_encoder.ALL_ACTIONS.player_action_set))
         self.fc_card_policy = nn.Linear(self.card_hidden_size,
-                                        len(default_encoder.ALL_ACTIONS.card_action_set[1]), bias=False)
+                                        len(default_encoder.ALL_ACTIONS.card_action_set[1]))
         self.fc_card_position = nn.Linear(self.card_hidden_size, 1, bias=False)
 
         nn.init.constant_(self.fc_player_policy.weight, 0)
+        nn.init.constant_(self.fc_player_policy.bias, 0)
         nn.init.constant_(self.fc_card_policy.weight, 0)
+        nn.init.constant_(self.fc_card_policy.bias, 0)
         nn.init.constant_(self.fc_card_position.weight, 0)
 
         # Additional network for battlecry target selection
