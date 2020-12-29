@@ -285,7 +285,10 @@ class PPOLearner(GlobalStepContext):
                 state_dict = learning_net.state_dict()
                 torch.save(state_dict, "{}/{}".format(self.export_path, str(self.global_step)))
                 if self.hparams['opponents.self_play.enabled']:
-                    if learning_bot_contestant.trueskill.mu > max(c.trueskill.mu for c in other_contestants) or not \
+                    # If it's +-sigma confidence interval puts it better than the next best bot, we make a new
+                    # copy.
+                    if learning_bot_contestant.trueskill.mu - learning_bot_contestant.trueskill.sigma > max(
+                            c.trueskill.mu for c in other_contestants) or not \
                             self.hparams['opponents.self_play.only_champions']:
                         frozen_clone = save_load.create_net(self.hparams)
                         frozen_clone.load_state_dict(state_dict)
@@ -293,7 +296,8 @@ class PPOLearner(GlobalStepContext):
                         while len(other_contestants) + 1 > self.hparams['opponents.max_pool_size']:
                             if self.hparams['opponents.self_play.remove_weakest']:
                                 min_trueskill = min(c.trueskill.mu for c in other_contestants)
-                                weakest_opponents = [opp for opp in other_contestants if opp.trueskill.mu == min_trueskill]
+                                weakest_opponents = [opp for opp in other_contestants if
+                                                     opp.trueskill.mu == min_trueskill]
                                 other_contestants.remove(weakest_opponents[0])
                             else:
                                 other_contestants.pop(random.randrange(0, len(other_contestants)))
