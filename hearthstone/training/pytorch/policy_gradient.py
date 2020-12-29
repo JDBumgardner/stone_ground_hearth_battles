@@ -102,7 +102,7 @@ def tensorize_batch(transitions: List[ActorCriticGameStepInfo], device: torch.de
     is_terminal_tensor = torch.tensor([transition.gae_info.is_terminal for transition in transitions])
     gae_return_tensor = torch.tensor([transition.gae_info.gae_return for transition in transitions])
     retrn_tensor = torch.tensor([transition.gae_info.retrn for transition in transitions])
-    debug_component_policy_tensor = torch.stack([transition.debug.component_policy for transition in transitions]).detach()
+    debug_component_policy_tensor = torch.cat([transition.debug.component_policy for transition in transitions], dim=0).detach()
 
     return TransitionBatch(StateBatch(player_tensor.to(device), cards_tensor.to(device)),
                            EncodedActionSet(valid_player_actions_tensor.to(device), valid_card_actions_tensor.to(device),
