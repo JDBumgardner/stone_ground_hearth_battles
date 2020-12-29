@@ -205,12 +205,10 @@ class Player:
         discoverables = [card for card in self.tavern.deck.all_cards() if predicate(card)] # Jeremy says: Hmm, we can run out of unique cards.  Changed to be all cards for now.
         discovered_cards = []
         for _ in range(3):
-            if discoverables:
-                discovered_cards.append(self.tavern.randomizer.select_discover_card(discoverables))
-                discoverables.remove(discovered_cards[-1])
-                self.tavern.deck.remove_card(discovered_cards[-1])
-        if discovered_cards:
-            self.discover_queue.append(discovered_cards)
+            discovered_cards.append(self.tavern.randomizer.select_discover_card(discoverables))
+            discoverables.remove(discovered_cards[-1])
+            self.tavern.deck.remove_card(discovered_cards[-1])
+        self.discover_queue.append(discovered_cards)
 
     def select_discover(self, card_index: 'DiscoverIndex'):
         assert self.valid_select_discover(card_index)
