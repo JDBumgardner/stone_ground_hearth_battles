@@ -51,7 +51,7 @@ class Worker:
             winner_names = list(reversed([name for name, player in host.tavern.losers]))
             print("---------------------------------------------------------------")
             print(winner_names)
-            print(host.tavern.players[self.learning_bot_contestant.name].in_play)
+            print(host.tavern.players[self.learning_bot_contestant.name].in_play, host.tavern.players[self.learning_bot_contestant.name].hero)
             ranked_contestants = sorted(round_contestants, key=lambda c: winner_names.index(c.name))
             update_ratings(ranked_contestants)
             print_standings([self.learning_bot_contestant] + self.other_contestants)

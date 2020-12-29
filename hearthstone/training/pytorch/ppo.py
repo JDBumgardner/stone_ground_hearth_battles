@@ -291,7 +291,12 @@ class PPOLearner(GlobalStepContext):
                         frozen_clone.load_state_dict(state_dict)
                         frozen_clone.eval()
                         while len(other_contestants) + 1 > self.hparams['opponents.max_pool_size']:
-                            other_contestants.pop(random.randrange(0, len(other_contestants)))
+                            if self.hparams['opponents.self_play.remove_weakest']:
+                                min_trueskill = min(c.trueskill.mu for c in other_contestants)
+                                weakest_opponents = [opp for opp in other_contestants if opp.trueskill.mu == min_trueskill]
+                                other_contestants.remove(weakest_opponents[0])
+                            else:
+                                other_contestants.pop(random.randrange(0, len(other_contestants)))
                         other_contestants.append(Contestant(
                             "{}_{}".format(learning_bot_contestant.name, self.global_step),
                             ContestantAgentGenerator(PytorchBot,
@@ -307,7 +312,7 @@ class PPOLearner(GlobalStepContext):
         batch_size = self.hparams['batch_size']
 
         device = self.get_device()
-        tensorboard = SummaryWriter(f"../../../data/learning/pytorch/tensorboard/{datetime.now().isoformat()}")
+        tensorboard = SummaryWriter(f"../../../data/learning/pytorch/tensorboard/{self.hparams['export.path']}")
         logging.getLogger().setLevel(logging.INFO)
 
         if self.hparams['export.enabled']:
@@ -421,6 +426,7 @@ def main():
         'opponents.initial': 'easiest',
         'opponents.self_play.enabled': True,
         'opponents.self_play.only_champions': True,
+        'opponents.self_play.remove_weakest': False,
         'opponents.max_pool_size': 7,
         'adam_lr': 0.0001,
         'batch_size': 1024,
