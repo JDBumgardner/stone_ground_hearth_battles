@@ -185,11 +185,11 @@ class HearthstoneTransformerNet(nn.Module):
             card_position_scores[:, card_position_start_index: card_position_start_index + card_position_max_length],
             valid_actions.cards_to_rearrange[:, 1] * valid_actions.rearrange_phase)
         if chosen_actions:
-            permutation_samples = torch.nn.utils.rnn.pad_sequence(
-                [torch.LongTensor(action.permutation) if isinstance(action,
-                                                                    RearrangeCardsAction) else torch.LongTensor() for
-                 action in chosen_actions],
-                batch_first=True).to(device=card_position_scores.device)
+            permutation_samples = torch.tensor(
+                [action.permutation + [0] * (card_position_max_length - len(action.permutation))
+                 if isinstance(action, RearrangeCardsAction) else [0] * card_position_max_length
+                 for
+                 action in chosen_actions], device=card_position_scores.device)
         else:
             permutation_samples = permutation_distribution.sample()
         permutation_log_probs = permutation_distribution.log_prob(permutation_samples)

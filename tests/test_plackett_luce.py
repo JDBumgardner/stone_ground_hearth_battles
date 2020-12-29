@@ -10,7 +10,7 @@ class PlackettLuceTest(unittest.TestCase):
     def assertIsPermutation(self, sample: torch.Tensor, shape: Tuple, permutation_sizes: Optional[torch.Tensor] = None):
         self.assertEqual(sample.shape, shape)
         self.assertTrue((sample.sort(-1).values == torch.arange(0, sample.shape[-1])).all())
-        if permutation_sizes is not None:
+        if permutation_sizes is not None and (permutation_sizes > 0).any():
             indices = (permutation_sizes.unsqueeze(-1).expand((*sample.shape[:-1], 1)) - 1)
             self.assertTrue(torch.eq(sample.cumsum(-1).gather(-1, indices).squeeze(-1),
                                      permutation_sizes * (permutation_sizes - 1) // 2).all())
@@ -88,6 +88,15 @@ class PlackettLuceTest(unittest.TestCase):
         self.assertEqual(sample.shape, (1, 0))
         log_prob = distribution.log_prob(sample)
         self.assertTrue(torch.equal(log_prob, torch.Tensor([0])))
+
+    def test_masked_to_size_zero(self):
+        logits = torch.Tensor([10.0, 20.0, 30.0, 40.0])
+        permutation_sizes = torch.tensor(0, dtype=torch.int64)
+        distribution = PlackettLuce(logits, permutation_sizes)
+        sample = distribution.sample()
+        self.assertIsPermutation(sample, (4,), permutation_sizes)
+        log_prob = distribution.log_prob(sample)
+        self.assertEqual(log_prob.shape, logits.shape[:-1])
 
     def test_size_zero_shaped_sample(self):
         logits = torch.Tensor([])

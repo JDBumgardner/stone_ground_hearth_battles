@@ -160,7 +160,7 @@ class DefaultEncoder(Encoder):
         cards_action_tensor = torch.from_numpy(cards_action_array)
 
         cards_to_rearrange = torch.tensor(
-            [MAX_ENCODED_STORE + MAX_ENCODED_HAND, len(player.in_play) if rearrange_phase else 0], dtype=torch.long)
+            [MAX_ENCODED_STORE + MAX_ENCODED_HAND, len(player.in_play)], dtype=torch.long)
 
         return EncodedActionSet(player_action_tensor, cards_action_tensor, torch.tensor(rearrange_phase), cards_to_rearrange)
 

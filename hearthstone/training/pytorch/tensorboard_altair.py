@@ -186,14 +186,14 @@ def plot_replay(replay: Replay, player_name: str, tensorboard: SummaryWriter, gl
         if not valid_step(step):
             continue
 
-        annotations:TensorboardAltairAnnotation = step.observer_annotations.get("TensorboardAltairAnnotator")
+        annotations: TensorboardAltairAnnotation = step.observer_annotations.get("TensorboardAltairAnnotator")
         basic_action_prob, buy_prob, summon_prob, sell_prob = calc_action_probs(step.agent_annotation.debug.component_policy,
                                                                                 step.agent_annotation.valid_actions,
                                                                                 annotations.store,
                                                                                 annotations.hand,
                                                                                 annotations.board,
                                                                                 )
-        rearrange_logit = step.agent_annotation.debug.permutation_logits.tolist()[:len(annotations.board)]
+        rearrange_logit = step.agent_annotation.debug.permutation_logits.squeeze().tolist()
         stores.append(annotations.store)
         hands.append(annotations.hand)
         boards.append(annotations.board)
