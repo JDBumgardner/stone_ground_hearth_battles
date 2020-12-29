@@ -1,5 +1,5 @@
 from collections import namedtuple
-from typing import List
+from typing import List, NamedTuple
 
 import torch
 from torch import nn
@@ -12,6 +12,7 @@ from hearthstone.battlebots.priority_functions import PriorityFunctions
 from hearthstone.battlebots.random_bot import RandomBot
 from hearthstone.battlebots.saurolisk_bot import SauroliskBot
 from hearthstone.battlebots.supremacy_bot import SupremacyBot
+from hearthstone.simulator.agent import Action
 
 from hearthstone.simulator.core.hero import EmptyHero
 from hearthstone.ladder.ladder import Contestant, ContestantAgentGenerator
@@ -69,9 +70,22 @@ def easy_contestants():
     return all_bots
 
 
-StateBatch = namedtuple('StateBatch', ('player_tensor', 'cards_tensor'))
-TransitionBatch = namedtuple('TransitionBatch', ('state', 'valid_actions', 'action', 'policy', 'value', 'gae_return', 'retn', 'reward', 'is_terminal'))
+class StateBatch(NamedTuple):
+    player_tensor: torch.Tensor
+    cards_tensor: torch.Tensor
 
+
+class TransitionBatch(NamedTuple):
+    state: StateBatch
+    valid_actions: EncodedActionSet
+    action: List[Action]
+    action_log_prob: torch.Tensor
+    value: torch.Tensor
+    gae_return: torch.Tensor
+    retn: torch.Tensor
+    reward: torch.Tensor
+    is_terminal: torch.BoolTensor
+    debug_component_policy: torch.Tensor
 
 # TODO: Delete all of this
 def tensorize_batch(transitions: List[ActorCriticGameStepInfo], device: torch.device) -> TransitionBatch:
@@ -79,21 +93,27 @@ def tensorize_batch(transitions: List[ActorCriticGameStepInfo], device: torch.de
     cards_tensor = torch.stack([transition.state.cards_tensor for transition in transitions]).detach()
     valid_player_actions_tensor = torch.stack([transition.valid_actions.player_action_tensor for transition in transitions]).detach()
     valid_card_actions_tensor = torch.stack([transition.valid_actions.card_action_tensor for transition in transitions]).detach()
-    action_tensor = torch.tensor([transition.action for transition in transitions])
-    policy_tensor = torch.stack([transition.policy for transition in transitions]).detach()
+    rearrange_phase = torch.stack([transition.valid_actions.rearrange_phase for transition in transitions]).detach()
+    cards_to_rearrange = torch.stack([transition.valid_actions.cards_to_rearrange for transition in transitions]).detach()
+    action_list = [transition.action for transition in transitions]
+    action_log_prob_tensor = torch.tensor([transition.action_log_prob for transition in transitions])
     value_tensor = torch.tensor([transition.value for transition in transitions])
     reward_tensor = torch.tensor([transition.gae_info.reward for transition in transitions])
     is_terminal_tensor = torch.tensor([transition.gae_info.is_terminal for transition in transitions])
     gae_return_tensor = torch.tensor([transition.gae_info.gae_return for transition in transitions])
     retrn_tensor = torch.tensor([transition.gae_info.retrn for transition in transitions])
+    debug_component_policy_tensor = torch.stack([transition.debug.component_policy for transition in transitions]).detach()
 
     return TransitionBatch(StateBatch(player_tensor.to(device), cards_tensor.to(device)),
-                           EncodedActionSet(valid_player_actions_tensor.to(device), valid_card_actions_tensor.to(device)),
-                           action_tensor.to(device),
-                           policy_tensor.to(device),
+                           EncodedActionSet(valid_player_actions_tensor.to(device), valid_card_actions_tensor.to(device),
+                                            rearrange_phase.to(device),
+                                            cards_to_rearrange.to(device)),
+                           action_list,
+                           action_log_prob_tensor.to(device),
                            value_tensor.to(device),
                            gae_return_tensor.to(device),
                            retrn_tensor.to(device),
                            reward_tensor.to(device),
                            is_terminal_tensor.to(device),
+                           debug_component_policy_tensor.to(device),
                            )

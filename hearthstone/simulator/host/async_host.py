@@ -41,20 +41,22 @@ class AsyncHost(Host):
 
         async def perform_player_actions(player_name, agent, player):
             for _ in range(40):
+                if player.dead:
+                    return
                 if player.discover_queue:
-                    discover_card_action = await agent.discover_choice_action(player)
-                    self._apply_and_record(player_name, discover_card_action)
+                    discover_card_action, agent_annotation = await agent.annotated_discover_choice_action(player)
+                    self._apply_and_record(player_name, discover_card_action, agent_annotation)
                 elif player.hero.discover_choices:
-                    hero_discover_action = await agent.hero_discover_action(player)
-                    self._apply_and_record(player_name, hero_discover_action)
+                    hero_discover_action, agent_annotation = await agent.annotated_hero_discover_action(player)
+                    self._apply_and_record(player_name, hero_discover_action, agent_annotation)
                 else:
                     action, agent_annotation = await agent.annotated_buy_phase_action(player)
                     self._apply_and_record(player_name, action, agent_annotation)
                     if type(action) is EndPhaseAction:
                         break
             if len(player.in_play) > 1:
-                rearrange_action = await agent.rearrange_cards(player)
-                self._apply_and_record(player_name, rearrange_action)
+                rearrange_action, agent_annotation = await agent.rearrange_cards(player)
+                self._apply_and_record(player_name, rearrange_action, agent_annotation)
 
         perform_player_action_tasks = []
         for player_name, player in self.tavern.players.items():

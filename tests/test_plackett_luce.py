@@ -16,28 +16,28 @@ class PlackettLuceTest(unittest.TestCase):
                                      permutation_sizes * (permutation_sizes - 1) // 2).all())
 
     def test_single(self):
-        logits = torch.Tensor([[10.0, 20.0, 30.0, 40.0]])
-        permutation_sizes = torch.LongTensor([3])
+        logits = torch.Tensor([10.0, 20.0, 30.0, 40.0])
+        permutation_sizes = torch.tensor(3, dtype=torch.int64)
         distribution = PlackettLuce(logits, permutation_sizes)
         sample = distribution.sample()
-        self.assertIsPermutation(sample, (1, 4), permutation_sizes)
+        self.assertIsPermutation(sample, (4,), permutation_sizes)
         log_prob = distribution.log_prob(sample)
         self.assertEqual(log_prob.shape, logits.shape[:-1])
 
     def test_max_size(self):
-        logits = torch.Tensor([[10.0, 20.0, 30.0, 40.0]])
-        permutation_sizes = torch.LongTensor([4])
+        logits = torch.Tensor([10.0, 20.0, 30.0, 40.0])
+        permutation_sizes = torch.tensor(3, dtype=torch.int64)
         distribution = PlackettLuce(logits, permutation_sizes)
         sample = distribution.sample()
-        self.assertIsPermutation(sample, (1, 4), permutation_sizes)
+        self.assertIsPermutation(sample, (4,), permutation_sizes)
         log_prob = distribution.log_prob(sample)
         self.assertEqual(log_prob.shape, logits.shape[:-1])
 
     def test_default_sizes(self):
-        logits = torch.Tensor([[10.0, 20.0, 30.0, 40.0]])
+        logits = torch.Tensor([10.0, 20.0, 30.0, 40.0])
         distribution = PlackettLuce(logits)
         sample = distribution.sample()
-        self.assertIsPermutation(sample, (1, 4))
+        self.assertIsPermutation(sample, (4, ))
         log_prob = distribution.log_prob(sample)
         self.assertEqual(log_prob.shape, logits.shape[:-1])
 
@@ -72,6 +72,58 @@ class PlackettLuceTest(unittest.TestCase):
         self.assertIsPermutation(sample, (10, 4, 4), permutation_sizes)
         log_prob = distribution.log_prob(sample)
         self.assertEqual(log_prob.shape, (10, *logits.shape[:-1]))
+
+    def test_size_zero(self):
+        logits = torch.Tensor([])
+        distribution = PlackettLuce(logits)
+        sample = distribution.sample()
+        self.assertEqual(sample.shape, (0,))
+        log_prob = distribution.log_prob(sample)
+        self.assertTrue(torch.equal(log_prob, torch.tensor(0.)))
+
+    def test_size_double_zero(self):
+        logits = torch.Tensor([[]])
+        distribution = PlackettLuce(logits)
+        sample = distribution.sample()
+        self.assertEqual(sample.shape, (1, 0))
+        log_prob = distribution.log_prob(sample)
+        self.assertTrue(torch.equal(log_prob, torch.Tensor([0])))
+
+    def test_size_zero_shaped_sample(self):
+        logits = torch.Tensor([])
+        distribution = PlackettLuce(logits)
+        sample = distribution.sample((10,))
+        self.assertEqual(sample.shape, (10, 0))
+        log_prob = distribution.log_prob(sample)
+        self.assertTrue(torch.equal(log_prob, torch.zeros(10)))
+
+    def test_size_double_zero_shaped_sample(self):
+        logits = torch.Tensor([[]])
+        distribution = PlackettLuce(logits)
+        sample = distribution.sample((10,))
+        self.assertEqual(sample.shape, (10, 1, 0))
+        log_prob = distribution.log_prob(sample)
+        self.assertTrue(torch.eq(log_prob, torch.Tensor([0]*10)).all())
+
+
+    def test_size_two_prob(self):
+        logits = torch.Tensor([0, 0])
+        distribution = PlackettLuce(logits)
+        sample = torch.LongTensor([0, 1])
+        self.assertAlmostEqual(float(distribution.log_prob(sample)), -0.693147181)
+
+    def test_equal_scores_prob(self):
+        logits = torch.Tensor([0, 0, 0, 0, 0])
+        distribution = PlackettLuce(logits)
+        sample = torch.LongTensor([0, 1, 2, 3, 4])
+        self.assertAlmostEqual(float(distribution.log_prob(sample)), -4.787491743, 6)
+
+    def test_equal_scores_prob_masked(self):
+        logits = torch.Tensor([0, 0, 0, 0, 0, 0, 0])
+        permutation_sizes = torch.tensor(5., dtype=torch.int64)
+        distribution = PlackettLuce(logits, permutation_sizes)
+        sample = torch.LongTensor([0, 1, 2, 3, 4, 5, 6])
+        self.assertAlmostEqual(float(distribution.log_prob(sample)), -4.787491743, 6)
 
 
 if __name__ == '__main__':

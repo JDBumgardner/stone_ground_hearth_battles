@@ -30,26 +30,24 @@ class RoundRobinHost(Host):
                 if player.dead:
                     break
                 if player.discover_queue:
-                    discover_choice_action = asyncio_utils.get_or_create_event_loop().run_until_complete(
-                        agent.discover_choice_action(player))
-                    self._apply_and_record(player_name, discover_choice_action)
-                    continue
-                if player.hero.discover_choices:
-                    hero_discover_action = asyncio_utils.get_or_create_event_loop().run_until_complete(
-                        agent.hero_discover_action(player))
-                    self._apply_and_record(player_name, hero_discover_action)
-                    continue
-                action, agent_annotation = asyncio_utils.get_or_create_event_loop().run_until_complete(agent.annotated_buy_phase_action(player))
-                if type(action) is EndPhaseAction:
+                    discover_choice_action, agent_annotation = asyncio_utils.get_or_create_event_loop().run_until_complete(
+                        agent.annotated_discover_choice_action(player))
+                    self._apply_and_record(player_name, discover_choice_action, agent_annotation)
+                elif player.hero.discover_choices:
+                    hero_discover_action, agent_annotation = asyncio_utils.get_or_create_event_loop().run_until_complete(
+                        agent.annotated_hero_discover_action(player))
+                    self._apply_and_record(player_name, hero_discover_action, agent_annotation)
+                else:
+                    action, agent_annotation = asyncio_utils.get_or_create_event_loop().run_until_complete(agent.annotated_buy_phase_action(player))
+                    self._apply_and_record(player_name, action, agent_annotation)
                     yield
-                    break
-                self._apply_and_record(player_name, action, agent_annotation)
-                yield
+                    if type(action) is EndPhaseAction:
+                        break
             if player.dead:
                 continue
             if len(player.in_play) > 1:
-                rearrange_action = asyncio_utils.get_or_create_event_loop().run_until_complete(agent.rearrange_cards(player))
-                self._apply_and_record(player_name, rearrange_action)
+                rearrange_action, agent_annotation = asyncio_utils.get_or_create_event_loop().run_until_complete(agent.annotated_rearrange_cards(player))
+                self._apply_and_record(player_name, rearrange_action, agent_annotation)
         self.tavern.combat_step()
         if self.tavern.game_over():
             for position, (name, player) in enumerate(reversed(self.tavern.losers)):

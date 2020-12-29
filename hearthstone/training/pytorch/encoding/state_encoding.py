@@ -1,14 +1,12 @@
 import copy
-from collections import namedtuple
 from typing import NamedTuple, Any, Tuple, Callable, List
 
 import numpy as np
 import torch
 
-from hearthstone.simulator.agent import TripleRewardsAction, TavernUpgradeAction, RerollAction, EndPhaseAction, \
-    BuyAction, SummonAction, SellAction, StandardAction
+from hearthstone.simulator.agent import StandardAction
 from hearthstone.simulator.core.cards import MonsterCard, CardLocation
-from hearthstone.simulator.core.player import Player, BoardIndex, StoreIndex
+from hearthstone.simulator.core.player import Player
 
 
 class State(NamedTuple):
@@ -168,15 +166,28 @@ class SortedByValueFeature(Feature):
 class EncodedActionSet(NamedTuple):
     player_action_tensor: torch.BoolTensor
     card_action_tensor: torch.BoolTensor
+    rearrange_phase: torch.BoolTensor
+    cards_to_rearrange: torch.IntTensor  # Start and length index
 
     def to(self, device: torch.device):
         if device:
-            return EncodedActionSet(self.player_action_tensor.to(device), self.card_action_tensor.to(device))
+            return EncodedActionSet(self.player_action_tensor.to(device), self.card_action_tensor.to(device),
+                                    self.rearrange_phase.to(device),
+                                    self.cards_to_rearrange.to(device))
         else:
             return self
 
+class ActionComponent:
+    """
+    A component of a potentially multi-part action.
+    """
+    def valid(self, player: 'Player'):
+        raise NotImplementedError()
 
-ActionSet = namedtuple('ActionSet', ('player_action_set', 'card_action_set'))
+
+class ActionSet(NamedTuple):
+    player_action_set: List[ActionComponent]
+    card_action_set: List[List[ActionComponent]]
 
 
 class InvalidAction(StandardAction):
@@ -194,7 +205,7 @@ class Encoder:
     def encode_state(self, player: Player) -> State:
         raise NotImplemented()
 
-    def encode_valid_actions(self, player: Player) -> EncodedActionSet:
+    def encode_valid_actions(self, player: Player, rearrange_phase: bool = False) -> EncodedActionSet:
         raise NotImplemented()
 
     def player_encoding(self) -> Feature:
@@ -209,5 +220,5 @@ class Encoder:
     def get_action_index(self, action: StandardAction) -> int:
         raise NotImplemented()
 
-    def get_indexed_action(self, index:int)-> StandardAction:
+    def get_indexed_action(self, index: int) -> StandardAction:
         raise NotImplemented()

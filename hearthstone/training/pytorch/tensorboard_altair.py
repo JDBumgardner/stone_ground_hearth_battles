@@ -1,6 +1,6 @@
 import itertools
 from collections import defaultdict
-from typing import List, NamedTuple, Any
+from typing import List, NamedTuple, Any, Optional
 
 import altair as alt
 import pandas as pd
@@ -73,7 +73,7 @@ class TensorboardAltairAnnotator(Observer):
         )
 
 
-def _action_chart(df: pd.DataFrame, name: str, max_size: int):
+def _action_chart(df: pd.DataFrame, name: str, action_name: str, max_size: int):
     ranked_text = alt.Chart(df).mark_text().transform_lookup(lookup="step_in_game",
                        from_=alt.LookupSelection(key="step_in_game",
                                                  selection="gamestep_hover",
@@ -84,21 +84,27 @@ def _action_chart(df: pd.DataFrame, name: str, max_size: int):
     ).transform_window(
         row_number='row_number()'
     )
+    tooltip_fields = [alt.Tooltip("action_probability:Q", title="Probability of {}".format(action_name))]
+    if 'rearrange_logits' in df:
+        tooltip_fields.append(alt.Tooltip("rearrange_logits:Q", title="Positioning"))
+
     return ranked_text.encode(text=f'{name}:N',
                               y=alt.Y('row_number:O', axis=None,
                                       scale=alt.Scale(domain=list(range(1, max_size + 1)))),
                               color=alt.Color("action_probability:Q",
                                               scale=alt.Scale(domain=[0, 1], scheme="bluegreen")),
-                              tooltip=[alt.Tooltip("action_probability:Q", title="Probability")])
+                              tooltip=tooltip_fields)
 
 
-def _card_list_chart(name: str, cards_list: List[List[str]], action_probs: List[List[float]], max_size:int):
+def _card_list_chart(name: str, action_name: str, cards_list: List[List[str]], action_probs: List[List[float]], max_size:int,
+                     rearrange_logits:Optional[List[List[float]]]=None):
     df = pd.DataFrame({
         name: cards_list,
-        "action_probability": action_probs
+        "action_probability": action_probs,
+        "rearrange_logits": rearrange_logits,
     })
     df = df.apply(pd.Series.explode).reset_index().rename(columns={'index': 'step_in_game'}).dropna()
-    return _action_chart(df, name, max_size)
+    return _action_chart(df, name, action_name, max_size)
 
 
 def _player_action_chart(action_probs: List[List[float]], max_size: int):
@@ -110,7 +116,7 @@ def _player_action_chart(action_probs: List[List[float]], max_size: int):
         }
     )
     df = df.apply(pd.Series.explode).reset_index().rename(columns={'index': 'step_in_game'})
-    return _action_chart(df, "basic_actions", max_size)
+    return _action_chart(df, "basic_actions", "action", max_size)
 
 
 def calc_action_probs(policy: torch.Tensor, valid_actions: EncodedActionSet, store: List[str], hand: List[str], board:List[str]) -> (List, List, List, List):
@@ -175,17 +181,19 @@ def plot_replay(replay: Replay, player_name: str, tensorboard: SummaryWriter, gl
     buy_probs = []
     summon_probs = []
     sell_probs = []
+    rearrange_logits = []
     for step in replay.steps:
         if not valid_step(step):
             continue
 
         annotations:TensorboardAltairAnnotation = step.observer_annotations.get("TensorboardAltairAnnotator")
-        basic_action_prob, buy_prob, summon_prob, sell_prob = calc_action_probs(step.agent_annotation.policy,
+        basic_action_prob, buy_prob, summon_prob, sell_prob = calc_action_probs(step.agent_annotation.debug.component_policy,
                                                                                 step.agent_annotation.valid_actions,
                                                                                 annotations.store,
                                                                                 annotations.hand,
                                                                                 annotations.board,
                                                                                 )
+        rearrange_logit = step.agent_annotation.debug.permutation_logits.tolist()[:len(annotations.board)]
         stores.append(annotations.store)
         hands.append(annotations.hand)
         boards.append(annotations.board)
@@ -193,6 +201,7 @@ def plot_replay(replay: Replay, player_name: str, tensorboard: SummaryWriter, gl
         buy_probs.append(buy_prob)
         summon_probs.append(summon_prob)
         sell_probs.append(sell_prob)
+        rearrange_logits.append(rearrange_logit)
 
     df = pd.DataFrame(columns)
     hover_selection = alt.selection_single(name="gamestep_hover", fields=['step_in_game'], encodings=['x'],
@@ -264,9 +273,9 @@ def plot_replay(replay: Replay, player_name: str, tensorboard: SummaryWriter, gl
 
     basic_action_chart = _player_action_chart(basic_action_probs, len(
         default_encoder.ALL_ACTIONS.player_action_set)).properties(title='Basic Actions', width=400)
-    board_chart = _card_list_chart('board', boards, sell_probs, 7).properties(title='On Board', width=400)
-    hand_chart = _card_list_chart('hand', hands, summon_probs, 10).properties(title='In Hand', width=400)
-    store_chart = _card_list_chart('store', stores, buy_probs, 7).properties(title='In Store', width=400)
+    board_chart = _card_list_chart('board', 'sell', boards, sell_probs, 7, rearrange_logits).properties(title='On Board', width=400)
+    hand_chart = _card_list_chart('hand', 'summon', hands, summon_probs, 10).properties(title='In Hand', width=400)
+    store_chart = _card_list_chart('store', 'buy', stores, buy_probs, 7).properties(title='In Store', width=400)
 
     left_chart = alt.vconcat(game_progression_chart, action_chart).resolve_scale(color='independent')
     right_chart = alt.vconcat(basic_action_chart, board_chart, hand_chart, store_chart).resolve_legend('shared')

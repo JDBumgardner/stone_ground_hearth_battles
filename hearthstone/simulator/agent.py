@@ -159,7 +159,7 @@ class EndPhaseAction(StandardAction):
             player.freeze()
 
     def valid(self, player: 'Player') -> bool:
-        return not player.dead
+        return not player.dead and not player.discover_queue
 
 
 class RerollAction(StandardAction):
@@ -249,14 +249,14 @@ class AnnotatingAgent:
     async def hero_choice_action(self, player: 'Player') -> HeroChoiceAction:
         return HeroChoiceAction(HeroChoiceIndex(0))
 
-    async def rearrange_cards(self, player: 'Player') -> RearrangeCardsAction:
+    async def annotated_rearrange_cards(self, player: 'Player') -> (RearrangeCardsAction, Annotation):
         """
         here the player selects a card arrangement one time per combat directly preceding combat
 
         Args:
             player: The player object controlled by this agent. This function should not modify it.
 
-        Returns: An arrangement of the player's board
+        Returns:  A tuple containing an arrangement of the player's board, and the Agent Annotation to attach to the replay.
 
         """
         pass
@@ -278,7 +278,7 @@ class AnnotatingAgent:
         """
         pass
 
-    async def discover_choice_action(self, player: 'Player') -> DiscoverChoiceAction:
+    async def annotated_discover_choice_action(self, player: 'Player') -> (DiscoverChoiceAction, Annotation):
         """
 
         Args:
@@ -289,7 +289,7 @@ class AnnotatingAgent:
         """
         pass
 
-    async def hero_discover_action(self, player: 'Player') -> 'HeroDiscoverAction':
+    async def annotated_hero_discover_action(self, player: 'Player') -> ('HeroDiscoverAction', Annotation):
         """
 
         Args:
@@ -316,6 +316,24 @@ class Agent(AnnotatingAgent):
 
     async def annotated_buy_phase_action(self, player: 'Player') -> (StandardAction, Annotation):
         return await self.buy_phase_action(player), None
+
+    async def rearrange_cards(self, player: 'Player') -> RearrangeCardsAction:
+        pass
+
+    async def annotated_rearrange_cards(self, player: 'Player') -> (RearrangeCardsAction, Annotation):
+        return await self.rearrange_cards(player), None
+
+    async def discover_choice_action(self, player: 'Player') -> DiscoverChoiceAction:
+        pass
+
+    async def annotated_discover_choice_action(self, player: 'Player') -> (DiscoverChoiceAction, Annotation):
+        return await self.discover_choice_action(player), None
+
+    async def hero_discover_action(self, player: 'Player') -> 'HeroDiscoverAction':
+        pass
+
+    async def annotated_hero_discover_action(self, player: 'Player') -> ('HeroDiscoverAction', Annotation):
+        return await self.hero_discover_action(player), None
 
 
 def generate_valid_actions(player: 'Player') -> Generator[StandardAction, None, None]:

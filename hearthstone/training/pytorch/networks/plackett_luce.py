@@ -14,14 +14,13 @@ class PlackettLuce(Distribution):
         self.logits: torch.Tensor = logits
 
         if permutation_sizes is None:
-            permutation_sizes = torch.ones(self.logits.shape[:-1], dtype=torch.int64) * self.logits.shape[-1]
+            permutation_sizes = torch.full(self.logits.shape[:-1], self.logits.shape[-1], dtype=torch.int64, device=logits.device)
         self.permutation_sizes: torch.Tensor = permutation_sizes
         # Mask is true for invalid indices
         with torch.no_grad():
             self.mask: torch.Tensor = torch.zeros(
-                *logits.shape[:-1], logits.shape[-1] + 1).scatter(-1,
-                                                                  permutation_sizes.unsqueeze(
-                                                                      -1),
+                *logits.shape[:-1], logits.shape[-1] + 1, device=logits.device).scatter(-1,
+                                                                  permutation_sizes.unsqueeze(-1),
                                                                   1)[...,
                                       :-1].cumsum(
                 dim=-1).bool()
@@ -38,9 +37,9 @@ class PlackettLuce(Distribution):
 
     def log_prob(self, value: torch.Tensor):
         logits = self.logits.masked_fill(self.mask, -1e30).expand(value.shape)
-        log_probs = torch.zeros(value.shape[:-1])
+        log_probs = torch.zeros(value.shape[:-1], device=value.device)
         for i in range(int(self.permutation_sizes.max())):
-            log_probs += (logits.log_softmax(dim=-1) * self.mask.logical_not()).gather(-1, value[..., i:i+1]).squeeze(-1)
+            log_probs += logits.log_softmax(dim=-1).gather(-1, value[..., i:i+1]).squeeze(-1) * self.mask.logical_not()[..., i]
             logits = logits.scatter(-1, value[..., i:i + 1], -1e30)
         return log_probs
 

@@ -1,6 +1,6 @@
 from hearthstone.simulator.agent import StandardAction
 from hearthstone.simulator.replay.replay import Replay
-from hearthstone.training.pytorch.replay import GAEReplayInfo
+from hearthstone.training.pytorch.replay import GAEReplayInfo, ActorCriticGameStepInfo
 
 
 class GAEAnnotator:
@@ -16,8 +16,8 @@ class GAEAnnotator:
         next_value = reward
         # We iterate backwards over the actions taken by this player only.  For now, we are not learning from nonstandard actions.
         reversed_player_steps = reversed([game_step for game_step in replay.steps if
-                                          game_step.player == self.player and isinstance(game_step.action,
-                                                                                         StandardAction)])
+                                          game_step.player == self.player and isinstance(game_step.agent_annotation,
+                                                                                         ActorCriticGameStepInfo)])
         for i, game_step in enumerate(reversed_player_steps):
             is_terminal = i == 0
             game_step.agent_annotation.gae_info = GAEReplayInfo(

@@ -5,8 +5,8 @@ from hearthstone.simulator.agent import Agent, StandardAction, EndPhaseAction, D
     RearrangeCardsAction, HeroDiscoverAction
 
 if typing.TYPE_CHECKING:
-
-    from hearthstone.simulator.core.player import Player, DiscoverIndex
+    from hearthstone.simulator.core.player import Player
+from hearthstone.simulator.core.player import DiscoverIndex
 
 
 class NoActionBot(Agent):

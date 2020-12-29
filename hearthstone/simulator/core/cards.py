@@ -345,3 +345,4 @@ class CardLocation(enum.Enum):
     STORE = 1
     HAND = 2
     BOARD = 3
+    DISCOVER = 4

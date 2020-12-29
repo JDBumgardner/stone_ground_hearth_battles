@@ -11,15 +11,17 @@ from torch import optim, nn
 from torch.utils.tensorboard import SummaryWriter
 
 from hearthstone.ladder.ladder import Contestant, load_ratings, ContestantAgentGenerator
+from hearthstone.simulator.agent import RearrangeCardsAction, BuyAction, EndPhaseAction, SellAction, SummonAction, \
+    RerollAction, DiscoverChoiceAction, TavernUpgradeAction, TripleRewardsAction
 from hearthstone.simulator.core.hero import EmptyHero
 from hearthstone.simulator.core.tavern import Tavern
 from hearthstone.training.pytorch.encoding import shared_tensor_pool_encoder
-from hearthstone.training.pytorch.encoding.shared_tensor_pool_encoder import SharedTensorPoolEncoder
-from hearthstone.training.pytorch.gae import GAEAnnotator
-from hearthstone.training.pytorch.encoding.default_encoder import  \
+from hearthstone.training.pytorch.encoding.default_encoder import \
     DEFAULT_PLAYER_ENCODING, DEFAULT_CARDS_ENCODING, EncodedActionSet, \
     DefaultEncoder
+from hearthstone.training.pytorch.encoding.shared_tensor_pool_encoder import SharedTensorPoolEncoder
 from hearthstone.training.pytorch.encoding.state_encoding import State
+from hearthstone.training.pytorch.gae import GAEAnnotator
 from hearthstone.training.pytorch.networks import save_load
 from hearthstone.training.pytorch.networks.save_load import create_net, load_from_saved
 from hearthstone.training.pytorch.normalization import ObservationNormalizer, PPONormalizer
@@ -29,6 +31,7 @@ from hearthstone.training.pytorch.pytorch_bot import PytorchBot
 from hearthstone.training.pytorch.replay import ActorCriticGameStepInfo
 from hearthstone.training.pytorch.replay_buffer import EpochBuffer
 from hearthstone.training.pytorch.surveillance import GlobalStepContext
+from hearthstone.training.pytorch.worker.worker import Worker
 from hearthstone.training.pytorch.worker.worker_pool import WorkerPool
 
 PPOHyperparameters = NewType('PPOHyperparameters', Dict[str, Union[str, int, float]])
@@ -64,7 +67,7 @@ class PPOLearner(GlobalStepContext):
 
         # Encoder is shared to reuse tensors passed between processes
         self.encoder = DefaultEncoder()
-        if self.hparams['parallelism.use_processes']:
+        if self.hparams['parallelism.method'] == "process":
             self.encoder = SharedTensorPoolEncoder(self.encoder)
 
     def get_global_step(self) -> int:
@@ -126,12 +129,14 @@ class PPOLearner(GlobalStepContext):
         """
         transition_batch = tensorize_batch(minibatch, self.get_device())
 
-        policy, value = learning_net(transition_batch.state, transition_batch.valid_actions)
+        actions, action_log_probs, value, debug = learning_net(transition_batch.state,
+                                                                    transition_batch.valid_actions,
+                                                                    transition_batch.action)
 
         # The advantage is the difference between the expected value before taking the action and the value after updating
         advantage = transition_batch.gae_return - transition_batch.value
 
-        log_ratio = (policy - transition_batch.policy).gather(1, transition_batch.action.unsqueeze(-1)).squeeze(1)
+        log_ratio = (action_log_probs - transition_batch.action_log_prob)
         ratio = torch.exp(log_ratio)
         clipped_ratio = ratio.clamp(1 - ppo_epsilon, 1 + ppo_epsilon)
 
@@ -156,22 +161,20 @@ class PPOLearner(GlobalStepContext):
             (transition_batch.valid_actions.player_action_tensor.flatten(1),
              transition_batch.valid_actions.card_action_tensor.flatten(1)), dim=1)
 
-        entropy_loss = entropy_weight * torch.sum(valid_action_tensor.float() * policy * torch.exp(policy),
-                                                  dim=1).mean()
-        kl_divergence = (policy.exp() * (policy - transition_batch.policy)).sum(dim=1).mean()
+        entropy_loss = (entropy_weight * action_log_probs).mean()
+        main_dist_kl_divergence = (debug.component_policy.exp() * (
+                    debug.component_policy - transition_batch.debug_component_policy)).sum(dim=1).mean()
         approx_kl_divergence = -log_ratio.mean()
         if self.histogram_tensorboard:
-            masked_policy = policy.masked_select(valid_action_tensor)
-            tensorboard.add_histogram("policy", torch.exp(masked_policy), self.global_step)
+            tensorboard.add_histogram("policy", torch.exp(action_log_probs), self.global_step)
             masked_reward = transition_batch.reward.masked_select(transition_batch.is_terminal)
             if masked_reward.size()[0]:
                 tensorboard.add_histogram("reward",
                                           transition_batch.reward.masked_select(transition_batch.is_terminal),
                                           self.global_step)
             tensorboard.add_histogram("value/current", value, self.global_step)
-            tensorboard.add_histogram("value/next", next_value, self.global_step)
+            tensorboard.add_histogram("value/next", transition_batch.value, self.global_step)
             tensorboard.add_histogram("advantage/unclipped", advantage, self.global_step)
-            tensorboard.add_histogram("advantage/clipped", clipped_advantage, self.global_step)
             tensorboard.add_histogram("advantage/normalized", normalized_advantage, self.global_step)
             tensorboard.add_histogram("policy_loss/unclipped", unclipped_policy_loss, self.global_step)
             tensorboard.add_histogram("policy_loss/clipped", clipped_policy_loss, self.global_step)
@@ -187,17 +190,26 @@ class PPOLearner(GlobalStepContext):
         tensorboard.add_scalar("loss/policy", policy_loss, self.global_step)
         tensorboard.add_scalar("loss/value", value_loss, self.global_step)
         tensorboard.add_scalar("loss/entropy", entropy_loss, self.global_step)
-        tensorboard.add_scalar("kl_divergence/exact", kl_divergence, self.global_step)
+        tensorboard.add_scalar("kl_divergence/main_dist", main_dist_kl_divergence, self.global_step)
         tensorboard.add_scalar("kl_divergence/approx", approx_kl_divergence, self.global_step)
         if epoch == 0 and minibatch_idx == 0:
-            tensorboard.add_scalar("kl_divergence/before_learning_exact", kl_divergence, self.global_step)
+            tensorboard.add_scalar("kl_divergence/before_learning_main_dist", main_dist_kl_divergence, self.global_step)
             tensorboard.add_scalar("kl_divergence/before_learning_approx", approx_kl_divergence, self.global_step)
         if approx_kl_divergence > self.hparams['approx_kl_limit']:
             tensorboard.add_scalar("kl_divergence/early_stopped_epoch", epoch, self.global_step)
-            tensorboard.add_scalar("kl_divergence/early_stopped_exact", kl_divergence, self.global_step)
+            tensorboard.add_scalar("kl_divergence/early_stopped_main_dist", main_dist_kl_divergence, self.global_step)
             tensorboard.add_scalar("kl_divergence/early_stopped_approx", approx_kl_divergence, self.global_step)
         tensorboard.add_scalar("avg_policy_loss/unclipped", unclipped_policy_loss.mean(), self.global_step)
         tensorboard.add_scalar("avg_policy_loss/clipped", clipped_policy_loss.mean(), self.global_step)
+        tensorboard.add_scalar("actions/endphase", sum(type(action) is EndPhaseAction for action in transition_batch.action), self.global_step)
+        tensorboard.add_scalar("actions/rearrange", sum(type(action) is RearrangeCardsAction for action in transition_batch.action), self.global_step)
+        tensorboard.add_scalar("actions/buy", sum(type(action) is BuyAction for action in transition_batch.action), self.global_step)
+        tensorboard.add_scalar("actions/sell", sum(type(action) is SellAction for action in transition_batch.action), self.global_step)
+        tensorboard.add_scalar("actions/summon", sum(type(action) is SummonAction for action in transition_batch.action), self.global_step)
+        tensorboard.add_scalar("actions/reroll", sum(type(action) is RerollAction for action in transition_batch.action), self.global_step)
+        tensorboard.add_scalar("actions/upgrade", sum(type(action) is TavernUpgradeAction for action in transition_batch.action), self.global_step)
+        tensorboard.add_scalar("actions/triple_rewards", sum(type(action) is TripleRewardsAction for action in transition_batch.action), self.global_step)
+        tensorboard.add_scalar("actions/discover", sum(type(action) is DiscoverChoiceAction for action in transition_batch.action), self.global_step)
 
         mean_0_return = transition_batch.retn - transition_batch.retn.mean()
         mean_0_value = value - value.mean()
@@ -345,21 +357,25 @@ class PPOLearner(GlobalStepContext):
         load_ratings(other_contestants, "../../../data/standings/8p.json")
 
         gae_annotator = GAEAnnotator(learning_bot_name, self.hparams['gae_gamma'], self.hparams['gae_lambda'])
-        worker_pool = WorkerPool(self.hparams['parallelism.num_workers'],
-                                 replay_buffer,
-                                 gae_annotator,
-                                 self.encoder,
-                                 tensorboard,
-                                 self,
-                                 self.hparams['parallelism.use_processes']
-                                 )
+        if self.hparams['parallelism.method']:
+            worker_pool = WorkerPool(self.hparams['parallelism.num_workers'],
+                                     replay_buffer,
+                                     gae_annotator,
+                                     self.encoder,
+                                     tensorboard,
+                                     self,
+                                     self.hparams['parallelism.method'] == "process"
+                                     )
 
         for _ in range(1000000):
             learning_net.eval()
-            worker_pool.play_games(learning_bot_contestant, other_contestants, self.hparams['game_size'])
-            learning_net.train()
-            torch.set_num_threads(8)
+            if self.hparams['parallelism.method']:
+                worker_pool.play_games(learning_bot_contestant, other_contestants, self.hparams['game_size'])
+            else:
+                Worker(learning_bot_contestant, other_contestants, self.hparams['game_size'], replay_buffer,
+                       gae_annotator, tensorboard, self).play_game()
             if len(replay_buffer) >= batch_size:
+                learning_net.train()
                 print(f"Running {self.hparams['ppo_epochs']} epochs of PPO optimization...")
                 for i in range(self.hparams["ppo_epochs"]):
                     self.handle_export(learning_bot_contestant, learning_net, other_contestants)
@@ -409,7 +425,7 @@ def main():
         'adam_lr': 0.0001,
         'batch_size': 1024,
         'minibatch_size': 1024,
-        'cuda': False,
+        'cuda': True,
         'entropy_weight': 0.001,
         'gae_gamma': 0.999,
         'gae_lambda': 0.9,
@@ -425,8 +441,8 @@ def main():
         'nn.encoding.redundant': True,
         'normalize_advantage': True,
         'normalize_observations': False,
-        'parallelism.num_workers': 2,
-        'parallelism.use_processes': False,
+        'parallelism.num_workers': 1,
+        'parallelism.method': None,
         'optimizer': 'adam',
         'policy_weight': 0.581166675499831,
         'ppo_epochs': 8,

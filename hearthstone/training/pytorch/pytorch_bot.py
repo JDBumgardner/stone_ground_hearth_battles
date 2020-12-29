@@ -1,17 +1,16 @@
 import logging
 import random
-from typing import Optional, Tuple, Any, Dict
+from typing import Optional, Any, Dict
 
 import torch
-from torch import nn, Tensor
-from torch.distributions import Categorical
+from torch import nn
 
 from hearthstone.simulator.agent import StandardAction, DiscoverChoiceAction, RearrangeCardsAction, \
-    AnnotatingAgent, HeroDiscoverAction
+    AnnotatingAgent, HeroDiscoverAction, Action
 from hearthstone.training.pytorch.encoding.default_encoder import \
     EncodedActionSet
 from hearthstone.training.pytorch.encoding.state_encoding import State, Encoder
-from hearthstone.training.pytorch.replay import ActorCriticGameStepInfo
+from hearthstone.training.pytorch.replay import ActorCriticGameStepInfo, ActorCriticGameStepDebugInfo
 
 logger = logging.getLogger(__name__)
 
@@ -26,49 +25,50 @@ class PytorchBot(AnnotatingAgent):
         if self.device:
             self.net.to(device)
 
-    def policy_and_value(self, player: 'Player') -> Tuple[Tensor, float]:
+    def act(self, player: 'Player', rearrange_cards: bool) -> (Action, ActorCriticGameStepInfo):
         encoded_state: State = self.encoder.encode_state(player).to(self.device)
-        valid_actions_mask: EncodedActionSet = self.encoder.encode_valid_actions(player).to(self.device)
-
-        policy, value = self.net(State(encoded_state.player_tensor.unsqueeze(0),
-                                       encoded_state.cards_tensor.unsqueeze(0)),
-                                 EncodedActionSet(valid_actions_mask.player_action_tensor.unsqueeze(0),
-                                                  valid_actions_mask.card_action_tensor.unsqueeze(0)))
-        return policy, value
-
-    async def annotated_buy_phase_action(self, player: 'Player') -> (StandardAction, ActorCriticGameStepInfo):
-        encoded_state: State = self.encoder.encode_state(player).to(self.device)
-        valid_actions_mask: EncodedActionSet = self.encoder.encode_valid_actions(player).to(self.device)
-        policy, value = self.net(State(encoded_state.player_tensor.unsqueeze(0),
-                                       encoded_state.cards_tensor.unsqueeze(0)),
-                                 EncodedActionSet(valid_actions_mask.player_action_tensor.unsqueeze(0),
-                                                  valid_actions_mask.card_action_tensor.unsqueeze(0)))
-        probs = torch.exp(policy[0])
-        action_index = Categorical(probs).sample()
-        action = self.encoder.get_indexed_action(int(action_index))
-
+        valid_actions_mask: EncodedActionSet = self.encoder.encode_valid_actions(player, rearrange_cards).to(self.device)
+        actions, action_log_probs, value, debug = self.net(State(encoded_state.player_tensor.unsqueeze(0),
+                                                                 encoded_state.cards_tensor.unsqueeze(0)),
+                                                           EncodedActionSet(
+                                                               valid_actions_mask.player_action_tensor.unsqueeze(0),
+                                                               valid_actions_mask.card_action_tensor.unsqueeze(0),
+                                                               valid_actions_mask.rearrange_phase.unsqueeze(0),
+                                                               valid_actions_mask.cards_to_rearrange.unsqueeze(0)),
+                                                           chosen_actions=None)
+        assert (len(actions) == 1)
+        action = actions[0]
         ac_game_step_info = None
         if self.annotate:
             ac_game_step_info = ActorCriticGameStepInfo(
                 state=encoded_state,
                 valid_actions=valid_actions_mask,
-                action=int(action_index),
-                policy=policy[0].detach(),
+                action=action,
+                action_log_prob=float(action_log_probs[0]),
                 value=float(value),
-                gae_info=None
+                gae_info=None,
+                debug=debug
             )
 
         return action, ac_game_step_info
 
-    # TODO handle learning card and discover choice actions
-    async def rearrange_cards(self, player: 'Player') -> RearrangeCardsAction:
-        return RearrangeCardsAction(list(range(len(player.in_play))))
+    async def annotated_buy_phase_action(self, player: 'Player') -> (StandardAction, ActorCriticGameStepInfo):
+        action, ac_game_step_info = self.act(player, False)
+        assert isinstance(action, StandardAction)
+        return action, ac_game_step_info
 
-    async def discover_choice_action(self, player: 'Player') -> DiscoverChoiceAction:
-        return DiscoverChoiceAction(random.choice(range(len(player.discover_queue[0]))))
+    async def annotated_rearrange_cards(self, player: 'Player') -> (RearrangeCardsAction, ActorCriticGameStepInfo):
+        action, ac_game_step_info = self.act(player, True)
+        assert isinstance(action, RearrangeCardsAction)
+        return action, ac_game_step_info
 
-    async def hero_discover_action(self, player: 'Player') -> 'HeroDiscoverAction':
-        return HeroDiscoverAction(random.choice(range(len(player.hero.discover_choices))))
+    async def annotated_discover_choice_action(self, player: 'Player') -> (DiscoverChoiceAction, ActorCriticGameStepInfo):
+        action, ac_game_step_info = self.act(player, False)
+        assert isinstance(action, DiscoverChoiceAction)
+        return action, ac_game_step_info
+
+    async def annotated_hero_discover_action(self, player: 'Player') -> ('HeroDiscoverAction', ActorCriticGameStepInfo):
+        return HeroDiscoverAction(random.choice(range(len(player.hero.discover_choices)))), None
 
     async def game_over(self, player: 'Player', ranking: int) -> Dict[str, Any]:
         return {'ranking': ranking}

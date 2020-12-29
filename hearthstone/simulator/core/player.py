@@ -3,7 +3,6 @@ import typing
 from typing import Optional, List, Callable, Type, Tuple
 
 from frozenlist.frozen_list import FrozenList
-
 from hearthstone.simulator.core import events
 from hearthstone.simulator.core.cards import MonsterCard
 from hearthstone.simulator.core.events import BuyPhaseContext, CardEvent
@@ -134,6 +133,8 @@ class Player:
     def valid_upgrade_tavern(self) -> bool:
         if self.dead:
             return False
+        if self.discover_queue:
+            return False
         if self.tavern_tier >= self.max_tier():
             return False
         if self.coins < self.tavern_upgrade_cost:
@@ -154,6 +155,8 @@ class Player:
 
     def valid_summon_from_hand(self, index: HandIndex, targets: Optional[List[BoardIndex]] = None) -> bool:
         if self.dead:
+            return False
+        if self.discover_queue:
             return False
         if targets is None:
             targets = []
@@ -192,16 +195,22 @@ class Player:
         self.draw_discover(lambda card: card.tier == discover_tier)
 
     def valid_triple_rewards(self) -> bool:
-        return bool(self.triple_rewards) and not self.dead
+        if self.dead:
+            return False
+        if self.discover_queue:
+            return False
+        return bool(self.triple_rewards)
 
     def draw_discover(self, predicate: Callable[['MonsterCard'], bool]): #TODO: Jarett help make discoverables unique are cards with more copies in the deck more likely to be discovered?
         discoverables = [card for card in self.tavern.deck.all_cards() if predicate(card)] # Jeremy says: Hmm, we can run out of unique cards.  Changed to be all cards for now.
         discovered_cards = []
         for _ in range(3):
-            discovered_cards.append(self.tavern.randomizer.select_discover_card(discoverables))
-            discoverables.remove(discovered_cards[-1])
-            self.tavern.deck.remove_card(discovered_cards[-1])
-        self.discover_queue.append(discovered_cards)
+            if discoverables:
+                discovered_cards.append(self.tavern.randomizer.select_discover_card(discoverables))
+                discoverables.remove(discovered_cards[-1])
+                self.tavern.deck.remove_card(discovered_cards[-1])
+        if discovered_cards:
+            self.discover_queue.append(discovered_cards)
 
     def select_discover(self, card_index: 'DiscoverIndex'):
         assert self.valid_select_discover(card_index)
@@ -243,6 +252,8 @@ class Player:
     def valid_purchase(self, index: 'StoreIndex') -> bool:
         if self.dead:
             return False
+        if self.discover_queue:
+            return False
         if not self.valid_store_index(index):
             return False
         if self.coins < self.minion_cost:
@@ -274,7 +285,11 @@ class Player:
         self.broadcast_buy_phase_event(events.RefreshStoreEvent())
 
     def valid_reroll(self) -> bool:
-        return (self.coins >= self.refresh_store_cost or self.free_refreshes >= 1) and not self.dead
+        if self.dead:
+            return False
+        if self.discover_queue:
+            return False
+        return self.coins >= self.refresh_store_cost or self.free_refreshes >= 1
 
     def return_cards(self, unfreeze: Optional[bool] = True):
         if unfreeze:
@@ -301,13 +316,21 @@ class Player:
         self.tavern.deck.return_cards(returned_cards)
 
     def valid_sell_minion(self, index: 'BoardIndex') -> bool:
-        return self.valid_board_index(index) and not self.dead
+        if self.dead:
+            return False
+        if self.discover_queue:
+            return False
+        return self.valid_board_index(index)
 
     def hero_power(self, board_index: Optional['BoardIndex'] = None, store_index: Optional['StoreIndex'] = None):
         self.hero.hero_power(BuyPhaseContext(self, self.tavern.randomizer), board_index, store_index)
 
     def valid_hero_power(self, board_target: Optional['BoardIndex'] = None, store_target: Optional['StoreIndex'] = None) -> bool:
-        return self.hero.hero_power_valid(BuyPhaseContext(self, self.tavern.randomizer), board_target, store_target) and not self.dead
+        if self.dead:
+            return False
+        if self.discover_queue:
+            return False
+        return self.hero.hero_power_valid(BuyPhaseContext(self, self.tavern.randomizer), board_target, store_target)
 
     def broadcast_buy_phase_event(self, event: 'CardEvent', randomizer: Optional['Randomizer'] = None):
         self.hero.handle_event(event, BuyPhaseContext(self, randomizer or self.tavern.randomizer))
@@ -319,7 +342,11 @@ class Player:
                 card.handle_event_in_hand(event, BuyPhaseContext(self, randomizer or self.tavern.randomizer))
 
     def valid_rearrange_cards(self, permutation: List[int]) -> bool:
-        return len(permutation) == len(self.in_play) and set(permutation) == set(range(len(self.in_play))) and not self.dead
+        if self.dead:
+            return False
+        if self.discover_queue:
+            return False
+        return len(permutation) == len(self.in_play) and set(permutation) == set(range(len(self.in_play)))
 
     def rearrange_cards(self, permutation: List[int]):
         assert self.valid_rearrange_cards(permutation)
@@ -432,13 +459,15 @@ class Player:
     def valid_use_banana(self, board_index: Optional['BoardIndex'] = None, store_index: Optional['StoreIndex'] = None) -> bool:
         if self.dead:
             return False
+        if self.discover_queue:
+            return False
         if self.bananas <= 0:
             return False
         if board_index == store_index:
             return False
-        if board_index is not None and not self.in_play:
+        if board_index is not None and not self.valid_board_index(board_index):
             return False
-        if store_index is not None and not self.store:
+        if store_index is not None and not self.valid_store_index(store_index):
             return False
         return True
 
@@ -463,7 +492,9 @@ class Player:
         self.hero.select_discover(discover_index)
 
     def valid_hero_select_discover(self, discover_index: 'DiscoverIndex'):
-        return self.hero.valid_select_discover(discover_index) and not self.dead
+        if self.dead:
+            return False
+        return self.hero.valid_select_discover(discover_index)
 
     def current_build(self) -> Tuple[Optional['MONSTER_TYPES'], Optional[int]]:
         cards_by_type = {monster_type.name: 0 for monster_type in MONSTER_TYPES.single_types()}
