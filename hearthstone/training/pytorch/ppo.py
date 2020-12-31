@@ -27,7 +27,7 @@ from hearthstone.training.pytorch.networks.save_load import create_net, load_fro
 from hearthstone.training.pytorch.normalization import ObservationNormalizer, PPONormalizer
 from hearthstone.training.pytorch.policy_gradient import tensorize_batch, easy_contestants, easiest_contestants, \
     easier_contestants
-from hearthstone.training.pytorch.pytorch_bot import PytorchBot
+from hearthstone.training.pytorch.agents.pytorch_bot import PytorchBot
 from hearthstone.training.pytorch.replay import ActorCriticGameStepInfo
 from hearthstone.training.pytorch.replay_buffer import EpochBuffer
 from hearthstone.training.pytorch.surveillance import GlobalStepContext
@@ -67,8 +67,8 @@ class PPOLearner(GlobalStepContext):
 
         # Encoder is shared to reuse tensors passed between processes
         self.encoder = DefaultEncoder()
-        if self.hparams['parallelism.method'] == "process":
-            self.encoder = SharedTensorPoolEncoder(self.encoder)
+        if self.hparams['parallelism.method'] in ("process", "batch"):
+            self.encoder = SharedTensorPoolEncoder(self.encoder, self.hparams['parallelism.method']=="process")
 
     def get_global_step(self) -> int:
         return self.global_step
@@ -373,7 +373,9 @@ class PPOLearner(GlobalStepContext):
                                      self.encoder,
                                      tensorboard,
                                      self,
-                                     self.hparams['parallelism.method'] == "process"
+                                     self.hparams['parallelism.method'] == "process",
+                                     self.hparams['parallelism.method'] == "batch",
+                                     self.get_device(),
                                      )
 
         for _ in range(1000000):
@@ -396,8 +398,12 @@ class PPOLearner(GlobalStepContext):
                                      self.hparams["normalize_advantage"])
                     if stop_early:
                         break
-
-                replay_buffer.recycle(shared_tensor_pool_encoder.global_tensor_queue)
+                if self.hparams['parallelism.method'] =="process":
+                    replay_buffer.recycle(shared_tensor_pool_encoder.global_process_tensor_queue)
+                elif self.hparams['parallelism.method'] == "batch":
+                    replay_buffer.recycle(shared_tensor_pool_encoder.global_thread_tensor_queue)
+                else:
+                    replay_buffer.clear()
 
             time_elapsed = int(time.time() - start_time)
             tensorboard.add_scalar("rating/elo", learning_bot_contestant.elo, global_step=self.global_step)

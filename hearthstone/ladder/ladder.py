@@ -5,7 +5,7 @@ from typing import List, Callable
 
 import trueskill
 
-from hearthstone.simulator.agent import Agent, AnnotatingAgent
+from hearthstone.simulator.agent import AnnotatingAgent
 from hearthstone.battlebots.cheapo_bot import CheapoBot
 from hearthstone.battlebots.get_bot_contestants import get_priority_bot_contestant_tuples, \
     get_priority_heuristics_bot_contestant_tuples
@@ -14,11 +14,10 @@ from hearthstone.battlebots.random_bot import RandomBot
 from hearthstone.battlebots.saurolisk_bot import SauroliskBot
 from hearthstone.battlebots.supremacy_bot import SupremacyBot
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
-import hearthstone.simulator.core.hero_pool
 from hearthstone.simulator.host.round_robin_host import RoundRobinHost
 from hearthstone.training.pytorch.encoding.default_encoder import DefaultEncoder
 from hearthstone.training.pytorch.networks.save_load import load_from_saved
-from hearthstone.training.pytorch.pytorch_bot import PytorchBot
+from hearthstone.training.pytorch.agents.pytorch_bot import PytorchBot
 
 
 class ContestantAgentGenerator:

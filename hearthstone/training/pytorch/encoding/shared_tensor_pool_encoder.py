@@ -1,3 +1,4 @@
+import collections
 import queue
 from typing import List, Optional
 
@@ -15,24 +16,33 @@ import numpy as np
 from hearthstone.training.pytorch.replay import ActorCriticGameStepInfo
 
 # A global singleton queue, since multiprocessing can't handle passing the queue through as a function argument.
-global_tensor_queue: queue.Queue = torch.multiprocessing.Queue()
+global_process_tensor_queue: queue.Queue = torch.multiprocessing.Queue()
+
+global_thread_tensor_queue: collections.deque = collections.deque()
 
 class SharedTensorPoolEncoder(Encoder):
-    def __init__(self, base_encoder: Encoder):
+    def __init__(self, base_encoder: Encoder, multiprocess: bool):
         self.base_encoder: Encoder = base_encoder
+        self.multiprocess: bool = multiprocess
         # Pools of tensors to reuse
         self._states_pool: List[State] = []
         self._valid_actions_pool: List[EncodedActionSet] = []
 
     def _fill_from_queue(self):
-        global global_tensor_queue
+        global global_process_tensor_queue
+        global global_thread_tensor_queue
         if self._states_pool and self._valid_actions_pool:
             return
         try:
-            game_step_info: ActorCriticGameStepInfo = global_tensor_queue.get_nowait()
+            if self.multiprocess:
+                game_step_info: ActorCriticGameStepInfo = global_process_tensor_queue.get_nowait()
+            else:
+                game_step_info: ActorCriticGameStepInfo = global_thread_tensor_queue.popleft()
         except queue.Empty:
             return
         except AttributeError:
+            return
+        except IndexError:
             return
         self._states_pool.append(game_step_info.state)
         self._valid_actions_pool.append(game_step_info.valid_actions)
@@ -48,13 +58,15 @@ class SharedTensorPoolEncoder(Encoder):
         else:
             return base_state
 
-    def encode_valid_actions(self, player: Player) -> EncodedActionSet:
-        base_action_set: EncodedActionSet = self.base_encoder.encode_valid_actions(player)
+    def encode_valid_actions(self, player: Player, rearrange_phase: bool = False) -> EncodedActionSet:
+        base_action_set: EncodedActionSet = self.base_encoder.encode_valid_actions(player, rearrange_phase)
         self._fill_from_queue()
         if self._valid_actions_pool:
             reused_action_set = self._valid_actions_pool.pop()
-            reused_action_set.player_action_tensor[:] = base_action_set.player_action_tensor
-            reused_action_set.card_action_tensor[:] = base_action_set.card_action_tensor
+            reused_action_set.player_action_tensor.copy_(base_action_set.player_action_tensor)
+            reused_action_set.card_action_tensor.copy_(base_action_set.card_action_tensor)
+            reused_action_set.rearrange_phase.copy_(base_action_set.rearrange_phase)
+            reused_action_set.cards_to_rearrange.copy_(base_action_set.cards_to_rearrange)
             return reused_action_set
         else:
             return base_action_set

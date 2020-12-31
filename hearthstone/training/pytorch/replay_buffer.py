@@ -1,7 +1,8 @@
+import collections
 import logging
 import random
 from queue import Queue
-from typing import List, Generator, Optional
+from typing import List, Generator, Optional, Union
 
 from hearthstone.simulator.replay.replay import Replay
 from hearthstone.training.pytorch.normalization import ObservationNormalizer
@@ -29,9 +30,12 @@ class EpochBuffer:
     def clear(self):
         self.transitions.clear()
 
-    def recycle(self, queue: Queue):
+    def recycle(self, queue: Union[Queue, collections.deque]):
         for transition in self.transitions:
-            queue.put_nowait(transition)
+            if isinstance(queue, collections.deque):
+                queue.append(transition)
+            else:
+                queue.put_nowait(transition)
         self.clear()
 
     def add_replay(self, replay: Replay):
