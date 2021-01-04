@@ -2,7 +2,7 @@ import copy
 import logging
 from typing import Union, Tuple, Optional
 
-from hearthstone.simulator.core import combat, events
+from hearthstone.simulator.core import combat, events, hero
 from hearthstone.simulator.core.card_pool import Amalgam, EmperorCobra, Snake, FishOfNZoth
 from hearthstone.simulator.core.cards import one_minion_per_type, CardLocation
 from hearthstone.simulator.core.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
@@ -776,7 +776,13 @@ class SirFinleyMrrgglton(Hero):
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_START and context.owner.tavern.turn_count == 0:
-            self.discover_choices.extend(context.owner.tavern.select_three_heroes())
+            hero_pool = [hero_type() for hero_type in hero.VALHALLA if (hero_type.pool in context.owner.tavern.available_types or hero_type.pool == MONSTER_TYPES.ALL) and hero_type != type(self)]
+            hero_choices = []
+            for _ in range(3):
+                random_hero = context.randomizer.select_hero(hero_pool)
+                hero_choices.append(random_hero)
+                hero_pool.remove(random_hero)
+            self.discover_choices.extend(hero_choices)
             self.player = context.owner
 
     def select_discover(self, discover_index: 'DiscoverIndex'):

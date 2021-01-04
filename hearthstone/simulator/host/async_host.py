@@ -55,7 +55,7 @@ class AsyncHost(Host):
                     if type(action) is EndPhaseAction:
                         break
             if len(player.in_play) > 1:
-                rearrange_action, agent_annotation = await agent.rearrange_cards(player)
+                rearrange_action, agent_annotation = await agent.annotated_rearrange_cards(player)
                 self._apply_and_record(player_name, rearrange_action, agent_annotation)
 
         perform_player_action_tasks = []

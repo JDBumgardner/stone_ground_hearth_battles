@@ -3677,6 +3677,16 @@ class CardTests(unittest.TestCase):
         tavern.buying_step()
         self.assertCardListEquals(player_1.in_play, [FishOfNZoth])
 
+    def test_mrrgglton_can_duplicate_hero(self):
+        tavern = Tavern(restrict_types=False)
+        tavern.randomizer = self.TestMrrggltonRatKingRandomizer()
+        player_1 = tavern.add_player_with_hero("Dante_Kong", SirFinleyMrrgglton())
+        player_2 = tavern.add_player_with_hero("lucy", TheRatKing())
+        tavern.buying_step()
+        self.assertEqual(type(player_1.hero), SirFinleyMrrgglton)
+        player_1.hero_select_discover(DiscoverIndex(0))
+        self.assertEqual(type(player_1.hero), TheRatKing)
+
 
 if __name__ == '__main__':
     unittest.main()
