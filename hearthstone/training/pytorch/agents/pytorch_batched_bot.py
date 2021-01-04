@@ -23,9 +23,8 @@ class BatchedInferencePytorchBot(AnnotatingAgent):
         self.device = device
 
     def act(self, player: 'Player', rearrange_cards: bool) -> (Action, ActorCriticGameStepInfo):
-        encoded_state: State = self.encoder.encode_state(player).to(self.device)
-        valid_actions_mask: EncodedActionSet = self.encoder.encode_valid_actions(player, rearrange_cards).to(
-            self.device)
+        encoded_state: State = self.encoder.encode_state(player)
+        valid_actions_mask: EncodedActionSet = self.encoder.encode_valid_actions(player, rearrange_cards)
         future = self.queue.infer(self.net_name,
                                   State(encoded_state.player_tensor.unsqueeze(0),
                                         encoded_state.cards_tensor.unsqueeze(0)),
@@ -157,7 +156,7 @@ class BatchedInferenceQueue:
                                 )
                                 ))
             self.communication_event.wait(1)
-            if self.done_event.set():
+            if self.done_event.is_set():
                 return
 
     def start_worker_thread(self):

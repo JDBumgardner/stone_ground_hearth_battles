@@ -35,25 +35,25 @@ class SharedTensorPoolEncoder(Encoder):
             return
         try:
             if self.multiprocess:
-                game_step_info: ActorCriticGameStepInfo = global_process_tensor_queue.get_nowait()
+                state, valid_actions = global_process_tensor_queue.get_nowait()
             else:
-                game_step_info: ActorCriticGameStepInfo = global_thread_tensor_queue.popleft()
+                state, valid_actions = global_thread_tensor_queue.popleft()
         except queue.Empty:
             return
         except AttributeError:
             return
         except IndexError:
             return
-        self._states_pool.append(game_step_info.state)
-        self._valid_actions_pool.append(game_step_info.valid_actions)
+        self._states_pool.append(state)
+        self._valid_actions_pool.append(valid_actions)
 
     def encode_state(self, player: Player) -> State:
         base_state = self.base_encoder.encode_state(player)
         self._fill_from_queue()
         if self._states_pool:
             reused_state = self._states_pool.pop()
-            reused_state.player_tensor[:] = base_state.player_tensor
-            reused_state.cards_tensor[:] = base_state.cards_tensor
+            reused_state.player_tensor.copy_(base_state.player_tensor).detach_()
+            reused_state.cards_tensor.copy_(base_state.cards_tensor).detach_()
             return reused_state
         else:
             return base_state
@@ -63,10 +63,10 @@ class SharedTensorPoolEncoder(Encoder):
         self._fill_from_queue()
         if self._valid_actions_pool:
             reused_action_set = self._valid_actions_pool.pop()
-            reused_action_set.player_action_tensor.copy_(base_action_set.player_action_tensor)
-            reused_action_set.card_action_tensor.copy_(base_action_set.card_action_tensor)
-            reused_action_set.rearrange_phase.copy_(base_action_set.rearrange_phase)
-            reused_action_set.cards_to_rearrange.copy_(base_action_set.cards_to_rearrange)
+            reused_action_set.player_action_tensor.copy_(base_action_set.player_action_tensor).detach_()
+            reused_action_set.card_action_tensor.copy_(base_action_set.card_action_tensor).detach_()
+            reused_action_set.rearrange_phase.copy_(base_action_set.rearrange_phase).detach_()
+            reused_action_set.cards_to_rearrange.copy_(base_action_set.cards_to_rearrange).detach_()
             return reused_action_set
         else:
             return base_action_set

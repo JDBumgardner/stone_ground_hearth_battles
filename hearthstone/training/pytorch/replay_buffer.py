@@ -33,9 +33,9 @@ class EpochBuffer:
     def recycle(self, queue: Union[Queue, collections.deque]):
         for transition in self.transitions:
             if isinstance(queue, collections.deque):
-                queue.append(transition)
+                queue.append((transition.state, transition.valid_actions))
             else:
-                queue.put_nowait(transition)
+                queue.put_nowait((transition.state, transition.valid_actions))
         self.clear()
 
     def add_replay(self, replay: Replay):

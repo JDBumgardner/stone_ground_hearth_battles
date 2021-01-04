@@ -43,7 +43,8 @@ class TransformerEncoderPostNormLayer(nn.Module):
             state['activation'] = F.relu
         super().__setstate__(state)
 
-    def forward(self, src, src_mask=None, src_key_padding_mask=None):
+    def forward(self, src, src_mask: Optional[torch.Tensor] = None,
+                src_key_padding_mask: Optional[torch.Tensor] = None):
         norm_src = self.norm1(src)
 
         src2 = self.self_attn(norm_src, norm_src, norm_src, attn_mask=src_mask,
@@ -73,6 +74,8 @@ class TransformerWithContextEncoder(nn.Module):
         self._reset_parameters()
 
     def forward(self, state: State) -> Tuple[torch.Tensor, torch.Tensor]:
+        if not isinstance(state, State):
+            state = State(state[0], state[1])
         player_rep = self.fc_player(state.player_tensor).unsqueeze(1)
         card_rep = state.cards_tensor
         if self.redundant:
@@ -107,6 +110,10 @@ class HearthstoneTransformerNet(nn.Module):
             self.player_hidden_size = encoding.player_encoding().size()[0]
             self.card_hidden_size = encoding.cards_encoding().size()[1]
 
+        # dummy_state = State(
+        #     torch.zeros((1, *encoding.player_encoding().size())),
+        #     torch.zeros((1,*encoding.cards_encoding().size()))
+        # )
         self.policy_encoder = TransformerWithContextEncoder(encoding, hidden_size, hidden_layers,
                                                             activation_function, redundant=redundant)
         if shared:

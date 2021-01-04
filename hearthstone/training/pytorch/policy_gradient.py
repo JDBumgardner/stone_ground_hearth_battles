@@ -84,7 +84,7 @@ class TransitionBatch(NamedTuple):
     gae_return: torch.Tensor
     retn: torch.Tensor
     reward: torch.Tensor
-    is_terminal: torch.BoolTensor
+    is_terminal: torch.Tensor  # Boolean
     debug_component_policy: torch.Tensor
 
 # TODO: Delete all of this

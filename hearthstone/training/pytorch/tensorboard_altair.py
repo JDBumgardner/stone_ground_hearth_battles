@@ -122,10 +122,11 @@ def _player_action_chart(action_probs: List[List[float]], max_size: int):
 
 
 def calc_action_probs(policy: torch.Tensor, valid_actions: EncodedActionSet, store: List[str], hand: List[str], board:List[str]) -> (List, List, List, List):
-    encoder = DefaultEncoder()
-    flat_valid_actions = torch.cat((valid_actions.player_action_tensor.flatten(0), valid_actions.card_action_tensor.flatten(0)), dim=0)
-    policy = policy.detach().masked_fill(flat_valid_actions.logical_not(), -1e30).squeeze().exp()
-    basic_action_probs = [float(policy[encoder.get_action_index(action)]) for action in
+    with torch.no_grad():
+        encoder = DefaultEncoder()
+        flat_valid_actions = torch.cat((valid_actions.player_action_tensor.flatten(0), valid_actions.card_action_tensor.flatten(0)), dim=0)
+        policy = policy.to("cpu").masked_fill(flat_valid_actions.to("cpu").logical_not(), -1e30).squeeze().exp()
+        basic_action_probs = [float(policy[encoder.get_action_index(action)]) for action in
                           default_encoder.ALL_ACTIONS.player_action_set]
 
     action_probs = defaultdict(lambda: 0.0)

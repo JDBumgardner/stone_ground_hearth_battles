@@ -2,13 +2,13 @@ import itertools
 import typing
 from typing import Any, List, Optional, Generator
 
+import torch
+
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 from hearthstone.simulator.core.player import StoreIndex, HandIndex, BoardIndex, HeroChoiceIndex, DiscoverIndex
 
-if typing.TYPE_CHECKING:
-    from hearthstone.simulator.core.hero import Hero
-    from hearthstone.simulator.core.tavern import Player
 
+from hearthstone.simulator.core.tavern import Player
 
 class Action:
     def apply(self, player: 'Player'):

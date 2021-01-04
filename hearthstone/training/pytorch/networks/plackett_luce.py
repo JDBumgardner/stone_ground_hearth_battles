@@ -18,8 +18,8 @@ class PlackettLuce(Distribution):
         self.permutation_sizes: torch.Tensor = permutation_sizes
         # Mask is true for invalid indices
         with torch.no_grad():
-            self.mask: torch.Tensor = torch.zeros(
-                *logits.shape[:-1], logits.shape[-1] + 1, device=logits.device).scatter(-1,
+            self.mask: torch.Tensor = torch.zeros((
+                *logits.shape[:-1], logits.shape[-1] + 1), device=logits.device).scatter(-1,
                                                                   permutation_sizes.unsqueeze(-1),
                                                                   1)[...,
                                       :-1].cumsum(

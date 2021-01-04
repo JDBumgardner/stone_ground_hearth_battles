@@ -22,7 +22,7 @@ class State(NamedTuple):
 
 class Transition(NamedTuple):
     state: State
-    valid_actions: torch.BoolTensor
+    valid_actions: torch.Tensor  # Boolean
     action: int  # Index of the action
     action_prob: float
     value: float
@@ -164,10 +164,10 @@ class SortedByValueFeature(Feature):
 
 
 class EncodedActionSet(NamedTuple):
-    player_action_tensor: torch.BoolTensor
-    card_action_tensor: torch.BoolTensor
-    rearrange_phase: torch.BoolTensor
-    cards_to_rearrange: torch.IntTensor  # Start and length index
+    player_action_tensor: torch.Tensor  # Boolean
+    card_action_tensor: torch.Tensor  # Boolean
+    rearrange_phase: torch.Tensor  # Boolean
+    cards_to_rearrange: torch.Tensor  # Start and length index as integers
 
     def to(self, device: torch.device):
         if device:

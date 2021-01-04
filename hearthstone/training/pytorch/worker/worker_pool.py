@@ -64,7 +64,7 @@ class WorkerPool:
                 torch.set_num_threads(1)  # This is really important, otherwise OpenMP messes things up.
                 shared_tensor_pool_encoder.gloabal_tensor_queue = q
 
-            self.pool = torch.multiprocessing.Pool(initializer=setup_worker_process(),
+            self.pool = torch.multiprocessing.Pool(initializer=setup_worker_process,
                                               initargs=(shared_tensor_pool_encoder.global_process_tensor_queue,),
                                               processes=num_workers)
         else:
@@ -89,8 +89,8 @@ class WorkerPool:
             return promise.result()
 
     def play_games(self, learning_bot_contestant: Contestant, other_contestants: List[Contestant], game_size: int):
-        # num_torch_threads = torch.get_num_threads()
-        # torch.set_num_threads(1)
+        num_torch_threads = torch.get_num_threads()
+        torch.set_num_threads(1)
 
         all_contestants = [learning_bot_contestant] + other_contestants
 
@@ -126,8 +126,9 @@ class WorkerPool:
                                                self.global_step_context)
                 self._update_ratings(learning_bot_contestant, all_contestants, replay)
                 self.epoch_buffer.add_replay(replay)
-            batched_inference_queue.kill_worker_thread()
-        # torch.set_num_threads(num_torch_threads)
+            if self.use_batched_inference:
+                batched_inference_queue.kill_worker_thread()
+        torch.set_num_threads(num_torch_threads)
         if self.use_batched_inference:
             for contestant, original_agent in zip(all_contestants, original_agents):
                 contestant.agent_generator = original_agent

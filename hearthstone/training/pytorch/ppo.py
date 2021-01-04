@@ -63,6 +63,8 @@ class PPOLearner(GlobalStepContext):
         # Number of games we have plotted
         self.games_plotted = 0
 
+        # global_step at time of last model export.
+        self.last_exported_step = 0
         self.export_path = "../../../data/learning/pytorch/saved_models/{}".format(self.hparams['export.path'])
 
         # Encoder is shared to reuse tensors passed between processes
@@ -156,11 +158,6 @@ class PPOLearner(GlobalStepContext):
 
         value_loss = torch.max(value_error.pow(2), clipped_value_error.pow(2)).mean()
 
-        # Here we compute the policy only for actions which are valid.
-        valid_action_tensor = torch.cat(
-            (transition_batch.valid_actions.player_action_tensor.flatten(1),
-             transition_batch.valid_actions.card_action_tensor.flatten(1)), dim=1)
-
         entropy_loss = (entropy_weight * action_log_probs).mean()
         main_dist_kl_divergence = (debug.component_policy.exp() * (
                     debug.component_policy - transition_batch.debug_component_policy)).sum(dim=1).mean()
@@ -244,8 +241,9 @@ class PPOLearner(GlobalStepContext):
         tavern.buying_step()
         player = list(tavern.players.values())[0]
 
-        encoded_state: State = encode_player(player, self.get_device())
-        valid_actions_mask: EncodedActionSet = encode_valid_actions(player, self.get_device())
+        encoder = DefaultEncoder()
+        encoded_state: State = encoder.encode_state(player).to(self.get_device())
+        valid_actions_mask: EncodedActionSet = encoder.encode_valid_actions(player).to(self.get_device())
 
         tensorboard.add_graph(learning_net, input_to_model=(State(encoded_state.player_tensor.unsqueeze(0),
                                                                   encoded_state.cards_tensor.unsqueeze(0)),
@@ -280,8 +278,9 @@ class PPOLearner(GlobalStepContext):
         assert False
 
     def handle_export(self, learning_bot_contestant: Contestant, learning_net, other_contestants):
-        if self.global_step % self.hparams['export.period_epochs'] == 0:
+        if self.global_step > self.last_exported_step + self.hparams['export.period_epochs']:
             if self.hparams['export.enabled']:
+                self.last_exported_step = self.global_step
                 state_dict = learning_net.state_dict()
                 torch.save(state_dict, "{}/{}".format(self.export_path, str(self.global_step)))
                 if self.hparams['opponents.self_play.enabled']:
@@ -386,6 +385,7 @@ class PPOLearner(GlobalStepContext):
                 Worker(learning_bot_contestant, other_contestants, self.hparams['game_size'], replay_buffer,
                        gae_annotator, tensorboard, self).play_game()
             if len(replay_buffer) >= batch_size:
+                print(len(replay_buffer))
                 learning_net.train()
                 print(f"Running {self.hparams['ppo_epochs']} epochs of PPO optimization...")
                 for i in range(self.hparams["ppo_epochs"]):
@@ -398,10 +398,11 @@ class PPOLearner(GlobalStepContext):
                                      self.hparams["normalize_advantage"])
                     if stop_early:
                         break
-                if self.hparams['parallelism.method'] =="process":
+                if self.hparams['parallelism.method'] == "process":
                     replay_buffer.recycle(shared_tensor_pool_encoder.global_process_tensor_queue)
                 elif self.hparams['parallelism.method'] == "batch":
-                    replay_buffer.recycle(shared_tensor_pool_encoder.global_thread_tensor_queue)
+                    # replay_buffer.recycle(shared_tensor_pool_encoder.global_thread_tensor_queue)
+                    replay_buffer.clear()
                 else:
                     replay_buffer.clear()
 
@@ -429,7 +430,7 @@ class PPOLearner(GlobalStepContext):
 def main():
     ppo_learner = PPOLearner(PPOHyperparameters({
         "resume": False,
-        'resume.from': '2020-10-18T02:14:22.530381',
+        'resume.from': '2021-01-02T01:27:39.587254',
         'export.enabled': True,
         'export.period_epochs': 200,
         'export.path': datetime.now().isoformat(),
@@ -439,30 +440,30 @@ def main():
         'opponents.self_play.remove_weakest': False,
         'opponents.max_pool_size': 7,
         'adam_lr': 0.0001,
-        'batch_size': 1024,
-        'minibatch_size': 1024,
+        'batch_size': 512,
+        'minibatch_size': 512,
         'cuda': True,
         'entropy_weight': 0.001,
         'gae_gamma': 0.999,
         'gae_lambda': 0.9,
-        'game_size': 2,
+        'game_size': 8,
         'gradient_clipping': 0.5,
         'approx_kl_limit': 0.015,
         'nn.architecture': 'transformer',
         'nn.state_encoder': 'Default',
-        'nn.hidden_layers': 1,
-        'nn.hidden_size': 32,
+        'nn.hidden_layers': 2,
+        'nn.hidden_size': 64,
         'nn.activation': 'gelu',
         'nn.shared': False,
         'nn.encoding.redundant': True,
         'normalize_advantage': True,
         'normalize_observations': False,
-        'parallelism.num_workers': 1,
-        'parallelism.method': None,
+        'parallelism.num_workers': 64,
+        'parallelism.method': "batch",
         'optimizer': 'adam',
         'policy_weight': 0.581166675499831,
         'ppo_epochs': 8,
-        'ppo_epsilon': 0.1}))
+        'ppo_epsilon': 0.2}))
 
     ppo_learner.run()
 
