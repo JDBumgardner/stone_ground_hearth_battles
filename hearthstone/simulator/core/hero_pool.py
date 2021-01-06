@@ -14,7 +14,7 @@ from hearthstone.simulator.core.triple_reward_card import TripleRewardCard
 
 
 class Pyramad(Hero):
-    power_cost = 1
+    base_power_cost = 1
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
@@ -24,7 +24,7 @@ class Pyramad(Hero):
 
 
 class LordJaraxxus(Hero):
-    power_cost = 1
+    base_power_cost = 1
     pool = MONSTER_TYPES.DEMON
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
@@ -62,7 +62,7 @@ class MillificentManastorm(Hero):
 
 
 class YoggSaron(Hero):
-    power_cost = 2
+    base_power_cost = 2
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
@@ -82,7 +82,7 @@ class YoggSaron(Hero):
 
 
 class PatchesThePirate(Hero):
-    power_cost = 3
+    base_power_cost = 3
     pool = MONSTER_TYPES.PIRATE
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
@@ -141,7 +141,7 @@ class KaelthasSunstrider(Hero):
 
 
 class LichBazhial(Hero):
-    power_cost = 0
+    base_power_cost = 0
 
     def hero_power_valid_impl(self, context: BuyPhaseContext, board_index: Optional['BoardIndex'] = None,
                               store_index: Optional['StoreIndex'] = None):
@@ -154,7 +154,7 @@ class LichBazhial(Hero):
 
 
 class SkycapnKragg(Hero):
-    power_cost = 0
+    base_power_cost = 0
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
@@ -213,7 +213,7 @@ class MillhouseManastorm(Hero):
 
 
 class CaptainEudora(Hero):
-    power_cost = 1
+    base_power_cost = 1
 
     def __init__(self):
         super().__init__()
@@ -240,7 +240,7 @@ class CaptainEudora(Hero):
 
 
 class QueenWagtoggle(Hero):
-    power_cost = 1
+    base_power_cost = 1
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
@@ -256,7 +256,7 @@ class ForestWardenOmu(Hero):
 
 
 class GeorgeTheFallen(Hero):
-    power_cost = 2
+    base_power_cost = 2
     power_target_location = [CardLocation.BOARD]
 
     def hero_power_valid_impl(self, context: BuyPhaseContext, board_index: Optional['BoardIndex'] = None,
@@ -269,7 +269,7 @@ class GeorgeTheFallen(Hero):
 
 
 class RenoJackson(Hero):
-    power_cost = 0
+    base_power_cost = 0
     power_target_location = [CardLocation.BOARD]
 
     def __init__(self):
@@ -293,7 +293,7 @@ class RenoJackson(Hero):
 
 
 class JandiceBarov(Hero):
-    power_cost = 0
+    base_power_cost = 0
     power_target_location = [CardLocation.BOARD]
 
     def hero_power_valid_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
@@ -310,7 +310,7 @@ class JandiceBarov(Hero):
 
 
 class ArchVillianRafaam(Hero):
-    power_cost = 1
+    base_power_cost = 1
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.DIES and event.card in context.enemy_war_party.board and self.hero_power_used:
@@ -321,7 +321,7 @@ class ArchVillianRafaam(Hero):
 
 
 class CaptainHooktusk(Hero):
-    power_cost = 1
+    base_power_cost = 1
     power_target_location = [CardLocation.BOARD]
 
     def hero_power_valid_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
@@ -338,7 +338,7 @@ class CaptainHooktusk(Hero):
 
 
 class Malygos(Hero):
-    power_cost = 0
+    base_power_cost = 0
     power_target_location = [CardLocation.BOARD, CardLocation.STORE]  # TODO: are there other hero powers with multiple target locations?
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
@@ -369,7 +369,7 @@ class AFKay(Hero):
 
 
 class EdwinVanCleef(Hero):
-    power_cost = 1
+    base_power_cost = 1
     power_target_location = [CardLocation.BOARD]  # TODO: can this target minions in the store?
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
@@ -395,7 +395,7 @@ class ArannaStarseeker(Hero):
 
 
 class DinotamerBrann(Hero):
-    power_cost = 1
+    base_power_cost = 1
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
@@ -417,7 +417,7 @@ class Alexstrasza(Hero):
 
 
 class KingMukla(Hero):
-    power_cost = 1
+    base_power_cost = 1
 
     def hero_power_valid_impl(self, context: BuyPhaseContext, board_index: Optional['BoardIndex'] = None,
                               store_index: Optional['StoreIndex'] = None):
@@ -439,7 +439,7 @@ class KingMukla(Hero):
 
 
 class EliseStarseeker(Hero):
-    power_cost = 2
+    base_power_cost = 2
     multiple_power_uses_per_turn = True
 
     def __init__(self):
@@ -497,8 +497,8 @@ class RagnarosTheFirelord(Hero):
 
     def __init__(self):
         super().__init__()
-        minions_killed = 0
-        sulfuras = False
+        self.minions_killed = 0
+        self.sulfuras = False
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.DIES and event.card in context.enemy_war_party.board:
@@ -515,7 +515,7 @@ class RagnarosTheFirelord(Hero):
 
 
 class Rakanishu(Hero):
-    power_cost = 2
+    base_power_cost = 2
     power_target_location = [CardLocation.BOARD]
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
@@ -555,7 +555,7 @@ class Sindragosa(Hero):
 
 
 class Galakrond(Hero):
-    power_cost = 0
+    base_power_cost = 0
     power_target_location = [CardLocation.STORE]
 
     def hero_power_valid_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
@@ -572,7 +572,7 @@ class Galakrond(Hero):
 
 
 class InfiniteToki(Hero):
-    power_cost = 1
+    base_power_cost = 1
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
@@ -589,7 +589,7 @@ class InfiniteToki(Hero):
 
 
 class TheLichKing(Hero):
-    power_cost = 0
+    base_power_cost = 0
     power_target_location = [CardLocation.BOARD]
 
     def __init__(self):
@@ -618,7 +618,7 @@ class TheLichKing(Hero):
 
 
 class TessGreymane(Hero):
-    power_cost = 1
+    base_power_cost = 1
 
     def __init__(self):
         super().__init__()
@@ -644,7 +644,7 @@ class TessGreymane(Hero):
 
 
 class Shudderwock(Hero):
-    power_cost = 1
+    base_power_cost = 1
 
     def __init__(self):
         super().__init__()
@@ -665,9 +665,10 @@ class Shudderwock(Hero):
 
 
 class TheGreatAkazamzarak(Hero):
-    power_cost = 1
+    base_power_cost = 1
 
     def __init__(self):
+        super().__init__()
         self.secrets = []
 
     def hero_power_valid_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
@@ -764,7 +765,7 @@ class IllidanStormrage(Hero):
 
 
 class ZephrysTheGreat(Hero):
-    power_cost = 3
+    base_power_cost = 3
 
     def __init__(self):
         super().__init__()
@@ -831,7 +832,7 @@ class SirFinleyMrrgglton(Hero):
 
 
 class LordBarov(Hero):
-    power_cost = 1
+    base_power_cost = 1
 
     def __init__(self):
         super().__init__()
@@ -865,7 +866,7 @@ class LordBarov(Hero):
 
 
 class MaievShadowsong(Hero):
-    power_cost = 1
+    base_power_cost = 1
     power_target_location = [CardLocation.STORE]
 
     def __init__(self):
@@ -894,7 +895,7 @@ class MaievShadowsong(Hero):
 
 
 class CThun(Hero):
-    power_cost = 2
+    base_power_cost = 2
 
     def __init__(self):
         super().__init__()
@@ -916,7 +917,7 @@ class CThun(Hero):
 
 
 class YShaarj(Hero):
-    power_cost = 2
+    base_power_cost = 2
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.COMBAT_START and self.hero_power_used and context.friendly_war_party.room_on_board():  # TODO: order of this vs other start of combat effects?

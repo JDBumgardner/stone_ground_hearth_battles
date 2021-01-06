@@ -16,7 +16,7 @@ HeroType = make_metaclass(VALHALLA.append, ("Hero", "EmptyHero"))
 
 
 class Hero(metaclass=HeroType):
-    power_cost: Optional[int] = None  # default value is for heroes with passive hero powers
+    base_power_cost: Optional[int] = None  # default value is for heroes with passive hero powers
     hero_power_used = False
     can_use_power = True
     power_target_location: Optional[List['CardLocation']] = None
@@ -25,6 +25,7 @@ class Hero(metaclass=HeroType):
     give_immunity = False
 
     def __init__(self):
+        self.power_cost = self.base_power_cost
         self.discover_choices = []  # needs to be an instance attribute as the contents may be modified
 
     def __repr__(self):
