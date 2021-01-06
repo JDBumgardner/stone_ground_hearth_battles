@@ -169,7 +169,10 @@ class TheCurator(Hero):
 
 
 class TheRatKing(Hero):
-    current_type = None
+
+    def __init__(self):
+        super().__init__()
+        self.current_type = None
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_START:
@@ -211,7 +214,10 @@ class MillhouseManastorm(Hero):
 
 class CaptainEudora(Hero):
     power_cost = 1
-    digs_left = 5
+
+    def __init__(self):
+        super().__init__()
+        self.digs_left = 5
 
     def hero_power_valid_impl(self, context: BuyPhaseContext, board_index: Optional['BoardIndex'] = None,
                               store_index: Optional['StoreIndex'] = None):
@@ -265,7 +271,10 @@ class GeorgeTheFallen(Hero):
 class RenoJackson(Hero):
     power_cost = 0
     power_target_location = [CardLocation.BOARD]
-    target = None
+
+    def __init__(self):
+        super().__init__()
+        self.target = None
 
     def hero_power_valid_impl(self, context: BuyPhaseContext, board_index: Optional['BoardIndex'] = None,
                               store_index: Optional['StoreIndex'] = None):
@@ -371,7 +380,9 @@ class EdwinVanCleef(Hero):
 
 
 class ArannaStarseeker(Hero):
-    total_rerolls = 0
+    def __init__(self):
+        super().__init__()
+        self.total_rerolls = 0
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.REFRESHED_STORE or event.event is EVENTS.BUY_START:
@@ -430,7 +441,10 @@ class KingMukla(Hero):
 class EliseStarseeker(Hero):
     power_cost = 2
     multiple_power_uses_per_turn = True
-    recruitment_maps = []
+
+    def __init__(self):
+        super().__init__()
+        self.recruitment_maps = []
 
     def occupied_hand_slots(self) -> int:
         return len(self.recruitment_maps)
@@ -462,8 +476,11 @@ class AlAkir(Hero):
 
 
 class Chenvaala(Hero):
-    play_counter = 0
     pool = MONSTER_TYPES.ELEMENTAL
+
+    def __init__(self):
+        super().__init__()
+        self.play_counter = 0
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.SUMMON_BUY and event.card.check_type(MONSTER_TYPES.ELEMENTAL):
@@ -477,8 +494,11 @@ class Chenvaala(Hero):
 
 
 class RagnarosTheFirelord(Hero):
-    minions_killed = 0
-    sulfuras = False
+
+    def __init__(self):
+        super().__init__()
+        minions_killed = 0
+        sulfuras = False
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.DIES and event.card in context.enemy_war_party.board:
@@ -571,8 +591,11 @@ class InfiniteToki(Hero):
 class TheLichKing(Hero):
     power_cost = 0
     power_target_location = [CardLocation.BOARD]
-    target = None
-    target_index = None
+
+    def __init__(self):
+        super().__init__()
+        self.target = None
+        self.target_index = None
 
     def hero_power_valid_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                               store_index: Optional['StoreIndex'] = None):
@@ -596,7 +619,10 @@ class TheLichKing(Hero):
 
 class TessGreymane(Hero):
     power_cost = 1
-    refreshed_cards = []
+
+    def __init__(self):
+        super().__init__()
+        self.refreshed_cards = []
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
@@ -619,7 +645,10 @@ class TessGreymane(Hero):
 
 class Shudderwock(Hero):
     power_cost = 1
-    battlecries_counted = 0
+
+    def __init__(self):
+        super().__init__()
+        self.battlecries_counted = 0
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
@@ -637,7 +666,9 @@ class Shudderwock(Hero):
 
 class TheGreatAkazamzarak(Hero):
     power_cost = 1
-    secrets = []
+
+    def __init__(self):
+        self.secrets = []
 
     def hero_power_valid_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                               store_index: Optional['StoreIndex'] = None):
@@ -734,7 +765,10 @@ class IllidanStormrage(Hero):
 
 class ZephrysTheGreat(Hero):
     power_cost = 3
-    wishes_left = 3
+
+    def __init__(self):
+        super().__init__()
+        self.wishes_left = 3
 
     def hero_power_valid_impl(self, context: BuyPhaseContext, board_index: Optional['BoardIndex'] = None,
                               store_index: Optional['StoreIndex'] = None):
@@ -754,7 +788,9 @@ class ZephrysTheGreat(Hero):
 
 
 class SilasDarkmoon(Hero):
-    tickets_purchased = 0
+    def __init__(self):
+        super().__init__()
+        self.tickets_purchased = 0
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.ADD_TO_STORE:
@@ -772,7 +808,9 @@ class SilasDarkmoon(Hero):
 
 
 class SirFinleyMrrgglton(Hero):
-    player = None
+    def __init__(self):
+        super().__init__()
+        self.player = None
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_START and context.owner.tavern.turn_count == 0:
@@ -794,7 +832,10 @@ class SirFinleyMrrgglton(Hero):
 
 class LordBarov(Hero):
     power_cost = 1
-    winning_pick = None
+
+    def __init__(self):
+        super().__init__()
+        self.winning_pick = None
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
@@ -826,7 +867,10 @@ class LordBarov(Hero):
 class MaievShadowsong(Hero):
     power_cost = 1
     power_target_location = [CardLocation.STORE]
-    dormant_minions = dict()
+
+    def __init__(self):
+        super().__init__()
+        self.dormant_minions = dict()
 
     def occupied_store_slots(self) -> int:
         return len(self.dormant_minions)
@@ -851,7 +895,10 @@ class MaievShadowsong(Hero):
 
 class CThun(Hero):
     power_cost = 2
-    power_uses = 0
+
+    def __init__(self):
+        super().__init__()
+        self.power_uses = 0
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                               store_index: Optional['StoreIndex'] = None):
