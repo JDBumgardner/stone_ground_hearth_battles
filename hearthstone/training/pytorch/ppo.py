@@ -15,6 +15,7 @@ from hearthstone.simulator.agent import RearrangeCardsAction, BuyAction, EndPhas
     RerollAction, DiscoverChoiceAction, TavernUpgradeAction, TripleRewardsAction
 from hearthstone.simulator.core.hero import EmptyHero
 from hearthstone.simulator.core.tavern import Tavern
+from hearthstone.training.pytorch.agents.pytorch_bot import PytorchBot
 from hearthstone.training.pytorch.encoding import shared_tensor_pool_encoder
 from hearthstone.training.pytorch.encoding.default_encoder import \
     DEFAULT_PLAYER_ENCODING, DEFAULT_CARDS_ENCODING, EncodedActionSet, \
@@ -27,7 +28,6 @@ from hearthstone.training.pytorch.networks.save_load import create_net, load_fro
 from hearthstone.training.pytorch.normalization import ObservationNormalizer, PPONormalizer
 from hearthstone.training.pytorch.policy_gradient import tensorize_batch, easy_contestants, easiest_contestants, \
     easier_contestants
-from hearthstone.training.pytorch.agents.pytorch_bot import PytorchBot
 from hearthstone.training.pytorch.replay import ActorCriticGameStepInfo
 from hearthstone.training.pytorch.replay_buffer import EpochBuffer
 from hearthstone.training.pytorch.surveillance import GlobalStepContext
@@ -185,10 +185,26 @@ class PPOLearner(GlobalStepContext):
         tensorboard.add_scalar("avg_advantage/normalized", normalized_advantage.mean(), self.global_step)
         tensorboard.add_scalar("avg_value_error", value_error.mean(), self.global_step)
         tensorboard.add_scalar("loss/policy", policy_loss, self.global_step)
+        tensorboard.add_scalar("loss/policy/main_dist",
+                               torch.max(clipped_policy_loss, unclipped_policy_loss).masked_select(
+                                   transition_batch.valid_actions.rearrange_phase.logical_not()).mean(),
+                               self.global_step)
+        tensorboard.add_scalar("loss/policy/rearrange",
+                               torch.max(clipped_policy_loss, unclipped_policy_loss).masked_select(
+                                   transition_batch.valid_actions.rearrange_phase).mean(), self.global_step)
         tensorboard.add_scalar("loss/value", value_loss, self.global_step)
         tensorboard.add_scalar("loss/entropy", entropy_loss, self.global_step)
+        tensorboard.add_scalar("loss/entropy/main_dist", entropy_weight * action_log_probs.masked_select(
+            transition_batch.valid_actions.rearrange_phase.logical_not()).mean(), self.global_step)
+        tensorboard.add_scalar("loss/entropy/rearrange", entropy_weight * action_log_probs.masked_select(
+            transition_batch.valid_actions.rearrange_phase).mean(), self.global_step)
         tensorboard.add_scalar("kl_divergence/main_dist", main_dist_kl_divergence, self.global_step)
         tensorboard.add_scalar("kl_divergence/approx", approx_kl_divergence, self.global_step)
+        tensorboard.add_scalar("kl_divergence/approx/main_dist", -log_ratio.masked_select(
+            transition_batch.valid_actions.rearrange_phase.logical_not()).mean(), self.global_step)
+        tensorboard.add_scalar("kl_divergence/approx/rearrange", -log_ratio.masked_select(
+            transition_batch.valid_actions.rearrange_phase).mean(), self.global_step)
+
         if epoch == 0 and minibatch_idx == 0:
             tensorboard.add_scalar("kl_divergence/before_learning_main_dist", main_dist_kl_divergence, self.global_step)
             tensorboard.add_scalar("kl_divergence/before_learning_approx", approx_kl_divergence, self.global_step)
@@ -198,7 +214,9 @@ class PPOLearner(GlobalStepContext):
             tensorboard.add_scalar("kl_divergence/early_stopped_approx", approx_kl_divergence, self.global_step)
         tensorboard.add_scalar("avg_policy_loss/unclipped", unclipped_policy_loss.mean(), self.global_step)
         tensorboard.add_scalar("avg_policy_loss/clipped", clipped_policy_loss.mean(), self.global_step)
+        tensorboard.add_scalar("actions/endphase_terminal", transition_batch.is_terminal.sum(), self.global_step)
         tensorboard.add_scalar("actions/endphase", sum(type(action) is EndPhaseAction for action in transition_batch.action), self.global_step)
+        tensorboard.add_scalar("actions/endphase_freeze", sum(type(action) is EndPhaseAction and action.freeze for action in transition_batch.action), self.global_step)
         tensorboard.add_scalar("actions/rearrange", sum(type(action) is RearrangeCardsAction for action in transition_batch.action), self.global_step)
         tensorboard.add_scalar("actions/buy", sum(type(action) is BuyAction for action in transition_batch.action), self.global_step)
         tensorboard.add_scalar("actions/sell", sum(type(action) is SellAction for action in transition_batch.action), self.global_step)
