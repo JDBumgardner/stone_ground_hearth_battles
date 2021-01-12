@@ -161,9 +161,8 @@ class MonsterCard(metaclass=CardType):
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if self == event.card:
             if event.event is EVENTS.DIES:
-                for _ in range(context.deathrattle_multiplier()):
-                    for deathrattle in self.deathrattles:
-                        deathrattle(self, context)
+                if self.deathrattles:
+                    context.deathrattle_queue.load_deathrattler(context.friendly_war_party, self)
                 if self.reborn:
                     self.trigger_reborn(context)
             elif event.event is EVENTS.SUMMON_BUY:

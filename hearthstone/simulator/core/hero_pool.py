@@ -4,7 +4,7 @@ from typing import Union, Tuple, Optional
 
 from hearthstone.simulator.core import combat, events, hero
 from hearthstone.simulator.core.card_pool import Amalgam, EmperorCobra, Snake, FishOfNZoth
-from hearthstone.simulator.core.cards import one_minion_per_type, CardLocation
+from hearthstone.simulator.core.cards import CardLocation
 from hearthstone.simulator.core.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
 from hearthstone.simulator.core.hero import Hero
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
@@ -733,8 +733,10 @@ class IllidanStormrage(Hero):
                         defender = defending_war_party.get_attack_target(context.randomizer, attacker)
                         if defender is None or attacker.dead:
                             break
-                        logging.debug(f'{attacking_war_party.owner.name} is attacking {defending_war_party.owner.name} from Illidan Stormrage\'s effect')
-                        combat.start_attack(attacker, defender, attacking_war_party, defending_war_party, context.randomizer)
+                        logging.debug(
+                            f'{attacking_war_party.owner.name} is attacking {defending_war_party.owner.name} from Illidan Stormrage\'s effect')
+                        combat.start_attack(attacker, defender, attacking_war_party, defending_war_party,
+                                            context.randomizer, context.deathrattle_queue)
 
 
 class ZephrysTheGreat(Hero):

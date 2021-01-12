@@ -3,6 +3,8 @@ import enum
 
 from typing import Optional, List
 
+from hearthstone.simulator.core.deathrattle_queue import DeathrattleQueue
+
 if typing.TYPE_CHECKING:
     from hearthstone.simulator.core.player import Player
     from hearthstone.simulator.core.randomizer import Randomizer
@@ -192,10 +194,11 @@ class BuyPhaseContext:
 
 
 class CombatPhaseContext:
-    def __init__(self, friendly_war_party: 'WarParty', enemy_war_party: 'WarParty', randomizer: 'Randomizer'):
+    def __init__(self, friendly_war_party: 'WarParty', enemy_war_party: 'WarParty', randomizer: 'Randomizer', deathrattle_queue: 'DeathrattleQueue'):
         self.friendly_war_party = friendly_war_party
         self.enemy_war_party = enemy_war_party
         self.randomizer = randomizer
+        self.deathrattle_queue = deathrattle_queue
 
     def broadcast_combat_event(self, event: 'CardEvent'):
         #  boards are copied to prevent reindexing lists while iterating over them
@@ -208,7 +211,7 @@ class CombatPhaseContext:
             card.handle_event(event, self.enemy_context())
 
     def enemy_context(self):
-        return CombatPhaseContext(self.enemy_war_party, self.friendly_war_party, self.randomizer)
+        return CombatPhaseContext(self.enemy_war_party, self.friendly_war_party, self.randomizer, self.deathrattle_queue)
 
     def summon_minion_multiplier(self) -> int:
         summon_multiplier = 1

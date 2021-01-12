@@ -1,5 +1,6 @@
 import random
 import typing
+from collections import deque
 from typing import List, Tuple, Type, Optional
 
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
@@ -63,6 +64,9 @@ class Randomizer:
     def select_combat_matchup(self, pairings: List[Tuple['Player', 'Player']]) -> Tuple['Player', 'Player']:
         raise NotImplementedError()
 
+    def select_deathrattle_queue(self, queues: List[deque]) -> deque:
+        raise NotImplementedError()
+
 
 class DefaultRandomizer(Randomizer):
     def __init__(self, seed: Optional[int] = None):
@@ -123,3 +127,6 @@ class DefaultRandomizer(Randomizer):
 
     def select_combat_matchup(self, pairings: List[Tuple['Player', 'Player']]) -> Tuple['Player', 'Player']:
         return self.rand.choice(pairings)
+
+    def select_deathrattle_queue(self, queues: List[deque]) -> deque:
+        return self.rand.choice(queues)
