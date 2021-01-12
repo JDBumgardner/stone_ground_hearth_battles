@@ -12,6 +12,7 @@ from hearthstone.simulator.core.player import Player, StoreIndex, BoardIndex
 if typing.TYPE_CHECKING:
     from hearthstone.simulator.core.cards import MonsterCard
 
+
 class EarlyGameBot(Agent):
     def __init__(self, authors: List[str], priority: Callable[['Player', 'MonsterCard'], float], seed: int):
         if not authors:

@@ -10,6 +10,7 @@ from hearthstone.simulator.core.player import StoreIndex, HandIndex, BoardIndex,
 
 from hearthstone.simulator.core.tavern import Player
 
+
 class Action:
     def apply(self, player: 'Player'):
         pass
@@ -363,8 +364,8 @@ def generate_all_actions(player: 'Player') -> Generator[StandardAction, None, No
             possible_num_targets = [len(valid_target_indices)]
         for num_targets in possible_num_targets:
             for targets in itertools.combinations(valid_target_indices, num_targets):
-                yield SummonAction(HandIndex(index), list(targets))
+                yield SummonAction(HandIndex(index), [BoardIndex(target_index) for target_index in targets])
         if card.magnetic:
             for target_index, target_card in enumerate(player.in_play):
                 if target_card.check_type(MONSTER_TYPES.MECH):
-                    yield SummonAction(HandIndex(index), [target_index])
+                    yield SummonAction(HandIndex(index), [BoardIndex(target_index)])

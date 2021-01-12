@@ -5,6 +5,7 @@ from hearthstone.simulator.agent import generate_all_actions, EndPhaseAction
 from hearthstone.simulator.core.adaptations import AdaptBuffs
 from hearthstone.simulator.core.card_pool import *
 from hearthstone.simulator.core.cards import MonsterCard, CardType
+from hearthstone.simulator.core.hero_graveyard import *
 from hearthstone.simulator.core.hero_pool import *
 from hearthstone.simulator.core.player import StoreIndex, HandIndex, BoardIndex, DiscoverIndex, Player
 from hearthstone.simulator.core.randomizer import DefaultRandomizer

@@ -2336,8 +2336,8 @@ class MythraxTheUnraveler(MonsterCard):
 class ElistraTheImmortal(MonsterCard):
     tier = 6
     monster_type = None
-    base_attack = 7
-    base_health = 7
+    base_attack = 4
+    base_health = 4
     base_divine_shield = True
     base_reborn = True
     divert_taunt_attack = True

@@ -1345,7 +1345,7 @@ class CombatTests(unittest.TestCase):
         ethan = tavern.add_player_with_hero("Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
-        adams_war_party.board = [IronhideDirehorn(), IronhideDirehorn(), IronhideDirehorn(), IronhideDirehorn()]
+        adams_war_party.board = [TwilightEmissary(), TwilightEmissary(), TwilightEmissary(), TwilightEmissary()]
         ethans_war_party.board = [ElistraTheImmortal(), VulgarHomunculus()]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 38)
@@ -1360,7 +1360,7 @@ class CombatTests(unittest.TestCase):
         ethans_war_party = WarParty(ethan)
         saurolisk = RabidSaurolisk()
         saurolisk.taunt = True
-        adams_war_party.board = [Robosaur(), Robosaur(), NadinaTheRed(), NadinaTheRed(), saurolisk]
+        adams_war_party.board = [IronhideRunt(), IronhideRunt(), CrystalWeaver(), CrystalWeaver(), saurolisk]
         ethans_war_party.board = [TormentedRitualist(), ElistraTheImmortal()]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
