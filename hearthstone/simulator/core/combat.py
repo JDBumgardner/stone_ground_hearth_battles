@@ -167,14 +167,18 @@ def player_damage(half_board_1: 'WarParty', half_board_2: 'WarParty', randomizer
 def start_attack(attacker: 'MonsterCard', defender: 'MonsterCard', attacking_war_party: 'WarParty', defending_war_party: 'WarParty',
                  randomizer: 'Randomizer'):
     logger.debug(f'{attacker} is attacking {defender}')
-    on_attack_event = events.OnAttackEvent(attacker, foe=defender)
+    is_attacked_event = events.IsAttackedEvent(defender)
+    on_attack_event = events.OnAttackEvent(attacker)
     combat_phase_context = CombatPhaseContext(attacking_war_party, defending_war_party, randomizer)
+    combat_phase_context.enemy_context().broadcast_combat_event(is_attacked_event)
     combat_phase_context.broadcast_combat_event(on_attack_event)
 
     taunt_diversions = [card for card in defending_war_party.live_minions() if card.divert_taunt_attack]
     if defender.taunt and taunt_diversions:
         new_defender = randomizer.select_attack_target(taunt_diversions)
         logger.debug(f'{new_defender} has diverted an attack on {defender}')
+        is_attacked_event = events.IsAttackedEvent(new_defender)
+        combat_phase_context.enemy_context().broadcast_combat_event(is_attacked_event)
         defender = new_defender
 
     attacker.take_damage(defender.attack, combat_phase_context, defender, defending=False)

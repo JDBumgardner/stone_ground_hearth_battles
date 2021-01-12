@@ -33,6 +33,7 @@ class EVENTS(enum.Enum):
     RESULTS_BROADCAST = 20
     ADD_TO_STORE = 21
     COMBAT_PREPHASE = 22
+    IS_ATTACKED = 23
 
 
 class CardEvent:
@@ -77,10 +78,15 @@ class BuyStartEvent(CardEvent):
 
 
 class OnAttackEvent(CardEvent):
-    def __init__(self, card: 'MonsterCard', foe: 'MonsterCard'):
+    def __init__(self, card: 'MonsterCard'):
         super().__init__(EVENTS.ON_ATTACK)
         self.card = card
-        self.foe = foe
+
+
+class IsAttackedEvent(CardEvent):
+    def __init__(self, card: 'MonsterCard'):
+        super().__init__(EVENTS.IS_ATTACKED)
+        self.card = card
 
 
 class AfterAttackDamageEvent(CardEvent):

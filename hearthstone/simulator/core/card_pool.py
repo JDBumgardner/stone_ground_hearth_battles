@@ -2239,7 +2239,7 @@ class TormentedRitualist(MonsterCard):
     base_taunt = True
 
     def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
-        if event.event is EVENTS.ON_ATTACK and event.foe == self:
+        if event.event is EVENTS.IS_ATTACKED and event.card == self:
             bonus = 2 if self.golden else 1
             for minion in context.friendly_war_party.adjacent_minions(self):
                 minion.attack += bonus
@@ -2265,9 +2265,9 @@ class ArmOfTheEmpire(MonsterCard):
     base_health = 5
 
     def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
-        if event.event is EVENTS.ON_ATTACK and event.foe in context.friendly_war_party.board and event.foe.taunt:
+        if event.event is EVENTS.IS_ATTACKED and event.card in context.friendly_war_party.board and event.card.taunt:
             bonus = 6 if self.golden else 3
-            event.foe.attack += bonus
+            event.card.attack += bonus
 
 
 class Bigfernal(MonsterCard):
@@ -2310,7 +2310,7 @@ class ChampionOfYShaarj(MonsterCard):
     base_health = 2
 
     def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
-        if event.event is EVENTS.ON_ATTACK and event.foe in context.friendly_war_party.board and event.foe.taunt:
+        if event.event is EVENTS.IS_ATTACKED and event.card in context.friendly_war_party.board and event.card.taunt:
             bonus = 2 if self.golden else 1
             self.attack += bonus
             self.health += bonus

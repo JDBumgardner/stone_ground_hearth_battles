@@ -92,7 +92,7 @@ def _action_chart(df: pd.DataFrame, name: str, action_name: str, max_size: int):
                               y=alt.Y('row_number:O', axis=None,
                                       scale=alt.Scale(domain=list(range(1, max_size + 1)))),
                               color=alt.Color("action_probability:Q",
-                                              scale=alt.Scale(domain=[0, 1], scheme="bluegreen")),
+                                              scale=alt.Scale(domain=[0, 1], scheme="goldred")),
                               tooltip=tooltip_fields)
 
 

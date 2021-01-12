@@ -674,14 +674,14 @@ class TheGreatAkazamzarak(Hero):
             self.secrets.remove(SECRETS.ICE_BLOCK)
             context.owner.health += event.damage_taken
             self.give_immunity = True
-        if event.event is EVENTS.ON_ATTACK and event.foe in context.friendly_war_party.board:
+        if event.event is EVENTS.IS_ATTACKED and event.card in context.friendly_war_party.board:
             if context.friendly_war_party.room_on_board():
                 if SECRETS.SPLITTING_IMAGE in self.secrets and context.friendly_war_party.room_on_board():
                     logging.debug(f'{SECRETS.SPLITTING_IMAGE} triggers')
                     self.secrets.remove(SECRETS.SPLITTING_IMAGE)
-                    summon_index = context.friendly_war_party.get_index(event.foe)
+                    summon_index = context.friendly_war_party.get_index(event.card)
                     for i in range(context.summon_minion_multiplier()):
-                        context.friendly_war_party.summon_in_combat(copy.deepcopy(event.foe), context, summon_index+1+i)
+                        context.friendly_war_party.summon_in_combat(copy.deepcopy(event.card), context, summon_index+1+i)
                 if SECRETS.VENOMSTRIKE_TRAP in self.secrets and context.friendly_war_party.room_on_board():
                     logging.debug(f'{SECRETS.VENOMSTRIKE_TRAP} triggers')
                     self.secrets.remove(SECRETS.VENOMSTRIKE_TRAP)
@@ -694,10 +694,10 @@ class TheGreatAkazamzarak(Hero):
                     for _ in range(3 * context.summon_minion_multiplier()):
                         snake = Snake()
                         context.friendly_war_party.summon_in_combat(snake, context)
-            if SECRETS.AUTODEFENSE_MATRIX in self.secrets and not event.foe.divine_shield:
+            if SECRETS.AUTODEFENSE_MATRIX in self.secrets and not event.card.divine_shield:
                 logging.debug(f'{SECRETS.AUTODEFENSE_MATRIX} triggers')
                 self.secrets.remove(SECRETS.AUTODEFENSE_MATRIX)
-                event.foe.divine_shield = True
+                event.card.divine_shield = True
 
         if event.event is EVENTS.DIES and event.card in context.friendly_war_party.board:
             if SECRETS.REDEMPTION in self.secrets:
