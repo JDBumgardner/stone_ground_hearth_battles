@@ -4,7 +4,7 @@ import typing
 from typing import Optional, List
 
 from hearthstone.simulator.core import events
-from hearthstone.simulator.core.deathrattle_queue import DeathrattleQueue
+from hearthstone.simulator.core.combat_event_queue import CombatEventQueue
 from hearthstone.simulator.core.events import CombatPhaseContext
 
 if typing.TYPE_CHECKING:
@@ -102,7 +102,7 @@ def fight_boards(war_party_1: 'WarParty', war_party_2: 'WarParty', randomizer: '
     #  Currently we are not randomizing the first to fight here
     #  Expect to pass half boards into fight_boards in random order i.e. by shuffling players in combat step
     #  Half boards are copies, the originals state cannot be changed in the combat step
-    deathrattle_queue = DeathrattleQueue(war_party_1, war_party_2, randomizer)
+    deathrattle_queue = CombatEventQueue(war_party_1, war_party_2, randomizer)
     context = CombatPhaseContext(war_party_1, war_party_2, randomizer, deathrattle_queue)
     context.broadcast_combat_event(events.CombatPrePhaseEvent())
     logger.debug(
@@ -170,7 +170,7 @@ def player_damage(half_board_1: 'WarParty', half_board_2: 'WarParty', randomizer
 
 
 def start_attack(attacker: 'MonsterCard', defender: 'MonsterCard', attacking_war_party: 'WarParty', defending_war_party: 'WarParty',
-                 randomizer: 'Randomizer', deathrattle_queue: 'DeathrattleQueue'):
+                 randomizer: 'Randomizer', deathrattle_queue: 'CombatEventQueue'):
     logger.debug(f'{attacker} is attacking {defender}')
     is_attacked_event = events.IsAttackedEvent(defender)
     on_attack_event = events.OnAttackEvent(attacker)
@@ -193,42 +193,64 @@ def start_attack(attacker: 'MonsterCard', defender: 'MonsterCard', attacking_war
     combat_phase_context.broadcast_combat_event(events.AfterAttackDamageEvent(attacker, foe=defender))
     resolve_combat_deaths(attacker, defender, attacking_war_party, defending_war_party, randomizer, deathrattle_queue)
     resolve_deathrattles(randomizer, deathrattle_queue)
-    while attacking_war_party.has_dying_minions() or defending_war_party.has_dying_minions():
-        for card in attacking_war_party.board.copy():
-            card.resolve_death(combat_phase_context)
-        for card in defending_war_party.board.copy():
-            card.resolve_death(combat_phase_context.enemy_context())
-        resolve_deathrattles(randomizer, deathrattle_queue)
+    resolve_chained_combat_events(combat_phase_context)
     combat_phase_context.broadcast_combat_event(events.AfterAttackDeathrattleEvent(defender, foe=attacker))
     logger.debug(f'{attacker} has just attacked {defender}')
 
 
 def resolve_combat_deaths(attacker: 'MonsterCard', defender: 'MonsterCard', attacking_war_party: 'WarParty',
-                          defending_war_party: 'WarParty', randomizer: 'Randomizer', deathrattle_queue: 'DeathrattleQueue'):
-    defenders = defending_war_party.get_defenders(attacker, defender)
-    # need to check if both combatants are dead before broadcasting events
-    if attacker.health <= 0 and not attacker.dead:
-        attacker.dead = True
-    for enemy in defenders:
-        if enemy.health <= 0 and not enemy.dead:
-            enemy.dead = True
-    if attacker.dead:
-        attacking_war_party.dead_minions.append(attacker)
-        context = CombatPhaseContext(attacking_war_party, defending_war_party, randomizer, deathrattle_queue)
-        card_death_event = events.DiesEvent(attacker, foe=defender)
-        context.broadcast_combat_event(card_death_event)
-    for enemy in defenders:
-        if enemy.dead:
-            defending_war_party.dead_minions.append(enemy)
-            context = CombatPhaseContext(defending_war_party, attacking_war_party, randomizer, deathrattle_queue)
-            card_death_event = events.DiesEvent(enemy, foe=attacker)
-            context.broadcast_combat_event(card_death_event)
+                          defending_war_party: 'WarParty', randomizer: 'Randomizer', deathrattle_queue: 'CombatEventQueue'):
+    context = CombatPhaseContext(attacking_war_party, defending_war_party, randomizer, deathrattle_queue)
+
+    death_event_queue = CombatEventQueue(attacking_war_party, defending_war_party, randomizer)
+
+    for card in attacking_war_party.board:
+        if card.health <= 0 and not card.dead:
+            card.dead = True
+            context.friendly_war_party.dead_minions.append(card)
+            death_event_queue.load_minion(attacking_war_party, card)
+
+    for card in defending_war_party.board:
+        if card.health <= 0 and not card.dead:
+            card.dead = True
+            context.enemy_war_party.dead_minions.append(card)
+            death_event_queue.load_minion(defending_war_party, card)
+
+    while not death_event_queue.empty():
+        minion, friendly_war_party, enemy_war_party = death_event_queue.get_next_minion()
+        if friendly_war_party == attacking_war_party:
+            context.broadcast_combat_event(events.DiesEvent(minion, foe=defender))
+        else:
+            context.broadcast_combat_event(events.DiesEvent(minion, foe=attacker))
 
 
-def resolve_deathrattles(randomizer: 'Randomizer', deathrattle_queue: 'DeathrattleQueue'):
+def resolve_deathrattles(randomizer: 'Randomizer', deathrattle_queue: 'CombatEventQueue'):
     while not deathrattle_queue.empty():
-        minion, friendly_war_party, enemy_war_party = deathrattle_queue.get_next_deathrattler()
+        minion, friendly_war_party, enemy_war_party = deathrattle_queue.get_next_minion()
         context = CombatPhaseContext(friendly_war_party, enemy_war_party, randomizer, deathrattle_queue)
         for _ in range(context.deathrattle_multiplier()):
             for deathrattle in minion.deathrattles:
                 deathrattle(minion, context)
+
+
+def resolve_chained_combat_events(context: 'CombatPhaseContext'):
+    while context.friendly_war_party.has_dying_minions() or context.enemy_war_party.has_dying_minions():
+        death_event_queue = CombatEventQueue(context.friendly_war_party, context.enemy_war_party, context.randomizer)
+
+        for card in context.friendly_war_party.board:
+            if card.health <= 0 and not card.dead:
+                card.dead = True
+                context.friendly_war_party.dead_minions.append(card)
+                death_event_queue.load_minion(context.friendly_war_party, card)
+
+        for card in context.enemy_war_party.board:
+            if card.health <= 0 and not card.dead:
+                card.dead = True
+                context.enemy_war_party.dead_minions.append(card)
+                death_event_queue.load_minion(context.enemy_war_party, card)
+
+        while not death_event_queue.empty():
+            minion, friendly_war_party, enemy_war_party = death_event_queue.get_next_minion()
+            context.broadcast_combat_event(events.DiesEvent(minion))  # TODO: do we need to keep track of who is doing the killing?
+
+    resolve_deathrattles(context.randomizer, context.deathrattle_queue)

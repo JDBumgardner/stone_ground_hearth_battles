@@ -9,7 +9,7 @@ if typing.TYPE_CHECKING:
     from hearthstone.simulator.core.combat import WarParty
 
 
-class DeathrattleQueue:
+class CombatEventQueue:
 
     def __init__(self, war_party_1: 'WarParty', war_party_2: 'WarParty', randomizer: Optional['Randomizer'] = DefaultRandomizer()):
         self.randomizer = randomizer
@@ -19,13 +19,13 @@ class DeathrattleQueue:
         self._wp2queue = deque()
         self._queues = {self._war_party_1: self._wp1queue, self._war_party_2: self._wp2queue}
 
-    def load_deathrattler(self, war_party: 'WarParty', deathrattle_minion: 'MonsterCard'):
-        self._queues[war_party].append(deathrattle_minion)
+    def load_minion(self, war_party: 'WarParty', minion: 'MonsterCard'):
+        self._queues[war_party].append(minion)
 
-    def get_next_deathrattler(self) -> Tuple['MonsterCard', 'WarParty', 'WarParty']:
+    def get_next_minion(self) -> Tuple['MonsterCard', 'WarParty', 'WarParty']:
         assert not self.empty()
         if self._wp1queue and self._wp2queue:
-            random_queue = self.randomizer.select_deathrattle_queue(list(self._queues.values()))
+            random_queue = self.randomizer.select_event_queue(list(self._queues.values()))
             other_queue = [q for q in self._queues.values() if q != random_queue][0]
             return random_queue.popleft(), self.get_war_party(random_queue), self.get_war_party(other_queue)
         elif self._wp1queue:

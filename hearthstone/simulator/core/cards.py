@@ -162,7 +162,7 @@ class MonsterCard(metaclass=CardType):
         if self == event.card:
             if event.event is EVENTS.DIES:
                 if self.deathrattles:
-                    context.deathrattle_queue.load_deathrattler(context.friendly_war_party, self)
+                    context.deathrattle_queue.load_minion(context.friendly_war_party, self)
                 if self.reborn:
                     self.trigger_reborn(context)
             elif event.event is EVENTS.SUMMON_BUY:

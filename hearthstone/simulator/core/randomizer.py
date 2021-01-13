@@ -64,7 +64,7 @@ class Randomizer:
     def select_combat_matchup(self, pairings: List[Tuple['Player', 'Player']]) -> Tuple['Player', 'Player']:
         raise NotImplementedError()
 
-    def select_deathrattle_queue(self, queues: List[deque]) -> deque:
+    def select_event_queue(self, queues: List[deque]) -> deque:
         raise NotImplementedError()
 
 
@@ -128,5 +128,5 @@ class DefaultRandomizer(Randomizer):
     def select_combat_matchup(self, pairings: List[Tuple['Player', 'Player']]) -> Tuple['Player', 'Player']:
         return self.rand.choice(pairings)
 
-    def select_deathrattle_queue(self, queues: List[deque]) -> deque:
+    def select_event_queue(self, queues: List[deque]) -> deque:
         return self.rand.choice(queues)

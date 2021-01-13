@@ -5,6 +5,7 @@ from typing import Union, List
 from hearthstone.simulator.core import combat
 from hearthstone.simulator.core.adaptations import valid_adaptations
 from hearthstone.simulator.core.cards import MonsterCard, PrintingPress, one_minion_per_type
+from hearthstone.simulator.core.combat import logger
 from hearthstone.simulator.core.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 
@@ -257,7 +258,7 @@ class RedWhelp(MonsterCard):
             for _ in range(num_damage_instances):
                 target = context.randomizer.select_enemy_minion(targets)
                 target.take_damage(self.damage, context.enemy_context(), self)
-                # target.resolve_death(context.enemy_context(), self)  # TODO: Order of death resolution?
+                combat.resolve_chained_combat_events(context)
 
 
 class HarvestGolem(MonsterCard):
@@ -302,7 +303,6 @@ class KaboomBot(MonsterCard):
                 break
             target = context.randomizer.select_enemy_minion(targets)
             target.take_damage(4, context.enemy_context(), self)
-            # target.resolve_death(context.enemy_context(), self)  # TODO: Order of death resolution?
 
 
 class KindlyGrandmother(MonsterCard):
@@ -477,7 +477,7 @@ class SkyPirate(MonsterCard):
             defender = defending_war_party.get_attack_target(context.randomizer, self)
             if not defender:
                 return
-            logging.debug(f'{attacking_war_party.owner.name} is attacking {defending_war_party.owner.name}')
+            logger.debug(f'{attacking_war_party.owner.name} is attacking {defending_war_party.owner.name}')
             combat.start_attack(self, defender, attacking_war_party, defending_war_party, context.randomizer,
                                 context.deathrattle_queue)
 
@@ -513,10 +513,8 @@ class UnstableGhoul(MonsterCard):
                     continue
                 if minion in context.friendly_war_party.board:
                     minion.take_damage(1, context, self)
-                    # minion.resolve_death(context, self)  # TODO: Order of death resolution?
                 elif minion in context.enemy_war_party.board:
                     minion.take_damage(1, context.enemy_context(), self)
-                    # minion.resolve_death(context.enemy_context(), self)
 
 
 class RockpoolHunter(MonsterCard):
@@ -912,7 +910,6 @@ class SoulJuggler(MonsterCard):
                 if targets:
                     target = context.randomizer.select_enemy_minion(targets)
                     target.take_damage(3, context.enemy_context(), self)
-                    # target.resolve_death(context.enemy_context(), self)  # TODO: Order of death resolution?
 
 
 class TwilightEmissary(MonsterCard):
@@ -1469,7 +1466,6 @@ class HeraldOfFlame(MonsterCard):
             if leftmost_index >= len(context.enemy_war_party.board):
                 return
         context.enemy_war_party.board[leftmost_index].take_damage(damage, context.enemy_context(), self)
-        # context.enemy_war_party.board[leftmost_index].resolve_death(context.enemy_context(), self)
 
 
 class IronhideDirehorn(MonsterCard):
@@ -1622,7 +1618,7 @@ class YoHoOgre(MonsterCard):
             defender = defending_war_party.get_attack_target(context.randomizer, self)
             if not defender:
                 return
-            logging.debug(f'{self} triggers after surviving an attack')
+            logger.debug(f'{self} triggers after surviving an attack')
             combat.start_attack(self, defender, attacking_war_party, defending_war_party, context.randomizer,
                                 context.deathrattle_queue)
 
@@ -2182,7 +2178,6 @@ class WildfireElemental(MonsterCard):
                 adjacent_targets = adjacent_enemies if self.golden else [context.randomizer.select_enemy_minion(adjacent_enemies)]
                 for card in adjacent_targets:
                     card.take_damage(excess_damage, context, foe=self)
-                    # card.resolve_death(context, foe=self)
 
 
 class StasisElemental(MonsterCard):

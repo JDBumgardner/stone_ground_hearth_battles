@@ -3,7 +3,7 @@ import enum
 
 from typing import Optional, List
 
-from hearthstone.simulator.core.deathrattle_queue import DeathrattleQueue
+from hearthstone.simulator.core.combat_event_queue import CombatEventQueue
 
 if typing.TYPE_CHECKING:
     from hearthstone.simulator.core.player import Player
@@ -58,7 +58,7 @@ class SummonCombatEvent(CardEvent):
 
 
 class DiesEvent(CardEvent):
-    def __init__(self, card: 'MonsterCard', foe: Optional['MonsterCard']):
+    def __init__(self, card: 'MonsterCard', foe: Optional['MonsterCard'] = None):
         super().__init__(EVENTS.DIES)
         self.card = card
         self.foe = foe
@@ -194,7 +194,7 @@ class BuyPhaseContext:
 
 
 class CombatPhaseContext:
-    def __init__(self, friendly_war_party: 'WarParty', enemy_war_party: 'WarParty', randomizer: 'Randomizer', deathrattle_queue: 'DeathrattleQueue'):
+    def __init__(self, friendly_war_party: 'WarParty', enemy_war_party: 'WarParty', randomizer: 'Randomizer', deathrattle_queue: 'CombatEventQueue'):
         self.friendly_war_party = friendly_war_party
         self.enemy_war_party = enemy_war_party
         self.randomizer = randomizer
