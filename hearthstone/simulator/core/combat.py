@@ -253,4 +253,4 @@ def resolve_chained_combat_events(context: 'CombatPhaseContext'):
             minion, friendly_war_party, enemy_war_party = death_event_queue.get_next_minion()
             context.broadcast_combat_event(events.DiesEvent(minion))  # TODO: do we need to keep track of who is doing the killing?
 
-    resolve_deathrattles(context.randomizer, context.deathrattle_queue)
+        resolve_deathrattles(context.randomizer, context.deathrattle_queue)
