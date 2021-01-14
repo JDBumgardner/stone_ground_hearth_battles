@@ -112,10 +112,10 @@ class HearthstoneTransformerNet(nn.Module):
             self.card_hidden_size = encoding.cards_encoding().size()[1]
 
         self.player_normalizer = nn.BatchNorm1d(
-            encoding.player_encoding().size().numel(),
+            torch.Size(encoding.player_encoding().size()).numel(),
             momentum=normalization_momentum) if normalize_observations else nn.Identity()
         self.card_normalizer = nn.BatchNorm1d(
-            encoding.cards_encoding().size().numel(),
+            torch.Size(encoding.cards_encoding().size()).numel(),
             momentum=normalization_momentum) if normalize_observations else nn.Identity()
 
         # dummy_state = State(
