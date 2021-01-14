@@ -3,7 +3,7 @@ from typing import Optional, Tuple
 
 import torch
 
-from hearthstone.training.pytorch.networks.plackett_luce import PlackettLuce
+from plackett_luce.plackett_luce import PlackettLuce
 
 
 class PlackettLuceTest(unittest.TestCase):

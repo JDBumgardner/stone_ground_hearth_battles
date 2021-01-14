@@ -25,7 +25,6 @@ from hearthstone.training.pytorch.encoding.state_encoding import State
 from hearthstone.training.pytorch.gae import GAEAnnotator
 from hearthstone.training.pytorch.networks import save_load
 from hearthstone.training.pytorch.networks.save_load import create_net, load_from_saved
-from hearthstone.training.pytorch.normalization import ObservationNormalizer, PPONormalizer
 from hearthstone.training.pytorch.policy_gradient import tensorize_batch, easy_contestants, easiest_contestants, \
     easier_contestants
 from hearthstone.training.pytorch.replay import ActorCriticGameStepInfo
@@ -360,13 +359,7 @@ class PPOLearner(GlobalStepContext):
             assert False
 
         learning_bot_name = "LearningBot"
-        observation_normalizer = None
-        if self.hparams["normalize_observations"]:
-            normalization_gamma = self.hparams["normalization_gamma"]
-            observation_normalizer = ObservationNormalizer(
-                PPONormalizer(normalization_gamma, DEFAULT_PLAYER_ENCODING.size()),
-                PPONormalizer(normalization_gamma, DEFAULT_CARDS_ENCODING.size()))
-        replay_buffer = EpochBuffer(learning_bot_name, observation_normalizer)
+        replay_buffer = EpochBuffer(learning_bot_name)
         learning_bot_contestant = Contestant(
             learning_bot_name,
             ContestantAgentGenerator(PytorchBot,
@@ -381,7 +374,6 @@ class PPOLearner(GlobalStepContext):
 
         other_contestants = self.get_initial_contestants()
         load_ratings(other_contestants, "../../../data/standings/8p.json")
-
         gae_annotator = GAEAnnotator(learning_bot_name, self.hparams['gae_gamma'], self.hparams['gae_lambda'])
         if self.hparams['parallelism.method']:
             worker_pool = WorkerPool(self.hparams['parallelism.num_workers'],
@@ -448,7 +440,7 @@ class PPOLearner(GlobalStepContext):
 def main():
     ppo_learner = PPOLearner(PPOHyperparameters({
         "resume": False,
-        'resume.from': '2021-01-02T01:27:39.587254',
+        'resume.from': '2021-01-06T01:18:59.151166',
         'export.enabled': True,
         'export.period_epochs': 200,
         'export.path': datetime.now().isoformat(),
@@ -469,13 +461,14 @@ def main():
         'approx_kl_limit': 0.015,
         'nn.architecture': 'transformer',
         'nn.state_encoder': 'Default',
-        'nn.hidden_layers': 2,
-        'nn.hidden_size': 64,
+        'nn.hidden_layers': 3,
+        'nn.hidden_size': 128,
         'nn.activation': 'gelu',
         'nn.shared': False,
         'nn.encoding.redundant': True,
+        'nn.encoding.normalize': True,
+        'nn.encoding.normalize.gamma': 0.999,
         'normalize_advantage': True,
-        'normalize_observations': False,
         'parallelism.num_workers': 64,
         'parallelism.method': "batch",
         'optimizer': 'adam',
