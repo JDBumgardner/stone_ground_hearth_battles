@@ -170,8 +170,10 @@ class Player:
         if not self.room_on_board():
             return False
         if card.battlecry:
-            valid_targets = [target_index for target_index, target_card in enumerate(self.in_play) if card.valid_battlecry_target(target_card)]
-            possible_num_targets = [num_targets for num_targets in card.num_battlecry_targets if num_targets <= len(valid_targets)]
+            valid_targets = [target_index for target_index, target_card in enumerate(self.in_play) if
+                             card.valid_battlecry_target(target_card)]
+            possible_num_targets = [num_targets for num_targets in card.num_battlecry_targets if
+                                    num_targets <= len(valid_targets)]
             if not possible_num_targets:
                 possible_num_targets = [len(valid_targets)]
             if len(targets) not in possible_num_targets:
@@ -201,8 +203,10 @@ class Player:
             return False
         return bool(self.triple_rewards)
 
-    def draw_discover(self, predicate: Callable[['MonsterCard'], bool]): #TODO: Jarett help make discoverables unique are cards with more copies in the deck more likely to be discovered?
-        discoverables = [card for card in self.tavern.deck.all_cards() if predicate(card)] # Jeremy says: Hmm, we can run out of unique cards.  Changed to be all cards for now.
+    def draw_discover(self, predicate: Callable[[
+                                                    'MonsterCard'], bool]):  # TODO: Jarett help make discoverables unique are cards with more copies in the deck more likely to be discovered?
+        discoverables = [card for card in self.tavern.deck.all_cards() if predicate(
+            card)]  # Jeremy says: Hmm, we can run out of unique cards.  Changed to be all cards for now.
         discovered_cards = []
         for _ in range(3):
             discovered_cards.append(self.tavern.randomizer.select_discover_card(discoverables))
@@ -215,7 +219,8 @@ class Player:
         card = self.discover_queue[0].pop(card_index)
         card.token = False  # for Bigglesworth (there is no other scenario where a token will be a discover option)
         self.gain_hand_card(card)
-        self.tavern.deck.return_cards(itertools.chain.from_iterable([card.dissolve() for card in self.discover_queue[0]]))
+        self.tavern.deck.return_cards(
+            itertools.chain.from_iterable([card.dissolve() for card in self.discover_queue[0]]))
         self.discover_queue.pop(0)
 
     def valid_select_discover(self, card_index: 'DiscoverIndex'):
@@ -232,7 +237,7 @@ class Player:
     def draw(self, unfreeze: Optional[bool] = True):
         self.return_cards(unfreeze)
         number_of_cards = (3 + self.tavern_tier // 2 - len(self.store))
-        number_of_cards = min(number_of_cards, self.maximum_store_size-self.store_size())
+        number_of_cards = min(number_of_cards, self.maximum_store_size - self.store_size())
         self.extend_store(self.tavern.deck.draw(self, number_of_cards))
 
     def purchase(self, index: StoreIndex):
@@ -292,7 +297,8 @@ class Player:
     def return_cards(self, unfreeze: Optional[bool] = True):
         if unfreeze:
             self.unfreeze()
-        self.tavern.deck.return_cards(itertools.chain.from_iterable([card.dissolve() for card in self.store if not card.frozen]))
+        self.tavern.deck.return_cards(
+            itertools.chain.from_iterable([card.dissolve() for card in self.store if not card.frozen]))
         self._store = [card for card in self.store if card.frozen]
         self.unfreeze()
 
@@ -323,7 +329,8 @@ class Player:
     def hero_power(self, board_index: Optional['BoardIndex'] = None, store_index: Optional['StoreIndex'] = None):
         self.hero.hero_power(BuyPhaseContext(self, self.tavern.randomizer), board_index, store_index)
 
-    def valid_hero_power(self, board_target: Optional['BoardIndex'] = None, store_target: Optional['StoreIndex'] = None) -> bool:
+    def valid_hero_power(self, board_target: Optional['BoardIndex'] = None,
+                         store_target: Optional['StoreIndex'] = None) -> bool:
         if self.dead:
             return False
         if self.discover_queue:
@@ -351,7 +358,8 @@ class Player:
         self._in_play = [self._in_play[i] for i in permutation]
 
     def hand_size(self):
-        return len(self.hand) + len(self.triple_rewards) + self.gold_coins + self.bananas + self.hero.occupied_hand_slots()
+        return len(self.hand) + len(
+            self.triple_rewards) + self.gold_coins + self.bananas + self.hero.occupied_hand_slots()
 
     def room_in_hand(self):
         return self.hand_size() < self.maximum_hand_size
@@ -363,7 +371,7 @@ class Player:
         return len(self._tavern_upgrade_costs)
 
     def choose_hero(self, hero_index: HeroChoiceIndex):
-        assert(self.valid_choose_hero(hero_index))
+        assert (self.valid_choose_hero(hero_index))
         self.hero = self.hero_options.pop(hero_index)
         self.tavern.hero_pool.extend(self.hero_options)
         self.hero_options = []
@@ -454,7 +462,8 @@ class Player:
             self.store[store_index].attack += bonus
             self.store[store_index].health += bonus
 
-    def valid_use_banana(self, board_index: Optional['BoardIndex'] = None, store_index: Optional['StoreIndex'] = None) -> bool:
+    def valid_use_banana(self, board_index: Optional['BoardIndex'] = None,
+                         store_index: Optional['StoreIndex'] = None) -> bool:
         if self.dead:
             return False
         if self.discover_queue:
