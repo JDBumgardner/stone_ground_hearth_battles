@@ -10,3 +10,5 @@ six~=1.15.0
 Werkzeug~=1.0.1
 tensorboard~=2.3.0
 torchvision~=0.7.0
+numpy~=1.19.4
+aioupnp~=0.0.17

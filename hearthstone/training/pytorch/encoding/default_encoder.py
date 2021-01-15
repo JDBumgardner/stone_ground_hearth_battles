@@ -93,7 +93,8 @@ def default_cards_encoding() -> Feature:
             lambda player: [LocatedCard(card, CardLocation.BOARD) for card in player.in_play],
             default_card_encoding(), MAX_ENCODED_BOARD),
         ListOfFeatures(
-            lambda player: [LocatedCard(card, CardLocation.DISCOVER) for card in (player.discover_queue[0] if player.discover_queue else [])],
+            lambda player: [LocatedCard(card, CardLocation.DISCOVER) for card in
+                            (player.discover_queue[0] if player.discover_queue else [])],
             default_card_encoding(), MAX_ENCODED_DISCOVER)
     ])
 
@@ -129,7 +130,7 @@ def _all_actions() -> ActionSet:
          InvalidAction(), InvalidAction(), InvalidAction()] for index in hand_indices()]
     board_action_set = [
         [InvalidAction(), InvalidAction(), InvalidAction(),
-         SellAction(index), InvalidAction(), HeroPowerAction(board_target=index)] for index inboard_indices()]
+         SellAction(index), InvalidAction(), HeroPowerAction(board_target=index)] for index in board_indices()]
     discover_action_set = [
         [InvalidAction(), InvalidAction(), InvalidAction(),
          InvalidAction(), DiscoverChoiceAction(index), InvalidAction()] for index in
@@ -162,7 +163,7 @@ class DefaultEncoder(Encoder):
         cards_tensor = torch.from_numpy(DEFAULT_CARDS_ENCODING.encode(player))
         return State(player_tensor, cards_tensor)
 
-    def encode_valid_actions(self, player: Player, rearrange_phase: bool=False) -> EncodedActionSet:
+    def encode_valid_actions(self, player: Player, rearrange_phase: bool = False) -> EncodedActionSet:
         actions = ALL_ACTIONS
 
         player_action_tensor = torch.tensor([action.valid(player) for action in actions.player_action_set])
@@ -175,7 +176,8 @@ class DefaultEncoder(Encoder):
         cards_to_rearrange = torch.tensor(
             [MAX_ENCODED_STORE + MAX_ENCODED_HAND, len(player.in_play)], dtype=torch.long)
 
-        return EncodedActionSet(player_action_tensor, cards_action_tensor, torch.tensor(rearrange_phase), cards_to_rearrange)
+        return EncodedActionSet(player_action_tensor, cards_action_tensor, torch.tensor(rearrange_phase),
+                                cards_to_rearrange)
 
     def player_encoding(self) -> Feature:
         return DEFAULT_PLAYER_ENCODING
@@ -199,4 +201,3 @@ class DefaultEncoder(Encoder):
             card_index = card_action_index // len(ALL_ACTIONS.card_action_set[0])
             within_card_index = card_action_index % len(ALL_ACTIONS.card_action_set[0])
             return ALL_ACTIONS.card_action_set[card_index][within_card_index]
-
