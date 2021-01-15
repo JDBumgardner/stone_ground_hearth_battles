@@ -5,8 +5,9 @@ import numpy as np
 import torch
 
 from hearthstone.simulator.agent import TripleRewardsAction, TavernUpgradeAction, RerollAction, \
-    EndPhaseAction, SummonAction, BuyAction, SellAction, StandardAction, DiscoverChoiceAction
+    EndPhaseAction, SummonAction, BuyAction, SellAction, StandardAction, DiscoverChoiceAction, HeroPowerAction
 from hearthstone.simulator.core.cards import CardLocation, PrintingPress
+from hearthstone.simulator.core.hero import VALHALLA
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 from hearthstone.simulator.core.player import Player, StoreIndex, HandIndex, BoardIndex, DiscoverIndex
 from hearthstone.training.pytorch.encoding.state_encoding import State, \
@@ -28,6 +29,8 @@ def enum_to_int(value: Optional[enum.Enum]) -> int:
 
 CARD_TYPE_TO_INT = {card_type: ind for ind, card_type in enumerate(PrintingPress.cards)}
 INT_TO_CARD_TYPE = {ind: card_type for ind, card_type in enumerate(PrintingPress.cards)}
+HERO_TYPE_TO_INT = {hero_type: ind for ind, hero_type in enumerate(VALHALLA)}
+INT_TO_HERO_TYPE = {ind: hero_type for ind, hero_type in enumerate(VALHALLA)}
 
 
 def default_card_encoding() -> Feature:
@@ -65,6 +68,10 @@ def default_player_encoding() -> Feature:
         ScalarFeature(lambda player: float(player.health)),
         ScalarFeature(lambda player: float(player.coins)),
         ScalarFeature(lambda player: float(player.tavern_tier)),
+        ScalarFeature(lambda player: float(len(player.in_play))),
+        ScalarFeature(lambda player: float(len(player.hand))),
+        ScalarFeature(lambda player: float(len(player.tavern))),
+        OnehotFeature(lambda player: HERO_TYPE_TO_INT[type(player.hero)], len(VALHALLA) + 1),
         SortedByValueFeature(lambda player: [p.health for name, p in player.tavern.players.items()], 8),
     ])
 
@@ -113,14 +120,20 @@ def discover_indices() -> List[DiscoverIndex]:
 
 def _all_actions() -> ActionSet:
     player_action_set = [TripleRewardsAction(), TavernUpgradeAction(), RerollAction(), EndPhaseAction(False),
-                         EndPhaseAction(True)]
-    store_action_set = [[BuyAction(index), InvalidAction(), InvalidAction(), InvalidAction(), InvalidAction()] for index in store_indices()]
-    hand_action_set = [[InvalidAction(), SummonAction(index), SummonAction(index, [BoardIndex(0)]), InvalidAction(), InvalidAction()] for index in
-                       hand_indices()]
-    board_action_set = [[InvalidAction(), InvalidAction(), InvalidAction(), SellAction(index), InvalidAction()] for index in
-                        board_indices()]
-    discover_action_set = [[InvalidAction(), InvalidAction(), InvalidAction(), InvalidAction(), DiscoverChoiceAction(index)] for index in
-                           discover_indices()]
+                         HeroPowerAction(), EndPhaseAction(True)]
+    store_action_set = [
+        [BuyAction(index), InvalidAction(), InvalidAction(),
+         InvalidAction(), InvalidAction(), HeroPowerAction(store_target=index)] for index in store_indices()]
+    hand_action_set = [
+        [InvalidAction(), SummonAction(index), SummonAction(index, [BoardIndex(0)]),
+         InvalidAction(), InvalidAction(), InvalidAction()] for index in hand_indices()]
+    board_action_set = [
+        [InvalidAction(), InvalidAction(), InvalidAction(),
+         SellAction(index), InvalidAction(), HeroPowerAction(board_target=index)] for index inboard_indices()]
+    discover_action_set = [
+        [InvalidAction(), InvalidAction(), InvalidAction(),
+         InvalidAction(), DiscoverChoiceAction(index), InvalidAction()] for index in
+        discover_indices()]
     return ActionSet(player_action_set, store_action_set + hand_action_set + board_action_set + discover_action_set)
 
 
