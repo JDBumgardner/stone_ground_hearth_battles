@@ -737,7 +737,7 @@ class IllidanStormrage(Hero):
                         logger.debug(
                             f'{attacking_war_party.owner.name} is attacking {defending_war_party.owner.name} from Illidan Stormrage\'s effect')
                         combat.start_attack(attacker, defender, attacking_war_party, defending_war_party,
-                                            context.randomizer, context.deathrattle_queue)
+                                            context.randomizer, context.event_queue)
 
 
 class ZephrysTheGreat(Hero):

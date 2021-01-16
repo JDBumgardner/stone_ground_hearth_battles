@@ -1,7 +1,8 @@
 import typing
 from collections import deque
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List
 
+from hearthstone.simulator.core.events import EVENTS
 from hearthstone.simulator.core.randomizer import Randomizer, DefaultRandomizer
 
 if typing.TYPE_CHECKING:
@@ -10,31 +11,38 @@ if typing.TYPE_CHECKING:
 
 
 class CombatEventQueue:
-
     def __init__(self, war_party_1: 'WarParty', war_party_2: 'WarParty', randomizer: Optional['Randomizer'] = DefaultRandomizer()):
         self.randomizer = randomizer
-        self._war_party_1 = war_party_1
-        self._war_party_2 = war_party_2
-        self._wp1queue = deque()
-        self._wp2queue = deque()
-        self._queues = {self._war_party_1: self._wp1queue, self._war_party_2: self._wp2queue}
+        self.queues = {
+            EVENTS.DEATHRATTLE_TRIGGERED: {war_party_1: deque(), war_party_2: deque()},
+            EVENTS.DIES: {war_party_1: deque(), war_party_2: deque()}
+        }
 
-    def load_minion(self, war_party: 'WarParty', minion: 'MonsterCard'):
-        self._queues[war_party].append(minion)
+    def load_minion(self, event: 'EVENTS', war_party: 'WarParty', minion: 'MonsterCard', foe: Optional['MonsterCard'] = None):
+        self.queues[event][war_party].append((minion, foe))
 
-    def get_next_minion(self) -> Tuple['MonsterCard', 'WarParty', 'WarParty']:
-        assert not self.empty()
-        if self._wp1queue and self._wp2queue:
-            random_queue = self.randomizer.select_event_queue(list(self._queues.values()))
-            other_queue = [q for q in self._queues.values() if q != random_queue][0]
-            return random_queue.popleft(), self.get_war_party(random_queue), self.get_war_party(other_queue)
-        elif self._wp1queue:
-            return self._wp1queue.popleft(), self._war_party_1, self._war_party_2
+    def get_next_minion(self, event: 'EVENTS') -> Tuple['MonsterCard', Optional['MonsterCard'], 'WarParty', 'WarParty']:
+        assert not self.all_empty()
+
+        if all(bool(queue) for queue in self.queues[event].values()):
+            non_empty_queue = self.randomizer.select_event_queue(list(self.queues[event].values()))
         else:
-            return self._wp2queue.popleft(), self._war_party_2, self._war_party_1
+            non_empty_queue = [q for q in self.queues[event].values() if bool(q)][0]
 
-    def empty(self) -> bool:
-        return not self._wp1queue and not self._wp2queue
+        other_queue = [q for q in self.queues[event].values() if q != non_empty_queue][0]
+        friendly_war_party = self.get_war_party(non_empty_queue, event)
+        enemy_war_party = self.get_war_party(other_queue, event)
+        minion, foe = non_empty_queue.popleft()
 
-    def get_war_party(self, queue) -> 'WarParty':
-        return list(self._queues.keys())[list(self._queues.values()).index(queue)]
+        return minion, foe, friendly_war_party, enemy_war_party
+
+    def all_empty(self) -> bool:
+        return all(not bool(queue) for event in self.queues.keys() for queue in self.queues[event].values())
+
+    def event_empty(self, event: 'EVENTS') -> bool:
+        return all(not bool(queue) for queue in self.queues[event].values())
+
+    def get_war_party(self, queue: deque, event: 'EVENTS') -> 'WarParty':
+        queues_of_event = list(self.queues[event].keys())
+        queue_index = list(self.queues[event].values()).index(queue)
+        return queues_of_event[queue_index]

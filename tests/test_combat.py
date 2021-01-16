@@ -1649,6 +1649,7 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(ethan.health, 40)
 
     def test_red_whelp_in_the_queue(self):
+        logging.basicConfig(level=logging.DEBUG)
         tavern = Tavern()
         adam = tavern.add_player_with_hero("Adam")
         ethan = tavern.add_player_with_hero("Ethan")
@@ -1656,8 +1657,10 @@ class CombatTests(unittest.TestCase):
         ethans_war_party = WarParty(ethan)
         red_whelp = RedWhelp()
         red_whelp.golden_transformation([])
-        adams_war_party.board = [KindlyGrandmother(), ReplicatingMenace()]
-        ethans_war_party.board = [red_whelp, AlleyCat(), AlleyCat()]
+        garr = LieutenantGarr()
+        garr.golden_transformation([])
+        adams_war_party.board = [ReplicatingMenace(), KindlyGrandmother()]
+        ethans_war_party.board = [red_whelp, garr]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
@@ -1676,10 +1679,10 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
 
-    class TestKaboomBotResolvingBeforeSpawn(DefaultRandomizer):
+    class TestKaboomBotResolvingBeforeSpawnRandomizer(DefaultRandomizer):
         def select_event_queue(self, queues: List[deque]) -> deque:
-            first_queue_minions = [type(card) for card in queues[0]]
-            second_queue_minions = [type(card) for card in queues[1]]
+            first_queue_minions = [type(card) for card, foe in queues[0]]
+            second_queue_minions = [type(card) for card, foe in queues[1]]
             if KaboomBot in first_queue_minions:
                 return queues[0]
             elif KaboomBot in second_queue_minions:
@@ -1688,7 +1691,6 @@ class CombatTests(unittest.TestCase):
                 return random.choice(queues)
 
     def test_kaboom_bot_resolving_before_spawn(self):
-        logging.basicConfig(level=logging.DEBUG)
         tavern = Tavern()
         adam = tavern.add_player_with_hero("Adam")
         ethan = tavern.add_player_with_hero("Ethan")
@@ -1701,7 +1703,7 @@ class CombatTests(unittest.TestCase):
         garr.health += 1
         adams_war_party.board = [unstable_ghoul, KaboomBot(), KaboomBot()]
         ethans_war_party.board = [garr, SpawnOfNzoth(), CapnHoggarr()]
-        fight_boards(adams_war_party, ethans_war_party, self.TestKaboomBotResolvingBeforeSpawn())
+        fight_boards(adams_war_party, ethans_war_party, self.TestKaboomBotResolvingBeforeSpawnRandomizer())
         self.assertEqual(adam.health, 34)
         self.assertEqual(ethan.health, 40)
 

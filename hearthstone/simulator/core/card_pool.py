@@ -251,14 +251,13 @@ class RedWhelp(MonsterCard):
         if event.event is EVENTS.COMBAT_PREPHASE:
             self.damage = len([card for card in context.friendly_war_party.board if card.check_type(MONSTER_TYPES.DRAGON)])
         if event.event is EVENTS.COMBAT_START:
-            targets = [card for card in context.enemy_war_party.board if not card.is_dying()]
-            if not targets:
-                return
             num_damage_instances = 2 if self.golden else 1
             for _ in range(num_damage_instances):
+                targets = [card for card in context.enemy_war_party.board if card.is_targetable()]
+                if not targets:
+                    return
                 target = context.randomizer.select_enemy_minion(targets)
                 target.take_damage(self.damage, context.enemy_context(), self)
-                combat.resolve_chained_combat_events(context)
 
 
 class HarvestGolem(MonsterCard):
@@ -298,7 +297,7 @@ class KaboomBot(MonsterCard):
     def base_deathrattle(self, context: CombatPhaseContext):
         num_damage_instances = 2 if self.golden else 1
         for _ in range(num_damage_instances):
-            targets = [card for card in context.enemy_war_party.board if not card.is_dying()]
+            targets = [card for card in context.enemy_war_party.board if card.is_targetable()]
             if not targets:
                 break
             target = context.randomizer.select_enemy_minion(targets)
@@ -479,7 +478,7 @@ class SkyPirate(MonsterCard):
                 return
             logger.debug(f'{attacking_war_party.owner.name} is attacking {defending_war_party.owner.name}')
             combat.start_attack(self, defender, attacking_war_party, defending_war_party, context.randomizer,
-                                context.deathrattle_queue)
+                                context.event_queue)
 
 
 class DeckSwabbie(MonsterCard):
@@ -509,7 +508,7 @@ class UnstableGhoul(MonsterCard):
         count = 2 if self.golden else 1
         for _ in range(count):
             for minion in all_minions:
-                if minion.is_dying():
+                if not minion.is_targetable():
                     continue
                 if minion in context.friendly_war_party.board:
                     minion.take_damage(1, context, self)
@@ -906,7 +905,7 @@ class SoulJuggler(MonsterCard):
                 MONSTER_TYPES.DEMON) and event.card in context.friendly_war_party.board:
             count = 2 if self.golden else 1
             for _ in range(count):
-                targets = [card for card in context.enemy_war_party.board if not card.is_dying()]
+                targets = [card for card in context.enemy_war_party.board if card.is_targetable()]
                 if targets:
                     target = context.randomizer.select_enemy_minion(targets)
                     target.take_damage(3, context.enemy_context(), self)
@@ -1460,7 +1459,7 @@ class HeraldOfFlame(MonsterCard):
         damage = 6 if self.golden else 3
         leftmost_index = 0
         while True:
-            if not context.enemy_war_party.board[leftmost_index].is_dying():
+            if context.enemy_war_party.board[leftmost_index].is_targetable():
                 break
             leftmost_index += 1
             if leftmost_index >= len(context.enemy_war_party.board):
@@ -1504,7 +1503,7 @@ class NatPagleExtremeAngler(MonsterCard):
     mana_cost = 7
 
     def handle_event_powers(self, event: CardEvent, context: Union['BuyPhaseContext', 'CombatPhaseContext']):
-        if event.event is EVENTS.AFTER_ATTACK_DAMAGE and self == event.card and event.foe.is_dying():
+        if event.event is EVENTS.AFTER_ATTACK_DAMAGE and self == event.card and not event.foe.is_targetable():
             for _ in range(2 if self.golden else 1):
                 if context.friendly_war_party.owner.room_in_hand():
                     available_cards = [card for card in context.friendly_war_party.owner.tavern.deck.unique_cards() if card.tier <= context.friendly_war_party.owner.tavern_tier]
@@ -1612,7 +1611,7 @@ class YoHoOgre(MonsterCard):
     mana_cost = 6
 
     def handle_event_powers(self, event: CardEvent, context: Union['BuyPhaseContext', 'CombatPhaseContext']):
-        if event.event is EVENTS.AFTER_ATTACK_DEATHRATTLES and event.card == self and not self.is_dying():
+        if event.event is EVENTS.AFTER_ATTACK_DEATHRATTLES and event.card == self and self.is_targetable():
             attacking_war_party = context.friendly_war_party
             defending_war_party = context.enemy_war_party
             defender = defending_war_party.get_attack_target(context.randomizer, self)
@@ -1620,7 +1619,7 @@ class YoHoOgre(MonsterCard):
                 return
             logger.debug(f'{self} triggers after surviving an attack')
             combat.start_attack(self, defender, attacking_war_party, defending_war_party, context.randomizer,
-                                context.deathrattle_queue)
+                                context.event_queue)
 
 
 class WaxriderTogwaggle(MonsterCard):
@@ -2171,13 +2170,13 @@ class WildfireElemental(MonsterCard):
     mana_cost = 6
 
     def handle_event_powers(self, event: CardEvent, context: Union['BuyPhaseContext', 'CombatPhaseContext']):
-        if event.event is EVENTS.AFTER_ATTACK_DAMAGE and self == event.card and event.foe.is_dying():
+        if event.event is EVENTS.AFTER_ATTACK_DAMAGE and self == event.card and not event.foe.is_targetable():
             excess_damage = max(event.foe.health * -1, 0)
             adjacent_enemies = context.enemy_war_party.adjacent_minions(event.foe)
             if adjacent_enemies:
                 adjacent_targets = adjacent_enemies if self.golden else [context.randomizer.select_enemy_minion(adjacent_enemies)]
                 for card in adjacent_targets:
-                    card.take_damage(excess_damage, context, foe=self)
+                    card.take_damage(excess_damage, context.enemy_context(), self)
 
 
 class StasisElemental(MonsterCard):
