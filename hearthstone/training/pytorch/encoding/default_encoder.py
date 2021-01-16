@@ -6,7 +6,8 @@ import torch
 
 from hearthstone.simulator.agent import TripleRewardsAction, TavernUpgradeAction, RerollAction, \
     EndPhaseAction, SummonAction, BuyAction, SellAction, StandardAction, DiscoverChoiceAction, HeroPowerAction
-from hearthstone.simulator.core.cards import CardLocation, PrintingPress
+from hearthstone.simulator.core.card_pool import PrintingPress
+from hearthstone.simulator.core.cards import CardLocation
 from hearthstone.simulator.core.hero_pool import VALHALLA
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 from hearthstone.simulator.core.player import Player, StoreIndex, HandIndex, BoardIndex, DiscoverIndex

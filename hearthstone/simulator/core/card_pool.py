@@ -2,11 +2,11 @@ import logging
 import sys
 import types
 from inspect import getmembers, isclass
-from typing import Union, List
+from typing import Union, List, Set, Type
 
 from hearthstone.simulator.core import combat
 from hearthstone.simulator.core.adaptations import valid_adaptations
-from hearthstone.simulator.core.cards import MonsterCard, PrintingPress, one_minion_per_type
+from hearthstone.simulator.core.cards import MonsterCard, one_minion_per_type, CardList
 from hearthstone.simulator.core.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 
@@ -2364,7 +2364,18 @@ class FishOfNZoth(MonsterCard):
 # TODO: add Faceless Taverngoer - add option to target store minions
 
 
-ALL_MINIONS = [member[1] for member in getmembers(sys.modules[__name__], lambda member: isclass(member) and member.__module__ == __name__)]
+class PrintingPress:
+    cards: Set[Type['MonsterCard']] = set(member[1] for member in getmembers(sys.modules[__name__], lambda member: isclass(member) and issubclass(member, MonsterCard) and member.__module__ == __name__))
+    cards_per_tier = {1: 16, 2: 15, 3: 13, 4: 11, 5: 9, 6: 7}
 
-for minion_class in ALL_MINIONS:  # is this bad style?
-    PrintingPress.add_card(minion_class)
+    @classmethod
+    def make_cards(cls, available_types: List['MONSTER_TYPES']) -> 'CardList':
+        cardlist = []
+        for card in cls.cards:
+            if not card.base_token and (card.pool in available_types or card.pool == MONSTER_TYPES.ALL):
+                cardlist.extend([card() for _ in range(cls.cards_per_tier[card.tier])])
+        return CardList(cardlist)
+
+    @classmethod
+    def all_types(cls):
+        return [card_type for card_type in cls.cards if not card_type.base_token]

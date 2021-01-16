@@ -2,7 +2,8 @@ import enum
 from typing import Dict, Optional
 
 from hearthstone.simulator.core import hero, combat, events
-from hearthstone.simulator.core.cards import CardList, PrintingPress
+from hearthstone.simulator.core.card_pool import PrintingPress
+from hearthstone.simulator.core.cards import CardList
 from hearthstone.simulator.core.combat import WarParty
 from hearthstone.simulator.core.hero import Hero
 from hearthstone.simulator.core.hero_pool import VALHALLA

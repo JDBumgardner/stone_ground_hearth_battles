@@ -32,27 +32,6 @@ def one_minion_per_type(cards: List['MonsterCard'], randomizer: 'Randomizer', ex
     return minions
 
 
-class PrintingPress:
-    cards: Set[Type['MonsterCard']] = set()
-    cards_per_tier = {1: 16, 2: 15, 3: 13, 4: 11, 5: 9, 6: 7}
-
-    @classmethod
-    def make_cards(cls, available_types: List['MONSTER_TYPES']) -> 'CardList':
-        cardlist = []
-        for card in cls.cards:
-            if not card.base_token and (card.pool in available_types or card.pool == MONSTER_TYPES.ALL):
-                cardlist.extend([card() for _ in range(cls.cards_per_tier[card.tier])])
-        return CardList(cardlist)
-
-    @classmethod
-    def add_card(cls, card_class):
-        cls.cards.add(card_class)
-
-    @classmethod
-    def all_types(cls):
-        return [card_type for card_type in cls.cards if not card_type.base_token]
-
-
 class MonsterCard:
     coin_cost = 3
     mana_cost: Optional[int] = None
