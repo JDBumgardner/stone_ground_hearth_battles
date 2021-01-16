@@ -5,7 +5,6 @@ from collections import defaultdict
 from typing import Set, List, Optional, Callable, Type, Union, Iterator
 
 from hearthstone.simulator.core import events
-from hearthstone.simulator.core.card_factory import make_metaclass
 from hearthstone.simulator.core.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 from hearthstone.simulator.core.randomizer import Randomizer
@@ -54,10 +53,7 @@ class PrintingPress:
         return [card_type for card_type in cls.cards if not card_type.base_token]
 
 
-CardType = make_metaclass(PrintingPress.add_card, ("MonsterCard",))
-
-
-class MonsterCard(metaclass=CardType):
+class MonsterCard:
     coin_cost = 3
     mana_cost: Optional[int] = None
     base_health: int

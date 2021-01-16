@@ -7,7 +7,7 @@ import torch
 from hearthstone.simulator.agent import TripleRewardsAction, TavernUpgradeAction, RerollAction, \
     EndPhaseAction, SummonAction, BuyAction, SellAction, StandardAction, DiscoverChoiceAction, HeroPowerAction
 from hearthstone.simulator.core.cards import CardLocation, PrintingPress
-from hearthstone.simulator.core.hero import VALHALLA
+from hearthstone.simulator.core.hero_pool import VALHALLA
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 from hearthstone.simulator.core.player import Player, StoreIndex, HandIndex, BoardIndex, DiscoverIndex
 from hearthstone.training.pytorch.encoding.state_encoding import State, \
@@ -70,7 +70,7 @@ def default_player_encoding() -> Feature:
         ScalarFeature(lambda player: float(player.tavern_tier)),
         ScalarFeature(lambda player: float(len(player.in_play))),
         ScalarFeature(lambda player: float(len(player.hand))),
-        ScalarFeature(lambda player: float(len(player.tavern))),
+        ScalarFeature(lambda player: float(len(player.store))),
         OnehotFeature(lambda player: HERO_TYPE_TO_INT[type(player.hero)], len(VALHALLA) + 1),
         SortedByValueFeature(lambda player: [p.health for name, p in player.tavern.players.items()], 8),
     ])

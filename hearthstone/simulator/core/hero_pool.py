@@ -1,5 +1,7 @@
 import copy
 import logging
+import sys
+from inspect import getmembers, isclass
 from typing import Union, Tuple, Optional
 
 from hearthstone.simulator.core import combat, events, hero
@@ -788,7 +790,7 @@ class SirFinleyMrrgglton(Hero):
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_START and context.owner.tavern.turn_count == 0:
-            hero_pool = [hero_type() for hero_type in hero.VALHALLA if (hero_type.pool in context.owner.tavern.available_types or hero_type.pool == MONSTER_TYPES.ALL) and hero_type != type(self)]
+            hero_pool = [hero_type() for hero_type in VALHALLA if (hero_type.pool in context.owner.tavern.available_types or hero_type.pool == MONSTER_TYPES.ALL) and hero_type != type(self)]
             hero_choices = []
             for _ in range(3):
                 random_hero = context.randomizer.select_hero(hero_pool)
@@ -905,3 +907,6 @@ class NZoth(Hero):
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_START and context.owner.tavern.turn_count == 0:
             context.owner.gain_board_card(FishOfNZoth())
+
+
+VALHALLA = [member[1] for member in getmembers(sys.modules[__name__], lambda member: isclass(member) and member.__module__ == __name__)]

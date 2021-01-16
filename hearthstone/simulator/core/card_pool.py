@@ -1,5 +1,7 @@
 import logging
+import sys
 import types
+from inspect import getmembers, isclass
 from typing import Union, List
 
 from hearthstone.simulator.core import combat
@@ -2360,3 +2362,9 @@ class FishOfNZoth(MonsterCard):
 
 
 # TODO: add Faceless Taverngoer - add option to target store minions
+
+
+ALL_MINIONS = [member[1] for member in getmembers(sys.modules[__name__], lambda member: isclass(member) and member.__module__ == __name__)]
+
+for minion_class in ALL_MINIONS:  # is this bad style?
+    PrintingPress.add_card(minion_class)

@@ -1,7 +1,6 @@
 import typing
 from typing import Union, Tuple, Optional, List
 
-from hearthstone.simulator.core.card_factory import make_metaclass
 from hearthstone.simulator.core.cards import CardLocation
 
 from hearthstone.simulator.core.events import BuyPhaseContext, CombatPhaseContext, CardEvent
@@ -10,12 +9,8 @@ from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 if typing.TYPE_CHECKING:
     from hearthstone.simulator.core.player import BoardIndex, StoreIndex, DiscoverIndex
 
-VALHALLA = []
 
-HeroType = make_metaclass(VALHALLA.append, ("Hero", "EmptyHero"))
-
-
-class Hero(metaclass=HeroType):
+class Hero:
     base_power_cost: Optional[int] = None  # default value is for heroes with passive hero powers
     hero_power_used = False
     can_use_power = True

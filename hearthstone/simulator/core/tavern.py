@@ -5,6 +5,7 @@ from hearthstone.simulator.core import hero, combat, events
 from hearthstone.simulator.core.cards import CardList, PrintingPress
 from hearthstone.simulator.core.combat import WarParty
 from hearthstone.simulator.core.hero import Hero
+from hearthstone.simulator.core.hero_pool import VALHALLA
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 from hearthstone.simulator.core.player import Player
 from hearthstone.simulator.core.randomizer import DefaultRandomizer
@@ -21,7 +22,7 @@ class Tavern:
         if restrict_types:
             self.restrict_monster_types()
         self.deck: 'CardList' = PrintingPress.make_cards(self.available_types)
-        self.hero_pool = [hero_type() for hero_type in hero.VALHALLA if
+        self.hero_pool = [hero_type() for hero_type in VALHALLA if
                           hero_type.pool in self.available_types or hero_type.pool == MONSTER_TYPES.ALL]
         self.losers = []
         self.game_state = GameState.HERO_SELECTION

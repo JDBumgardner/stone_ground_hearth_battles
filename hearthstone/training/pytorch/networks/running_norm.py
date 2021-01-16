@@ -5,7 +5,7 @@ from hearthstone.training.pytorch.encoding.state_encoding import Encoder, State
 
 
 class WelfordAggregator:
-    def __init__(self, shape:torch.Shape):
+    def __init__(self, shape:torch.Size):
         self.shape = shape
         self.count = 0
         self.mean = torch.zeros(shape)
@@ -37,7 +37,7 @@ class WelfordAggregator:
 
 
 class PPONormalizer(nn.Module):
-    def __init__(self, shape: torch.Shape, gamma: float, epsilon: float = 1e-5):
+    def __init__(self, shape: torch.Size, gamma: float, epsilon: float = 1e-5):
         """
         This is the reward normalization scheme defined in https://openreview.net/pdf?id=r1etN1rtPB, Appendix A2.
 
@@ -67,7 +67,7 @@ class PPONormalizer(nn.Module):
             return value
 
 class EMANormalizer(nn.Module):
-    def __init__(self, shape: torch.Shape, gamma: float, epsilon: float = 1e-5):
+    def __init__(self, shape: torch.Size, gamma: float, epsilon: float = 1e-5):
         """
         This is a raw normalizer which normalizes by a running mean/stddev.
 

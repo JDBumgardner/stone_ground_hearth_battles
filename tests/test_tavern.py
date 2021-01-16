@@ -4,7 +4,7 @@ from typing import Type
 from hearthstone.simulator.agent import generate_all_actions, EndPhaseAction
 from hearthstone.simulator.core.adaptations import AdaptBuffs
 from hearthstone.simulator.core.card_pool import *
-from hearthstone.simulator.core.cards import MonsterCard, CardType
+from hearthstone.simulator.core.cards import MonsterCard
 from hearthstone.simulator.core.hero_graveyard import *
 from hearthstone.simulator.core.hero_pool import *
 from hearthstone.simulator.core.player import StoreIndex, HandIndex, BoardIndex, DiscoverIndex, Player
@@ -17,7 +17,7 @@ def force_card(cards: List[MonsterCard], card_type) -> MonsterCard:
 
 
 class CardForcer(DefaultRandomizer):
-    def __init__(self, forced_cards: List[CardType]):
+    def __init__(self, forced_cards: List[Type['MonsterCard']]):
         super().__init__()
         self.forced_cards = forced_cards
 
@@ -27,7 +27,7 @@ class CardForcer(DefaultRandomizer):
 
 
 class RepeatedCardForcer(DefaultRandomizer):
-    def __init__(self, repeatedly_forced_cards: List[CardType]):
+    def __init__(self, repeatedly_forced_cards: List[Type['MonsterCard']]):
         super().__init__()
         self.repeatedly_forced_cards = repeatedly_forced_cards
         self.pointer = 0

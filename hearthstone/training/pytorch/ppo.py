@@ -12,7 +12,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 from hearthstone.ladder.ladder import Contestant, load_ratings, ContestantAgentGenerator
 from hearthstone.simulator.agent import RearrangeCardsAction, BuyAction, EndPhaseAction, SellAction, SummonAction, \
-    RerollAction, DiscoverChoiceAction, TavernUpgradeAction, TripleRewardsAction
+    RerollAction, DiscoverChoiceAction, TavernUpgradeAction, TripleRewardsAction, HeroPowerAction
 from hearthstone.simulator.core.hero import EmptyHero
 from hearthstone.simulator.core.tavern import Tavern
 from hearthstone.training.pytorch.agents.pytorch_bot import PytorchBot
@@ -224,6 +224,7 @@ class PPOLearner(GlobalStepContext):
         tensorboard.add_scalar("actions/upgrade", sum(type(action) is TavernUpgradeAction for action in transition_batch.action), self.global_step)
         tensorboard.add_scalar("actions/triple_rewards", sum(type(action) is TripleRewardsAction for action in transition_batch.action), self.global_step)
         tensorboard.add_scalar("actions/discover", sum(type(action) is DiscoverChoiceAction for action in transition_batch.action), self.global_step)
+        tensorboard.add_scalar("actions/hero_power", sum(type(action) is HeroPowerAction for action in transition_batch.action), self.global_step)
 
         mean_0_return = transition_batch.retn - transition_batch.retn.mean()
         mean_0_value = value - value.mean()
@@ -447,7 +448,7 @@ def main():
         'opponents.initial': 'easiest',
         'opponents.self_play.enabled': True,
         'opponents.self_play.only_champions': True,
-        'opponents.self_play.remove_weakest': False,
+        'opponents.self_play.remove_weakest': True,
         'opponents.max_pool_size': 7,
         'adam_lr': 0.00001,
         'batch_size': 512,
