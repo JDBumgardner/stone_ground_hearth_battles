@@ -208,7 +208,7 @@ def resolve_combat_events(randomizer: 'Randomizer', event_queue: 'CombatEventQue
             context.broadcast_combat_event(events.DiesEvent(minion, foe))
 
         while not event_queue.event_empty(EVENTS.DEATHRATTLE_TRIGGERED):
-            minion, foe, friendly_war_party, enemy_war_party = event_queue.get_next_minion(EVENTS.DEATHRATTLE_TRIGGERED)
+            minion, _, friendly_war_party, enemy_war_party = event_queue.get_next_minion(EVENTS.DEATHRATTLE_TRIGGERED)
             context = CombatPhaseContext(friendly_war_party, enemy_war_party, randomizer, event_queue)
             for _ in range(context.deathrattle_multiplier()):
                 for deathrattle in minion.deathrattles:

@@ -1,0 +1,24 @@
+current implementation:
+
+
+attack happens
+attack damage is marked
+
+while there are any dying minions in play:  // health <= 0 but not marked dead yet
+
+    for each minion in play:
+        mark death if necessary
+        add to death event queue if necessary
+    end for
+
+    while the death event queue is not empty:
+        get the next minion from the queue
+        broadcast that minion's death event  // this can cause damage to other minions, but they won't be added to the death event queue yet
+    end while                                // minions are added to the deathrattle queue in handle_event
+
+    while the deathrattle queue is not empty:
+        get the next minion from the queue
+        resolve that minion's deathrattle  // this can cause damage to other minions, but they won't be added to the death event queue yet
+    end while
+
+end while
