@@ -154,21 +154,16 @@ class Player:
         self.played_minions.append(type(card))
 
     def valid_summon_from_hand(self, index: HandIndex, targets: Optional[List[BoardIndex]] = None) -> bool:
-        if self.dead:
+        if not self.room_to_summon(index):
             return False
-        if self.discover_queue:
-            return False
+
+        card = self.hand[index]
         if targets is None:
             targets = []
         #  TODO: Jack num_battlecry_targets should only accept 0,1,2
         for target in targets:
             if not self.valid_board_index(target):
                 return False
-        if not self.valid_hand_index(index):
-            return False
-        card = self.hand[index]
-        if not self.room_on_board():
-            return False
         if card.battlecry:
             valid_targets = [target_index for target_index, target_card in enumerate(self.in_play) if
                              card.valid_battlecry_target(target_card)]
@@ -188,6 +183,17 @@ class Player:
                 return False
             if len(targets) == 1 and not self.in_play[targets[0]].check_type(MONSTER_TYPES.MECH):
                 return False
+        return True
+
+    def room_to_summon(self, index: HandIndex):
+        if self.dead:
+            return False
+        if self.discover_queue:
+            return False
+        if not self.valid_hand_index(index):
+            return False
+        if not self.room_on_board():
+            return False
         return True
 
     def play_triple_rewards(self):

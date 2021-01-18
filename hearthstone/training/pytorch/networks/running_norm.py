@@ -5,27 +5,30 @@ from hearthstone.training.pytorch.encoding.state_encoding import Encoder, State
 
 
 class WelfordAggregator:
-    def __init__(self, shape:torch.Size):
+    def __init__(self, shape: torch.Size):
         self.shape = shape
         self.count = 0
-        self.mean = torch.zeros(shape)
-        self.m2 = torch.zeros(shape)
+        self.mu = None
+        self.m2 = None
 
     def update(self, value: torch.Tensor):
         with torch.no_grad():
+            if self.mu is None:
+                self.mu = torch.zeros(self.shape, device=value.device)
+                self.m2 = torch.zeros(self.shape, device=value.device)
             value = value.reshape((-1,) + self.shape)
             b_count = value.shape[0]
             b_mean = value.mean(dim=0)
             b_m2 = (value - b_mean).pow(2).sum(dim=0)
             n = self.count + b_count
-            delta = b_mean - self.mean
+            delta = b_mean - self.mu
 
             self.m2 = self.m2 + b_m2 + delta.pow(2) * self.count * b_count / n
-            self.mean += delta * b_count / n
+            self.mu += delta * b_count / n
             self.count = n
 
     def mean(self):
-        return self.mean
+        return self.mu
 
     def variance(self):
         with torch.no_grad():
@@ -86,7 +89,7 @@ class EMANormalizer(nn.Module):
     def forward(self, value: torch.Tensor):
         if not self.training:
             self.welford_aggregator.count *= self.gamma
-            self.welford_aggregator.update(self.value)
+            self.welford_aggregator.update(value)
         if self.welford_aggregator.count > 2:
             return value - self.welford_aggregator.mean() / (self.welford_aggregator.stdev() + self.epsilon)
         else:
@@ -96,8 +99,8 @@ class EMANormalizer(nn.Module):
 class ObservationNormalizer(nn.Module):
     def __init__(self, encoding: Encoder, gamma: float):
         super().__init__()
-        self.player_normalizer = EMANormalizer(torch.Shape(encoding.player_encoding().size()), gamma)
-        self.cards_normalizer = EMANormalizer(torch.Shape(encoding.cards_encoding().size()[1:]), gamma)
+        self.player_normalizer = EMANormalizer(torch.Size(encoding.player_encoding().size()), gamma)
+        self.cards_normalizer = EMANormalizer(torch.Size(encoding.cards_encoding().size()[1:]), gamma)
 
     def forward(self, state: State):
         return State(player_tensor=self.player_normalizer(state.player_tensor),

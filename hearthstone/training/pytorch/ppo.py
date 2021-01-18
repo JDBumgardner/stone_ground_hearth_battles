@@ -18,7 +18,7 @@ from hearthstone.simulator.core.tavern import Tavern
 from hearthstone.training.pytorch.agents.pytorch_bot import PytorchBot
 from hearthstone.training.pytorch.encoding import shared_tensor_pool_encoder
 from hearthstone.training.pytorch.encoding.default_encoder import \
-    DEFAULT_PLAYER_ENCODING, DEFAULT_CARDS_ENCODING, EncodedActionSet, \
+    EncodedActionSet, \
     DefaultEncoder
 from hearthstone.training.pytorch.encoding.shared_tensor_pool_encoder import SharedTensorPoolEncoder
 from hearthstone.training.pytorch.encoding.state_encoding import State
@@ -155,12 +155,19 @@ class PPOLearner(GlobalStepContext):
             transition_batch.value - value,
             -ppo_epsilon, ppo_epsilon)
 
-        value_loss = torch.max(value_error.pow(2), clipped_value_error.pow(2)).mean()
+        if self.hparams['ppo_clip_value']:
+            value_loss = torch.max(value_error.pow(2), clipped_value_error.pow(2)).mean()
+        else:
+            value_loss = value_error.pow(2).mean()
 
         entropy_loss = (entropy_weight * action_log_probs).mean()
-        main_dist_kl_divergence = (debug.component_policy.exp() * (
-                    debug.component_policy - transition_batch.debug_component_policy)).sum(dim=1).mean()
         approx_kl_divergence = -log_ratio.mean()
+        main_dist_kl_divergence = (debug.component_policy.exp() * (
+                debug.component_policy - transition_batch.debug_component_policy)).sum(dim=1).masked_select(
+            transition_batch.valid_actions.rearrange_phase.logical_not()).mean()
+        main_dist_entropy = - (debug.component_policy.exp() * debug.component_policy).sum(dim=1).masked_select(
+            transition_batch.valid_actions.rearrange_phase.logical_not()).mean()
+
         if self.histogram_tensorboard:
             tensorboard.add_histogram("policy", torch.exp(action_log_probs), self.global_step)
             masked_reward = transition_batch.reward.masked_select(transition_batch.is_terminal)
@@ -180,8 +187,10 @@ class PPOLearner(GlobalStepContext):
                                transition_batch.reward.masked_select(transition_batch.is_terminal).float().mean(),
                                self.global_step)
         tensorboard.add_scalar("avg_value", value.mean(), self.global_step)
-        tensorboard.add_scalar("avg_advantage/unnormalized", advantage.mean(), self.global_step)
-        tensorboard.add_scalar("avg_advantage/normalized", normalized_advantage.mean(), self.global_step)
+        tensorboard.add_scalar("advantage/mean/unnormalized", advantage.mean(), self.global_step)
+        tensorboard.add_scalar("advantage/mean/normalized", normalized_advantage.mean(), self.global_step)
+        tensorboard.add_scalar("advantage/stddev/unnormalized", advantage.std(), self.global_step)
+        tensorboard.add_scalar("advantage/stddev/normalized", normalized_advantage.std(), self.global_step)
         tensorboard.add_scalar("avg_value_error", value_error.mean(), self.global_step)
         tensorboard.add_scalar("loss/policy", policy_loss, self.global_step)
         tensorboard.add_scalar("loss/policy/main_dist",
@@ -193,14 +202,30 @@ class PPOLearner(GlobalStepContext):
                                    transition_batch.valid_actions.rearrange_phase).mean(), self.global_step)
         tensorboard.add_scalar("loss/value", value_loss, self.global_step)
         tensorboard.add_scalar("loss/entropy", entropy_loss, self.global_step)
-        tensorboard.add_scalar("loss/entropy/main_dist", entropy_weight * action_log_probs.masked_select(
-            transition_batch.valid_actions.rearrange_phase.logical_not()).mean(), self.global_step)
-        tensorboard.add_scalar("loss/entropy/rearrange", entropy_weight * action_log_probs.masked_select(
-            transition_batch.valid_actions.rearrange_phase).mean(), self.global_step)
-        tensorboard.add_scalar("kl_divergence/main_dist", main_dist_kl_divergence, self.global_step)
+        tensorboard.add_scalars("loss/entropy/main_dist",
+                                {"approx": entropy_weight * action_log_probs.masked_select(
+            transition_batch.valid_actions.rearrange_phase.logical_not()).mean(),
+                                 "exact": - entropy_weight * main_dist_entropy,
+                                 "min": - entropy_weight * (transition_batch.valid_actions.player_action_tensor.sum(
+                                   dim=1) + transition_batch.valid_actions.card_action_tensor.flatten(1).sum(
+                                   dim=1)).float().log().masked_select(
+                                   transition_batch.valid_actions.rearrange_phase.logical_not()).mean()
+                                 }, self.global_step)
+        tensorboard.add_scalars("loss/entropy/rearrange",
+                                {"approx": entropy_weight * action_log_probs.masked_select(
+                                    transition_batch.valid_actions.rearrange_phase).mean(),
+                                 "min": - entropy_weight *
+                                        (transition_batch.valid_actions.cards_to_rearrange[:, 1] + 1).masked_select(
+                                            transition_batch.valid_actions.rearrange_phase).float().lgamma().mean()
+                                 }, self.global_step)
+        tensorboard.add_scalars("kl_divergence/main_dist",
+                                {
+                                    "exact": main_dist_kl_divergence,
+                                    "approx": -log_ratio.masked_select(
+                                        transition_batch.valid_actions.rearrange_phase.logical_not()).mean()
+                                }, self.global_step)
+
         tensorboard.add_scalar("kl_divergence/approx", approx_kl_divergence, self.global_step)
-        tensorboard.add_scalar("kl_divergence/approx/main_dist", -log_ratio.masked_select(
-            transition_batch.valid_actions.rearrange_phase.logical_not()).mean(), self.global_step)
         tensorboard.add_scalar("kl_divergence/approx/rearrange", -log_ratio.masked_select(
             transition_batch.valid_actions.rearrange_phase).mean(), self.global_step)
 
@@ -228,12 +253,23 @@ class PPOLearner(GlobalStepContext):
 
         mean_0_return = transition_batch.retn - transition_batch.retn.mean()
         mean_0_value = value - value.mean()
-        mean_0_diff = transition_batch.retn - value
-        mean_0_diff -= mean_0_diff.mean()
-        tensorboard.add_scalar("critic_explanation/explained_variance", (1 - mean_0_diff.pow(2).mean()) /
-                               mean_0_return.pow(2).mean(), self.global_step)
         tensorboard.add_scalar("critic_explanation/correlation", (mean_0_return * mean_0_value).mean() / (
                 mean_0_return.pow(2).mean() * mean_0_value.pow(2).mean()).sqrt(), self.global_step)
+        tensorboard.add_scalar("critic_explanation/residual_return_variance",
+                               value_error.var() / transition_batch.retn.var(),
+                               self.global_step)
+        tensorboard.add_scalar("critic_explanation/residual_gae_variance",
+                               (value - transition_batch.gae_return).var() / transition_batch.gae_return.var(),
+                               self.global_step)
+
+        mean_0_terminal_reward = transition_batch.reward.masked_select(
+            transition_batch.is_terminal) - transition_batch.reward.masked_select(transition_batch.is_terminal).float().mean()
+        mean_0_terminal_value = value.masked_select(
+            transition_batch.is_terminal) - value.masked_select(transition_batch.is_terminal).mean()
+        tensorboard.add_scalar("critic_explanation/terminal_correlation",
+                               (mean_0_terminal_reward * mean_0_terminal_value).mean() / (
+                                       mean_0_terminal_reward.pow(2).mean() * mean_0_terminal_value.pow(
+                                   2).mean()).sqrt(), self.global_step)
 
         loss = policy_loss * policy_weight + value_loss + entropy_loss
         optimizer.zero_grad()
@@ -450,11 +486,11 @@ def main():
         'opponents.self_play.only_champions': True,
         'opponents.self_play.remove_weakest': True,
         'opponents.max_pool_size': 7,
-        'adam_lr': 0.00001,
-        'batch_size': 512,
-        'minibatch_size': 512,
+        'adam_lr': 0.00002,
+        'batch_size': 1024,
+        'minibatch_size': 1024,
         'cuda': True,
-        'entropy_weight': 0.001,
+        'entropy_weight': 0.01,
         'gae_gamma': 0.999,
         'gae_lambda': 0.9,
         'game_size': 8,
@@ -467,15 +503,16 @@ def main():
         'nn.activation': 'gelu',
         'nn.shared': False,
         'nn.encoding.redundant': True,
-        'nn.encoding.normalize': False,
-        'nn.encoding.normalize.gamma': 0.9999,
+        'nn.encoding.normalize': True,
+        'nn.encoding.normalize.gamma': 0.99999,
         'normalize_advantage': True,
         'parallelism.num_workers': 64,
         'parallelism.method': "batch",
         'optimizer': 'adam',
-        'policy_weight': 0.581166675499831,
+        'policy_weight': 0.5,
         'ppo_epochs': 8,
-        'ppo_epsilon': 0.2}))
+        'ppo_epsilon': 0.2,
+        'ppo_clip_value': False}))
 
     ppo_learner.run()
 
