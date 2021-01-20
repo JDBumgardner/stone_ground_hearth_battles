@@ -282,8 +282,7 @@ class Player:
                     self._hand.remove(card)
             golden_card = check_card()
             golden_card.golden_transformation(cards)
-            if self.room_in_hand():  # If our hand is full but we gain the card on board, we won't have room in hand.
-                self._hand.append(golden_card)
+            self.gain_hand_card(golden_card)
 
     def reroll_store(self):
         assert self.valid_reroll()

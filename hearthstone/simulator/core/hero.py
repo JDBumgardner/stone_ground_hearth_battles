@@ -69,6 +69,8 @@ class Hero:
                 return False
         if not self.can_use_power:
             return False
+        if self.power_target_location is None and (board_index is not None or store_index is not None):
+            return False
         if self.power_target_location is not None:
             if board_index is None and store_index is None:
                 return False

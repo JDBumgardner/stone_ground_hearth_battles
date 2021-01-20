@@ -2110,13 +2110,13 @@ class GentleDjinni(MonsterCard):
                 for _ in range(context.summon_minion_multiplier()):
                     context.friendly_war_party.summon_in_combat(random_elemental_type(), context, summon_index + i + 1)
                     i += 1
-                    if context.friendly_war_party.owner.room_in_hand():
-                        same_elemental_in_tavern = [card for card in
-                                                    context.friendly_war_party.owner.tavern.deck.unique_cards() if
-                                                    type(card) == random_elemental_type]
-                        if same_elemental_in_tavern:
-                            context.friendly_war_party.owner.tavern.deck.remove_card(same_elemental_in_tavern[0])
-                        context.friendly_war_party.owner.gain_hand_card(random_elemental_type())
+                if context.friendly_war_party.owner.room_in_hand():
+                    same_elemental_in_tavern = [card for card in
+                                                context.friendly_war_party.owner.tavern.deck.unique_cards() if
+                                                type(card) == random_elemental_type]
+                    if same_elemental_in_tavern:
+                        context.friendly_war_party.owner.tavern.deck.remove_card(same_elemental_in_tavern[0])
+                    context.friendly_war_party.owner.gain_hand_card(random_elemental_type())
 
 
 class NomiKitchenNightmare(MonsterCard):

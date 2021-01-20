@@ -1020,6 +1020,20 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(adam.hand_size(), 1)
         self.assertEqual(type(adam.hand[0]), Sellemental)
 
+    def test_djinni_khadgar(self):
+        tavern = Tavern()
+        adam = tavern.add_player_with_hero("Adam")
+        ethan = tavern.add_player_with_hero("Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [GentleDjinni(), Khadgar()]
+        ethans_war_party.board = [ZappSlywick()]
+        fight_boards(adams_war_party, ethans_war_party, self.GentleDjinniRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+        self.assertEqual(adam.hand_size(), 1)
+        self.assertEqual(type(adam.hand[0]), Sellemental)
+
     def test_wildfire_elemental(self):
         tavern = Tavern()
         adam = tavern.add_player_with_hero("Adam")
