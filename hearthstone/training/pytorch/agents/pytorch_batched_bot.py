@@ -98,6 +98,8 @@ class BatchedInferenceQueue:
         self.device = device
         self.queued_tasks_by_net = {name: collections.deque() for name in nets.keys()}
 
+        self.inference_example_count = 0
+        self.inference_count = 0
         # These are the only variables accessed from multiple threads.
         self.communication_queue = collections.deque()
         self.communication_event = threading.Event()
@@ -142,6 +144,8 @@ class BatchedInferenceQueue:
             length = min(len(tasks), self.max_batch_size)
             if length:
                 batched_tasks = [tasks.popleft() for _ in range(length)]
+                self.inference_count += 1
+                self.inference_example_count += len(batched_tasks)
 
                 # Run inference on batched tensor
                 state_batch, valid_actions_batch = self._tensorize_batch([args for _, args in batched_tasks])

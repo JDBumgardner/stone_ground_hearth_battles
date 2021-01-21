@@ -24,10 +24,11 @@ from hearthstone.training.pytorch.encoding.shared_tensor_pool_encoder import Sha
 from hearthstone.training.pytorch.encoding.state_encoding import State
 from hearthstone.training.pytorch.gae import GAEAnnotator
 from hearthstone.training.pytorch.networks import save_load
+from hearthstone.training.pytorch.networks.running_norm import WelfordAggregator
 from hearthstone.training.pytorch.networks.save_load import create_net, load_from_saved
 from hearthstone.training.pytorch.policy_gradient import tensorize_batch, easy_contestants, easiest_contestants, \
-    easier_contestants
-from hearthstone.training.pytorch.replay import ActorCriticGameStepInfo
+    easier_contestants, TransitionBatch
+from hearthstone.training.pytorch.replay import ActorCriticGameStepInfo, ActorCriticGameStepDebugInfo
 from hearthstone.training.pytorch.replay_buffer import EpochBuffer
 from hearthstone.training.pytorch.surveillance import GlobalStepContext
 from hearthstone.training.pytorch.worker.worker import Worker
@@ -128,159 +129,62 @@ class PPOLearner(GlobalStepContext):
             normalize_advantage: Whether to batch normal the advantage with a mean of 0 and stdev of 1.
         :returns Bool, whether to stop early due to kl constraint being exceeded
         """
-        transition_batch = tensorize_batch(minibatch, self.get_device())
 
-        actions, action_log_probs, value, debug = learning_net(transition_batch.state,
-                                                                    transition_batch.valid_actions,
-                                                                    transition_batch.action)
-
-        # The advantage is the difference between the expected value before taking the action and the value after updating
-        advantage = transition_batch.gae_return - transition_batch.value
-
-        log_ratio = (action_log_probs - transition_batch.action_log_prob)
-        ratio = torch.exp(log_ratio)
-        clipped_ratio = ratio.clamp(1 - ppo_epsilon, 1 + ppo_epsilon)
-
-        normalized_advantage: torch.Tensor = advantage
-        if normalize_advantage:
-            normalized_advantage = (normalized_advantage - normalized_advantage.mean()) / (
-                    normalized_advantage.std(unbiased=False) + 1e-7)
-        clipped_policy_loss = - clipped_ratio * normalized_advantage
-        unclipped_policy_loss = - ratio * normalized_advantage
-        policy_loss = torch.max(clipped_policy_loss, unclipped_policy_loss).mean()
-
-        value_error = transition_batch.retn - value
-        # Clip the value error to be within ppo_epsilon of the advantage at the time that the action was taken.
-        clipped_value_error = transition_batch.retn - transition_batch.value + torch.clamp(
-            transition_batch.value - value,
-            -ppo_epsilon, ppo_epsilon)
-
-        if self.hparams['ppo_clip_value']:
-            value_loss = torch.max(value_error.pow(2), clipped_value_error.pow(2)).mean()
-        else:
-            value_loss = value_error.pow(2).mean()
-
-        entropy_loss = (entropy_weight * action_log_probs).mean()
-        approx_kl_divergence = -log_ratio.mean()
-        main_dist_kl_divergence = (debug.component_policy.exp() * (
-                debug.component_policy - transition_batch.debug_component_policy)).sum(dim=1).masked_select(
-            transition_batch.valid_actions.rearrange_phase.logical_not()).mean()
-        main_dist_entropy = - (debug.component_policy.exp() * debug.component_policy).sum(dim=1).masked_select(
-            transition_batch.valid_actions.rearrange_phase.logical_not()).mean()
-
-        if self.histogram_tensorboard:
-            tensorboard.add_histogram("policy", torch.exp(action_log_probs), self.global_step)
-            masked_reward = transition_batch.reward.masked_select(transition_batch.is_terminal)
-            if masked_reward.size()[0]:
-                tensorboard.add_histogram("reward",
-                                          transition_batch.reward.masked_select(transition_batch.is_terminal),
-                                          self.global_step)
-            tensorboard.add_histogram("value/current", value, self.global_step)
-            tensorboard.add_histogram("value/next", transition_batch.value, self.global_step)
-            tensorboard.add_histogram("advantage/unclipped", advantage, self.global_step)
-            tensorboard.add_histogram("advantage/normalized", normalized_advantage, self.global_step)
-            tensorboard.add_histogram("policy_loss/unclipped", unclipped_policy_loss, self.global_step)
-            tensorboard.add_histogram("policy_loss/clipped", clipped_policy_loss, self.global_step)
-            tensorboard.add_histogram("policy_ratio/unclipped", ratio, self.global_step)
-            tensorboard.add_histogram("policy_ratio/clipped", clipped_ratio, self.global_step)
-        tensorboard.add_scalar("avg_reward",
-                               transition_batch.reward.masked_select(transition_batch.is_terminal).float().mean(),
-                               self.global_step)
-        tensorboard.add_scalar("avg_value", value.mean(), self.global_step)
-        tensorboard.add_scalar("advantage/mean/unnormalized", advantage.mean(), self.global_step)
-        tensorboard.add_scalar("advantage/mean/normalized", normalized_advantage.mean(), self.global_step)
-        tensorboard.add_scalar("advantage/stddev/unnormalized", advantage.std(), self.global_step)
-        tensorboard.add_scalar("advantage/stddev/normalized", normalized_advantage.std(), self.global_step)
-        tensorboard.add_scalar("avg_value_error", value_error.mean(), self.global_step)
-        tensorboard.add_scalar("loss/policy", policy_loss, self.global_step)
-        tensorboard.add_scalar("loss/policy/main_dist",
-                               torch.max(clipped_policy_loss, unclipped_policy_loss).masked_select(
-                                   transition_batch.valid_actions.rearrange_phase.logical_not()).mean(),
-                               self.global_step)
-        tensorboard.add_scalar("loss/policy/rearrange",
-                               torch.max(clipped_policy_loss, unclipped_policy_loss).masked_select(
-                                   transition_batch.valid_actions.rearrange_phase).mean(), self.global_step)
-        tensorboard.add_scalar("loss/value", value_loss, self.global_step)
-        tensorboard.add_scalar("loss/entropy", entropy_loss, self.global_step)
-        tensorboard.add_scalars("loss/entropy/main_dist",
-                                {"approx": entropy_weight * action_log_probs.masked_select(
-            transition_batch.valid_actions.rearrange_phase.logical_not()).mean(),
-                                 "exact": - entropy_weight * main_dist_entropy,
-                                 "min": - entropy_weight * (transition_batch.valid_actions.player_action_tensor.sum(
-                                   dim=1) + transition_batch.valid_actions.card_action_tensor.flatten(1).sum(
-                                   dim=1)).float().log().masked_select(
-                                   transition_batch.valid_actions.rearrange_phase.logical_not()).mean()
-                                 }, self.global_step)
-        tensorboard.add_scalars("loss/entropy/rearrange",
-                                {"approx": entropy_weight * action_log_probs.masked_select(
-                                    transition_batch.valid_actions.rearrange_phase).mean(),
-                                 "min": - entropy_weight *
-                                        (transition_batch.valid_actions.cards_to_rearrange[:, 1] + 1).masked_select(
-                                            transition_batch.valid_actions.rearrange_phase).float().lgamma().mean()
-                                 }, self.global_step)
-        tensorboard.add_scalars("kl_divergence/main_dist",
-                                {
-                                    "exact": main_dist_kl_divergence,
-                                    "approx": -log_ratio.masked_select(
-                                        transition_batch.valid_actions.rearrange_phase.logical_not()).mean()
-                                }, self.global_step)
-
-        tensorboard.add_scalar("kl_divergence/approx", approx_kl_divergence, self.global_step)
-        tensorboard.add_scalar("kl_divergence/approx/rearrange", -log_ratio.masked_select(
-            transition_batch.valid_actions.rearrange_phase).mean(), self.global_step)
-
-        if epoch == 0 and minibatch_idx == 0:
-            tensorboard.add_scalar("kl_divergence/before_learning_main_dist", main_dist_kl_divergence, self.global_step)
-            tensorboard.add_scalar("kl_divergence/before_learning_approx", approx_kl_divergence, self.global_step)
-        if approx_kl_divergence > self.hparams['approx_kl_limit']:
-            tensorboard.add_scalar("kl_divergence/early_stopped_epoch", epoch, self.global_step)
-            tensorboard.add_scalar("kl_divergence/early_stopped_main_dist", main_dist_kl_divergence, self.global_step)
-            tensorboard.add_scalar("kl_divergence/early_stopped_approx", approx_kl_divergence, self.global_step)
-        tensorboard.add_scalar("avg_policy_loss/unclipped", unclipped_policy_loss.mean(), self.global_step)
-        tensorboard.add_scalar("avg_policy_loss/clipped", clipped_policy_loss.mean(), self.global_step)
-        tensorboard.add_scalar("actions/endphase_terminal", transition_batch.is_terminal.sum(), self.global_step)
-        tensorboard.add_scalar("actions/endphase", sum(type(action) is EndPhaseAction for action in transition_batch.action), self.global_step)
-        tensorboard.add_scalar("actions/endphase_freeze", sum(type(action) is EndPhaseAction and action.freeze for action in transition_batch.action), self.global_step)
-        tensorboard.add_scalar("actions/rearrange", sum(type(action) is RearrangeCardsAction for action in transition_batch.action), self.global_step)
-        tensorboard.add_scalar("actions/buy", sum(type(action) is BuyAction for action in transition_batch.action), self.global_step)
-        tensorboard.add_scalar("actions/sell", sum(type(action) is SellAction for action in transition_batch.action), self.global_step)
-        tensorboard.add_scalar("actions/summon", sum(type(action) is SummonAction for action in transition_batch.action), self.global_step)
-        tensorboard.add_scalar("actions/reroll", sum(type(action) is RerollAction for action in transition_batch.action), self.global_step)
-        tensorboard.add_scalar("actions/upgrade", sum(type(action) is TavernUpgradeAction for action in transition_batch.action), self.global_step)
-        tensorboard.add_scalar("actions/triple_rewards", sum(type(action) is TripleRewardsAction for action in transition_batch.action), self.global_step)
-        tensorboard.add_scalar("actions/discover", sum(type(action) is DiscoverChoiceAction for action in transition_batch.action), self.global_step)
-        tensorboard.add_scalar("actions/hero_power", sum(type(action) is HeroPowerAction for action in transition_batch.action), self.global_step)
-
-        mean_0_return = transition_batch.retn - transition_batch.retn.mean()
-        mean_0_value = value - value.mean()
-        tensorboard.add_scalar("critic_explanation/correlation", (mean_0_return * mean_0_value).mean() / (
-                mean_0_return.pow(2).mean() * mean_0_value.pow(2).mean()).sqrt(), self.global_step)
-        tensorboard.add_scalar("critic_explanation/residual_return_variance",
-                               value_error.var() / transition_batch.retn.var(),
-                               self.global_step)
-        tensorboard.add_scalar("critic_explanation/residual_gae_variance",
-                               (value - transition_batch.gae_return).var() / transition_batch.gae_return.var(),
-                               self.global_step)
-
-        mean_0_terminal_reward = transition_batch.reward.masked_select(
-            transition_batch.is_terminal) - transition_batch.reward.masked_select(transition_batch.is_terminal).float().mean()
-        mean_0_terminal_value = value.masked_select(
-            transition_batch.is_terminal) - value.masked_select(transition_batch.is_terminal).mean()
-        tensorboard.add_scalar("critic_explanation/terminal_correlation",
-                               (mean_0_terminal_reward * mean_0_terminal_value).mean() / (
-                                       mean_0_terminal_reward.pow(2).mean() * mean_0_terminal_value.pow(
-                                   2).mean()).sqrt(), self.global_step)
-
-        loss = policy_loss * policy_weight + value_loss + entropy_loss
+        tensorboard_accum = PPOTensorboard(self.expensive_tensorboard, self.histogram_tensorboard)
+        approx_kl_divergence_welford = WelfordAggregator(torch.Size())
         optimizer.zero_grad()
-        loss.backward()
+        # We have to split into sub batches, since the minibatch might not fit onto our wimpy GPU's memory.
+        for i in range(0, len(minibatch), self.hparams['batch.max_in_memory']):
+            sub_batch = minibatch[i: i + self.hparams['batch.max_in_memory']]
+            transition_batch = tensorize_batch(sub_batch, self.get_device())
+
+            actions, action_log_probs, value, debug = learning_net(transition_batch.state,
+                                                                        transition_batch.valid_actions,
+                                                                        transition_batch.action)
+
+            # The advantage is the difference between the expected value before taking the action and the value after updating
+            advantage = transition_batch.gae_return - transition_batch.value
+
+            log_ratio = (action_log_probs - transition_batch.action_log_prob)
+            ratio = torch.exp(log_ratio)
+            clipped_ratio = ratio.clamp(1 - ppo_epsilon, 1 + ppo_epsilon)
+
+            normalized_advantage: torch.Tensor = advantage
+            if normalize_advantage:
+                normalized_advantage = (normalized_advantage - normalized_advantage.mean()) / (
+                        normalized_advantage.std(unbiased=False) + 1e-7)
+            clipped_policy_loss = - clipped_ratio * normalized_advantage
+            unclipped_policy_loss = - ratio * normalized_advantage
+            policy_loss = torch.max(clipped_policy_loss, unclipped_policy_loss).mean()
+
+            value_error = transition_batch.retn - value
+            # Clip the value error to be within ppo_epsilon of the advantage at the time that the action was taken.
+            clipped_value_error = transition_batch.retn - transition_batch.value + torch.clamp(
+                transition_batch.value - value,
+                -ppo_epsilon, ppo_epsilon)
+
+            if self.hparams['ppo_clip_value']:
+                value_loss = torch.max(value_error.pow(2), clipped_value_error.pow(2)).mean()
+            else:
+                value_loss = value_error.pow(2).mean()
+
+            entropy_loss = (entropy_weight * action_log_probs).mean()
+            approx_kl_divergence_welford.update(-log_ratio.mean())
+
+            loss = policy_loss * policy_weight + value_loss + entropy_loss
+            loss.backward()
+            tensorboard_accum.update(transition_batch, debug, value,
+               advantage, normalized_advantage, value_error,
+               policy_loss, unclipped_policy_loss, clipped_policy_loss,
+               value_loss, entropy_loss, entropy_weight,
+               action_log_probs, log_ratio)
+
         if gradient_clipping:
             torch.nn.utils.clip_grad_norm_(learning_net.parameters(), gradient_clipping)
         optimizer.step()
-        if self.expensive_tensorboard:
-            for tag, parm in learning_net.named_parameters():
-                tensorboard.add_histogram(f"gradients_{tag}/train", parm.grad.data, self.global_step)
-        return approx_kl_divergence > self.hparams['approx_kl_limit']
+        early_stopped = approx_kl_divergence_welford.mean() > self.hparams['approx_kl_limit']
+        tensorboard_accum.flush(tensorboard, epoch, minibatch_idx, approx_kl_divergence_welford.mean(), early_stopped, self.global_step)
+        return early_stopped
 
     def get_device(self) -> torch.device:
         if self.hparams['cuda'] and torch.cuda.is_available():
@@ -366,7 +270,7 @@ class PPOLearner(GlobalStepContext):
     def run(self):
         start_time = time.time()
         last_reported_time = start_time
-        batch_size = self.hparams['batch_size']
+        min_replay_buffer_size = self.hparams['batch.min_replay_buffer_size']
 
         device = self.get_device()
         tensorboard = SummaryWriter(f"../../../data/learning/pytorch/tensorboard/{self.hparams['export.path']}")
@@ -431,14 +335,14 @@ class PPOLearner(GlobalStepContext):
             else:
                 Worker(learning_bot_contestant, other_contestants, self.hparams['game_size'], replay_buffer,
                        gae_annotator, tensorboard, self).play_game()
-            if len(replay_buffer) >= batch_size:
+            if len(replay_buffer) >= min_replay_buffer_size:
                 print(len(replay_buffer))
                 learning_net.train()
                 print(f"Running {self.hparams['ppo_epochs']} epochs of PPO optimization...")
                 for i in range(self.hparams["ppo_epochs"]):
                     self.handle_export(learning_bot_contestant, learning_net, other_contestants)
                     stop_early = self.learn_epoch(i, tensorboard, optimizer, learning_net, replay_buffer,
-                                     self.hparams['minibatch_size'],
+                                     self.hparams['batch.minibatch_size'],
                                      self.hparams["policy_weight"],
                                      self.hparams["entropy_weight"], self.hparams["ppo_epsilon"],
                                      self.hparams["gradient_clipping"],
@@ -474,6 +378,194 @@ class PPOLearner(GlobalStepContext):
         return learning_bot_contestant.trueskill.mu
 
 
+class PPOTensorboard:
+    def __init__(self, expensive_metrics: bool, histogram_metrics: bool):
+        self.expensive_metrics = expensive_metrics
+        self.histogram_metrics = histogram_metrics
+        self.count = 0
+        self.reward_welford = WelfordAggregator(torch.Size())
+        self.value_welford = WelfordAggregator(torch.Size())
+        self.advantage_welford = WelfordAggregator(torch.Size())
+        self.normalized_advantage_welford = WelfordAggregator(torch.Size())
+        self.value_error_welford = WelfordAggregator(torch.Size())
+        self.policy_loss_sum = 0
+        self.policy_loss_unclipped_sum = 0
+        self.policy_loss_clipped_sum = 0
+        self.policy_loss_main_dist_welford = WelfordAggregator(torch.Size())
+        self.policy_loss_rearrange_welford = WelfordAggregator(torch.Size())
+        self.value_loss_sum = 0
+        self.entropy_loss_sum = 0
+        self.entropy_loss_main_dist_approx_welford = WelfordAggregator(torch.Size())
+        self.entropy_loss_main_dist_exact_welford = WelfordAggregator(torch.Size())
+        self.entropy_loss_main_dist_min_welford = WelfordAggregator(torch.Size())
+        self.entropy_loss_rearrange_approx_welford = WelfordAggregator(torch.Size())
+        self.entropy_loss_rearrange_min_welford = WelfordAggregator(torch.Size())
+        self.kl_divergence_main_dist_exact_welford = WelfordAggregator(torch.Size())
+        self.kl_divergence_main_dist_approx_welford = WelfordAggregator(torch.Size())
+        self.kl_divergence_rearrange_approx_welford = WelfordAggregator(torch.Size())
+        self.return_welford = WelfordAggregator(torch.Size())
+        self.gae_return_welford = WelfordAggregator(torch.Size())
+        self.terminal_value_welford = WelfordAggregator(torch.Size())
+        self.terminal_value_error_welford = WelfordAggregator(torch.Size())
+        self.actions = []
+        self.terminal_action_count = 0
+
+    def update(self, transition_batch: TransitionBatch, debug: ActorCriticGameStepDebugInfo, value: torch.Tensor,
+               advantage: torch.Tensor, normalized_advantage: torch.Tensor, value_error: torch.Tensor,
+               policy_loss: torch.Tensor, unclipped_policy_loss: torch.Tensor, clipped_policy_loss: torch.Tensor,
+               value_loss: torch.Tensor, entropy_loss: torch.Tensor, entropy_weight: float,
+               action_log_probs: torch.Tensor, log_ratio: torch.Tensor):
+        new_count = transition_batch.value.shape[0]
+        self.count += new_count
+        self.reward_welford.update(transition_batch.reward.masked_select(transition_batch.is_terminal).float())
+        self.value_welford.update(value)
+        self.advantage_welford.update(advantage)
+        self.normalized_advantage_welford.update(normalized_advantage)
+        self.value_error_welford.update(value_error)
+        self.policy_loss_sum += policy_loss * new_count
+        self.policy_loss_unclipped_sum += unclipped_policy_loss.sum()
+        self.policy_loss_clipped_sum += clipped_policy_loss.sum()
+        self.policy_loss_main_dist_welford.update(torch.max(clipped_policy_loss, unclipped_policy_loss).masked_select(
+            transition_batch.valid_actions.rearrange_phase.logical_not()))
+        self.policy_loss_rearrange_welford.update(torch.max(clipped_policy_loss, unclipped_policy_loss).masked_select(
+            transition_batch.valid_actions.rearrange_phase))
+        self.value_loss_sum += value_loss * new_count
+        self.entropy_loss_sum += entropy_loss * new_count
+        self.entropy_loss_main_dist_approx_welford.update(entropy_weight * action_log_probs.masked_select(
+            transition_batch.valid_actions.rearrange_phase.logical_not()))
+        self.entropy_loss_main_dist_exact_welford.update(entropy_weight * (debug.component_policy.exp() * debug.component_policy).sum(
+            dim=1).masked_select(
+            transition_batch.valid_actions.rearrange_phase.logical_not()))
+        self.entropy_loss_main_dist_min_welford.update(
+            - entropy_weight * (transition_batch.valid_actions.player_action_tensor.sum(
+                dim=1) + transition_batch.valid_actions.card_action_tensor.flatten(1).sum(
+                dim=1)).float().log().masked_select(
+                transition_batch.valid_actions.rearrange_phase.logical_not()))
+        self.entropy_loss_rearrange_approx_welford.update(entropy_weight * action_log_probs.masked_select(
+            transition_batch.valid_actions.rearrange_phase))
+        self.entropy_loss_rearrange_min_welford.update(- entropy_weight *
+                                                       (transition_batch.valid_actions.cards_to_rearrange[:,
+                                                         1] + 1).masked_select(
+                                                            transition_batch.valid_actions.rearrange_phase).float().lgamma())
+        self.kl_divergence_main_dist_exact_welford.update((debug.component_policy.exp() * (
+                debug.component_policy - transition_batch.debug_component_policy)).sum(dim=1).masked_select(
+            transition_batch.valid_actions.rearrange_phase.logical_not()))
+        self.kl_divergence_main_dist_approx_welford.update(-log_ratio.masked_select(
+                                        transition_batch.valid_actions.rearrange_phase.logical_not()))
+        self.kl_divergence_rearrange_approx_welford.update(-log_ratio.masked_select(
+                                        transition_batch.valid_actions.rearrange_phase))
+        self.return_welford.update(transition_batch.retn)
+        self.gae_return_welford.update(transition_batch.gae_return)
+        self.terminal_value_welford.update(value.masked_select(transition_batch.is_terminal))
+        self.terminal_value_error_welford.update(
+            value.masked_select(transition_batch.is_terminal) - transition_batch.reward.masked_select(
+                transition_batch.is_terminal).float())
+
+        self.actions += transition_batch.action
+        self.terminal_action_count += transition_batch.is_terminal.sum()
+
+    def flush(self, tensorboard: SummaryWriter, epoch:int, minibatch_idx: int, approx_kl_divergence: torch.Tensor, early_stopped:bool, step):
+        tensorboard.add_scalar("reward/mean", self.reward_welford.mean(), step)
+        tensorboard.add_scalar("reward/stddev", self.reward_welford.mean(), step)
+        tensorboard.add_scalar("value/mean", self.value_welford.mean(), step)
+        tensorboard.add_scalar("value/stddev", self.value_welford.stdev(), step)
+        tensorboard.add_scalar("advantage/mean/unnormalized", self.advantage_welford.mean(), step)
+        tensorboard.add_scalar("advantage/mean/normalized", self.normalized_advantage_welford.mean(), step)
+        tensorboard.add_scalar("advantage/stddev/unnormalized", self.advantage_welford.stdev(), step)
+        tensorboard.add_scalar("advantage/stddev/normalized", self.normalized_advantage_welford.stdev(), step)
+        tensorboard.add_scalar("value_error/mean", self.value_error_welford.mean(), step)
+        tensorboard.add_scalar("value_error/stddev", self.value_error_welford.stdev(), step)
+        tensorboard.add_scalar("loss/policy", self.policy_loss_sum / self.count, step)
+        tensorboard.add_scalar("loss/policy/main_dist", self.policy_loss_main_dist_welford.mean(), step)
+        tensorboard.add_scalar("loss/policy/rearrange", self.policy_loss_rearrange_welford.mean(), step)
+        tensorboard.add_scalar("loss/value", self.value_loss_sum / self.count, step)
+        tensorboard.add_scalar("loss/entropy", self.entropy_loss_sum / self.count, step)
+        tensorboard.add_scalars("loss/entropy/main_dist",
+                                {"approx": self.entropy_loss_main_dist_approx_welford.mean(),
+                                 "exact": self.entropy_loss_main_dist_exact_welford.mean(),
+                                 "min": self.entropy_loss_main_dist_min_welford.mean(),
+                                 }, step)
+        tensorboard.add_scalars("loss/entropy/rearrange",
+                                {"approx": self.entropy_loss_rearrange_approx_welford.mean(),
+                                 "min": self.entropy_loss_rearrange_min_welford.mean(),
+                                 }, step)
+        tensorboard.add_scalars("kl_divergence/main_dist",
+                                {
+                                    "exact": self.kl_divergence_main_dist_exact_welford.mean(),
+                                    "approx": self.kl_divergence_main_dist_approx_welford.mean(),
+                                }, step)
+
+        tensorboard.add_scalar("kl_divergence/approx", approx_kl_divergence, step)
+        tensorboard.add_scalar("kl_divergence/approx/rearrange", self.kl_divergence_rearrange_approx_welford.mean(),
+                               step)
+
+        if epoch == 0 and minibatch_idx == 0:
+            tensorboard.add_scalar("kl_divergence/before_learning_main_dist", self.kl_divergence_main_dist_exact_welford.mean(), step)
+            tensorboard.add_scalar("kl_divergence/before_learning_approx", approx_kl_divergence, step)
+        if early_stopped:
+            tensorboard.add_scalar("kl_divergence/early_stopped_epoch", epoch, step)
+            tensorboard.add_scalar("kl_divergence/early_stopped_main_dist", self.kl_divergence_main_dist_exact_welford.mean(), step)
+            tensorboard.add_scalar("kl_divergence/early_stopped_approx", approx_kl_divergence, step)
+        tensorboard.add_scalar("avg_policy_loss/unclipped", self.policy_loss_unclipped_sum / self.count, step)
+        tensorboard.add_scalar("avg_policy_loss/clipped", self.policy_loss_clipped_sum / self.count, step)
+
+        tensorboard.add_scalar("actions/endphase_terminal", self.terminal_action_count, step)
+        tensorboard.add_scalar("actions/endphase",
+                               sum(type(action) is EndPhaseAction for action in self.actions), step)
+        tensorboard.add_scalar("actions/endphase_freeze", sum(
+            type(action) is EndPhaseAction and action.freeze for action in self.actions), step)
+        tensorboard.add_scalar("actions/rearrange",
+                               sum(type(action) is RearrangeCardsAction for action in self.actions), step)
+        tensorboard.add_scalar("actions/buy", sum(type(action) is BuyAction for action in self.actions), step)
+        tensorboard.add_scalar("actions/sell", sum(type(action) is SellAction for action in self.actions), step)
+        tensorboard.add_scalar("actions/summon",
+                               sum(type(action) is SummonAction for action in self.actions), step)
+        tensorboard.add_scalar("actions/reroll",
+                               sum(type(action) is RerollAction for action in self.actions), step)
+        tensorboard.add_scalar("actions/upgrade",
+                               sum(type(action) is TavernUpgradeAction for action in self.actions), step)
+        tensorboard.add_scalar("actions/triple_rewards",
+                               sum(type(action) is TripleRewardsAction for action in self.actions), step)
+        tensorboard.add_scalar("actions/discover",
+                               sum(type(action) is DiscoverChoiceAction for action in self.actions), step)
+        tensorboard.add_scalar("actions/hero_power",
+                               sum(type(action) is HeroPowerAction for action in self.actions), step)
+
+        tensorboard.add_scalar("critic_explanation/correlation", (
+                self.value_welford.variance() + self.return_welford.variance() - self.value_error_welford.variance()) / (
+                                       2 * self.value_welford.stdev() * self.return_welford.stdev()), step)
+
+        tensorboard.add_scalar("critic_explanation/residual_return_variance",
+                               self.value_error_welford.variance() / self.return_welford.variance(), step)
+        tensorboard.add_scalar("critic_explanation/residual_gae_variance",
+                               self.advantage_welford.variance() / self.gae_return_welford.variance(), step)
+
+        tensorboard.add_scalar("critic_explanation/terminal_correlation",
+                               (
+                                       self.terminal_value_welford.variance() + self.reward_welford.variance() - self.terminal_value_error_welford.variance()) / (
+                                       2 * self.terminal_value_welford.stdev() * self.reward_welford.stdev()
+                               ), step)
+
+        if self.histogram_metrics:
+            tensorboard.add_histogram("policy", torch.exp(action_log_probs), step)
+            masked_reward = transition_batch.reward.masked_select(transition_batch.is_terminal)
+            if masked_reward.size()[0]:
+                tensorboard.add_histogram("reward",
+                                          transition_batch.reward.masked_select(transition_batch.is_terminal),
+                                          step)
+            tensorboard.add_histogram("value/current", value, step)
+            tensorboard.add_histogram("value/next", transition_batch.value, step)
+            tensorboard.add_histogram("advantage/unclipped", advantage, step)
+            tensorboard.add_histogram("advantage/normalized", normalized_advantage, step)
+            tensorboard.add_histogram("policy_loss/unclipped", unclipped_policy_loss, step)
+            tensorboard.add_histogram("policy_loss/clipped", clipped_policy_loss, step)
+            tensorboard.add_histogram("policy_ratio/unclipped", ratio, step)
+            tensorboard.add_histogram("policy_ratio/clipped", clipped_ratio, step)
+
+        if self.expensive_metrics:
+            for tag, parm in learning_net.named_parameters():
+                tensorboard.add_histogram(f"gradients_{tag}/train", parm.grad.data, step)
+
 def main():
     ppo_learner = PPOLearner(PPOHyperparameters({
         "resume": False,
@@ -486,11 +578,12 @@ def main():
         'opponents.self_play.only_champions': True,
         'opponents.self_play.remove_weakest': True,
         'opponents.max_pool_size': 7,
-        'adam_lr': 0.00002,
-        'batch_size': 1024,
-        'minibatch_size': 1024,
+        'adam_lr': 0.0001,
+        'batch.min_replay_buffer_size': 32768,
+        'batch.minibatch_size': 8192,
+        'batch.max_in_memory': 1024,
         'cuda': True,
-        'entropy_weight': 0.01,
+        'entropy_weight': 0.001,
         'gae_gamma': 0.999,
         'gae_lambda': 0.9,
         'game_size': 8,
@@ -504,9 +597,9 @@ def main():
         'nn.shared': False,
         'nn.encoding.redundant': True,
         'nn.encoding.normalize': True,
-        'nn.encoding.normalize.gamma': 0.99999,
+        'nn.encoding.normalize.gamma': 0.999999,
         'normalize_advantage': True,
-        'parallelism.num_workers': 64,
+        'parallelism.num_workers': 128,
         'parallelism.method': "batch",
         'optimizer': 'adam',
         'policy_weight': 0.5,
