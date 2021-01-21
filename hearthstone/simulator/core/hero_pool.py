@@ -392,10 +392,9 @@ class DinotamerBrann(Hero):
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
         context.owner.return_cards()
-        number_of_cards = 3 + context.owner.tavern_tier // 2 - context.owner.store_size()
         predicate = lambda card: card.base_battlecry
         context.owner.extend_store(
-            [context.owner.tavern.deck.draw_with_predicate(context.owner, predicate) for _ in range(number_of_cards)])
+            [context.owner.tavern.deck.draw_with_predicate(context.owner, predicate) for _ in range(context.owner.refresh_size())])
 
 
 class Alexstrasza(Hero):
@@ -552,8 +551,7 @@ class InfiniteToki(Hero):
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
         context.owner.return_cards()
-        number_of_cards = 3 + context.owner.tavern_tier // 2 - context.owner.store_size()
-        number_of_cards = min(number_of_cards, context.owner.maximum_store_size - context.owner.store_size())
+        number_of_cards = min(context.owner.refresh_size(), context.owner.maximum_store_size - context.owner.store_size())
         context.owner.extend_store(context.owner.tavern.deck.draw(context.owner, number_of_cards - 1))
         if context.owner.maximum_store_size > context.owner.store_size():
             higher_tier_minions = [card for card in context.owner.tavern.deck.unique_cards() if
@@ -609,6 +607,7 @@ class TessGreymane(Hero):
                 context.owner.add_to_store(card_copy)
                 if not card.base_token:
                     self.refreshed_cards.append(card_copy)
+            context.owner.extend_store(context.owner.tavern.deck.draw(context.owner, context.owner.refresh_size()))
         else:
             context.owner.draw()
 

@@ -373,6 +373,9 @@ class Player:
     def store_size(self):
         return len(self.store) + self.hero.occupied_store_slots()
 
+    def refresh_size(self):
+        return 3 + self.tavern_tier // 2 - self.store_size()
+
     def max_tier(self):
         return len(self._tavern_upgrade_costs)
 
