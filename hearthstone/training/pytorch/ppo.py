@@ -466,7 +466,7 @@ class PPOTensorboard:
 
     def flush(self, tensorboard: SummaryWriter, epoch:int, minibatch_idx: int, approx_kl_divergence: torch.Tensor, early_stopped:bool, step):
         tensorboard.add_scalar("reward/mean", self.reward_welford.mean(), step)
-        tensorboard.add_scalar("reward/stddev", self.reward_welford.mean(), step)
+        tensorboard.add_scalar("reward/stddev", self.reward_welford.stdev(), step)
         tensorboard.add_scalar("value/mean", self.value_welford.mean(), step)
         tensorboard.add_scalar("value/stddev", self.value_welford.stdev(), step)
         tensorboard.add_scalar("advantage/mean/unnormalized", self.advantage_welford.mean(), step)
