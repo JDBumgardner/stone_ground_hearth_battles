@@ -73,6 +73,7 @@ def default_player_encoding() -> Feature:
         ScalarFeature(lambda player: float(len(player.hand))),
         ScalarFeature(lambda player: float(len(player.store))),
         OnehotFeature(lambda player: HERO_TYPE_TO_INT[type(player.hero)], len(VALHALLA) + 1),
+        ScalarFeature(lambda player: float(player.tavern.get_paired_opponent(player).health)),
         SortedByValueFeature(lambda player: [p.health for name, p in player.tavern.players.items()], 8),
     ])
 

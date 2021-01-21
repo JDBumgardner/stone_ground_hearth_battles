@@ -77,6 +77,14 @@ class Tavern:
         self._update_losers()
         self.turn_count += 1
 
+    def get_paired_opponent(self, player: Player) -> Player:
+        for p1, p2 in self.current_player_pairings:
+            if p1 == player:
+                return p2
+            if p2 == player:
+                return p1
+        raise IndexError("Player not found in tavern pairings {}".format(player))
+
     def _generate_pairings(self): #TODO figure out algorithm for ded guy someone in the bottom 3 fights the last ded guy
         fighting_players = [player for player in self.players.values() if not player.dead]
         if len(fighting_players) % 2 != 0:
