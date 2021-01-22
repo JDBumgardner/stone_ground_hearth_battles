@@ -569,10 +569,11 @@ class PPOTensorboard:
         if small_batch_size != big_batch_size:
             tensorboard.add_scalar("gradients/big_batch_l2", sqrt(self.big_batch_grad_norm), step)
             gradient_signal_estimate = (
-                                               big_batch_size * self.big_batch_grad_norm - small_batch_size * self.small_batch_grad_norm) / (
+                                               self.big_batch_grad_norm / big_batch_size - self.small_batch_grad_norm / small_batch_size) / (
                                                big_batch_size - small_batch_size)
-            gradient_noise_estimate = (self.small_batch_grad_norm - self.big_batch_grad_norm) / (
-                    1.0 / small_batch_size - 1.0 / self.big_batch_grad_norm)
+            gradient_noise_estimate = (
+                                                  self.small_batch_grad_norm / small_batch_size ** 2 - self.big_batch_grad_norm / big_batch_size ** 2) / (
+                                              1.0 / small_batch_size - 1.0 / self.big_batch_grad_norm)
             tensorboard.add_scalar("gradients/gradient_signal_est", gradient_signal_estimate, step)
             tensorboard.add_scalar("gradients/gradient_noise_est", gradient_noise_estimate, step)
             self.gradient_signal_mag.update(torch.tensor(gradient_signal_estimate))
