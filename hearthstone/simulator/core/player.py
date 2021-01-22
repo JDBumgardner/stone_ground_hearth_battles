@@ -360,7 +360,7 @@ class Player:
         return len(permutation) == len(self.in_play) and set(permutation) == set(range(len(self.in_play)))
 
     def rearrange_cards(self, permutation: List[int]):
-        assert self.valid_rearrange_cards(permutation)
+        assert self.valid_rearrange_cards(permutation), "in play {} permutation {}".format(self.in_play, permutation)
         self._in_play = [self._in_play[i] for i in permutation]
 
     def hand_size(self):

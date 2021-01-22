@@ -27,6 +27,9 @@ class WelfordAggregator:
             self.mu += delta * b_count / n
             self.count = n
 
+    def decay(self, gamma: float):
+        self.count *= gamma
+
     def mean(self):
         return self.mu
 

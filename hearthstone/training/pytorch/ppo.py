@@ -3,6 +3,7 @@ import os
 import random
 import time
 from datetime import datetime
+from math import sqrt
 from typing import List, Dict, Union, NewType
 
 import torch
@@ -56,8 +57,6 @@ class PPOLearner(GlobalStepContext):
         self.time_limit_secs = time_limit_secs
         self.early_stopper = early_stopper
 
-        self.expensive_tensorboard = False
-        self.histogram_tensorboard = False
         # Total number of gradient descent steps we've taken. (for reporting to tensorboard)
         self.global_step = 0
         # Number of games we have plotted
@@ -71,6 +70,8 @@ class PPOLearner(GlobalStepContext):
         self.encoder = DefaultEncoder()
         if self.hparams['parallelism.method'] in ("process", "batch"):
             self.encoder = SharedTensorPoolEncoder(self.encoder, self.hparams['parallelism.method']=="process")
+
+        self.tensorboard_accum = PPOTensorboard(False, False)
 
     def get_global_step(self) -> int:
         return self.global_step
@@ -129,8 +130,7 @@ class PPOLearner(GlobalStepContext):
             normalize_advantage: Whether to batch normal the advantage with a mean of 0 and stdev of 1.
         :returns Bool, whether to stop early due to kl constraint being exceeded
         """
-
-        tensorboard_accum = PPOTensorboard(self.expensive_tensorboard, self.histogram_tensorboard)
+        self.tensorboard_accum.reset()
         approx_kl_divergence_welford = WelfordAggregator(torch.Size())
         optimizer.zero_grad()
         # We have to split into sub batches, since the minibatch might not fit onto our wimpy GPU's memory.
@@ -173,7 +173,7 @@ class PPOLearner(GlobalStepContext):
 
             loss = policy_loss * policy_weight + value_loss + entropy_loss
             loss.backward()
-            tensorboard_accum.update(transition_batch, debug, value,
+            self.tensorboard_accum.update(learning_net, transition_batch, debug, value,
                advantage, normalized_advantage, value_error,
                policy_loss, unclipped_policy_loss, clipped_policy_loss,
                value_loss, entropy_loss, entropy_weight,
@@ -183,7 +183,8 @@ class PPOLearner(GlobalStepContext):
             torch.nn.utils.clip_grad_norm_(learning_net.parameters(), gradient_clipping)
         optimizer.step()
         early_stopped = approx_kl_divergence_welford.mean() > self.hparams['approx_kl_limit']
-        tensorboard_accum.flush(tensorboard, epoch, minibatch_idx, approx_kl_divergence_welford.mean(), early_stopped, self.global_step)
+        self.tensorboard_accum.flush(tensorboard, epoch, minibatch_idx, approx_kl_divergence_welford.mean(), early_stopped,
+                                self.hparams['batch.max_in_memory'], len(minibatch), self.global_step)
         return early_stopped
 
     def get_device(self) -> torch.device:
@@ -382,6 +383,13 @@ class PPOTensorboard:
     def __init__(self, expensive_metrics: bool, histogram_metrics: bool):
         self.expensive_metrics = expensive_metrics
         self.histogram_metrics = histogram_metrics
+        self.reset()
+
+        # These are kept across multiple gradient steps.
+        self.gradient_signal_mag = WelfordAggregator(torch.Size())
+        self.gradient_noise_mag = WelfordAggregator(torch.Size())
+
+    def reset(self):
         self.count = 0
         self.reward_welford = WelfordAggregator(torch.Size())
         self.value_welford = WelfordAggregator(torch.Size())
@@ -409,12 +417,22 @@ class PPOTensorboard:
         self.terminal_value_error_welford = WelfordAggregator(torch.Size())
         self.actions = []
         self.terminal_action_count = 0
+        self.small_batch_grad_norm = 0.0
+        self.big_batch_grad_norm = 0.0
 
-    def update(self, transition_batch: TransitionBatch, debug: ActorCriticGameStepDebugInfo, value: torch.Tensor,
+    def update(self, net: nn.Module, transition_batch: TransitionBatch, debug: ActorCriticGameStepDebugInfo, value: torch.Tensor,
                advantage: torch.Tensor, normalized_advantage: torch.Tensor, value_error: torch.Tensor,
                policy_loss: torch.Tensor, unclipped_policy_loss: torch.Tensor, clipped_policy_loss: torch.Tensor,
                value_loss: torch.Tensor, entropy_loss: torch.Tensor, entropy_weight: float,
                action_log_probs: torch.Tensor, log_ratio: torch.Tensor):
+
+        self.big_batch_grad_norm = 0.0
+        for name, param in net.named_parameters():
+            if param.grad is not None:
+                self.big_batch_grad_norm += float(param.grad.pow(2).sum())
+        if self.count == 0:
+            self.small_batch_grad_norm = self.big_batch_grad_norm
+
         new_count = transition_batch.value.shape[0]
         self.count += new_count
         self.reward_welford.update(transition_batch.reward.masked_select(transition_batch.is_terminal).float())
@@ -464,7 +482,8 @@ class PPOTensorboard:
         self.actions += transition_batch.action
         self.terminal_action_count += transition_batch.is_terminal.sum()
 
-    def flush(self, tensorboard: SummaryWriter, epoch:int, minibatch_idx: int, approx_kl_divergence: torch.Tensor, early_stopped:bool, step):
+    def flush(self, tensorboard: SummaryWriter, epoch:int, minibatch_idx: int, approx_kl_divergence: torch.Tensor, early_stopped:bool,
+              small_batch_size: int, big_batch_size: int, step):
         tensorboard.add_scalar("reward/mean", self.reward_welford.mean(), step)
         tensorboard.add_scalar("reward/stddev", self.reward_welford.stdev(), step)
         tensorboard.add_scalar("value/mean", self.value_welford.mean(), step)
@@ -545,6 +564,23 @@ class PPOTensorboard:
                                        self.terminal_value_welford.variance() + self.reward_welford.variance() - self.terminal_value_error_welford.variance()) / (
                                        2 * self.terminal_value_welford.stdev() * self.reward_welford.stdev()
                                ), step)
+
+        tensorboard.add_scalar("gradients/small_batch_l2", sqrt(self.small_batch_grad_norm), step)
+        if small_batch_size != big_batch_size:
+            tensorboard.add_scalar("gradients/big_batch_l2", sqrt(self.big_batch_grad_norm), step)
+            gradient_signal_estimate = (
+                                               big_batch_size * self.big_batch_grad_norm - small_batch_size * self.small_batch_grad_norm) / (
+                                               big_batch_size - small_batch_size)
+            gradient_noise_estimate = (self.small_batch_grad_norm - self.big_batch_grad_norm) / (
+                    1.0 / small_batch_size - 1.0 / self.big_batch_grad_norm)
+            tensorboard.add_scalar("gradients/gradient_signal_est", gradient_signal_estimate, step)
+            tensorboard.add_scalar("gradients/gradient_noise_est", gradient_noise_estimate, step)
+            self.gradient_signal_mag.update(torch.tensor(gradient_signal_estimate))
+            self.gradient_noise_mag.update(torch.tensor(gradient_noise_estimate))
+            tensorboard.add_scalar("gradients/gradient_signal_est/rolling", self.gradient_signal_mag.mean(), step)
+            tensorboard.add_scalar("gradients/gradient_noise_est/rolling", self.gradient_noise_mag.mean(), step)
+            tensorboard.add_scalar("gradients/noise_scale",
+                                   self.gradient_noise_mag.mean() / self.gradient_signal_mag.mean(), step)
 
         if self.histogram_metrics:
             tensorboard.add_histogram("policy", torch.exp(action_log_probs), step)
