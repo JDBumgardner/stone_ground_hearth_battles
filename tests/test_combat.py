@@ -1643,6 +1643,30 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(adam.health, 29)
         self.assertEqual(ethan.health, 40)
 
+    def test_ring_watcher(self):
+        tavern = Tavern()
+        adam = tavern.add_player_with_hero("Adam")
+        ethan = tavern.add_player_with_hero("Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [RingWatcher()]
+        ethans_war_party.board = [KalecgosArcaneAspect()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+
+    def test_greybough(self):
+        tavern = Tavern()
+        adam = tavern.add_player_with_hero("Adam", Greybough())
+        ethan = tavern.add_player_with_hero("Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [Imprisoner(), ChampionOfYShaarj()]
+        ethans_war_party.board = [Robosaur()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+
 
 if __name__ == '__main__':
     unittest.main()

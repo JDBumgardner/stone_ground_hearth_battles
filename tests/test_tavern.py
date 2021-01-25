@@ -3,6 +3,7 @@ from typing import Type
 
 from hearthstone.simulator.agent import generate_all_actions, EndPhaseAction
 from hearthstone.simulator.core.adaptations import AdaptBuffs
+from hearthstone.simulator.core.card_graveyard import *
 from hearthstone.simulator.core.card_pool import *
 from hearthstone.simulator.core.cards import MonsterCard
 from hearthstone.simulator.core.hero_graveyard import *
@@ -1257,7 +1258,6 @@ class CardTests(unittest.TestCase):
         self.assertEqual(player_1.tavern_tier, 2)
         self.assertEqual(player_1.coins, 1)
 
-
     def test_strongshell_scavenger(self):
         tavern = Tavern(restrict_types=False)
         player_1 = tavern.add_player_with_hero("Dante_Kong")
@@ -1407,7 +1407,7 @@ class CardTests(unittest.TestCase):
         self.assertTrue(player_1.in_play[0].poisonous)
 
     def test_floating_watcher(self):
-        tavern = Tavern(restrict_types=False)
+        tavern = Tavern(restrict_types=False, include_graveyard=True)
         player_1 = tavern.add_player_with_hero("Dante_Kong")
         player_2 = tavern.add_player_with_hero("lucy")
         self.upgrade_to_tier(tavern, 4)
@@ -3704,6 +3704,23 @@ class CardTests(unittest.TestCase):
         self.assertEqual(type(player_1.hero), SirFinleyMrrgglton)
         player_1.hero_select_discover(DiscoverIndex(0))
         self.assertEqual(type(player_1.hero), TheRatKing)
+
+    def test_soul_devourer(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        self.upgrade_to_tier(tavern, 3)
+        tavern.randomizer = RepeatedCardForcer([Imprisoner, SoulDevourer])
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        self.assertCardListEquals(player_1.in_play, [Imprisoner])
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0), [BoardIndex(0)])
+        self.assertCardListEquals(player_1.in_play, [SoulDevourer])
+        self.assertEqual(player_1.in_play[0].attack, player_1.in_play[0].base_attack + 3)
+        self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health + 3)
+        self.assertEqual(player_1.coins, 4)
 
 
 if __name__ == '__main__':

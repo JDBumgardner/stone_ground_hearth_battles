@@ -13,7 +13,7 @@ from hearthstone.simulator.core.randomizer import DefaultRandomizer
 
 
 class Tavern:
-    def __init__(self, restrict_types: Optional[bool] = True):
+    def __init__(self, restrict_types: Optional[bool] = True, include_graveyard: Optional[bool] = False):
         self.players: Dict[str, Player] = {}
         self.turn_count = 0
         self._max_turn_count = 50
@@ -22,7 +22,7 @@ class Tavern:
         self.available_types = MONSTER_TYPES.single_types()
         if restrict_types:
             self.restrict_monster_types()
-        self.deck: 'CardList' = PrintingPress.make_cards(self.available_types)
+        self.deck: 'CardList' = PrintingPress.make_cards(self.available_types, include_graveyard)
         self.hero_pool = [hero_type() for hero_type in VALHALLA if
                           hero_type.pool in self.available_types or hero_type.pool == MONSTER_TYPES.ALL]
         self.losers = []

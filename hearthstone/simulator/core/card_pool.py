@@ -2,10 +2,11 @@ import logging
 import sys
 import types
 from inspect import getmembers, isclass
-from typing import Union, List, Set, Type
+from typing import Union, List, Set, Type, Optional
 
 from hearthstone.simulator.core import combat
 from hearthstone.simulator.core.adaptations import valid_adaptations
+from hearthstone.simulator.core.card_graveyard import REMOVED_CARDS
 from hearthstone.simulator.core.cards import MonsterCard, one_minion_per_type, CardList
 from hearthstone.simulator.core.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
@@ -1518,21 +1519,6 @@ class NatPagleExtremeAngler(MonsterCard):
                     context.friendly_war_party.owner.gain_hand_card(random_minion)
 
 
-class FloatingWatcher(MonsterCard):
-    tier = 4
-    monster_type = MONSTER_TYPES.DEMON
-    pool = MONSTER_TYPES.DEMON
-    base_attack = 4
-    base_health = 4
-    mana_cost = 5
-
-    def handle_event_powers(self, event: CardEvent, context: Union['BuyPhaseContext', 'CombatPhaseContext']):
-        if event.event is EVENTS.PLAYER_DAMAGED:
-            bonus = 4 if self.golden else 2
-            self.attack += bonus
-            self.health += bonus
-
-
 class MalGanis(MonsterCard):
     tier = 5
     monster_type = MONSTER_TYPES.DEMON
@@ -2361,6 +2347,53 @@ class FishOfNZoth(MonsterCard):
                     self.deathrattles.append(deathrattle)  # TODO: this should gain golden deathrattles if dead card is golden
 
 
+class RingWatcher(MonsterCard):
+    tier = 4
+    monster_type = MONSTER_TYPES.DEMON
+    pool = MONSTER_TYPES.DEMON
+    base_attack = 6
+    base_health = 4
+    base_taunt = True
+
+    def base_deathrattle(self, context: 'CombatPhaseContext'):
+        summon_index = context.friendly_war_party.get_index(self)
+        for i in range(2 * context.summon_minion_multiplier()):
+            imp = FieryImp()
+            if self.golden:
+                imp.golden_transformation([])
+            context.friendly_war_party.summon_in_combat(imp, context, summon_index + i + 1)
+
+
+class FieryImp(MonsterCard):
+    tier = 1
+    monster_type = MONSTER_TYPES.DEMON
+    pool = MONSTER_TYPES.DEMON
+    base_attack = 3
+    base_health = 2
+    base_token = True
+
+
+class SoulDevourer(MonsterCard):
+    tier = 3
+    monster_type = MONSTER_TYPES.DEMON
+    pool = MONSTER_TYPES.DEMON
+    base_attack = 3
+    base_health = 3
+    num_battlecry_targets = [1]
+
+    def base_battlecry(self, targets: List['MonsterCard'], context: 'BuyPhaseContext'):
+        multiplier = 2 if self.golden else 1
+        if targets and targets[0] in context.owner.in_play:
+            context.owner.remove_board_card(targets[0])
+            context.owner.tavern.deck.return_cards(targets[0].dissolve())
+            self.attack += targets[0].attack * multiplier
+            self.health += targets[0].health * multiplier
+            context.owner.coins += 6 if self.golden else 3
+
+    def valid_battlecry_target(self, card: 'MonsterCard') -> bool:
+        return card.check_type(MONSTER_TYPES.DEMON)
+
+
 # TODO: add Faceless Taverngoer - add option to target store minions
 
 
@@ -2369,9 +2402,9 @@ class PrintingPress:
     cards_per_tier = {1: 16, 2: 15, 3: 13, 4: 11, 5: 9, 6: 7}
 
     @classmethod
-    def make_cards(cls, available_types: List['MONSTER_TYPES']) -> 'CardList':
+    def make_cards(cls, available_types: List['MONSTER_TYPES'], include_graveyard: Optional[bool] = False) -> 'CardList':
         cardlist = []
-        for card in cls.cards:
+        for card in cls.cards | (REMOVED_CARDS if include_graveyard else set()):
             if not card.base_token and (card.pool in available_types or card.pool == MONSTER_TYPES.ALL):
                 cardlist.extend([card() for _ in range(cls.cards_per_tier[card.tier])])
         return CardList(cardlist)

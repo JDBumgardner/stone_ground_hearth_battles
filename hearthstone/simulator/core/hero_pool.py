@@ -908,4 +908,15 @@ class NZoth(Hero):
             context.owner.gain_board_card(FishOfNZoth())
 
 
+class Greybough(Hero):
+    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.SUMMON_COMBAT and event.card in context.friendly_war_party.board:
+            event.card.attack += 1
+            event.card.health += 2
+            event.card.taunt = True
+
+
+# TODO: add Tickatus... and darkmoon prizes (ugh)
+
+
 VALHALLA = [member[1] for member in getmembers(sys.modules[__name__], lambda member: isclass(member) and member.__module__ == __name__)]
