@@ -15,6 +15,7 @@ from hearthstone.training.pytorch.agents.pytorch_batched_bot import BatchedInfer
 from hearthstone.training.pytorch.agents.pytorch_bot import PytorchBot
 from hearthstone.training.pytorch.encoding import shared_tensor_pool_encoder
 from hearthstone.training.pytorch.encoding.shared_tensor_pool_encoder import SharedTensorPoolEncoder
+from hearthstone.training.pytorch.encoding.state_encoding import Encoder
 from hearthstone.training.pytorch.gae import GAEAnnotator
 from hearthstone.training.pytorch.replay_buffer import EpochBuffer
 from hearthstone.training.pytorch.surveillance import GlobalStepContext
@@ -46,7 +47,7 @@ class WorkerPool:
     def __init__(self, num_workers,
                  epoch_buffer: EpochBuffer,
                  annotator: GAEAnnotator,
-                 encoder: SharedTensorPoolEncoder,
+                 encoder: Encoder,
                  tensorboard: SummaryWriter,
                  global_step_context: GlobalStepContext,
                  use_processes: bool,

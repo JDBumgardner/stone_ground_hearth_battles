@@ -68,7 +68,7 @@ class PPOLearner(GlobalStepContext):
 
         # Encoder is shared to reuse tensors passed between processes
         self.encoder = DefaultEncoder()
-        if self.hparams['parallelism.method'] in ("process", "batch"):
+        if self.hparams['parallelism.shared_tensor_pool']:
             self.encoder = SharedTensorPoolEncoder(self.encoder, self.hparams['parallelism.method']=="process")
 
         self.tensorboard_accum = PPOTensorboard(False, False)
@@ -184,7 +184,7 @@ class PPOLearner(GlobalStepContext):
         optimizer.step()
         early_stopped = approx_kl_divergence_welford.mean() > self.hparams['approx_kl_limit']
         self.tensorboard_accum.flush(tensorboard, epoch, minibatch_idx, approx_kl_divergence_welford.mean(), early_stopped,
-                                self.hparams['batch.max_in_memory'], len(minibatch), self.global_step)
+                                self.hparams['batch.max_in_memory'], len(minibatch), optimizer.state_dict(), self.global_step)
         return early_stopped
 
     def get_device(self) -> torch.device:
@@ -291,7 +291,7 @@ class PPOLearner(GlobalStepContext):
         # Set gradient descent algorithm
         if self.hparams["optimizer"] == "adam":
             # {https://en.wikipedia.org/wiki/Stochastic_gradient_descent#Adam}
-            optimizer = optim.Adam(learning_net.parameters(), lr=self.hparams["adam_lr"])
+            optimizer = optim.Adam(learning_net.parameters(), lr=self.hparams["adam.lr"], weight_decay=self.hparams["adam.weight_decay"])
         elif self.hparams["optimizer"] == "sgd":
             # {https://en.wikipedia.org/wiki/Stochastic_gradient_descent}
             optimizer = optim.SGD(learning_net.parameters(), lr=self.hparams["sgd_lr"],
@@ -329,13 +329,17 @@ class PPOLearner(GlobalStepContext):
                                      self.get_device(),
                                      )
 
-        for _ in range(1000000):
+        for i in range(1000000):
             learning_net.eval()
             if self.hparams['parallelism.method']:
                 worker_pool.play_games(learning_bot_contestant, other_contestants, self.hparams['game_size'])
             else:
                 Worker(learning_bot_contestant, other_contestants, self.hparams['game_size'], replay_buffer,
                        gae_annotator, tensorboard, self).play_game()
+            # Warmup games for normalization layer are discarded.
+            if self.hparams['resume'] and self.hparams['nn.encoding.normalize'] and i == 0:
+                replay_buffer.clear()
+                continue
             if len(replay_buffer) >= min_replay_buffer_size:
                 print(len(replay_buffer))
                 learning_net.train()
@@ -350,11 +354,13 @@ class PPOLearner(GlobalStepContext):
                                      self.hparams["normalize_advantage"])
                     if stop_early:
                         break
-                if self.hparams['parallelism.method'] == "process":
-                    replay_buffer.recycle(shared_tensor_pool_encoder.global_process_tensor_queue)
-                elif self.hparams['parallelism.method'] == "batch":
-                    # replay_buffer.recycle(shared_tensor_pool_encoder.global_thread_tensor_queue)
-                    replay_buffer.clear()
+                if self.hparams['parallelism.shared_tensor_pool']:
+                    if self.hparams['parallelism.method'] == "process":
+                        replay_buffer.recycle(shared_tensor_pool_encoder.global_process_tensor_queue)
+                    elif self.hparams['parallelism.method'] in ("thread", "batch"):
+                        replay_buffer.recycle(shared_tensor_pool_encoder.global_thread_tensor_queue)
+                    else:
+                        assert False, "Unidentified parallelism method."
                 else:
                     replay_buffer.clear()
 
@@ -483,7 +489,7 @@ class PPOTensorboard:
         self.terminal_action_count += transition_batch.is_terminal.sum()
 
     def flush(self, tensorboard: SummaryWriter, epoch:int, minibatch_idx: int, approx_kl_divergence: torch.Tensor, early_stopped:bool,
-              small_batch_size: int, big_batch_size: int, step):
+              small_batch_size: int, big_batch_size: int, optimizer_state, step):
         tensorboard.add_scalar("reward/mean", self.reward_welford.mean(), step)
         tensorboard.add_scalar("reward/stddev", self.reward_welford.stdev(), step)
         tensorboard.add_scalar("value/mean", self.value_welford.mean(), step)
@@ -565,9 +571,9 @@ class PPOTensorboard:
                                        2 * self.terminal_value_welford.stdev() * self.reward_welford.stdev()
                                ), step)
 
-        tensorboard.add_scalar("gradients/small_batch_l2", sqrt(self.small_batch_grad_norm), step)
+        tensorboard.add_scalar("gradients/small_batch_l2", sqrt(self.small_batch_grad_norm) / small_batch_size, step)
         if small_batch_size != big_batch_size:
-            tensorboard.add_scalar("gradients/big_batch_l2", sqrt(self.big_batch_grad_norm), step)
+            tensorboard.add_scalar("gradients/big_batch_l2", sqrt(self.big_batch_grad_norm) / big_batch_size, step)
             gradient_signal_estimate = (
                                                self.big_batch_grad_norm / big_batch_size - self.small_batch_grad_norm / small_batch_size) / (
                                                big_batch_size - small_batch_size)
@@ -578,10 +584,17 @@ class PPOTensorboard:
             tensorboard.add_scalar("gradients/gradient_noise_est", gradient_noise_estimate, step)
             self.gradient_signal_mag.update(torch.tensor(gradient_signal_estimate))
             self.gradient_noise_mag.update(torch.tensor(gradient_noise_estimate))
+            self.gradient_signal_mag.decay(1 - 0.00000002 * big_batch_size)
+            self.gradient_signal_mag.decay(1 - 0.00000002 * big_batch_size)
             tensorboard.add_scalar("gradients/gradient_signal_est/rolling", self.gradient_signal_mag.mean(), step)
             tensorboard.add_scalar("gradients/gradient_noise_est/rolling", self.gradient_noise_mag.mean(), step)
             tensorboard.add_scalar("gradients/noise_scale",
                                    self.gradient_noise_mag.mean() / self.gradient_signal_mag.mean(), step)
+
+        s = optimizer_state['state']
+        v0 = torch.cat([s['exp_avg_sq'].reshape(-1) for _, s in s.items()]).norm()
+        m0 = torch.cat([s['exp_avg'].reshape(-1) for _, s in s.items()]).norm()
+        tensorboard.add_scalar("gradients/adam_gradient_noise_scale", big_batch_size * (v0 - m0 ** 2).item(), step)
 
         if self.histogram_metrics:
             tensorboard.add_histogram("policy", torch.exp(action_log_probs), step)
@@ -615,29 +628,31 @@ def main():
         'opponents.self_play.only_champions': True,
         'opponents.self_play.remove_weakest': True,
         'opponents.max_pool_size': 7,
-        'adam_lr': 0.0001,
-        'batch.min_replay_buffer_size': 32768,
-        'batch.minibatch_size': 8192,
+        'adam.lr': 5e-5,
+        'adam.weight_decay': 1e-4,
+        'batch.min_replay_buffer_size': 100000,
+        'batch.minibatch_size': 2048,
         'batch.max_in_memory': 1024,
         'cuda': True,
         'entropy_weight': 0.001,
         'gae_gamma': 0.999,
-        'gae_lambda': 0.9,
+        'gae_lambda': 0.95,
         'game_size': 8,
         'gradient_clipping': 0.5,
         'approx_kl_limit': 0.03,
         'nn.architecture': 'transformer',
         'nn.state_encoder': 'Default',
-        'nn.hidden_layers': 3,
-        'nn.hidden_size': 128,
+        'nn.hidden_layers': 2,
+        'nn.hidden_size': 64,
         'nn.activation': 'gelu',
         'nn.shared': False,
         'nn.encoding.redundant': True,
-        'nn.encoding.normalize': True,
+        'nn.encoding.normalize': False,
         'nn.encoding.normalize.gamma': 0.999999,
         'normalize_advantage': True,
-        'parallelism.num_workers': 128,
-        'parallelism.method': "batch",
+        'parallelism.num_workers': 256,
+        'parallelism.method': 'batch',
+        'parallelism.shared_tensor_pool': False,
         'optimizer': 'adam',
         'policy_weight': 0.5,
         'ppo_epochs': 8,

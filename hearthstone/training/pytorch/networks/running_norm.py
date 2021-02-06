@@ -12,20 +12,19 @@ class WelfordAggregator:
         self.m2 = None
 
     def update(self, value: torch.Tensor):
-        with torch.no_grad():
-            if self.mu is None:
-                self.mu = torch.zeros(self.shape, device=value.device)
-                self.m2 = torch.zeros(self.shape, device=value.device)
-            value = value.reshape((-1,) + self.shape)
-            b_count = value.shape[0]
-            b_mean = value.mean(dim=0)
-            b_m2 = (value - b_mean).pow(2).sum(dim=0)
-            n = self.count + b_count
-            delta = b_mean - self.mu
+        if self.mu is None:
+            self.mu = torch.zeros(self.shape, device=value.device)
+            self.m2 = torch.zeros(self.shape, device=value.device)
+        value = value.reshape((-1,) + self.shape)
+        b_count = value.shape[0]
+        b_mean = value.mean(dim=0)
+        b_m2 = (value - b_mean).pow(2).sum(dim=0)
+        n = self.count + b_count
+        delta = b_mean - self.mu
 
-            self.m2 = self.m2 + b_m2 + delta.pow(2) * self.count * b_count / n
-            self.mu += delta * b_count / n
-            self.count = n
+        self.m2 = self.m2 + b_m2 + delta.pow(2) * self.count * b_count / n
+        self.mu += delta * b_count / n
+        self.count = n
 
     def decay(self, gamma: float):
         self.count *= gamma
@@ -34,12 +33,10 @@ class WelfordAggregator:
         return self.mu
 
     def variance(self):
-        with torch.no_grad():
-            return self.m2 / self.count
+        return self.m2 / self.count
 
     def stdev(self):
-        with torch.no_grad():
-            return torch.sqrt(self.variance())
+        return torch.sqrt(self.variance())
 
 
 class PPONormalizer(nn.Module):
@@ -60,17 +57,18 @@ class PPONormalizer(nn.Module):
         self.welford_aggregator = WelfordAggregator(shape)
 
     def forward(self, value: torch.Tensor):
-        if not self.training:
-            with torch.no_grad():
-                flattened = value.reshape((-1,) + self.shape)
-                num_updates = flattened.shape[0]
-                coefficients = torch.pow(self.gamma, torch.arange(num_updates)).view((num_updates,) + (1,) * (len(flattened.shape) -1) )
-                self.exponential_mean = self.gamma ** num_updates * self.exponential_mean + flattened * coefficients
-                self.welford_aggregator.update(self.exponential_mean)
-        if self.welford_aggregator.count > 2:
-            return value / (self.welford_aggregator.stdev() + self.epsilon)
-        else:
-            return value
+        with torch.no_grad():
+            if not self.training:
+                with torch.no_grad():
+                    flattened = value.reshape((-1,) + self.shape)
+                    num_updates = flattened.shape[0]
+                    coefficients = torch.pow(self.gamma, torch.arange(num_updates)).view((num_updates,) + (1,) * (len(flattened.shape) -1) )
+                    self.exponential_mean = self.gamma ** num_updates * self.exponential_mean + flattened * coefficients
+                    self.welford_aggregator.update(self.exponential_mean)
+            if self.welford_aggregator.count > 2:
+                return value / (self.welford_aggregator.stdev() + self.epsilon)
+            else:
+                return value
 
 class EMANormalizer(nn.Module):
     def __init__(self, shape: torch.Size, gamma: float, epsilon: float = 1e-5):
@@ -90,13 +88,14 @@ class EMANormalizer(nn.Module):
         self.welford_aggregator = WelfordAggregator(shape)
 
     def forward(self, value: torch.Tensor):
-        if not self.training:
-            self.welford_aggregator.count *= self.gamma
-            self.welford_aggregator.update(value)
-        if self.welford_aggregator.count > 2:
-            return value - self.welford_aggregator.mean() / (self.welford_aggregator.stdev() + self.epsilon)
-        else:
-            return value
+        with torch.no_grad():
+            if not self.training:
+                self.welford_aggregator.decay(self.gamma)
+                self.welford_aggregator.update(value)
+            if self.welford_aggregator.count > 2:
+                return value - self.welford_aggregator.mean() / (self.welford_aggregator.stdev() + self.epsilon)
+            else:
+                return value
 
 
 class ObservationNormalizer(nn.Module):

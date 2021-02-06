@@ -1,4 +1,5 @@
 import asyncio
+import itertools
 import typing
 from typing import Dict, List, Optional
 
@@ -26,7 +27,7 @@ class RoundRobinHost(Host):
         self.tavern.buying_step()
         for player_name, player in self.tavern.players.items():
             agent = self.agents[player_name]
-            for _ in range(40):
+            for i in itertools.count():
                 if player.dead:
                     break
                 if player.discover_queue:
@@ -37,6 +38,8 @@ class RoundRobinHost(Host):
                     hero_discover_action, agent_annotation = asyncio_utils.get_or_create_event_loop().run_until_complete(
                         agent.annotated_hero_discover_action(player))
                     self._apply_and_record(player_name, hero_discover_action, agent_annotation)
+                elif i > 40:
+                    break
                 else:
                     action, agent_annotation = asyncio_utils.get_or_create_event_loop().run_until_complete(agent.annotated_buy_phase_action(player))
                     self._apply_and_record(player_name, action, agent_annotation)
