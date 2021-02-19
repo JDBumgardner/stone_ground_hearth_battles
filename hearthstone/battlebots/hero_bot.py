@@ -5,7 +5,7 @@ from typing import List, Callable
 from hearthstone.simulator.agent import Agent, StandardAction, generate_valid_actions, BuyAction, EndPhaseAction, \
     SummonAction, \
     SellAction, TavernUpgradeAction, RerollAction, HeroPowerAction, DiscoverChoiceAction, RearrangeCardsAction, \
-    HeroDiscoverAction
+    HeroDiscoverAction, FreezeDecision
 
 from hearthstone.simulator.core.player import Player, StoreIndex
 
@@ -68,7 +68,7 @@ class HeroBot(Agent):
         if reroll_action.valid(player):
             return reroll_action
 
-        return EndPhaseAction()
+        return EndPhaseAction(FreezeDecision.NO_FREEZE)
 
     async def discover_choice_action(self, player: 'Player') -> DiscoverChoiceAction:
         discover_cards = player.discover_queue[0]

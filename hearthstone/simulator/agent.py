@@ -13,8 +13,9 @@ from hearthstone.simulator.core.tavern import Player
 
 
 class FreezeDecision(enum.Enum):
-    FREEZE = 0
-    UNFREEZE = 1
+    NO_FREEZE = 0
+    FREEZE = 1
+    UNFREEZE = 2
 
 
 class Action:
@@ -155,11 +156,11 @@ class SellAction(StandardAction):
 
 class EndPhaseAction(StandardAction):
 
-    def __init__(self, freeze: Optional[FreezeDecision] = None):
-        self.freeze: Optional[FreezeDecision] = freeze
+    def __init__(self, freeze: FreezeDecision):
+        self.freeze = freeze
 
     def __repr__(self):
-        return f"EndPhase({self.freeze.name if self.freeze is not None else ''})"
+        return f"EndPhase({self.freeze.name})"
 
     def apply(self, player: 'Player'):
         if self.freeze == FreezeDecision.FREEZE:
@@ -355,7 +356,7 @@ def generate_all_actions(player: 'Player') -> Generator[StandardAction, None, No
     yield TripleRewardsAction()
     yield TavernUpgradeAction()
     yield RerollAction()
-    yield EndPhaseAction()
+    yield EndPhaseAction(FreezeDecision.NO_FREEZE)
     yield EndPhaseAction(FreezeDecision.FREEZE)
     yield EndPhaseAction(FreezeDecision.UNFREEZE)
     yield HeroPowerAction()

@@ -4,7 +4,8 @@ from typing import List
 
 from hearthstone.simulator.agent import Agent, StandardAction, generate_valid_actions, BuyAction, EndPhaseAction, \
     SummonAction, \
-    SellAction, TavernUpgradeAction, RerollAction, DiscoverChoiceAction, RearrangeCardsAction, HeroDiscoverAction
+    SellAction, TavernUpgradeAction, RerollAction, DiscoverChoiceAction, RearrangeCardsAction, HeroDiscoverAction, \
+    FreezeDecision
 from hearthstone.simulator.core.card_pool import RabidSaurolisk
 
 from hearthstone.simulator.core.player import Player, BoardIndex
@@ -51,7 +52,7 @@ class SauroliskBot(Agent):
                 if type(card) is not RabidSaurolisk:
                     return SellAction(BoardIndex(index))
 
-        return EndPhaseAction()
+        return EndPhaseAction(FreezeDecision.NO_FREEZE)
 
     async def discover_choice_action(self, player: 'Player') -> DiscoverChoiceAction:
         discover_cards = player.discover_queue[0]

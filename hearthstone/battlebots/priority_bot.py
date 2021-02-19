@@ -1,8 +1,8 @@
 import typing
 from typing import List
 from hearthstone.simulator.agent import generate_valid_actions, BuyAction, EndPhaseAction, SummonAction, SellAction, \
-    DiscoverChoiceAction, RearrangeCardsAction, HeroDiscoverAction
-from hearthstone.simulator.agent import  TavernUpgradeAction, RerollAction
+    DiscoverChoiceAction, RearrangeCardsAction, HeroDiscoverAction, FreezeDecision
+from hearthstone.simulator.agent import TavernUpgradeAction, RerollAction
 from hearthstone.battlebots.bot_types import PriorityFunctionBot
 
 from hearthstone.simulator.core.player import Player, StoreIndex
@@ -45,7 +45,7 @@ class PriorityBot(PriorityFunctionBot):
         if reroll_action.valid(player):
             return reroll_action
 
-        return EndPhaseAction()
+        return EndPhaseAction(FreezeDecision.NO_FREEZE)
 
     async def discover_choice_action(self, player: 'Player') -> DiscoverChoiceAction:
         discover_cards = player.discover_queue[0]

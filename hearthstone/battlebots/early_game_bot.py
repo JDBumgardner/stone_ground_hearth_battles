@@ -4,7 +4,8 @@ from typing import List, Callable
 
 from hearthstone.simulator.agent import Agent, StandardAction, generate_valid_actions, BuyAction, EndPhaseAction, \
     SummonAction, \
-    SellAction, TavernUpgradeAction, RerollAction, DiscoverChoiceAction, RearrangeCardsAction, HeroDiscoverAction
+    SellAction, TavernUpgradeAction, RerollAction, DiscoverChoiceAction, RearrangeCardsAction, HeroDiscoverAction, \
+    FreezeDecision
 from hearthstone.simulator.core.card_pool import MurlocTidehunter, AlleyCat
 
 from hearthstone.simulator.core.player import Player, StoreIndex, BoardIndex
@@ -77,7 +78,7 @@ class EarlyGameBot(Agent):
         if reroll_action.valid(player):
             return reroll_action
 
-        return EndPhaseAction(False)
+        return EndPhaseAction(FreezeDecision.NO_FREEZE)
 
     async def discover_choice_action(self, player: 'Player') -> DiscoverChoiceAction:
         discover_cards = player.discover_queue[0]

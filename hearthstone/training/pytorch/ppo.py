@@ -538,8 +538,8 @@ class PPOTensorboard:
         tensorboard.add_scalar("actions/endphase_terminal", self.terminal_action_count, step)
         tensorboard.add_scalar("actions/endphase",
                                sum(type(action) is EndPhaseAction for action in self.actions), step)
-        tensorboard.add_scalar("actions/endphase_do_nothing", sum(
-            type(action) is EndPhaseAction and action.freeze is None for action in self.actions), step)
+        tensorboard.add_scalar("actions/endphase_no_freeze", sum(
+            type(action) is EndPhaseAction and action.freeze == FreezeDecision.NO_FREEZE for action in self.actions), step)
         tensorboard.add_scalar("actions/endphase_freeze", sum(
             type(action) is EndPhaseAction and action.freeze == FreezeDecision.FREEZE for action in self.actions), step)
         tensorboard.add_scalar("actions/endphase_unfreeze", sum(

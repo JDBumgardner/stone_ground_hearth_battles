@@ -155,7 +155,7 @@ class TextAgent(Agent):
                 return None
             return SellAction(BoardIndex(sell_index))
         elif split_list == ["e"]:
-            return EndPhaseAction()
+            return EndPhaseAction(FreezeDecision.NO_FREEZE)
         elif split_list == ["e", "f"]:
             return EndPhaseAction(FreezeDecision.FREEZE)
         elif split_list == ["e", "u"]:
