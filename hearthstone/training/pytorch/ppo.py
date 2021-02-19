@@ -13,7 +13,8 @@ from torch.utils.tensorboard import SummaryWriter
 
 from hearthstone.ladder.ladder import Contestant, load_ratings, ContestantAgentGenerator
 from hearthstone.simulator.agent import RearrangeCardsAction, BuyAction, EndPhaseAction, SellAction, SummonAction, \
-    RerollAction, DiscoverChoiceAction, TavernUpgradeAction, TripleRewardsAction, HeroPowerAction
+    RerollAction, DiscoverChoiceAction, TavernUpgradeAction, TripleRewardsAction, HeroPowerAction, FreezeDecision, \
+    BananaAction, RedeemGoldCoinAction
 from hearthstone.simulator.core.hero import EmptyHero
 from hearthstone.simulator.core.tavern import Tavern
 from hearthstone.training.pytorch.agents.pytorch_bot import PytorchBot
@@ -537,8 +538,12 @@ class PPOTensorboard:
         tensorboard.add_scalar("actions/endphase_terminal", self.terminal_action_count, step)
         tensorboard.add_scalar("actions/endphase",
                                sum(type(action) is EndPhaseAction for action in self.actions), step)
+        tensorboard.add_scalar("actions/endphase_do_nothing", sum(
+            type(action) is EndPhaseAction and action.freeze is None for action in self.actions), step)
         tensorboard.add_scalar("actions/endphase_freeze", sum(
-            type(action) is EndPhaseAction and action.freeze for action in self.actions), step)
+            type(action) is EndPhaseAction and action.freeze == FreezeDecision.FREEZE for action in self.actions), step)
+        tensorboard.add_scalar("actions/endphase_unfreeze", sum(
+            type(action) is EndPhaseAction and action.freeze == FreezeDecision.UNFREEZE for action in self.actions), step)
         tensorboard.add_scalar("actions/rearrange",
                                sum(type(action) is RearrangeCardsAction for action in self.actions), step)
         tensorboard.add_scalar("actions/buy", sum(type(action) is BuyAction for action in self.actions), step)
@@ -555,6 +560,10 @@ class PPOTensorboard:
                                sum(type(action) is DiscoverChoiceAction for action in self.actions), step)
         tensorboard.add_scalar("actions/hero_power",
                                sum(type(action) is HeroPowerAction for action in self.actions), step)
+        tensorboard.add_scalar("actions/banana",
+                               sum(type(action) is BananaAction for action in self.actions), step)
+        tensorboard.add_scalar("actions/redeem_gold_coin",
+                               sum(type(action) is RedeemGoldCoinAction for action in self.actions), step)
 
         tensorboard.add_scalar("critic_explanation/correlation", (
                 self.value_welford.variance() + self.return_welford.variance() - self.value_error_welford.variance()) / (

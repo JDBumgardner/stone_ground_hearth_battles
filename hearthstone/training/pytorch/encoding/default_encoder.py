@@ -5,7 +5,8 @@ import numpy as np
 import torch
 
 from hearthstone.simulator.agent import TripleRewardsAction, TavernUpgradeAction, RerollAction, \
-    EndPhaseAction, SummonAction, BuyAction, SellAction, StandardAction, DiscoverChoiceAction, HeroPowerAction
+    EndPhaseAction, SummonAction, BuyAction, SellAction, StandardAction, DiscoverChoiceAction, HeroPowerAction, \
+    FreezeDecision, BananaAction, RedeemGoldCoinAction
 from hearthstone.simulator.core.card_pool import PrintingPress
 from hearthstone.simulator.core.cards import CardLocation
 from hearthstone.simulator.core.hero_pool import VALHALLA
@@ -122,17 +123,18 @@ def discover_indices() -> List[DiscoverIndex]:
 
 
 def _all_actions() -> ActionSet:
-    player_action_set = [TripleRewardsAction(), TavernUpgradeAction(), RerollAction(), EndPhaseAction(False),
-                         HeroPowerAction(), EndPhaseAction(True)]
+    player_action_set = [TripleRewardsAction(), TavernUpgradeAction(), RerollAction(), HeroPowerAction(),
+                         RedeemGoldCoinAction(), EndPhaseAction(), EndPhaseAction(FreezeDecision.FREEZE),
+                         EndPhaseAction(FreezeDecision.UNFREEZE)]
     store_action_set = [
-        [BuyAction(index), InvalidAction(), InvalidAction(),
-         InvalidAction(), InvalidAction(), HeroPowerAction(store_target=index)] for index in store_indices()]
+        [BuyAction(index), InvalidAction(), InvalidAction(), InvalidAction(), HeroPowerAction(store_target=index),
+         BananaAction(store_target=index)] for index in store_indices()]
     hand_action_set = [
-        [InvalidAction(), SummonAction(index), SummonAction(index, [BoardIndex(0)]),
-         InvalidAction(), InvalidAction(), InvalidAction()] for index in hand_indices()]
+        [InvalidAction(), SummonAction(index), SummonAction(index, [BoardIndex(0)]), InvalidAction(), InvalidAction(),
+         InvalidAction()] for index in hand_indices()]
     board_action_set = [
-        [InvalidAction(), InvalidAction(), InvalidAction(),
-         SellAction(index), InvalidAction(), HeroPowerAction(board_target=index)] for index in board_indices()]
+        [InvalidAction(), InvalidAction(), InvalidAction(), SellAction(index), HeroPowerAction(board_target=index),
+         BananaAction(board_target=index)] for index in board_indices()]
     discover_action_set = [
         [InvalidAction(), InvalidAction(), InvalidAction(),
          InvalidAction(), DiscoverChoiceAction(index), InvalidAction()] for index in

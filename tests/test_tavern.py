@@ -3722,6 +3722,25 @@ class CardTests(unittest.TestCase):
         self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health + 3)
         self.assertEqual(player_1.coins, 4)
 
+    def test_brann_doesnt_double_soul_devourer(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        self.upgrade_to_tier(tavern, 5)
+        tavern.randomizer = RepeatedCardForcer([Imprisoner, BrannBronzebeard, SoulDevourer])
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        self.assertCardListEquals(player_1.in_play, [Imprisoner, BrannBronzebeard])
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0), [BoardIndex(0)])
+        print(player_1.in_play)
+        self.assertCardListEquals(player_1.in_play, [BrannBronzebeard, SoulDevourer])
+        self.assertEqual(player_1.in_play[1].attack, player_1.in_play[1].base_attack + 3)
+        self.assertEqual(player_1.in_play[1].health, player_1.in_play[1].base_health + 3)
+
 
 if __name__ == '__main__':
     unittest.main()

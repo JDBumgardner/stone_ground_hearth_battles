@@ -16,7 +16,7 @@ class NoActionBot(Agent):
         return RearrangeCardsAction([])
 
     async def buy_phase_action(self, player: 'Player') -> StandardAction:
-        return EndPhaseAction(True)
+        return EndPhaseAction()
 
     async def discover_choice_action(self, player: 'Player') -> DiscoverChoiceAction:
         return DiscoverChoiceAction(DiscoverIndex(0))

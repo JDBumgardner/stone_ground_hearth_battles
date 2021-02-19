@@ -2,7 +2,7 @@ from typing import Optional, List
 
 from hearthstone.simulator.agent import SummonAction, SellAction, EndPhaseAction, RerollAction, TavernUpgradeAction, \
     HeroPowerAction, TripleRewardsAction, RedeemGoldCoinAction, BuyAction, StandardAction, Agent, BananaAction, \
-    DiscoverChoiceAction, HeroChoiceAction, RearrangeCardsAction, HeroDiscoverAction
+    DiscoverChoiceAction, HeroChoiceAction, RearrangeCardsAction, HeroDiscoverAction, FreezeDecision
 from hearthstone.simulator.core.cards import CardLocation, MonsterCard
 from hearthstone.simulator.core.hero import Hero
 from hearthstone.simulator.core.player import HandIndex, BoardIndex, StoreIndex, Player, DiscoverIndex, HeroChoiceIndex
@@ -108,7 +108,7 @@ class TextAgent(Agent):
             await self.connection.send('coin tokens: "c" will use a coin token\n')
         if player.bananas >= 1:
             await self.connection.send('bananas: "b b 0" will use a banana on the 0 index board minion, "b s 0" will use a banana on the 0 index store minion\n')
-        await self.connection.send('end turn: "e f" ends the turn and freezes the shop, "e" ends the turn without freezing the shop\n')
+        await self.connection.send('end turn: "e f" ends the turn and freezes the shop, "e u" ends the turn and unfreezes the shop, "e" ends the turn with no changes\n')
         await self.connection.send("input action here: ")
         user_input = await self.connection.receive_line()
         while True:
@@ -155,9 +155,11 @@ class TextAgent(Agent):
                 return None
             return SellAction(BoardIndex(sell_index))
         elif split_list == ["e"]:
-            return EndPhaseAction(False)
+            return EndPhaseAction()
         elif split_list == ["e", "f"]:
-            return EndPhaseAction(True)
+            return EndPhaseAction(FreezeDecision.FREEZE)
+        elif split_list == ["e", "u"]:
+            return EndPhaseAction(FreezeDecision.UNFREEZE)
         elif split_list[0] == "R":
             return RerollAction()
         elif split_list[0] == "u":

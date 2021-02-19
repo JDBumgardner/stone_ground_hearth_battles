@@ -95,7 +95,7 @@ class LearnedPriorityBot(Agent):
         if reroll_action.valid(player):
             return reroll_action
 
-        return EndPhaseAction(False)
+        return EndPhaseAction()
 
     async def discover_choice_action(self, player: 'Player') -> DiscoverChoiceAction:
         discover_cards = player.discover_queue[0]

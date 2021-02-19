@@ -41,7 +41,7 @@ class SupremacyBot(Agent):
         if buy_actions:
             return buy_actions[0]
 
-        return EndPhaseAction(False)
+        return EndPhaseAction()
 
     async def discover_choice_action(self, player: 'Player') -> DiscoverChoiceAction:
         discover_cards = player.discover_queue[0]

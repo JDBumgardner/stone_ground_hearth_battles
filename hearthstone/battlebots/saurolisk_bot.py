@@ -51,7 +51,7 @@ class SauroliskBot(Agent):
                 if type(card) is not RabidSaurolisk:
                     return SellAction(BoardIndex(index))
 
-        return EndPhaseAction(False)
+        return EndPhaseAction()
 
     async def discover_choice_action(self, player: 'Player') -> DiscoverChoiceAction:
         discover_cards = player.discover_queue[0]
