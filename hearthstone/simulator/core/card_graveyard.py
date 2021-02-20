@@ -22,4 +22,15 @@ class FloatingWatcher(MonsterCard):
             self.health += bonus
 
 
+class ElistraTheImmortal(MonsterCard):
+    tier = 6
+    monster_type = None
+    base_attack = 4
+    base_health = 4
+    base_divine_shield = True
+    base_reborn = True
+    divert_taunt_attack = True
+    legendary = True
+
+
 REMOVED_CARDS = set(member[1] for member in getmembers(sys.modules[__name__], lambda member: isclass(member) and issubclass(member, MonsterCard) and member.__module__ == __name__))

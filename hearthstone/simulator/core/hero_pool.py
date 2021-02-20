@@ -312,23 +312,6 @@ class ArchVillianRafaam(Hero):
                 context.friendly_war_party.owner.gain_hand_card(card_copy)
 
 
-class CaptainHooktusk(Hero):
-    base_power_cost = 1
-    power_target_location = [CardLocation.BOARD]
-
-    def hero_power_valid_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
-                              store_index: Optional['StoreIndex'] = None):
-        return context.owner.room_in_hand()
-
-    def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
-                        store_index: Optional['StoreIndex'] = None):
-        board_minion = context.owner.pop_board_card(board_index)
-        context.owner.tavern.deck.return_cards(board_minion.dissolve())
-        predicate = lambda card: (card.tier == board_minion.tier-1 if board_minion.tier > 1 else card.tier == 1) and type(
-            card) != type(board_minion)
-        context.owner.draw_discover(predicate)
-
-
 class Malygos(Hero):
     base_power_cost = 0
     power_target_location = [CardLocation.BOARD, CardLocation.STORE]  # TODO: are there other hero powers with multiple target locations?
@@ -419,7 +402,7 @@ class KingMukla(Hero):
         for _ in range(2):
             if context.owner.room_in_hand():
                 context.owner.bananas += 1
-                if context.randomizer.select_random_number(1, 5) == 5:
+                if context.randomizer.select_random_number(1, 3) == 1:
                     context.owner.big_bananas += 1
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
@@ -430,7 +413,7 @@ class KingMukla(Hero):
 
 
 class EliseStarseeker(Hero):
-    base_power_cost = 2
+    base_power_cost = 3
     multiple_power_uses_per_turn = True
 
     def __init__(self):
@@ -644,6 +627,7 @@ class TheGreatAkazamzarak(Hero):
     def __init__(self):
         super().__init__()
         self.secrets = []
+        self.discovered_ice_block = False
 
     def hero_power_valid_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                               store_index: Optional['StoreIndex'] = None):
@@ -652,13 +636,18 @@ class TheGreatAkazamzarak(Hero):
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
         available_secrets = SECRETS.remaining_secrets(self)
+        if self.discovered_ice_block and SECRETS.ICE_BLOCK in available_secrets:
+            available_secrets.remove(SECRETS.ICE_BLOCK)
         for _ in range(3):
             secret = context.randomizer.select_secret(available_secrets)
             available_secrets.remove(secret)
             self.discover_choices.append(secret)
 
     def select_discover(self, discover_index: 'DiscoverIndex'):
-        self.secrets.append(self.discover_choices[discover_index])
+        secret = self.discover_choices[discover_index]
+        if secret == SECRETS.ICE_BLOCK:
+            self.discovered_ice_block = True
+        self.secrets.append(secret)
         self.discover_choices = []
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
@@ -899,7 +888,7 @@ class YShaarj(Hero):
                                  card.tier == context.friendly_war_party.owner.tavern_tier]
             random_minion = context.randomizer.select_gain_card(same_tier_options)
             context.friendly_war_party.summon_in_combat(type(random_minion)(), context)
-            context.friendly_war_party.owner.gain_board_card(random_minion)
+            context.friendly_war_party.owner.gain_hand_card(random_minion)
 
 
 class NZoth(Hero):

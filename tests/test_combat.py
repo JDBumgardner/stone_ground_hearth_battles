@@ -1,9 +1,8 @@
 import unittest
-from typing import Type
 
 from hearthstone.simulator.core.adaptations import AdaptBuffs
+from hearthstone.simulator.core.card_graveyard import *
 from hearthstone.simulator.core.card_pool import *
-
 from hearthstone.simulator.core.combat import WarParty, fight_boards
 from hearthstone.simulator.core.hero_pool import *
 from hearthstone.simulator.core.player import Player
@@ -293,7 +292,7 @@ class CombatTests(unittest.TestCase):
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [ImpGangBoss()]
-        ethans_war_party.board = [RabidSaurolisk(), Rat()]
+        ethans_war_party.board = [RabidSaurolisk(), Rat(), Rat(), Rat()]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
@@ -828,8 +827,10 @@ class CombatTests(unittest.TestCase):
         ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
+        houndmaster = Houndmaster()
+        houndmaster.attack += 1
         adams_war_party.board = [TwilightEmissary(), WaxriderTogwaggle()]
-        ethans_war_party.board = [TwilightEmissary(), Houndmaster()]
+        ethans_war_party.board = [TwilightEmissary(), houndmaster]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
@@ -902,7 +903,7 @@ class CombatTests(unittest.TestCase):
         ethans_war_party.board = [Maexxna()]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
-        self.assertEqual(ethan.health, 35)
+        self.assertEqual(ethan.health, 34)
 
     def test_zapp_slywick(self): # TODO I don't think this actually tests everything about this card
         adam = Player.new_player_with_hero(Tavern(), "Adam")
@@ -948,8 +949,8 @@ class CombatTests(unittest.TestCase):
         ethans_war_party = WarParty(ethan)
         zapp = ZappSlywick()
         zapp.golden_transformation([])
-        adams_war_party.board = [zapp, VulgarHomunculus()]
-        ethans_war_party.board = [RabidSaurolisk(), DeckSwabbie(), RabidSaurolisk(), CapnHoggarr(), NatPagleExtremeAngler()]
+        adams_war_party.board = [zapp, TwilightEmissary()]
+        ethans_war_party.board = [BloodsailCannoneer(), DeckSwabbie(), BloodsailCannoneer(), CapnHoggarr(), NatPagleExtremeAngler()]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
@@ -982,8 +983,8 @@ class CombatTests(unittest.TestCase):
         ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
-        adams_war_party.board = [CracklingCyclone(), VulgarHomunculus()]
-        ethans_war_party.board = [RabidSaurolisk(), VulgarHomunculus(), VulgarHomunculus()]
+        adams_war_party.board = [CracklingCyclone(), TwilightEmissary()]
+        ethans_war_party.board = [BloodsailCannoneer(), VulgarHomunculus(), VulgarHomunculus()]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
@@ -1054,8 +1055,8 @@ class CombatTests(unittest.TestCase):
         ethans_war_party = WarParty(ethan)
         wildfire_elemental = WildfireElemental()
         wildfire_elemental.golden_transformation([])
-        adams_war_party.board = [wildfire_elemental, VulgarHomunculus()]
-        ethans_war_party.board = [RabidSaurolisk(), CapnHoggarr(), LieutenantGarr(), CapnHoggarr(), AlleyCat()]
+        adams_war_party.board = [wildfire_elemental, TwilightEmissary()]
+        ethans_war_party.board = [BloodsailCannoneer(), CapnHoggarr(), LieutenantGarr(), CapnHoggarr(), AlleyCat()]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
@@ -1079,7 +1080,9 @@ class CombatTests(unittest.TestCase):
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [UnstableGhoul(), BaronRivendare(), BaronRivendare()]
-        ethans_war_party.board = [FreedealingGambler(), MoltenRock(), MoltenRock(), MoltenRock(), MoltenRock(), MoltenRock(), MoltenRock()]
+        ethans_war_party.board = [FreedealingGambler(), DragonspawnLieutenant(), DragonspawnLieutenant(),
+                                  DragonspawnLieutenant(), DragonspawnLieutenant(), DragonspawnLieutenant(),
+                                  DragonspawnLieutenant()]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
@@ -1091,8 +1094,8 @@ class CombatTests(unittest.TestCase):
         ethan = tavern.add_player_with_hero("Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
-        adams_war_party.board = [GlyphGuardian(), VulgarHomunculus(), DeadlySpore()]
-        ethans_war_party.board = [RabidSaurolisk(), Robosaur(), VulgarHomunculus(), VulgarHomunculus()]
+        adams_war_party.board = [GlyphGuardian(), TwilightEmissary(), DeadlySpore()]
+        ethans_war_party.board = [BloodsailCannoneer(), Robosaur(), VulgarHomunculus(), VulgarHomunculus()]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
@@ -1144,8 +1147,8 @@ class CombatTests(unittest.TestCase):
         adam.hero.secrets.append(SECRETS.SPLITTING_IMAGE)
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
-        adams_war_party.board = [VulgarHomunculus()]
-        ethans_war_party.board = [RabidSaurolisk(), RabidSaurolisk()]
+        adams_war_party.board = [TwilightEmissary()]
+        ethans_war_party.board = [BloodsailCannoneer(), BloodsailCannoneer()]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
@@ -1202,8 +1205,8 @@ class CombatTests(unittest.TestCase):
         adam.hero.secrets.append(SECRETS.REDEMPTION)
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
-        adams_war_party.board = [VulgarHomunculus()]
-        ethans_war_party.board = [RabidSaurolisk(), AlleyCat()]
+        adams_war_party.board = [TwilightEmissary()]
+        ethans_war_party.board = [BloodsailCannoneer(), AlleyCat()]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
@@ -1216,8 +1219,8 @@ class CombatTests(unittest.TestCase):
         adam.hero.secrets.append(SECRETS.AVENGE)
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
-        adams_war_party.board = [VulgarHomunculus(), AlleyCat()]
-        ethans_war_party.board = [RabidSaurolisk(), DeckSwabbie(), DeckSwabbie()]
+        adams_war_party.board = [TwilightEmissary(), AlleyCat()]
+        ethans_war_party.board = [BloodsailCannoneer(), DeckSwabbie(), DeckSwabbie()]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
@@ -1291,8 +1294,8 @@ class CombatTests(unittest.TestCase):
         ethan = tavern.add_player_with_hero("Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
-        adams_war_party.board = [CapnHoggarr(), VulgarHomunculus()]
-        ethans_war_party.board = [RabidSaurolisk(), AlleyCat(), TormentedRitualist(), AlleyCat()]
+        adams_war_party.board = [CapnHoggarr(), TwilightEmissary()]
+        ethans_war_party.board = [BloodsailCannoneer(), AlleyCat(), TormentedRitualist(), AlleyCat()]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
@@ -1316,7 +1319,7 @@ class CombatTests(unittest.TestCase):
         ethan = tavern.add_player_with_hero("Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
-        adams_war_party.board = [CobaltScalebane(), TwilightEmissary(), TwilightEmissary()]
+        adams_war_party.board = [TwilightEmissary(), TwilightEmissary(), TwilightEmissary()]
         ethans_war_party.board = [ArmOfTheEmpire(), VulgarHomunculus()]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
@@ -1415,7 +1418,7 @@ class CombatTests(unittest.TestCase):
         piloted_shredder = PilotedShredder()
         piloted_shredder.taunt = True
         adams_war_party.board = [piloted_shredder, Khadgar()]
-        ethans_war_party.board = [RabidSaurolisk(), RabidSaurolisk(), RabidSaurolisk(), RabidSaurolisk()]
+        ethans_war_party.board = [LieutenantGarr(), LieutenantGarr(), LieutenantGarr(), LieutenantGarr()]
         fight_boards(adams_war_party, ethans_war_party, self.TestKhadgarSummonsRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
@@ -1525,7 +1528,7 @@ class CombatTests(unittest.TestCase):
         adam.hero.secrets.append(SECRETS.SPLITTING_IMAGE)
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
-        adams_war_party.board = [VulgarHomunculus(), Khadgar()]
+        adams_war_party.board = [LieutenantGarr(), Khadgar()]
         ethans_war_party.board = [RabidSaurolisk(), RabidSaurolisk(), RabidSaurolisk(), RabidSaurolisk()]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
@@ -1539,7 +1542,7 @@ class CombatTests(unittest.TestCase):
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [AlleyCat(), AnnoyOModule()]
-        ethans_war_party.board = [RabidSaurolisk(), RabidSaurolisk(), RabidSaurolisk()]
+        ethans_war_party.board = [CracklingCyclone(), DeadlySpore(), DeadlySpore()]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
@@ -1552,8 +1555,8 @@ class CombatTests(unittest.TestCase):
         ethan.hero.secrets.append(SECRETS.VENOMSTRIKE_TRAP)
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
-        adams_war_party.board = [RabidSaurolisk() for _ in range(7)]
-        ethans_war_party.board = [VulgarHomunculus() for _ in range(7)]
+        adams_war_party.board = [BloodsailCannoneer() for _ in range(7)]
+        ethans_war_party.board = [TwilightEmissary() for _ in range(7)]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 38)
         self.assertEqual(ethan.health, 40)
@@ -1610,25 +1613,6 @@ class CombatTests(unittest.TestCase):
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
 
-    def test_taunted_elistra_double_triggers_champion_of_yshaarj(self):
-        logging.basicConfig(level=logging.DEBUG)
-        tavern = Tavern()
-        adam = tavern.add_player_with_hero("Adam")
-        ethan = tavern.add_player_with_hero("Ethan")
-        adams_war_party = WarParty(adam)
-        ethans_war_party = WarParty(ethan)
-        elistra = ElistraTheImmortal()
-        elistra.taunt = True
-        hoggarr = CapnHoggarr()
-        hoggarr.taunt = True
-        champion = ChampionOfYShaarj()
-        champion.taunt = True
-        adams_war_party.board = [ZappSlywick(), hoggarr, AlleyCat()]
-        ethans_war_party.board = [champion, elistra]
-        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
-        self.assertEqual(adam.health, 40)
-        self.assertEqual(ethan.health, 40)
-
     def test_elistra_doesnt_trigger_on_attack_twice(self):
         tavern = Tavern()
         adam = tavern.add_player_with_hero("Adam")
@@ -1661,8 +1645,10 @@ class CombatTests(unittest.TestCase):
         ethan = tavern.add_player_with_hero("Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
+        ironhide_runt = IronhideRunt()
+        ironhide_runt.golden_transformation([])
         adams_war_party.board = [Imprisoner(), ChampionOfYShaarj()]
-        ethans_war_party.board = [Robosaur()]
+        ethans_war_party.board = [ironhide_runt]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)

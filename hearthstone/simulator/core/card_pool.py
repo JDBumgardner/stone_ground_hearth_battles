@@ -353,15 +353,14 @@ class RabidSaurolisk(MonsterCard):
     tier = 2
     monster_type = MONSTER_TYPES.BEAST
     pool = MONSTER_TYPES.BEAST
-    base_attack = 4
+    base_attack = 3
     base_health = 2
     mana_cost = 3
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
-        bonus = 2 if self.golden else 1
         if event.event is EVENTS.SUMMON_BUY and event.card.deathrattles:
-            self.attack += bonus
-            self.health += bonus
+            self.attack += 2 if self.golden else 1
+            self.health += 4 if self.golden else 2
 
 
 class GlyphGuardian(MonsterCard):
@@ -1164,7 +1163,7 @@ class Microbot(MonsterCard):
 
 
 class Junkbot(MonsterCard):
-    tier = 5
+    tier = 4
     monster_type = MONSTER_TYPES.MECH
     pool = MONSTER_TYPES.MECH
     base_attack = 1
@@ -1598,7 +1597,7 @@ class YoHoOgre(MonsterCard):
     monster_type = MONSTER_TYPES.PIRATE
     pool = MONSTER_TYPES.PIRATE
     base_attack = 2
-    base_health = 5
+    base_health = 6
     base_taunt = True
     mana_cost = 6
 
@@ -1617,7 +1616,7 @@ class WaxriderTogwaggle(MonsterCard):
     tier = 2
     monster_type = None
     base_attack = 1
-    base_health = 2
+    base_health = 3
     legendary = True
     pool = MONSTER_TYPES.DRAGON
     mana_cost = 3
@@ -1717,8 +1716,8 @@ class MicroMummy(MonsterCard):
 class KangorsApprentice(MonsterCard):
     tier = 6
     monster_type = None
-    base_attack = 3
-    base_health = 6
+    base_attack = 4
+    base_health = 8
     pool = MONSTER_TYPES.MECH
     mana_cost = 9
 
@@ -1944,7 +1943,7 @@ class MoltenRock(MonsterCard):
     monster_type = MONSTER_TYPES.ELEMENTAL
     pool = MONSTER_TYPES.ELEMENTAL
     base_attack = 2
-    base_health = 3
+    base_health = 4
     base_taunt = True
     mana_cost = 3
 
@@ -2254,8 +2253,10 @@ class ArmOfTheEmpire(MonsterCard):
 
     def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.IS_ATTACKED and event.card in context.friendly_war_party.board and event.card.taunt:
-            bonus = 6 if self.golden else 3
+            bonus = 4 if self.golden else 2
             event.card.attack += bonus
+            if event.card.link is not None:
+                event.card.link.attack += bonus
 
 
 class Bigfernal(MonsterCard):
@@ -2294,8 +2295,8 @@ class QirajiHarbinger(MonsterCard):
 class ChampionOfYShaarj(MonsterCard):
     tier = 4
     monster_type = None
-    base_attack = 2
-    base_health = 2
+    base_attack = 4
+    base_health = 4
 
     def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.IS_ATTACKED and event.card in context.friendly_war_party.board and event.card.taunt:
@@ -2319,17 +2320,6 @@ class MythraxTheUnraveler(MonsterCard):
             for _ in range(len(one_minion_per_type(context.owner.in_play, context.randomizer))):
                 self.attack += 2 if self.golden else 1
                 self.health += 4 if self.golden else 2
-
-
-class ElistraTheImmortal(MonsterCard):
-    tier = 6
-    monster_type = None
-    base_attack = 4
-    base_health = 4
-    base_divine_shield = True
-    base_reborn = True
-    divert_taunt_attack = True
-    legendary = True
 
 
 class FishOfNZoth(MonsterCard):
