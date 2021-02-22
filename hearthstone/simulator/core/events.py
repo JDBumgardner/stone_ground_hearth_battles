@@ -1,7 +1,6 @@
-import typing
 import enum
-
-from typing import Optional, List
+import typing
+from typing import Optional, List, Set
 
 if typing.TYPE_CHECKING:
     from hearthstone.simulator.core.combat_event_queue import CombatEventQueue
@@ -194,11 +193,13 @@ class BuyPhaseContext:
 
 
 class CombatPhaseContext:
-    def __init__(self, friendly_war_party: 'WarParty', enemy_war_party: 'WarParty', randomizer: 'Randomizer', combat_event_queue: 'CombatEventQueue'):
+    def __init__(self, friendly_war_party: 'WarParty', enemy_war_party: 'WarParty', randomizer: 'Randomizer',
+                 combat_event_queue: 'CombatEventQueue', damaged_minions: Set['MonsterCard']):
         self.friendly_war_party = friendly_war_party
         self.enemy_war_party = enemy_war_party
         self.randomizer = randomizer
         self.event_queue = combat_event_queue
+        self.damaged_minions = damaged_minions
 
     def broadcast_combat_event(self, event: 'CardEvent'):
         #  boards are copied to prevent reindexing lists while iterating over them
@@ -211,7 +212,7 @@ class CombatPhaseContext:
             card.handle_event(event, self.enemy_context())
 
     def enemy_context(self):
-        return CombatPhaseContext(self.enemy_war_party, self.friendly_war_party, self.randomizer, self.event_queue)
+        return CombatPhaseContext(self.enemy_war_party, self.friendly_war_party, self.randomizer, self.event_queue, self.damaged_minions)
 
     def summon_minion_multiplier(self) -> int:
         summon_multiplier = 1

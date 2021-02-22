@@ -142,6 +142,7 @@ class MonsterCard(metaclass=CardType):
                 self.health = 0
             if defending and foe is not None and self.health < 0:
                 foe.overkill(combat_phase_context.enemy_context())
+            combat_phase_context.damaged_minions.add(self)
             combat_phase_context.broadcast_combat_event(events.CardDamagedEvent(self, foe=foe))
             if self.is_dying():
                 self.dealt_lethal_damage_by = foe

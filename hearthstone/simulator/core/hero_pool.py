@@ -1,5 +1,4 @@
 import copy
-import logging
 from typing import Union, Tuple, Optional
 
 from hearthstone.simulator.core import combat, events, hero
@@ -737,7 +736,7 @@ class IllidanStormrage(Hero):
                         logger.debug(
                             f'{attacking_war_party.owner.name} is attacking {defending_war_party.owner.name} from Illidan Stormrage\'s effect')
                         combat.start_attack(attacker, defender, attacking_war_party, defending_war_party,
-                                            context.randomizer, context.event_queue)
+                                            context.randomizer, context.event_queue, context.damaged_minions)
 
 
 class ZephrysTheGreat(Hero):

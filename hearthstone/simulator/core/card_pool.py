@@ -1,4 +1,3 @@
-import logging
 import types
 from typing import Union, List
 
@@ -258,6 +257,8 @@ class RedWhelp(MonsterCard):
                     return
                 target = context.randomizer.select_enemy_minion(targets)
                 target.take_damage(self.damage, context.enemy_context(), self)
+        combat.resolve_combat_events(context.randomizer, context.event_queue, context.friendly_war_party,
+                                     context.enemy_war_party, context.damaged_minions)  # TODO: need to test this behavior
 
 
 class HarvestGolem(MonsterCard):
@@ -478,7 +479,7 @@ class SkyPirate(MonsterCard):
                 return
             logger.debug(f'{attacking_war_party.owner.name} is attacking {defending_war_party.owner.name}')
             combat.start_attack(self, defender, attacking_war_party, defending_war_party, context.randomizer,
-                                context.event_queue)
+                                context.event_queue, context.damaged_minions)
 
 
 class DeckSwabbie(MonsterCard):
@@ -1619,7 +1620,7 @@ class YoHoOgre(MonsterCard):
                 return
             logger.debug(f'{self} triggers after surviving an attack')
             combat.start_attack(self, defender, attacking_war_party, defending_war_party, context.randomizer,
-                                context.event_queue)
+                                context.event_queue, context.damaged_minions)
 
 
 class WaxriderTogwaggle(MonsterCard):

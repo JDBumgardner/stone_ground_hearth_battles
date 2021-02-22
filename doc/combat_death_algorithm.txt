@@ -1,8 +1,8 @@
 current implementation:
 
-
-attack happens
-attack damage is marked
+IS_ATTACKED/ON_ATTACK events
+damage is dealt to attacker and defender(s)
+AFTER_ATTACK_DAMAGE event
 
 while there are any dying minions in play:  // health <= 0 but not marked dead yet
 
@@ -22,3 +22,5 @@ while there are any dying minions in play:  // health <= 0 but not marked dead y
     end while
 
 end while
+
+AFTER_ATTACK_DEATHRATTLES event
