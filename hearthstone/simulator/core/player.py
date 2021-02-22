@@ -234,7 +234,7 @@ class Player:
 
     def summon_from_void(self, monster: MonsterCard):
         if self.room_on_board():
-            self.gain_board_card(monster)
+            self.gain_board_card(monster, False)
             self.broadcast_buy_phase_event(events.SummonBuyEvent(monster))
 
     def room_on_board(self):
@@ -273,9 +273,8 @@ class Player:
 
     def check_golden(self, check_card: Type[MonsterCard]):
         cards = [card for card in self.in_play + self.hand if isinstance(card, check_card) and not card.golden]
-        assert len(cards) <= 3, f"fnord{cards}"
-        if len(cards) == 3:
-            for card in cards:
+        if len(cards) >= 3:
+            for card in cards[:3]:
                 if card in self.in_play:
                     self._in_play.remove(card)
                 if card in self.hand:
@@ -410,10 +409,11 @@ class Player:
             self._hand.append(card)
             self.check_golden(type(card))
 
-    def gain_board_card(self, card: 'MonsterCard'):
+    def gain_board_card(self, card: 'MonsterCard', check_for_triples: bool = True):
         if self.room_on_board():
             self._in_play.append(card)
-            self.check_golden(type(card))
+            if check_for_triples:
+                self.check_golden(type(card))
 
     def add_to_store(self, card: 'MonsterCard'):
         if self.store_size() < self.maximum_store_size:

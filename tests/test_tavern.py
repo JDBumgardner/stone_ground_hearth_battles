@@ -1009,10 +1009,8 @@ class CardTests(unittest.TestCase):
         tavern.buying_step()
         player_1.purchase(StoreIndex(0))
         player_1.summon_from_hand(HandIndex(0))
-        self.assertCardListEquals(player_1.in_play,
-                                  [Khadgar, Khadgar, AlleyCat, TabbyCat])
-        self.assertCardListEquals(player_1.hand,
-                                  [TabbyCat])
+        self.assertCardListEquals(player_1.in_play, [Khadgar, Khadgar, AlleyCat, TabbyCat])
+        self.assertCardListEquals(player_1.hand, [TabbyCat])
         self.assertTrue(player_1.hand[0].golden)
 
     def test_virmen_sensei(self):

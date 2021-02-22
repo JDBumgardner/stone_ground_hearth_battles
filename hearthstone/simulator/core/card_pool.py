@@ -89,6 +89,7 @@ class AlleyCat(MonsterCard):
             if self.golden:
                 tabby_cat.golden_transformation([])
             context.owner.summon_from_void(tabby_cat)
+        context.owner.check_golden(TabbyCat)
 
 
 class TabbyCat(MonsterCard):
@@ -193,6 +194,7 @@ class MurlocTidehunter(MonsterCard):
             if self.golden:
                 murloc_scout.golden_transformation([])
             context.owner.summon_from_void(murloc_scout)
+        context.owner.check_golden(MurlocScout)
 
 
 class MurlocScout(MonsterCard):
