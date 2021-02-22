@@ -57,7 +57,9 @@ class Feature:
         pass
 
     def encode(self, obj: Any) -> np.ndarray:
-        tensor = np.zeros(self.size(), dtype=self.dtype())
+        size = self.size()
+        dtype = self.dtype()
+        tensor = np.zeros(size, dtype)
         self.fill_tensor(obj, tensor)
         return tensor
 
