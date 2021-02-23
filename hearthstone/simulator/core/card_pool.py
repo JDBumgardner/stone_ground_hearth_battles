@@ -1,4 +1,3 @@
-import logging
 import sys
 import types
 from inspect import getmembers, isclass
@@ -8,6 +7,7 @@ from hearthstone.simulator.core import combat
 from hearthstone.simulator.core.adaptations import valid_adaptations
 from hearthstone.simulator.core.card_graveyard import REMOVED_CARDS
 from hearthstone.simulator.core.cards import MonsterCard, one_minion_per_type, CardList
+from hearthstone.simulator.core.combat import logger
 from hearthstone.simulator.core.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 

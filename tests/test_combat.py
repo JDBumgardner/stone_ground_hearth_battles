@@ -1713,7 +1713,7 @@ class CombatTests(unittest.TestCase):
         ethans_war_party = WarParty(ethan)
         soul_juggler = SoulJuggler()
         soul_juggler.golden_transformation([])
-        adams_war_party.board = [RabidSaurolisk(), KindlyGrandmother(), ReplicatingMenace()]
+        adams_war_party.board = [LieutenantGarr(), KindlyGrandmother(), ReplicatingMenace()]
         ethans_war_party.board = [soul_juggler, VulgarHomunculus()]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)

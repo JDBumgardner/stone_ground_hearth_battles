@@ -209,8 +209,7 @@ class Player:
             return False
         return bool(self.triple_rewards)
 
-    def draw_discover(self, predicate: Callable[[
-                                                    'MonsterCard'], bool]):  # TODO: Jarett help make discoverables unique are cards with more copies in the deck more likely to be discovered?
+    def draw_discover(self, predicate: Callable[['MonsterCard'], bool]):  # TODO: Jarett help make discoverables unique are cards with more copies in the deck more likely to be discovered?
         discoverables = [card for card in self.tavern.deck.all_cards() if predicate(
             card)]  # Jeremy says: Hmm, we can run out of unique cards.  Changed to be all cards for now.
         discovered_cards = []

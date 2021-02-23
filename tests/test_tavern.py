@@ -3781,6 +3781,5 @@ class CardTests(unittest.TestCase):
         self.assertEqual(player_1.in_play[1].attack, player_1.in_play[1].base_attack + 2)
 
 
-
 if __name__ == '__main__':
     unittest.main()
