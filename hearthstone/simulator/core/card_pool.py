@@ -258,7 +258,7 @@ class RedWhelp(MonsterCard):
                 target = context.randomizer.select_enemy_minion(targets)
                 target.take_damage(self.damage, context.enemy_context(), self)
             combat.resolve_combat_events(context.randomizer, context.event_queue, context.friendly_war_party,
-                                         context.enemy_war_party, context.damaged_minions)  # TODO: need to test this behavior
+                                         context.enemy_war_party, context.damaged_minions)
 
 
 class HarvestGolem(MonsterCard):
