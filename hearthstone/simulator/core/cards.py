@@ -85,6 +85,7 @@ class MonsterCard:
         self.ticket = False
         self.token = self.base_token
         self.link: Optional['MonsterCard'] = None  # links a card during combat to itself in the buy phase board
+        self.dealt_lethal_damage_by = None
 
     def __repr__(self):
         rep = f"{type(self).__name__} {self.attack}/{self.health} (t{self.tier})" #  TODO: add a proper enum to the monster typing
@@ -116,14 +117,16 @@ class MonsterCard:
                 self.health = 0
             if defending and foe is not None and self.health < 0:
                 foe.overkill(combat_phase_context.enemy_context())
+            combat_phase_context.damaged_minions.add(self)
             combat_phase_context.broadcast_combat_event(events.CardDamagedEvent(self, foe=foe))
+            if self.is_dying():
+                self.dealt_lethal_damage_by = foe
 
     def resolve_death(self, context: CombatPhaseContext, foe: Optional['MonsterCard'] = None):
-        if self.health <= 0 and not self.dead:
+        if self.is_dying():
             self.dead = True
             context.friendly_war_party.dead_minions.append(self)
-            card_death_event = events.DiesEvent(self, foe=foe)
-            context.broadcast_combat_event(card_death_event)
+            context.event_queue.load_minion(EVENTS.DIES, context.friendly_war_party, self, foe)
 
     def trigger_reborn(self, context: CombatPhaseContext):
         index = context.friendly_war_party.get_index(self)
@@ -136,9 +139,8 @@ class MonsterCard:
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if self == event.card:
             if event.event is EVENTS.DIES:
-                for _ in range(context.deathrattle_multiplier()):
-                    for deathrattle in self.deathrattles:
-                        deathrattle(self, context)
+                if self.deathrattles:
+                    context.event_queue.load_minion(EVENTS.DEATHRATTLE_TRIGGERED, context.friendly_war_party, self)
                 if self.reborn:
                     self.trigger_reborn(context)
             elif event.event is EVENTS.SUMMON_BUY:
@@ -219,8 +221,11 @@ class MonsterCard:
     def check_type(cls, desired_type: 'MONSTER_TYPES') -> bool:
         return cls.monster_type in (desired_type, MONSTER_TYPES.ALL)
 
+    def is_targetable(self) -> bool:
+        return not self.dead and self.health > 0
+
     def is_dying(self) -> bool:
-        return self.dead or self.health <= 0
+        return not self.dead and self.health <= 0
 
     def adapt(self, adaptation: 'Adaptation'):
         assert adaptation.valid(self)

@@ -1,4 +1,8 @@
+import logging
+import random
 import unittest
+from collections import deque
+from typing import Type
 
 from hearthstone.simulator.core.adaptations import AdaptBuffs
 from hearthstone.simulator.core.card_graveyard import *
@@ -1652,6 +1656,108 @@ class CombatTests(unittest.TestCase):
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
+
+    def test_ghoul_scavenger(self):
+        tavern = Tavern()
+        adam = tavern.add_player_with_hero("Adam")
+        ethan = tavern.add_player_with_hero("Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        ghoul = UnstableGhoul()
+        ghoul.golden_transformation([])
+        garr = LieutenantGarr()
+        garr.golden_transformation([])
+        adams_war_party.board = [ghoul]
+        ethans_war_party.board = [garr, TabbyCat(), ScavengingHyena()]  # hyena dies before it is buffed
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+
+    def test_kaboom_bot_in_the_queue(self):
+        tavern = Tavern()
+        adam = tavern.add_player_with_hero("Adam")
+        ethan = tavern.add_player_with_hero("Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        kaboom_bot = KaboomBot()
+        kaboom_bot.golden_transformation([])
+        kaboom_bot.taunt = True
+        adams_war_party.board = [TwilightEmissary(), KaboomBot(), KaboomBot()]
+        ethans_war_party.board = [kaboom_bot, AlleyCat(), AlleyCat()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+
+    def test_red_whelp_in_the_queue(self):
+        logging.basicConfig(level=logging.DEBUG)
+        tavern = Tavern()
+        adam = tavern.add_player_with_hero("Adam")
+        ethan = tavern.add_player_with_hero("Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        red_whelp = RedWhelp()
+        red_whelp.golden_transformation([])
+        garr = LieutenantGarr()
+        garr.golden_transformation([])
+        adams_war_party.board = [ReplicatingMenace(), KindlyGrandmother()]
+        ethans_war_party.board = [red_whelp, garr]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+
+    def test_soul_juggler_in_the_queue(self):
+        tavern = Tavern()
+        adam = tavern.add_player_with_hero("Adam")
+        ethan = tavern.add_player_with_hero("Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        soul_juggler = SoulJuggler()
+        soul_juggler.golden_transformation([])
+        adams_war_party.board = [RabidSaurolisk(), KindlyGrandmother(), ReplicatingMenace()]
+        ethans_war_party.board = [soul_juggler, VulgarHomunculus()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+
+    class TestKaboomBotResolvingBeforeSpawnRandomizer(DefaultRandomizer):
+        def select_event_queue(self, queues: List[deque]) -> deque:
+            first_queue_minions = [type(card) for card, foe in queues[0]]
+            second_queue_minions = [type(card) for card, foe in queues[1]]
+            if KaboomBot in first_queue_minions:
+                return queues[0]
+            elif KaboomBot in second_queue_minions:
+                return queues[1]
+            else:
+                return random.choice(queues)
+
+    def test_kaboom_bot_resolving_before_spawn(self):
+        tavern = Tavern()
+        adam = tavern.add_player_with_hero("Adam")
+        ethan = tavern.add_player_with_hero("Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        unstable_ghoul = UnstableGhoul()
+        unstable_ghoul.golden_transformation([])
+        garr = LieutenantGarr()
+        garr.attack += 1
+        garr.health += 1
+        adams_war_party.board = [unstable_ghoul, KaboomBot(), KaboomBot()]
+        ethans_war_party.board = [garr, SpawnOfNzoth(), CapnHoggarr()]
+        fight_boards(adams_war_party, ethans_war_party, self.TestKaboomBotResolvingBeforeSpawnRandomizer())
+        self.assertEqual(adam.health, 34)
+        self.assertEqual(ethan.health, 40)
+
+    def test_double_red_whelp(self):
+        tavern = Tavern()
+        adam = tavern.add_player_with_hero("Adam")
+        ethan = tavern.add_player_with_hero("Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [RedWhelp(), RedWhelp()]
+        ethans_war_party.board = [SelflessHero(), SelflessHero()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 38)
 
 
 if __name__ == '__main__':
