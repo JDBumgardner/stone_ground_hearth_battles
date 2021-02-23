@@ -15,11 +15,11 @@ from hearthstone.training.pytorch.agents.pytorch_batched_bot import BatchedInfer
 from hearthstone.training.pytorch.agents.pytorch_bot import PytorchBot
 from hearthstone.training.pytorch.encoding import shared_tensor_pool_encoder
 from hearthstone.training.pytorch.encoding.shared_tensor_pool_encoder import SharedTensorPoolEncoder
+from hearthstone.training.pytorch.encoding.state_encoding import Encoder
 from hearthstone.training.pytorch.gae import GAEAnnotator
 from hearthstone.training.pytorch.replay_buffer import EpochBuffer
 from hearthstone.training.pytorch.surveillance import GlobalStepContext
 from hearthstone.training.pytorch.tensorboard_altair import TensorboardAltairAnnotator
-import hearthstone.simulator.core.hero_pool
 
 
 def play_game(learning_bot_contestant: Contestant,
@@ -47,7 +47,7 @@ class WorkerPool:
     def __init__(self, num_workers,
                  epoch_buffer: EpochBuffer,
                  annotator: GAEAnnotator,
-                 encoder: SharedTensorPoolEncoder,
+                 encoder: Encoder,
                  tensorboard: SummaryWriter,
                  global_step_context: GlobalStepContext,
                  use_processes: bool,
@@ -128,6 +128,9 @@ class WorkerPool:
                 self.epoch_buffer.add_replay(replay)
             if self.use_batched_inference:
                 batched_inference_queue.kill_worker_thread()
+                print("Done with batch of inference.  Inferred {} times with average batch size {}.".format(
+                    batched_inference_queue.inference_count,
+                    float(batched_inference_queue.inference_example_count) / batched_inference_queue.inference_count))
         torch.set_num_threads(num_torch_threads)
         if self.use_batched_inference:
             for contestant, original_agent in zip(all_contestants, original_agents):

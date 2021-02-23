@@ -6,7 +6,7 @@ import torch
 
 from hearthstone.simulator.agent import StandardAction
 from hearthstone.simulator.core.cards import MonsterCard, CardLocation
-from hearthstone.simulator.core.player import Player
+from hearthstone.simulator.core.player import Player, BoardIndex
 
 
 class State(NamedTuple):
@@ -66,6 +66,7 @@ class Feature:
         for dim in self.size():
             num *= dim
         return num
+
 
 
 class ScalarFeature(Feature):
@@ -177,12 +178,21 @@ class EncodedActionSet(NamedTuple):
         else:
             return self
 
+
 class ActionComponent:
     """
     A component of a potentially multi-part action.
     """
     def valid(self, player: 'Player'):
         raise NotImplementedError()
+
+
+class SummonComponent(ActionComponent):
+    def __init__(self, index: BoardIndex):
+        self.index = index
+
+    def valid(self, player: 'Player'):
+        return player.room_to_summon(self.index)
 
 
 class ActionSet(NamedTuple):

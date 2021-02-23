@@ -108,7 +108,7 @@ def saved_learningbot_1v1_contestants() -> List[Contestant]:
         'opponents.self_play.enabled': True,
         'opponents.self_play.only_champions': True,
         'opponents.max_pool_size': 7,
-        'adam_lr': 0.0001,
+        'adam.lr': 0.0001,
         'batch_size': 1024,
         'minibatch_size': 1024,
         'cuda': True,

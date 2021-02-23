@@ -3,7 +3,7 @@ import itertools
 from typing import Optional
 
 from hearthstone.simulator.core.card_pool import *
-from hearthstone.simulator.core.cards import MonsterCard, PrintingPress
+from hearthstone.simulator.core.cards import MonsterCard
 from hearthstone.simulator.core.player import Player
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 

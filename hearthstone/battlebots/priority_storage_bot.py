@@ -4,7 +4,8 @@ from typing import List, Callable
 
 from hearthstone.simulator.agent import Agent, StandardAction, generate_valid_actions, BuyAction, EndPhaseAction, \
     SummonAction, \
-    TavernUpgradeAction, RerollAction, SellAction, DiscoverChoiceAction, RearrangeCardsAction, HeroDiscoverAction
+    TavernUpgradeAction, RerollAction, SellAction, DiscoverChoiceAction, RearrangeCardsAction, HeroDiscoverAction, \
+    FreezeDecision
 
 if typing.TYPE_CHECKING:
     from hearthstone.simulator.core.player import Player, StoreIndex
@@ -66,7 +67,7 @@ class PriorityStorageBot(Agent):
         if reroll_action.valid(player):
             return reroll_action
 
-        return EndPhaseAction(False)
+        return EndPhaseAction(FreezeDecision.NO_FREEZE)
 
     async def discover_choice_action(self, player: 'Player') -> DiscoverChoiceAction:
         discover_cards = player.discover_queue[0]

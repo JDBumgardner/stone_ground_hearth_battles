@@ -1,3 +1,4 @@
+import enum
 import itertools
 import typing
 from typing import Any, List, Optional, Generator
@@ -9,6 +10,12 @@ from hearthstone.simulator.core.player import StoreIndex, HandIndex, BoardIndex,
 
 
 from hearthstone.simulator.core.tavern import Player
+
+
+class FreezeDecision(enum.Enum):
+    NO_FREEZE = 0
+    FREEZE = 1
+    UNFREEZE = 2
 
 
 class Action:
@@ -149,17 +156,21 @@ class SellAction(StandardAction):
 
 class EndPhaseAction(StandardAction):
 
-    def __init__(self, freeze: bool):
-        self.freeze: bool = freeze
+    def __init__(self, freeze: FreezeDecision):
+        self.freeze = freeze
 
     def __repr__(self):
-        return f"EndPhase({self.freeze})"
+        return f"EndPhase({self.freeze.name})"
 
     def apply(self, player: 'Player'):
-        if self.freeze:
+        if self.freeze == FreezeDecision.FREEZE:
             player.freeze()
+        elif self.freeze == FreezeDecision.UNFREEZE:
+            player.unfreeze()
 
     def valid(self, player: 'Player') -> bool:
+        if self.freeze == FreezeDecision.UNFREEZE and not any(card.frozen for card in player.store):
+            return False
         return not player.dead and not player.discover_queue
 
 
@@ -345,16 +356,19 @@ def generate_all_actions(player: 'Player') -> Generator[StandardAction, None, No
     yield TripleRewardsAction()
     yield TavernUpgradeAction()
     yield RerollAction()
-    yield EndPhaseAction(True)
-    yield EndPhaseAction(False)
+    yield EndPhaseAction(FreezeDecision.NO_FREEZE)
+    yield EndPhaseAction(FreezeDecision.FREEZE)
+    yield EndPhaseAction(FreezeDecision.UNFREEZE)
     yield HeroPowerAction()
     yield RedeemGoldCoinAction()
     for index in range(len(player.in_play)):
         yield SellAction(BoardIndex(index))
         yield HeroPowerAction(board_target=BoardIndex(index))
+        yield BananaAction(board_target=BoardIndex(index))
     for index in range(len(player.store)):
         yield BuyAction(StoreIndex(index))
         yield HeroPowerAction(store_target=StoreIndex(index))
+        yield BananaAction(store_target=StoreIndex(index))
     for index, card in enumerate(player.hand):
         valid_target_indices = [index for index, target in enumerate(player.in_play) if
                                 card.valid_battlecry_target(target)]

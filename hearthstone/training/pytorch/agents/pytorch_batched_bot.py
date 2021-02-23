@@ -26,16 +26,7 @@ class BatchedInferencePytorchBot(AnnotatingAgent):
         encoded_state: State = self.encoder.encode_state(player)
         valid_actions_mask: EncodedActionSet = self.encoder.encode_valid_actions(player, rearrange_cards)
         future = self.queue.infer(self.net_name,
-                                  State(encoded_state.player_tensor.unsqueeze(0),
-                                        encoded_state.cards_tensor.unsqueeze(0)),
-                                  EncodedActionSet(
-                                      valid_actions_mask.player_action_tensor.unsqueeze(
-                                          0),
-                                      valid_actions_mask.card_action_tensor.unsqueeze(
-                                          0),
-                                      valid_actions_mask.rearrange_phase.unsqueeze(0),
-                                      valid_actions_mask.cards_to_rearrange.unsqueeze(
-                                          0)))
+                                  encoded_state, valid_actions_mask)
         actions, action_log_probs, value, debug = future.get()
         assert (len(actions) == 1)
         action = actions[0]
@@ -98,6 +89,8 @@ class BatchedInferenceQueue:
         self.device = device
         self.queued_tasks_by_net = {name: collections.deque() for name in nets.keys()}
 
+        self.inference_example_count = 0
+        self.inference_count = 0
         # These are the only variables accessed from multiple threads.
         self.communication_queue = collections.deque()
         self.communication_event = threading.Event()
@@ -116,14 +109,14 @@ class BatchedInferenceQueue:
 
     def _tensorize_batch(self, batch: List[Tuple[State, EncodedActionSet]]) -> (StateBatch, EncodedActionSet):
         device = self.device
-        player_tensor = torch.cat([b[0].player_tensor for b in batch], dim=0).detach()
-        cards_tensor = torch.cat([b[0].cards_tensor for b in batch], dim=0).detach()
-        valid_player_actions_tensor = torch.cat(
+        player_tensor = torch.stack([b[0].player_tensor for b in batch], dim=0).detach()
+        cards_tensor = torch.stack([b[0].cards_tensor for b in batch], dim=0).detach()
+        valid_player_actions_tensor = torch.stack(
             [b[1].player_action_tensor for b in batch], dim=0).detach()
-        valid_card_actions_tensor = torch.cat(
+        valid_card_actions_tensor = torch.stack(
             [b[1].card_action_tensor for b in batch], dim=0).detach()
-        rearrange_phase = torch.cat([b[1].rearrange_phase for b in batch], dim=0).detach()
-        cards_to_rearrange = torch.cat(
+        rearrange_phase = torch.stack([b[1].rearrange_phase for b in batch], dim=0).detach()
+        cards_to_rearrange = torch.stack(
             [b[1].cards_to_rearrange for b in batch], dim=0).detach()
         return (StateBatch(player_tensor=player_tensor.to(device),
                            cards_tensor=cards_tensor.to(device)),
@@ -142,6 +135,8 @@ class BatchedInferenceQueue:
             length = min(len(tasks), self.max_batch_size)
             if length:
                 batched_tasks = [tasks.popleft() for _ in range(length)]
+                self.inference_count += 1
+                self.inference_example_count += len(batched_tasks)
 
                 # Run inference on batched tensor
                 state_batch, valid_actions_batch = self._tensorize_batch([args for _, args in batched_tasks])

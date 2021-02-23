@@ -4,7 +4,7 @@ from typing import List
 
 from hearthstone.simulator.agent import Agent, StandardAction, generate_valid_actions, BuyAction, EndPhaseAction, \
     SummonAction, \
-    TavernUpgradeAction, DiscoverChoiceAction, RearrangeCardsAction, HeroDiscoverAction
+    TavernUpgradeAction, DiscoverChoiceAction, RearrangeCardsAction, HeroDiscoverAction, FreezeDecision
 
 if typing.TYPE_CHECKING:
 
@@ -41,7 +41,7 @@ class SupremacyBot(Agent):
         if buy_actions:
             return buy_actions[0]
 
-        return EndPhaseAction(False)
+        return EndPhaseAction(FreezeDecision.NO_FREEZE)
 
     async def discover_choice_action(self, player: 'Player') -> DiscoverChoiceAction:
         discover_cards = player.discover_queue[0]

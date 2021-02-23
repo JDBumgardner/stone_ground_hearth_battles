@@ -1,4 +1,7 @@
 import copy
+import logging
+import sys
+from inspect import getmembers, isclass
 from typing import Union, Tuple, Optional
 
 from hearthstone.simulator.core import combat, events, hero
@@ -310,23 +313,6 @@ class ArchVillianRafaam(Hero):
                 context.friendly_war_party.owner.gain_hand_card(card_copy)
 
 
-class CaptainHooktusk(Hero):
-    base_power_cost = 1
-    power_target_location = [CardLocation.BOARD]
-
-    def hero_power_valid_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
-                              store_index: Optional['StoreIndex'] = None):
-        return context.owner.room_in_hand()
-
-    def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
-                        store_index: Optional['StoreIndex'] = None):
-        board_minion = context.owner.pop_board_card(board_index)
-        context.owner.tavern.deck.return_cards(board_minion.dissolve())
-        predicate = lambda card: (card.tier == board_minion.tier-1 if board_minion.tier > 1 else card.tier == 1) and type(
-            card) != type(board_minion)
-        context.owner.draw_discover(predicate)
-
-
 class Malygos(Hero):
     base_power_cost = 0
     power_target_location = [CardLocation.BOARD, CardLocation.STORE]  # TODO: are there other hero powers with multiple target locations?
@@ -390,10 +376,9 @@ class DinotamerBrann(Hero):
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
         context.owner.return_cards()
-        number_of_cards = 3 + context.owner.tavern_tier // 2 - context.owner.store_size()
         predicate = lambda card: card.base_battlecry
         context.owner.extend_store(
-            [context.owner.tavern.deck.draw_with_predicate(context.owner, predicate) for _ in range(number_of_cards)])
+            [context.owner.tavern.deck.draw_with_predicate(context.owner, predicate) for _ in range(context.owner.refresh_size())])
 
 
 class Alexstrasza(Hero):
@@ -418,7 +403,7 @@ class KingMukla(Hero):
         for _ in range(2):
             if context.owner.room_in_hand():
                 context.owner.bananas += 1
-                if context.randomizer.select_random_number(1, 5) == 5:
+                if context.randomizer.select_random_number(1, 3) == 1:
                     context.owner.big_bananas += 1
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
@@ -429,7 +414,7 @@ class KingMukla(Hero):
 
 
 class EliseStarseeker(Hero):
-    base_power_cost = 2
+    base_power_cost = 3
     multiple_power_uses_per_turn = True
 
     def __init__(self):
@@ -550,8 +535,7 @@ class InfiniteToki(Hero):
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
         context.owner.return_cards()
-        number_of_cards = 3 + context.owner.tavern_tier // 2 - context.owner.store_size()
-        number_of_cards = min(number_of_cards, context.owner.maximum_store_size - context.owner.store_size())
+        number_of_cards = min(context.owner.refresh_size(), context.owner.maximum_store_size - context.owner.store_size())
         context.owner.extend_store(context.owner.tavern.deck.draw(context.owner, number_of_cards - 1))
         if context.owner.maximum_store_size > context.owner.store_size():
             higher_tier_minions = [card for card in context.owner.tavern.deck.unique_cards() if
@@ -607,6 +591,7 @@ class TessGreymane(Hero):
                 context.owner.add_to_store(card_copy)
                 if not card.base_token:
                     self.refreshed_cards.append(card_copy)
+            context.owner.extend_store(context.owner.tavern.deck.draw(context.owner, context.owner.refresh_size()))
         else:
             context.owner.draw()
 
@@ -643,6 +628,7 @@ class TheGreatAkazamzarak(Hero):
     def __init__(self):
         super().__init__()
         self.secrets = []
+        self.discovered_ice_block = False
 
     def hero_power_valid_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                               store_index: Optional['StoreIndex'] = None):
@@ -651,13 +637,18 @@ class TheGreatAkazamzarak(Hero):
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
         available_secrets = SECRETS.remaining_secrets(self)
+        if self.discovered_ice_block and SECRETS.ICE_BLOCK in available_secrets:
+            available_secrets.remove(SECRETS.ICE_BLOCK)
         for _ in range(3):
             secret = context.randomizer.select_secret(available_secrets)
             available_secrets.remove(secret)
             self.discover_choices.append(secret)
 
     def select_discover(self, discover_index: 'DiscoverIndex'):
-        self.secrets.append(self.discover_choices[discover_index])
+        secret = self.discover_choices[discover_index]
+        if secret == SECRETS.ICE_BLOCK:
+            self.discovered_ice_block = True
+        self.secrets.append(secret)
         self.discover_choices = []
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
@@ -790,7 +781,7 @@ class SirFinleyMrrgglton(Hero):
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_START and context.owner.tavern.turn_count == 0:
-            hero_pool = [hero_type() for hero_type in hero.VALHALLA if (hero_type.pool in context.owner.tavern.available_types or hero_type.pool == MONSTER_TYPES.ALL) and hero_type != type(self)]
+            hero_pool = [hero_type() for hero_type in VALHALLA if (hero_type.pool in context.owner.tavern.available_types or hero_type.pool == MONSTER_TYPES.ALL) and hero_type != type(self)]
             hero_choices = []
             for _ in range(3):
                 random_hero = context.randomizer.select_hero(hero_pool)
@@ -900,10 +891,24 @@ class YShaarj(Hero):
                                  card.tier == context.friendly_war_party.owner.tavern_tier]
             random_minion = context.randomizer.select_gain_card(same_tier_options)
             context.friendly_war_party.summon_in_combat(type(random_minion)(), context)
-            context.friendly_war_party.owner.gain_board_card(random_minion)
+            context.friendly_war_party.owner.gain_hand_card(random_minion)
 
 
 class NZoth(Hero):
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_START and context.owner.tavern.turn_count == 0:
             context.owner.gain_board_card(FishOfNZoth())
+
+
+class Greybough(Hero):
+    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.SUMMON_COMBAT and event.card in context.friendly_war_party.board:
+            event.card.attack += 1
+            event.card.health += 2
+            event.card.taunt = True
+
+
+# TODO: add Tickatus... and darkmoon prizes (ugh)
+
+
+VALHALLA = [member[1] for member in getmembers(sys.modules[__name__], lambda member: isclass(member) and member.__module__ == __name__)]

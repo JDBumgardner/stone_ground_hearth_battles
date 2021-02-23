@@ -11,8 +11,9 @@ from hearthstone.simulator.agent import Action, RearrangeCardsAction, StandardAc
 from hearthstone.training.pytorch.encoding import default_encoder
 from hearthstone.training.pytorch.encoding.default_encoder import EncodedActionSet
 from hearthstone.training.pytorch.encoding.state_encoding import State, Encoder, InvalidAction
-from hearthstone.training.pytorch.networks.plackett_luce import PlackettLuce
+from hearthstone.training.pytorch.networks.running_norm import ObservationNormalizer
 from hearthstone.training.pytorch.replay import ActorCriticGameStepDebugInfo
+from plackett_luce.plackett_luce import PlackettLuce
 
 
 def _get_activation_fn(activation):
@@ -99,7 +100,8 @@ class TransformerWithContextEncoder(nn.Module):
 
 
 class HearthstoneTransformerNet(nn.Module):
-    def __init__(self, encoding: Encoder, hidden_layers=1, hidden_size=16, shared=False, activation_function="gelu", redundant=False):
+    def __init__(self, encoding: Encoder, hidden_layers=1, hidden_size=16, shared=False, activation_function="gelu",
+                 redundant=False, normalize_observations=False, normalization_momentum=0.001):
         super().__init__()
 
         self.encoding = encoding
@@ -110,6 +112,9 @@ class HearthstoneTransformerNet(nn.Module):
             self.player_hidden_size = encoding.player_encoding().size()[0]
             self.card_hidden_size = encoding.cards_encoding().size()[1]
 
+        self.normalize_observations = normalize_observations
+        if normalize_observations:
+            self.observation_normalizer = ObservationNormalizer(encoding=encoding, gamma=normalization_momentum)
         # dummy_state = State(
         #     torch.zeros((1, *encoding.player_encoding().size())),
         #     torch.zeros((1,*encoding.cards_encoding().size()))
@@ -151,6 +156,9 @@ class HearthstoneTransformerNet(nn.Module):
             state = State(state[0], state[1])
         if not isinstance(valid_actions, EncodedActionSet):
             valid_actions = EncodedActionSet(valid_actions[0], valid_actions[1], valid_actions[2], valid_actions[3])
+
+        if self.normalize_observations:
+            state = self.observation_normalizer(state)
 
         policy_encoded_player, policy_encoded_cards = self.policy_encoder(state)
         value_encoded_player, value_encoded_cards = self.value_encoder(state)

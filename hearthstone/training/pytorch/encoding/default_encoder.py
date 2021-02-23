@@ -5,8 +5,11 @@ import numpy as np
 import torch
 
 from hearthstone.simulator.agent import TripleRewardsAction, TavernUpgradeAction, RerollAction, \
-    EndPhaseAction, SummonAction, BuyAction, SellAction, StandardAction, DiscoverChoiceAction
-from hearthstone.simulator.core.cards import CardLocation, PrintingPress
+    EndPhaseAction, SummonAction, BuyAction, SellAction, StandardAction, DiscoverChoiceAction, HeroPowerAction, \
+    FreezeDecision, BananaAction, RedeemGoldCoinAction
+from hearthstone.simulator.core.card_pool import PrintingPress
+from hearthstone.simulator.core.cards import CardLocation
+from hearthstone.simulator.core.hero_pool import VALHALLA
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 from hearthstone.simulator.core.player import Player, StoreIndex, HandIndex, BoardIndex, DiscoverIndex
 from hearthstone.training.pytorch.encoding.state_encoding import State, \
@@ -28,6 +31,8 @@ def enum_to_int(value: Optional[enum.Enum]) -> int:
 
 CARD_TYPE_TO_INT = {card_type: ind for ind, card_type in enumerate(PrintingPress.cards)}
 INT_TO_CARD_TYPE = {ind: card_type for ind, card_type in enumerate(PrintingPress.cards)}
+HERO_TYPE_TO_INT = {hero_type: ind for ind, hero_type in enumerate(VALHALLA)}
+INT_TO_HERO_TYPE = {ind: hero_type for ind, hero_type in enumerate(VALHALLA)}
 
 
 def default_card_encoding() -> Feature:
@@ -65,6 +70,11 @@ def default_player_encoding() -> Feature:
         ScalarFeature(lambda player: float(player.health)),
         ScalarFeature(lambda player: float(player.coins)),
         ScalarFeature(lambda player: float(player.tavern_tier)),
+        ScalarFeature(lambda player: float(len(player.in_play))),
+        ScalarFeature(lambda player: float(len(player.hand))),
+        ScalarFeature(lambda player: float(len(player.store))),
+        OnehotFeature(lambda player: HERO_TYPE_TO_INT[type(player.hero)], len(VALHALLA) + 1),
+        ScalarFeature(lambda player: float(player.tavern.get_paired_opponent(player).health)),
         SortedByValueFeature(lambda player: [p.health for name, p in player.tavern.players.items()], 8),
     ])
 
@@ -86,7 +96,8 @@ def default_cards_encoding() -> Feature:
             lambda player: [LocatedCard(card, CardLocation.BOARD) for card in player.in_play],
             default_card_encoding(), MAX_ENCODED_BOARD),
         ListOfFeatures(
-            lambda player: [LocatedCard(card, CardLocation.DISCOVER) for card in (player.discover_queue[0] if player.discover_queue else [])],
+            lambda player: [LocatedCard(card, CardLocation.DISCOVER) for card in
+                            (player.discover_queue[0] if player.discover_queue else [])],
             default_card_encoding(), MAX_ENCODED_DISCOVER)
     ])
 
@@ -112,15 +123,22 @@ def discover_indices() -> List[DiscoverIndex]:
 
 
 def _all_actions() -> ActionSet:
-    player_action_set = [TripleRewardsAction(), TavernUpgradeAction(), RerollAction(), EndPhaseAction(False),
-                         EndPhaseAction(True)]
-    store_action_set = [[BuyAction(index), InvalidAction(), InvalidAction(), InvalidAction(), InvalidAction()] for index in store_indices()]
-    hand_action_set = [[InvalidAction(), SummonAction(index), SummonAction(index, [BoardIndex(0)]), InvalidAction(), InvalidAction()] for index in
-                       hand_indices()]
-    board_action_set = [[InvalidAction(), InvalidAction(), InvalidAction(), SellAction(index), InvalidAction()] for index in
-                        board_indices()]
-    discover_action_set = [[InvalidAction(), InvalidAction(), InvalidAction(), InvalidAction(), DiscoverChoiceAction(index)] for index in
-                           discover_indices()]
+    player_action_set = [TripleRewardsAction(), TavernUpgradeAction(), RerollAction(), HeroPowerAction(),
+                         RedeemGoldCoinAction(), EndPhaseAction(FreezeDecision.NO_FREEZE), EndPhaseAction(FreezeDecision.FREEZE),
+                         EndPhaseAction(FreezeDecision.UNFREEZE)]
+    store_action_set = [
+        [BuyAction(index), InvalidAction(), InvalidAction(), InvalidAction(), HeroPowerAction(store_target=index),
+         BananaAction(store_target=index)] for index in store_indices()]
+    hand_action_set = [
+        [InvalidAction(), SummonAction(index), SummonAction(index, [BoardIndex(0)]), InvalidAction(), InvalidAction(),
+         InvalidAction()] for index in hand_indices()]
+    board_action_set = [
+        [InvalidAction(), InvalidAction(), InvalidAction(), SellAction(index), HeroPowerAction(board_target=index),
+         BananaAction(board_target=index)] for index in board_indices()]
+    discover_action_set = [
+        [InvalidAction(), InvalidAction(), InvalidAction(),
+         InvalidAction(), DiscoverChoiceAction(index), InvalidAction()] for index in
+        discover_indices()]
     return ActionSet(player_action_set, store_action_set + hand_action_set + board_action_set + discover_action_set)
 
 
@@ -149,7 +167,7 @@ class DefaultEncoder(Encoder):
         cards_tensor = torch.from_numpy(DEFAULT_CARDS_ENCODING.encode(player))
         return State(player_tensor, cards_tensor)
 
-    def encode_valid_actions(self, player: Player, rearrange_phase: bool=False) -> EncodedActionSet:
+    def encode_valid_actions(self, player: Player, rearrange_phase: bool = False) -> EncodedActionSet:
         actions = ALL_ACTIONS
 
         player_action_tensor = torch.tensor([action.valid(player) for action in actions.player_action_set])
@@ -162,7 +180,8 @@ class DefaultEncoder(Encoder):
         cards_to_rearrange = torch.tensor(
             [MAX_ENCODED_STORE + MAX_ENCODED_HAND, len(player.in_play)], dtype=torch.long)
 
-        return EncodedActionSet(player_action_tensor, cards_action_tensor, torch.tensor(rearrange_phase), cards_to_rearrange)
+        return EncodedActionSet(player_action_tensor, cards_action_tensor, torch.tensor(rearrange_phase),
+                                cards_to_rearrange)
 
     def player_encoding(self) -> Feature:
         return DEFAULT_PLAYER_ENCODING
@@ -186,4 +205,3 @@ class DefaultEncoder(Encoder):
             card_index = card_action_index // len(ALL_ACTIONS.card_action_set[0])
             within_card_index = card_action_index % len(ALL_ACTIONS.card_action_set[0])
             return ALL_ACTIONS.card_action_set[card_index][within_card_index]
-

@@ -154,24 +154,21 @@ class Player:
         self.played_minions.append(type(card))
 
     def valid_summon_from_hand(self, index: HandIndex, targets: Optional[List[BoardIndex]] = None) -> bool:
-        if self.dead:
+        if not self.room_to_summon(index):
             return False
-        if self.discover_queue:
-            return False
+
+        card = self.hand[index]
         if targets is None:
             targets = []
         #  TODO: Jack num_battlecry_targets should only accept 0,1,2
         for target in targets:
             if not self.valid_board_index(target):
                 return False
-        if not self.valid_hand_index(index):
-            return False
-        card = self.hand[index]
-        if not self.room_on_board():
-            return False
         if card.battlecry:
-            valid_targets = [target_index for target_index, target_card in enumerate(self.in_play) if card.valid_battlecry_target(target_card)]
-            possible_num_targets = [num_targets for num_targets in card.num_battlecry_targets if num_targets <= len(valid_targets)]
+            valid_targets = [target_index for target_index, target_card in enumerate(self.in_play) if
+                             card.valid_battlecry_target(target_card)]
+            possible_num_targets = [num_targets for num_targets in card.num_battlecry_targets if
+                                    num_targets <= len(valid_targets)]
             if not possible_num_targets:
                 possible_num_targets = [len(valid_targets)]
             if len(targets) not in possible_num_targets:
@@ -188,6 +185,17 @@ class Player:
                 return False
         return True
 
+    def room_to_summon(self, index: HandIndex):
+        if self.dead:
+            return False
+        if self.discover_queue:
+            return False
+        if not self.valid_hand_index(index):
+            return False
+        if not self.room_on_board():
+            return False
+        return True
+
     def play_triple_rewards(self):
         if not self.triple_rewards:
             return
@@ -201,8 +209,10 @@ class Player:
             return False
         return bool(self.triple_rewards)
 
-    def draw_discover(self, predicate: Callable[['MonsterCard'], bool]): #TODO: Jarett help make discoverables unique are cards with more copies in the deck more likely to be discovered?
-        discoverables = [card for card in self.tavern.deck.all_cards() if predicate(card)] # Jeremy says: Hmm, we can run out of unique cards.  Changed to be all cards for now.
+    def draw_discover(self, predicate: Callable[[
+                                                    'MonsterCard'], bool]):  # TODO: Jarett help make discoverables unique are cards with more copies in the deck more likely to be discovered?
+        discoverables = [card for card in self.tavern.deck.all_cards() if predicate(
+            card)]  # Jeremy says: Hmm, we can run out of unique cards.  Changed to be all cards for now.
         discovered_cards = []
         for _ in range(3):
             discovered_cards.append(self.tavern.randomizer.select_discover_card(discoverables))
@@ -215,7 +225,8 @@ class Player:
         card = self.discover_queue[0].pop(card_index)
         card.token = False  # for Bigglesworth (there is no other scenario where a token will be a discover option)
         self.gain_hand_card(card)
-        self.tavern.deck.return_cards(itertools.chain.from_iterable([card.dissolve() for card in self.discover_queue[0]]))
+        self.tavern.deck.return_cards(
+            itertools.chain.from_iterable([card.dissolve() for card in self.discover_queue[0]]))
         self.discover_queue.pop(0)
 
     def valid_select_discover(self, card_index: 'DiscoverIndex'):
@@ -223,7 +234,7 @@ class Player:
 
     def summon_from_void(self, monster: MonsterCard):
         if self.room_on_board():
-            self.gain_board_card(monster)
+            self.gain_board_card(monster, False)
             self.broadcast_buy_phase_event(events.SummonBuyEvent(monster))
 
     def room_on_board(self):
@@ -232,7 +243,7 @@ class Player:
     def draw(self, unfreeze: Optional[bool] = True):
         self.return_cards(unfreeze)
         number_of_cards = (3 + self.tavern_tier // 2 - len(self.store))
-        number_of_cards = min(number_of_cards, self.maximum_store_size-self.store_size())
+        number_of_cards = min(number_of_cards, self.maximum_store_size - self.store_size())
         self.extend_store(self.tavern.deck.draw(self, number_of_cards))
 
     def purchase(self, index: StoreIndex):
@@ -262,16 +273,15 @@ class Player:
 
     def check_golden(self, check_card: Type[MonsterCard]):
         cards = [card for card in self.in_play + self.hand if isinstance(card, check_card) and not card.golden]
-        assert len(cards) <= 3, f"fnord{cards}"
-        if len(cards) == 3:
-            for card in cards:
+        if len(cards) >= 3:
+            for card in cards[:3]:
                 if card in self.in_play:
                     self._in_play.remove(card)
                 if card in self.hand:
                     self._hand.remove(card)
             golden_card = check_card()
             golden_card.golden_transformation(cards)
-            self._hand.append(golden_card)
+            self.gain_hand_card(golden_card)
 
     def reroll_store(self):
         assert self.valid_reroll()
@@ -292,7 +302,8 @@ class Player:
     def return_cards(self, unfreeze: Optional[bool] = True):
         if unfreeze:
             self.unfreeze()
-        self.tavern.deck.return_cards(itertools.chain.from_iterable([card.dissolve() for card in self.store if not card.frozen]))
+        self.tavern.deck.return_cards(
+            itertools.chain.from_iterable([card.dissolve() for card in self.store if not card.frozen]))
         self._store = [card for card in self.store if card.frozen]
         self.unfreeze()
 
@@ -323,7 +334,8 @@ class Player:
     def hero_power(self, board_index: Optional['BoardIndex'] = None, store_index: Optional['StoreIndex'] = None):
         self.hero.hero_power(BuyPhaseContext(self, self.tavern.randomizer), board_index, store_index)
 
-    def valid_hero_power(self, board_target: Optional['BoardIndex'] = None, store_target: Optional['StoreIndex'] = None) -> bool:
+    def valid_hero_power(self, board_target: Optional['BoardIndex'] = None,
+                         store_target: Optional['StoreIndex'] = None) -> bool:
         if self.dead:
             return False
         if self.discover_queue:
@@ -347,11 +359,12 @@ class Player:
         return len(permutation) == len(self.in_play) and set(permutation) == set(range(len(self.in_play)))
 
     def rearrange_cards(self, permutation: List[int]):
-        assert self.valid_rearrange_cards(permutation)
+        assert self.valid_rearrange_cards(permutation), "in play {} permutation {}".format(self.in_play, permutation)
         self._in_play = [self._in_play[i] for i in permutation]
 
     def hand_size(self):
-        return len(self.hand) + len(self.triple_rewards) + self.gold_coins + self.bananas + self.hero.occupied_hand_slots()
+        return len(self.hand) + len(
+            self.triple_rewards) + self.gold_coins + self.bananas + self.hero.occupied_hand_slots()
 
     def room_in_hand(self):
         return self.hand_size() < self.maximum_hand_size
@@ -359,11 +372,14 @@ class Player:
     def store_size(self):
         return len(self.store) + self.hero.occupied_store_slots()
 
+    def refresh_size(self):
+        return 3 + self.tavern_tier // 2 - self.store_size()
+
     def max_tier(self):
         return len(self._tavern_upgrade_costs)
 
     def choose_hero(self, hero_index: HeroChoiceIndex):
-        assert(self.valid_choose_hero(hero_index))
+        assert (self.valid_choose_hero(hero_index))
         self.hero = self.hero_options.pop(hero_index)
         self.tavern.hero_pool.extend(self.hero_options)
         self.hero_options = []
@@ -393,10 +409,11 @@ class Player:
             self._hand.append(card)
             self.check_golden(type(card))
 
-    def gain_board_card(self, card: 'MonsterCard'):
+    def gain_board_card(self, card: 'MonsterCard', check_for_triples: bool = True):
         if self.room_on_board():
             self._in_play.append(card)
-            self.check_golden(type(card))
+            if check_for_triples:
+                self.check_golden(type(card))
 
     def add_to_store(self, card: 'MonsterCard'):
         if self.store_size() < self.maximum_store_size:
@@ -454,7 +471,8 @@ class Player:
             self.store[store_index].attack += bonus
             self.store[store_index].health += bonus
 
-    def valid_use_banana(self, board_index: Optional['BoardIndex'] = None, store_index: Optional['StoreIndex'] = None) -> bool:
+    def valid_use_banana(self, board_index: Optional['BoardIndex'] = None,
+                         store_index: Optional['StoreIndex'] = None) -> bool:
         if self.dead:
             return False
         if self.discover_queue:

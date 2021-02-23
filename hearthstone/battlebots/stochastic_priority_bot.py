@@ -6,7 +6,8 @@ from typing import List
 
 from hearthstone.simulator.agent import Agent, generate_valid_actions, TavernUpgradeAction, RerollAction, \
     EndPhaseAction, \
-    SellAction, StandardAction, BuyAction, SummonAction, DiscoverChoiceAction, RearrangeCardsAction, HeroDiscoverAction
+    SellAction, StandardAction, BuyAction, SummonAction, DiscoverChoiceAction, RearrangeCardsAction, HeroDiscoverAction, \
+    FreezeDecision
 
 if typing.TYPE_CHECKING:
 
@@ -95,7 +96,7 @@ class LearnedPriorityBot(Agent):
         if reroll_action.valid(player):
             return reroll_action
 
-        return EndPhaseAction(False)
+        return EndPhaseAction(FreezeDecision.NO_FREEZE)
 
     async def discover_choice_action(self, player: 'Player') -> DiscoverChoiceAction:
         discover_cards = player.discover_queue[0]

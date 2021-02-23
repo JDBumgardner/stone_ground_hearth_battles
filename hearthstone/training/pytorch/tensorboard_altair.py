@@ -32,6 +32,7 @@ class TensorboardAltairAnnotation(NamedTuple):
     store: List[str]
     action: str
     action_type: str
+    hero: str
 
 
 class TensorboardAltairAnnotator(Observer):
@@ -69,7 +70,8 @@ class TensorboardAltairAnnotator(Observer):
             hand=[str(card) for card in player.hand],
             store=[str(card) for card in player.store],
             action=action.str_in_context(player),
-            action_type=type(action).__name__
+            action_type=type(action).__name__,
+            hero=str(player.hero)
         )
 
 
@@ -274,9 +276,8 @@ def plot_replay(replay: Replay, player_name: str, tensorboard: SummaryWriter, gl
     ).properties(width=999)
 
 
-
     basic_action_chart = _player_action_chart(basic_action_probs, len(
-        default_encoder.ALL_ACTIONS.player_action_set)).properties(title='Basic Actions', width=400)
+        default_encoder.ALL_ACTIONS.player_action_set)).properties(title='Basic Actions: ' + annotations.hero, width=400)
     board_chart = _card_list_chart('board', 'sell', boards, sell_probs, 7, rearrange_logits).properties(title='On Board', width=400)
     hand_chart = _card_list_chart('hand', 'summon', hands, summon_probs, 10).properties(title='In Hand', width=400)
     store_chart = _card_list_chart('store', 'buy', stores, buy_probs, 7).properties(title='In Store', width=400)

@@ -5,7 +5,6 @@ from collections import defaultdict
 from typing import Set, List, Optional, Callable, Type, Union, Iterator
 
 from hearthstone.simulator.core import events
-from hearthstone.simulator.core.card_factory import make_metaclass
 from hearthstone.simulator.core.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 from hearthstone.simulator.core.randomizer import Randomizer
@@ -33,31 +32,7 @@ def one_minion_per_type(cards: List['MonsterCard'], randomizer: 'Randomizer', ex
     return minions
 
 
-class PrintingPress:
-    cards: Set[Type['MonsterCard']] = set()
-    cards_per_tier = {1: 16, 2: 15, 3: 13, 4: 11, 5: 9, 6: 7}
-
-    @classmethod
-    def make_cards(cls, available_types: List['MONSTER_TYPES']) -> 'CardList':
-        cardlist = []
-        for card in cls.cards:
-            if not card.base_token and (card.pool in available_types or card.pool == MONSTER_TYPES.ALL):
-                cardlist.extend([card() for _ in range(cls.cards_per_tier[card.tier])])
-        return CardList(cardlist)
-
-    @classmethod
-    def add_card(cls, card_class):
-        cls.cards.add(card_class)
-
-    @classmethod
-    def all_types(cls):
-        return [card_type for card_type in cls.cards if not card_type.base_token]
-
-
-CardType = make_metaclass(PrintingPress.add_card, ("MonsterCard",))
-
-
-class MonsterCard(metaclass=CardType):
+class MonsterCard:
     coin_cost = 3
     mana_cost: Optional[int] = None
     base_health: int

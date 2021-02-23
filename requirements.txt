@@ -1,4 +1,4 @@
-torch~=1.6.0
+torch~=1.7.1
 setuptools~=50.3.0
 optuna~=2.1.0
 trueskill~=0.4.5
@@ -9,4 +9,6 @@ altair~=4.1.0
 six~=1.15.0
 Werkzeug~=1.0.1
 tensorboard~=2.3.0
-torchvision~=0.7.0
+torchvision~=0.8.2
+numpy~=1.19.4
+aioupnp~=0.0.17

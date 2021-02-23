@@ -1,4 +1,5 @@
 import asyncio
+import itertools
 from typing import Dict, Optional, List
 
 from hearthstone.asyncio import asyncio_utils
@@ -40,7 +41,7 @@ class AsyncHost(Host):
         self.tavern.buying_step()
 
         async def perform_player_actions(player_name, agent, player):
-            for _ in range(40):
+            for i in itertools.count():
                 if player.dead:
                     return
                 if player.discover_queue:
@@ -49,6 +50,8 @@ class AsyncHost(Host):
                 elif player.hero.discover_choices:
                     hero_discover_action, agent_annotation = await agent.annotated_hero_discover_action(player)
                     self._apply_and_record(player_name, hero_discover_action, agent_annotation)
+                elif i>40:
+                    break
                 else:
                     action, agent_annotation = await agent.annotated_buy_phase_action(player)
                     self._apply_and_record(player_name, action, agent_annotation)
