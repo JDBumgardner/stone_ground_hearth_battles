@@ -87,7 +87,7 @@ class PlackettLuce(Distribution):
         super()._validate_sample(value)
         max_int64 = torch.iinfo(torch.int64).max
         if (value.masked_fill(self.mask, max_int64).sort(-1).values
-                != torch.arange(0, value.shape[-1], dtype=torch.int64).masked_fill(self.mask, max_int64)).any():
+                != torch.arange(0, value.shape[-1], dtype=torch.int64, device=value.device).masked_fill(self.mask, max_int64)).any():
             raise ValueError("Not a valid permutation or batch of permutations.")
 
 

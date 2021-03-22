@@ -77,7 +77,8 @@ def default_player_encoding() -> Feature:
         ScalarFeature(lambda player: float(player.tavern.get_paired_opponent(player).health)),
         ScalarFeature(lambda player: float(player.tavern.get_paired_opponent(player).tavern_tier)),
         SortedByValueFeature(lambda player: [p.tavern_tier for name, p in player.tavern.players.items()], 8),
-        SortedByValueFeature(lambda player: [p.health for name, p in player.tavern.players.items()], 8),
+        SortedByValueFeature(lambda player: [p
+                             .health for name, p in player.tavern.players.items()], 8),
     ])
 
 

@@ -22,8 +22,6 @@ class PytorchBot(AnnotatingAgent):
         self.encoder: Encoder = encoder
         self.annotate = annotate
         self.device = device
-        if self.device:
-            self.net.to(device)
 
     def act(self, player: 'Player', rearrange_cards: bool) -> (Action, ActorCriticGameStepInfo):
         with torch.no_grad():
@@ -36,7 +34,7 @@ class PytorchBot(AnnotatingAgent):
                                                                    valid_actions_mask.card_action_tensor.unsqueeze(0),
                                                                    valid_actions_mask.rearrange_phase.unsqueeze(0),
                                                                    valid_actions_mask.cards_to_rearrange.unsqueeze(0)),
-                                                               chosen_actions=None)
+                                                               None)
             assert (len(actions) == 1)
             action = actions[0]
             ac_game_step_info = None

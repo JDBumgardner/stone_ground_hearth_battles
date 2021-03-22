@@ -14,7 +14,6 @@ from hearthstone.training.pytorch import tensorboard_altair
 from hearthstone.training.pytorch.agents.pytorch_batched_bot import BatchedInferenceQueue, BatchedInferencePytorchBot
 from hearthstone.training.pytorch.agents.pytorch_bot import PytorchBot
 from hearthstone.training.pytorch.encoding import shared_tensor_pool_encoder
-from hearthstone.training.pytorch.encoding.shared_tensor_pool_encoder import SharedTensorPoolEncoder
 from hearthstone.training.pytorch.encoding.state_encoding import Encoder
 from hearthstone.training.pytorch.gae import GAEAnnotator
 from hearthstone.training.pytorch.replay_buffer import EpochBuffer
@@ -62,11 +61,12 @@ class WorkerPool:
             def setup_worker_process(q):
                 """Copies the global queue from the parent process to the child processes, overwriting the child's"""
                 torch.set_num_threads(1)  # This is really important, otherwise OpenMP messes things up.
-                shared_tensor_pool_encoder.gloabal_tensor_queue = q
+                shared_tensor_pool_encoder.global_process_tensor_queue = q
 
-            self.pool = torch.multiprocessing.Pool(initializer=setup_worker_process,
-                                              initargs=(shared_tensor_pool_encoder.global_process_tensor_queue,),
-                                              processes=num_workers)
+            self.pool = concurrent.futures.ProcessPoolExecutor(
+                mp_context=torch.multiprocessing.get_context('spawn'),
+                max_workers=num_workers, initializer=setup_worker_process,
+                initargs=(shared_tensor_pool_encoder.global_process_tensor_queue,))
         else:
             self.pool = concurrent.futures.ThreadPoolExecutor(max_workers=num_workers)
         self.epoch_buffer = epoch_buffer
@@ -77,16 +77,10 @@ class WorkerPool:
         self.device = device
 
     def _submit_task(self, fn, args):
-        if self.use_processes:
-            return self.pool.apply_async(fn, args)
-        else:
-            return self.pool.submit(fn, *args)
+        return self.pool.submit(fn, *args)
 
     def _get_task_result(self, promise):
-        if self.use_processes:
-            return promise.get()
-        else:
-            return promise.result()
+        return promise.result()
 
     def play_games(self, learning_bot_contestant: Contestant, other_contestants: List[Contestant], game_size: int):
         num_torch_threads = torch.get_num_threads()

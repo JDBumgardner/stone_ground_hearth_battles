@@ -4,7 +4,7 @@ import threading
 from typing import Dict, List, Any, Tuple
 
 import torch
-from torch import nn
+from torch import nn, multiprocessing
 
 from hearthstone.simulator.agent import AnnotatingAgent, StandardAction, RearrangeCardsAction, DiscoverChoiceAction, \
     HeroDiscoverAction, Action
