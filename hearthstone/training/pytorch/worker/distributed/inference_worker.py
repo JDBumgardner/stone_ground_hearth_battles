@@ -93,7 +93,7 @@ class InferenceWorker:
             if length:
                 self.inference_count += 1
                 self.inference_example_count += len(batched_tasks)
-                print("Inference {} {}".format(self.inference_count, float(self.inference_example_count)/ self.inference_count))
+                print("Inference {} {} {}".format(self.inference_count, len(batched_tasks), float(self.inference_example_count)/ self.inference_count))
 
                 # Run inference on batched tensor
                 state_batch, valid_actions_batch, chosen_actions_batch = self._tensorize_batch([args for _, args in batched_tasks])

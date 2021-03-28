@@ -33,8 +33,10 @@ from hearthstone.training.pytorch.policy_gradient import tensorize_batch, easy_c
 from hearthstone.training.pytorch.replay import ActorCriticGameStepInfo, ActorCriticGameStepDebugInfo
 from hearthstone.training.pytorch.replay_buffer import EpochBuffer
 from hearthstone.training.pytorch.surveillance import GlobalStepContext
-from hearthstone.training.pytorch.worker.worker import Worker
-from hearthstone.training.pytorch.worker.worker_pool import WorkerPool
+from hearthstone.training.pytorch.worker.distributed.worker_pool import DistributedWorkerPool
+from hearthstone.training.pytorch.worker.postprocessing import ExperiencePostProcessor
+from hearthstone.training.pytorch.worker.single_machine.worker import Worker
+from hearthstone.training.pytorch.worker.single_machine.worker_pool import WorkerPool
 
 PPOHyperparameters = NewType('PPOHyperparameters', Dict[str, Union[str, int, float]])
 
@@ -319,16 +321,26 @@ class PPOLearner(GlobalStepContext):
         load_ratings(other_contestants, "../../../data/standings/8p.json")
         gae_annotator = GAEAnnotator(learning_bot_name, self.hparams['gae_gamma'], self.hparams['gae_lambda'])
         if self.hparams['parallelism.method']:
-            worker_pool = WorkerPool(self.hparams['parallelism.num_workers'],
-                                     replay_buffer,
-                                     gae_annotator,
-                                     self.encoder,
-                                     tensorboard,
-                                     self,
-                                     self.hparams['parallelism.method'] == "process",
-                                     self.hparams['parallelism.method'] == "batch",
-                                     self.get_device(),
-                                     )
+            if self.hparams['parallelism.method'] == "distributed":
+                worker_pool = DistributedWorkerPool(num_workers=self.hparams['parallelism.num_workers'],
+                                                    threads_per_worker=self.hparams['parallelism.distributed.threads_per_worker'],
+                                                    use_batched_inference=True,
+                                                    max_batch_size=self.hparams['batch.max_in_memory'],
+                                                    replay_sink=ExperiencePostProcessor(replay_buffer, gae_annotator,
+                                                                                        tensorboard, self),
+                                                    device=self.get_device()
+                                                    )
+            else:
+                worker_pool = WorkerPool(self.hparams['parallelism.num_workers'],
+                                         replay_buffer,
+                                         gae_annotator,
+                                         self.encoder,
+                                         tensorboard,
+                                         self,
+                                         self.hparams['parallelism.method'] == "process",
+                                         self.hparams['parallelism.method'] == "batch",
+                                         self.get_device(),
+                                         )
 
         for i in range(1000000):
             learning_net.eval()

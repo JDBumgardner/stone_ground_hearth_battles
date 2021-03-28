@@ -10,10 +10,6 @@ from hearthstone.training.pytorch.policy_gradient import easiest_contestants
 from hearthstone.training.pytorch.worker.distributed.worker_pool import DistributedWorkerPool
 from hearthstone.training.pytorch.worker.postprocessing import ReplaySink
 
-AGENT_NAME = "agent"
-OBSERVER_NAME="obs_{}"
-
-
 class PytorchDistributedTests(unittest.TestCase):
     # def test_create_worker_pool(self):
     #     p = DistributedWorkerPool(5,
@@ -43,9 +39,11 @@ class PytorchDistributedTests(unittest.TestCase):
     #     p.play_games(learning_bot_contestant=learning_bot_contestant, other_contestants=contestants, game_size=8)
     #     p.shutdown()
 
+
     def test_play_game_cuda(self):
         device = torch.device('cuda')
-        p = DistributedWorkerPool(12,
+        p = DistributedWorkerPool(6,
+                                  1024,
                                   True,
                                   1024,
                                   ReplaySink(),

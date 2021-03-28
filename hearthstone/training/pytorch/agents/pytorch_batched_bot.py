@@ -85,6 +85,8 @@ class InferenceFuture:
 class BatchedInferenceQueue:
     def __init__(self, nets: Dict[str, nn.Module], max_batch_size: int, device: torch.device):
         self.nets = nets
+        for name_, net in nets.items():
+            net.to(device)
         self.max_batch_size = max_batch_size
         self.device = device
         self.queued_tasks_by_net = {name: collections.deque() for name in nets.keys()}
