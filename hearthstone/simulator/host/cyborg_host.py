@@ -7,7 +7,7 @@ from hearthstone.simulator.host.async_host import AsyncHost
 
 
 class CyborgArena(AsyncHost):
-    async def _async_play_round(self):
+    async def async_play_round(self):
         self.tavern.buying_step()
 
         async def perform_player_actions(agent, player):

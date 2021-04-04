@@ -18,48 +18,49 @@ INFERENCE_PROCESS_NAME = "inferrer"
 SIMULATOR_PROCESS_NAMES = "simulator_{}"
 
 
-def rpc_backed_options(num_workers, threads_per_worker):
+def rpc_backed_options(num_workers):
     device_maps = {
         SIMULATOR_PROCESS_NAMES.format(i): {0: 0} for i in range(num_workers)
     }
     device_maps.update({INFERENCE_PROCESS_NAME: {0: 0}})
-    return rpc.TensorPipeRpcBackendOptions(num_worker_threads= max(16, threads_per_worker+5),
-                                           device_maps=device_maps)
+    return rpc.TensorPipeRpcBackendOptions(device_maps=device_maps)
 
 
-def run_worker(rank, num_workers: int, threads_per_worker: int):
+def run_worker(rank, num_workers: int):
     os.environ['MASTER_ADDR'] = 'localhost'
     os.environ['MASTER_PORT'] = '29500'
     rpc.init_rpc(SIMULATOR_PROCESS_NAMES.format(rank), rank=rank + 1, world_size=num_workers + 1,
-                 rpc_backend_options=rpc_backed_options(num_workers, threads_per_worker))
+                 rpc_backend_options=rpc_backed_options(num_workers))
     rpc.shutdown()
 
 
 class DistributedWorkerPool:
     def __init__(self, num_workers: int,
-                 threads_per_worker: int,
+                 games_per_worker: int,
                  use_batched_inference: bool,
                  max_batch_size: int,
                  replay_sink: ReplaySink,
                  device: torch.device,
                  ):
         self.num_workers = num_workers
-        self.threads_per_worker = threads_per_worker
+        self.games_per_worker = games_per_worker
         self.batched = use_batched_inference
         self.replay_sink = replay_sink
         self.device = device
 
         os.environ['MASTER_ADDR'] = 'localhost'
         os.environ['MASTER_PORT'] = '29500'
+
+        print(f"num workers {num_workers}")
         self.process_context = multiprocessing.start_processes(
             run_worker,
-            args=(self.num_workers,self.threads_per_worker),
+            args=(self.num_workers,),
             nprocs=self.num_workers,
             start_method="forkserver",
             join=False
         )
         rpc.init_rpc(INFERENCE_PROCESS_NAME, rank=0, world_size=num_workers+1,
-                     rpc_backend_options=rpc_backed_options(self.num_workers, self.threads_per_worker))
+                     rpc_backend_options=rpc_backed_options(self.num_workers))
 
         if self.batched:
             self.inference_worker = InferenceWorker(max_batch_size, 1, device)
@@ -85,8 +86,9 @@ class DistributedWorkerPool:
         self.inference_worker.set_nets(nets)
         futures = []
         for sim_rref in self.simulator_rrefs:
-            for _ in range(self.threads_per_worker):
-                futures.append(sim_rref.rpc_async(timeout=120000).play_game(learning_bot_contestant, other_contestants, game_size))
+            futures.append(sim_rref.rpc_async(timeout=120000).play_interleaved_games(self.games_per_worker,
+                                                                                     learning_bot_contestant,
+                                                                                     other_contestants, game_size))
 
         for future in futures:
             replay = future.wait()
