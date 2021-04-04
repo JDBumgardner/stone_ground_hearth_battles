@@ -6,7 +6,6 @@ Hearthstone battlegrounds simulator is licensed under the Apache 2.0 License
 This repository includes a simulator along with bots and allows the user to play against the bots. There are various
 attempts to use Pytorch to train a bot.
 
-
 ### Tensorboard Plugin
 This repo also contains a Tensorboard plugin for displaying vega/vega-lite/altair plots in tensorboard.  We use this
 to plot debug information about our pytorch bots, but this plugin works standalone.  
@@ -19,3 +18,9 @@ To use it, run
 
 from within the `tensorboard_vega_embed/` directory.   When you launch tensorboard, it will show up as a new tab
 labeled "VEGA_EMBEDX".  To uninstall it, run `$ python setup.py develop --uninstall`.
+
+### Distributed Training Environment
+This repo also contains a distributed training setup to play several games in parallel
+using a single GPU, using Pytorch Distributed and python asyncio.
+
+![Architecture Diagram](doc/architecture.svg)
