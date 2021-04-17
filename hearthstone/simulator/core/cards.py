@@ -268,7 +268,7 @@ class MonsterCard:
         """
         clone = copy.copy(self)
         clone.deathrattles = clone.deathrattles.copy()
-        clone.attached_cards = [card.clone() for card in clone.attached_cards]
+        clone.attached_cards = [card.copy() for card in clone.attached_cards]
         return clone
 
 
