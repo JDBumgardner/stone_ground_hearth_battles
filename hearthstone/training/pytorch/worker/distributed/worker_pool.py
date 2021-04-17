@@ -1,6 +1,7 @@
 import os
 from typing import List
 
+import logging
 import torch
 from torch import multiprocessing
 from torch.distributed import rpc
@@ -13,6 +14,8 @@ from hearthstone.training.pytorch.worker.distributed.inference_worker import Inf
 from hearthstone.training.pytorch.worker.distributed.remote_net import RemoteNet
 from hearthstone.training.pytorch.worker.distributed.simulation_worker import SimulationWorker
 from hearthstone.training.pytorch.worker.postprocessing import ReplaySink
+
+logger = logging.getLogger(__name__)
 
 INFERENCE_PROCESS_NAME = "inferrer"
 SIMULATOR_PROCESS_NAMES = "simulator_{}"
@@ -51,7 +54,7 @@ class DistributedWorkerPool:
         os.environ['MASTER_ADDR'] = 'localhost'
         os.environ['MASTER_PORT'] = '29500'
 
-        print(f"num workers {num_workers}")
+        logger.info(f"Launching {num_workers} workers.")
         self.process_context = multiprocessing.start_processes(
             run_worker,
             args=(self.num_workers,),
@@ -71,7 +74,7 @@ class DistributedWorkerPool:
         self.simulator_rrefs: List[RRef] = []
         for sim_rank in range(self.num_workers):
             sim_info = rpc.get_worker_info(SIMULATOR_PROCESS_NAMES.format(sim_rank))
-            self.simulator_rrefs.append(rpc.remote(sim_info, SimulationWorker))
+            self.simulator_rrefs.append(rpc.remote(sim_info, SimulationWorker, args=(RRef(self.inference_worker),)))
 
     def play_games(self, learning_bot_contestant: Contestant, other_contestants: List[Contestant], game_size: int):
         all_contestants = [learning_bot_contestant] + other_contestants

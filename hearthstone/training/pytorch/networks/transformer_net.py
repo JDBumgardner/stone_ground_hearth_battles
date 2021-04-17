@@ -212,6 +212,8 @@ class HearthstoneTransformerNet(nn.Module):
         action_log_probs = torch.where(valid_actions.rearrange_phase,
                                        permutation_log_probs,
                                        component_log_probs)
+        # Convert to numpy first for faster random access
+        component_samples_numpy = component_samples.detach().cpu().numpy()
         for i in range(valid_actions.player_action_tensor.shape[0]):
             if chosen_actions:
                 output_actions[i] = chosen_actions[i]
@@ -220,7 +222,7 @@ class HearthstoneTransformerNet(nn.Module):
                     output_actions[i] = RearrangeCardsAction(
                         permutation_samples[i, :valid_actions.cards_to_rearrange[i, 1]].tolist())
                 else:
-                    output_actions[i] = self.encoding.get_indexed_action(component_samples[i])
+                    output_actions[i] = self.encoding.get_indexed_action(component_samples_numpy[i])
 
         debug_info = ActorCriticGameStepDebugInfo(
             component_policy=policy,

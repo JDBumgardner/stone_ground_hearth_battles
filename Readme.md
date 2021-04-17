@@ -24,3 +24,14 @@ This repo also contains a distributed training setup to play several games in pa
 using a single GPU, using Pytorch Distributed and python asyncio.
 
 ![Architecture Diagram](doc/architecture.svg)
+
+### Benchmarks
+Speed of simulation can be important for Reinforcement Learning.  Woe is upon us for choosing to write the simulator
+in python, thinking that it would not be the bottleneck.  CPU is the bottleneck for experience generation, not GPU :(
+
+Therefore, we have benchmarks to profile the performance of our simulator, and identify bottlenecks.  To run one of the
+profiles, run, e.g.
+
+```shell
+$ PYTHONPATH=. python -m cProfile benchmarks/benchmark_simulation.py -o benchmarks/profiles/simulation.cprof
+```
