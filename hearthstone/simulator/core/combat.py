@@ -22,7 +22,7 @@ class WarParty:
         self.owner = player
         self.board = []
         for card in player.in_play:  # TODO: better way to link cards in combat with cards in the buy phase?
-            card_copy = copy.deepcopy(card)
+            card_copy = copy.copy(card)
             card_copy.link = card
             self.board.append(card_copy)
         self.next_attacker_idx = 0
@@ -135,8 +135,8 @@ def fight_boards(war_party_1: 'WarParty', war_party_2: 'WarParty', randomizer: '
             break
         attacking_war_party, defending_war_party = defending_war_party, attacking_war_party
     player_damage(war_party_1, war_party_2, randomizer)
-    war_party_1.owner.last_opponent_warband = copy.deepcopy(war_party_2.owner.in_play)
-    war_party_2.owner.last_opponent_warband = copy.deepcopy(war_party_1.owner.in_play)
+    war_party_1.owner.last_opponent_warband = [card.copy() for card in war_party_2.owner.in_play]
+    war_party_2.owner.last_opponent_warband = [card.copy() for card in war_party_1.owner.in_play]
 
 
 def player_damage(half_board_1: 'WarParty', half_board_2: 'WarParty', randomizer: 'Randomizer'):

@@ -504,7 +504,7 @@ class MrBigglesworth(Hero):
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.PLAYER_DEAD and bool(event.player.in_play):
             discovered_cards = []
-            board = [copy.deepcopy(card) for card in event.player.in_play]
+            board = [card.copy() for card in event.player.in_play]
             for _ in range(3):
                 if board:
                     enemy_minion = context.randomizer.select_enemy_minion(board)

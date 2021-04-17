@@ -1,8 +1,9 @@
+import copy
 import enum
 import itertools
 import typing
 from collections import defaultdict
-from typing import Set, List, Optional, Callable, Type, Union, Iterator
+from typing import List, Optional, Callable, Type, Union, Iterator
 
 from hearthstone.simulator.core import events
 from hearthstone.simulator.core.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
@@ -31,6 +32,10 @@ def one_minion_per_type(cards: List['MonsterCard'], randomizer: 'Randomizer', ex
             minions.append(card)
     return minions
 
+
+BOOL_ATTRIBUTE_LIST = ["divine_shield", "magnetic", "poisonous", "taunt",
+                       "windfury", "cleave", "reborn", "mega_windfury"
+                       ]
 
 class MonsterCard:
     coin_cost = 3
@@ -75,10 +80,6 @@ class MonsterCard:
         self.dead = False
         self.golden = False
         self.battlecry: Optional[Callable[[List[MonsterCard], CombatPhaseContext], None]] = self.base_battlecry
-        self.bool_attribute_list = [
-            "divine_shield", "magnetic", "poisonous", "taunt",
-            "windfury", "cleave", "reborn", "mega_windfury"
-        ]
         self.attached_cards = []
         self.frozen = False
         self.nomi_buff = 0
@@ -93,7 +94,7 @@ class MonsterCard:
             rep += ", [dead]"
         if self.battlecry:
             rep += ", [battlecry]"
-        for attribute in self.bool_attribute_list:
+        for attribute in BOOL_ATTRIBUTE_LIST:
             if getattr(self, attribute):
                 rep += f", [{attribute}]"
         if self.deathrattles:
@@ -173,7 +174,7 @@ class MonsterCard:
                 self.deathrattles.extend(card.deathrattles[1:])
             else:
                 self.deathrattles.extend(card.deathrattles)
-            for attr in card.bool_attribute_list:
+            for attr in BOOL_ATTRIBUTE_LIST:
                 if getattr(card, attr):
                     if attr == "windfury" and card.base_windfury:
                         setattr(self, "mega_windfury", True)
@@ -187,7 +188,7 @@ class MonsterCard:
             targets[0].health += self.health
             if self.deathrattles:
                 targets[0].deathrattles.extend(self.deathrattles)
-            for attr in self.bool_attribute_list:
+            for attr in BOOL_ATTRIBUTE_LIST:
                 if getattr(self, attr) and attr != 'magnetic':
                     setattr(targets[0], attr, True)
             targets[0].attached_cards.append(self)
@@ -259,6 +260,16 @@ class MonsterCard:
             self.attack += (player.nomi_bonus - self.nomi_buff)
             self.health += (player.nomi_bonus - self.nomi_buff)
             self.nomi_buff = player.nomi_bonus
+
+    def copy(self) -> 'MonsterCard':
+        """
+        For when gaining a "copy" of a card.
+        :return:
+        """
+        clone = copy.copy(self)
+        clone.deathrattles = clone.deathrattles.copy()
+        clone.attached_cards = [card.clone() for card in clone.attached_cards]
+        return clone
 
 
 class CardList:
