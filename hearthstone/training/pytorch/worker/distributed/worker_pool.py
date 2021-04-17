@@ -94,8 +94,9 @@ class DistributedWorkerPool:
                                                                                      other_contestants, game_size))
 
         for future in futures:
-            replay = future.wait()
-            self.replay_sink.process(replay, learning_bot_contestant, other_contestants)
+            replays = future.wait()
+            for replay in replays:
+                self.replay_sink.process(replay, learning_bot_contestant, other_contestants)
         for contestant in all_contestants:
             if contestant.agent_generator.function == PytorchBot:
                 contestant.agent_generator.kwargs['net'] = nets[contestant.name]
