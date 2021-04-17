@@ -1,15 +1,9 @@
 import enum
 import itertools
-import typing
-from typing import Any, List, Optional, Generator
-
-import torch
+from typing import List, Optional, Generator
 
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
-from hearthstone.simulator.core.player import StoreIndex, HandIndex, BoardIndex, HeroChoiceIndex, DiscoverIndex
-
-
-from hearthstone.simulator.core.tavern import Player
+from hearthstone.simulator.core.player import HeroChoiceIndex, StoreIndex, HandIndex, BoardIndex
 
 
 class FreezeDecision(enum.Enum):
@@ -254,100 +248,6 @@ class BananaAction(StandardAction):
         return player.valid_use_banana(self.board_target, self.store_target)
 
 
-Annotation = Any
-
-
-class AnnotatingAgent:
-    async def hero_choice_action(self, player: 'Player') -> HeroChoiceAction:
-        return HeroChoiceAction(HeroChoiceIndex(0))
-
-    async def annotated_rearrange_cards(self, player: 'Player') -> (RearrangeCardsAction, Annotation):
-        """
-        here the player selects a card arrangement one time per combat directly preceding combat
-
-        Args:
-            player: The player object controlled by this agent. This function should not modify it.
-
-        Returns:  A tuple containing an arrangement of the player's board, and the Agent Annotation to attach to the replay.
-
-        """
-        pass
-
-    async def annotated_buy_phase_action(self, player: 'Player') -> (StandardAction, Annotation):
-        """
-        here the player chooses a buy phase action including:
-        purchasing a card from the store
-        summoning a card from hand to in_play
-        selling a card from hand or from in_play
-        and ending the buy phase
-
-        Args:
-            player: The player object controlled by this agent. This function should not modify it.
-
-        Returns:
-            A tuple containing the Action, and the Agent Annotation to attach to the replay.
-
-        """
-        pass
-
-    async def annotated_discover_choice_action(self, player: 'Player') -> (DiscoverChoiceAction, Annotation):
-        """
-
-        Args:
-            player: The player object controlled by this agent. This function should not modify it.
-
-        Returns:
-            Tuple of MonsterCard to discover, and Annotation to attach to the action.
-        """
-        pass
-
-    async def annotated_hero_discover_action(self, player: 'Player') -> ('HeroDiscoverAction', Annotation):
-        """
-
-        Args:
-            player: The player object controlled by this agent. This function should not modify it.
-
-        Returns:
-            Tuple of object to discover, and Annotation to attach to the action.
-        """
-        pass
-
-    async def game_over(self, player: 'Player', ranking: int) -> Annotation:
-        """
-        Notifies the agent that the game is over and the agent has achieved a given rank
-        :param ranking: Integer index 0 to 7 of where the agent placed
-        :return:
-        """
-        pass
-
-
-class Agent(AnnotatingAgent):
-
-    async def buy_phase_action(self, player: 'Player') -> StandardAction:
-        pass
-
-    async def annotated_buy_phase_action(self, player: 'Player') -> (StandardAction, Annotation):
-        return await self.buy_phase_action(player), None
-
-    async def rearrange_cards(self, player: 'Player') -> RearrangeCardsAction:
-        pass
-
-    async def annotated_rearrange_cards(self, player: 'Player') -> (RearrangeCardsAction, Annotation):
-        return await self.rearrange_cards(player), None
-
-    async def discover_choice_action(self, player: 'Player') -> DiscoverChoiceAction:
-        pass
-
-    async def annotated_discover_choice_action(self, player: 'Player') -> (DiscoverChoiceAction, Annotation):
-        return await self.discover_choice_action(player), None
-
-    async def hero_discover_action(self, player: 'Player') -> 'HeroDiscoverAction':
-        pass
-
-    async def annotated_hero_discover_action(self, player: 'Player') -> ('HeroDiscoverAction', Annotation):
-        return await self.hero_discover_action(player), None
-
-
 def generate_valid_actions(player: 'Player') -> Generator[StandardAction, None, None]:
     return (action for action in generate_all_actions(player) if action.valid(player))
 
@@ -370,15 +270,18 @@ def generate_all_actions(player: 'Player') -> Generator[StandardAction, None, No
         yield HeroPowerAction(store_target=StoreIndex(index))
         yield BananaAction(store_target=StoreIndex(index))
     for index, card in enumerate(player.hand):
-        valid_target_indices = [index for index, target in enumerate(player.in_play) if
-                                card.valid_battlecry_target(target)]
-        possible_num_targets = [num_targets for num_targets in card.num_battlecry_targets if
-                                num_targets <= len(valid_target_indices)]
-        if not possible_num_targets:
-            possible_num_targets = [len(valid_target_indices)]
-        for num_targets in possible_num_targets:
-            for targets in itertools.combinations(valid_target_indices, num_targets):
-                yield SummonAction(HandIndex(index), [BoardIndex(target_index) for target_index in targets])
+        if card.num_battlecry_targets:
+            valid_target_indices = [index for index, target in enumerate(player.in_play) if
+                                    card.valid_battlecry_target(target)]
+            possible_num_targets = [num_targets for num_targets in card.num_battlecry_targets if
+                                    num_targets <= len(valid_target_indices)]
+            if not possible_num_targets:
+                possible_num_targets = [len(valid_target_indices)]
+            for num_targets in possible_num_targets:
+                for targets in itertools.combinations(valid_target_indices, num_targets):
+                    yield SummonAction(HandIndex(index), [BoardIndex(target_index) for target_index in targets])
+        else:
+            yield SummonAction(HandIndex(index), [])
         if card.magnetic:
             for target_index, target_card in enumerate(player.in_play):
                 if target_card.check_type(MONSTER_TYPES.MECH):

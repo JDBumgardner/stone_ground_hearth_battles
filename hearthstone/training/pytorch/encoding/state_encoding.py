@@ -4,7 +4,7 @@ from typing import NamedTuple, Any, Tuple, Callable, List
 import numpy as np
 import torch
 
-from hearthstone.simulator.agent import StandardAction
+from hearthstone.simulator.agent.actions import StandardAction
 from hearthstone.simulator.core.cards import MonsterCard, CardLocation
 from hearthstone.simulator.core.player import Player, BoardIndex
 

@@ -1,9 +1,9 @@
 import random
 import typing
-from typing import List
 
-from hearthstone.simulator.agent import Agent, generate_valid_actions, StandardAction, DiscoverChoiceAction, \
+from hearthstone.simulator.agent.actions import generate_valid_actions, StandardAction, DiscoverChoiceAction, \
     RearrangeCardsAction, HeroDiscoverAction
+from hearthstone.simulator.agent.agent import Agent
 
 if typing.TYPE_CHECKING:
 

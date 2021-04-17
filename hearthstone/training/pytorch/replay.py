@@ -3,7 +3,7 @@ from typing import Optional, NamedTuple
 
 import torch
 
-from hearthstone.simulator.agent import Action
+from hearthstone.simulator.agent.actions import Action
 from hearthstone.training.pytorch.encoding.default_encoder import EncodedActionSet
 from hearthstone.training.pytorch.encoding.state_encoding import State
 

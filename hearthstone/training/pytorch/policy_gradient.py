@@ -12,7 +12,7 @@ from hearthstone.battlebots.priority_functions import PriorityFunctions
 from hearthstone.battlebots.random_bot import RandomBot
 from hearthstone.battlebots.saurolisk_bot import SauroliskBot
 from hearthstone.battlebots.supremacy_bot import SupremacyBot
-from hearthstone.simulator.agent import Action
+from hearthstone.simulator.agent.actions import Action
 
 from hearthstone.simulator.core.hero import EmptyHero
 from hearthstone.ladder.ladder import Contestant, ContestantAgentGenerator

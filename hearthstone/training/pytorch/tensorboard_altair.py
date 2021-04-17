@@ -8,7 +8,7 @@ import tensorboard_vega_embed.summary
 import torch
 from torch.utils.tensorboard import SummaryWriter
 
-from hearthstone.simulator.agent import StandardAction, SellAction, SummonAction, BuyAction, Action
+from hearthstone.simulator.agent.actions import StandardAction, SellAction, SummonAction, BuyAction, Action
 from hearthstone.simulator.core.tavern import Tavern
 from hearthstone.simulator.replay.observer import Observer, Annotation
 from hearthstone.simulator.replay.replay import Replay, ReplayStep

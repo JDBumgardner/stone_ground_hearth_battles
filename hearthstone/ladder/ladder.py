@@ -5,7 +5,7 @@ from typing import List, Callable
 
 import trueskill
 
-from hearthstone.simulator.agent import AnnotatingAgent
+from hearthstone.simulator.agent.agent import AnnotatingAgent
 from hearthstone.battlebots.cheapo_bot import CheapoBot
 from hearthstone.battlebots.get_bot_contestants import get_priority_bot_contestant_tuples, \
     get_priority_heuristics_bot_contestant_tuples

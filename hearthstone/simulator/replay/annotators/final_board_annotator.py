@@ -1,6 +1,6 @@
 from typing import List, Dict
 
-from hearthstone.simulator.agent import Action
+from hearthstone.simulator.agent.actions import Action
 from hearthstone.simulator.core.tavern import Tavern
 from hearthstone.simulator.replay.observer import Observer, Annotation
 

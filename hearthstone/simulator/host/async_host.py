@@ -3,8 +3,8 @@ import itertools
 from typing import Dict, Optional, List
 
 from hearthstone.asyncio import asyncio_utils
-from hearthstone.simulator import agent
-from hearthstone.simulator.agent import EndPhaseAction, Action, AnnotatingAgent, BuyAction
+from hearthstone.simulator.agent import agent
+from hearthstone.simulator.agent.actions import EndPhaseAction, Action, BuyAction
 from hearthstone.simulator.core.randomizer import Randomizer
 from hearthstone.simulator.core.tavern import Tavern
 from hearthstone.simulator.host.host import Host

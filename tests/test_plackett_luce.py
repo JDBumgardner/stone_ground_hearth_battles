@@ -9,7 +9,10 @@ from plackett_luce.plackett_luce import PlackettLuce
 class PlackettLuceTest(unittest.TestCase):
     def assertIsPermutation(self, sample: torch.Tensor, shape: Tuple, permutation_sizes: Optional[torch.Tensor] = None):
         self.assertEqual(sample.shape, shape)
-        self.assertTrue((sample.sort(-1).values == torch.arange(0, sample.shape[-1])).all())
+
+        self.assertTrue(
+            (sample.masked_fill(sample == -1, sample.shape[-1]).sort(-1).values == torch.arange(0, sample.shape[-1]))
+             .masked_fill(sample == -1, True).all())
         if permutation_sizes is not None and (permutation_sizes > 0).any():
             indices = (permutation_sizes.unsqueeze(-1).expand((*sample.shape[:-1], 1)) - 1)
             self.assertTrue(torch.eq(sample.cumsum(-1).gather(-1, indices).squeeze(-1),

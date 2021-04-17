@@ -6,8 +6,9 @@ from typing import Optional, Any, Dict
 import torch
 from torch import nn
 
-from hearthstone.simulator.agent import StandardAction, DiscoverChoiceAction, RearrangeCardsAction, \
-    AnnotatingAgent, HeroDiscoverAction, Action
+from hearthstone.simulator.agent.actions import StandardAction, DiscoverChoiceAction, RearrangeCardsAction, \
+     HeroDiscoverAction, Action
+from hearthstone.simulator.agent.agent import AnnotatingAgent
 from hearthstone.training.pytorch.encoding.default_encoder import \
     EncodedActionSet
 from hearthstone.training.pytorch.encoding.state_encoding import State, Encoder

@@ -1,4 +1,4 @@
-from hearthstone.simulator.agent import StandardAction
+from hearthstone.simulator.agent.actions import StandardAction
 from hearthstone.simulator.replay.replay import Replay
 from hearthstone.training.pytorch.replay import GAEReplayInfo, ActorCriticGameStepInfo
 

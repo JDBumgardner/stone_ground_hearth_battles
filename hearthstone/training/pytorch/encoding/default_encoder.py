@@ -4,11 +4,12 @@ from typing import List, Optional, Dict
 import numpy as np
 import torch
 
-from hearthstone.simulator.agent import TripleRewardsAction, TavernUpgradeAction, RerollAction, \
+from hearthstone.simulator.agent.actions import TripleRewardsAction, TavernUpgradeAction, RerollAction, \
     EndPhaseAction, SummonAction, BuyAction, SellAction, StandardAction, DiscoverChoiceAction, HeroPowerAction, \
     FreezeDecision, BananaAction, RedeemGoldCoinAction
 from hearthstone.simulator.core.card_pool import PrintingPress
 from hearthstone.simulator.core.cards import CardLocation
+from hearthstone.simulator.core.hero import EmptyHero
 from hearthstone.simulator.core.hero_pool import VALHALLA
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 from hearthstone.simulator.core.player import Player, StoreIndex, HandIndex, BoardIndex, DiscoverIndex
@@ -31,8 +32,8 @@ def enum_to_int(value: Optional[enum.Enum]) -> int:
 
 CARD_TYPE_TO_INT = {card_type: ind for ind, card_type in enumerate(PrintingPress.cards)}
 INT_TO_CARD_TYPE = {ind: card_type for ind, card_type in enumerate(PrintingPress.cards)}
-HERO_TYPE_TO_INT = {hero_type: ind for ind, hero_type in enumerate(VALHALLA)}
-INT_TO_HERO_TYPE = {ind: hero_type for ind, hero_type in enumerate(VALHALLA)}
+HERO_TYPE_TO_INT = {hero_type: ind for ind, hero_type in enumerate([EmptyHero]+VALHALLA)}
+INT_TO_HERO_TYPE = {ind: hero_type for ind, hero_type in enumerate([EmptyHero]+VALHALLA)}
 
 
 def default_card_encoding() -> Feature:

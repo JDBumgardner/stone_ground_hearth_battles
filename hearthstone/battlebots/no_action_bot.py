@@ -1,8 +1,9 @@
 import typing
 from typing import List
 
-from hearthstone.simulator.agent import Agent, StandardAction, EndPhaseAction, DiscoverChoiceAction, \
+from hearthstone.simulator.agent.actions import  StandardAction, EndPhaseAction, DiscoverChoiceAction, \
     RearrangeCardsAction, HeroDiscoverAction, FreezeDecision
+from hearthstone.simulator.agent.agent import Agent
 
 if typing.TYPE_CHECKING:
     from hearthstone.simulator.core.player import Player

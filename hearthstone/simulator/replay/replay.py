@@ -1,6 +1,6 @@
 from typing import List, Any, Dict, Optional
 
-from hearthstone.simulator.agent import EndPhaseAction, Action, HeroChoiceAction
+from hearthstone.simulator.agent.actions import EndPhaseAction, Action, HeroChoiceAction
 from hearthstone.simulator.core.randomizer import DefaultRandomizer
 from hearthstone.simulator.core.tavern import Tavern
 

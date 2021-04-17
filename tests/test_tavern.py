@@ -1,7 +1,7 @@
 import unittest
 from typing import Type
 
-from hearthstone.simulator.agent import generate_all_actions, EndPhaseAction
+from hearthstone.simulator.agent.actions import generate_all_actions, EndPhaseAction
 from hearthstone.simulator.core.adaptations import AdaptBuffs
 from hearthstone.simulator.core.card_graveyard import *
 from hearthstone.simulator.core.card_pool import *

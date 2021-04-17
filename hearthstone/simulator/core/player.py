@@ -186,9 +186,7 @@ class Player:
         return True
 
     def room_to_summon(self, index: HandIndex):
-        if self.dead:
-            return False
-        if self.discover_queue:
+        if not self.valid_standard_action():
             return False
         if not self.valid_hand_index(index):
             return False
@@ -203,9 +201,7 @@ class Player:
         self.draw_discover(lambda card: card.tier == discover_tier)
 
     def valid_triple_rewards(self) -> bool:
-        if self.dead:
-            return False
-        if self.discover_queue:
+        if not self.valid_standard_action():
             return False
         return bool(self.triple_rewards)
 
@@ -258,9 +254,7 @@ class Player:
         self.purchased_minions.append(type(card))
 
     def valid_purchase(self, index: 'StoreIndex') -> bool:
-        if self.dead:
-            return False
-        if self.discover_queue:
+        if not self.valid_standard_action():
             return False
         if not self.valid_store_index(index):
             return False
@@ -292,9 +286,7 @@ class Player:
         self.broadcast_buy_phase_event(events.RefreshStoreEvent())
 
     def valid_reroll(self) -> bool:
-        if self.dead:
-            return False
-        if self.discover_queue:
+        if not self.valid_standard_action():
             return False
         return self.coins >= self.refresh_store_cost or self.free_refreshes >= 1
 
@@ -302,7 +294,7 @@ class Player:
         if unfreeze:
             self.unfreeze()
         self.tavern.deck.return_cards(
-            itertools.chain.from_iterable([card.dissolve() for card in self.store if not card.frozen]))
+            itertools.chain.from_iterable((card.dissolve() for card in self.store if not card.frozen)))
         self._store = [card for card in self.store if card.frozen]
         self.unfreeze()
 
@@ -324,9 +316,7 @@ class Player:
         self.tavern.deck.return_cards(returned_cards)
 
     def valid_sell_minion(self, index: 'BoardIndex') -> bool:
-        if self.dead:
-            return False
-        if self.discover_queue:
+        if not self.valid_standard_action():
             return False
         return self.valid_board_index(index)
 
@@ -335,9 +325,7 @@ class Player:
 
     def valid_hero_power(self, board_target: Optional['BoardIndex'] = None,
                          store_target: Optional['StoreIndex'] = None) -> bool:
-        if self.dead:
-            return False
-        if self.discover_queue:
+        if not self.valid_standard_action():
             return False
         return self.hero.hero_power_valid(BuyPhaseContext(self, self.tavern.randomizer), board_target, store_target)
 
@@ -351,9 +339,7 @@ class Player:
                 card.handle_event_in_hand(event, BuyPhaseContext(self, randomizer or self.tavern.randomizer))
 
     def valid_rearrange_cards(self, permutation: List[int]) -> bool:
-        if self.dead:
-            return False
-        if self.discover_queue:
+        if not self.valid_standard_action():
             return False
         return len(permutation) == len(self.in_play) and set(permutation) == set(range(len(self.in_play)))
 
@@ -472,9 +458,7 @@ class Player:
 
     def valid_use_banana(self, board_index: Optional['BoardIndex'] = None,
                          store_index: Optional['StoreIndex'] = None) -> bool:
-        if self.dead:
-            return False
-        if self.discover_queue:
+        if not self.valid_standard_action():
             return False
         if self.bananas <= 0:
             return False
@@ -487,7 +471,7 @@ class Player:
         return True
 
     def resolve_death(self):
-        assert not self.dead and self.health <= 0
+        # assert not self.dead and self.health <= 0
         self.dead = True
         self.broadcast_global_event(events.PlayerDeadEvent(self))
         self.tavern.deck.return_cards(itertools.chain.from_iterable([card.dissolve() for card in self.in_play]))
@@ -510,6 +494,9 @@ class Player:
         if self.dead:
             return False
         return self.hero.valid_select_discover(discover_index)
+
+    def valid_standard_action(self):
+        return not self.dead and not self.discover_queue
 
     def current_build(self) -> Tuple[Optional['MONSTER_TYPES'], Optional[int]]:
         cards_by_type = {monster_type.name: 0 for monster_type in MONSTER_TYPES.single_types()}

@@ -4,7 +4,8 @@ import typing
 from typing import Dict, List, Optional
 
 from hearthstone.asyncio import asyncio_utils
-from hearthstone.simulator.agent import EndPhaseAction, AnnotatingAgent
+from hearthstone.simulator.agent.actions import EndPhaseAction
+from hearthstone.simulator.agent.agent import AnnotatingAgent
 from hearthstone.simulator.core.randomizer import Randomizer
 from hearthstone.simulator.host.host import Host
 from hearthstone.simulator.replay.observer import Observer

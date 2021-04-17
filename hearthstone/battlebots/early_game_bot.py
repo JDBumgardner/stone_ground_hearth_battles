@@ -2,12 +2,12 @@ import random
 import typing
 from typing import List, Callable
 
-from hearthstone.simulator.agent import Agent, StandardAction, generate_valid_actions, BuyAction, EndPhaseAction, \
+from hearthstone.simulator.agent.actions import StandardAction, generate_valid_actions, BuyAction, EndPhaseAction, \
     SummonAction, \
     SellAction, TavernUpgradeAction, RerollAction, DiscoverChoiceAction, RearrangeCardsAction, HeroDiscoverAction, \
     FreezeDecision
+from hearthstone.simulator.agent.agent import Agent
 from hearthstone.simulator.core.card_pool import MurlocTidehunter, AlleyCat
-
 from hearthstone.simulator.core.player import Player, StoreIndex, BoardIndex
 
 if typing.TYPE_CHECKING:

@@ -2,8 +2,9 @@ import random
 import typing
 from typing import List, Callable
 
-from hearthstone.simulator.agent import Agent, StandardAction, DiscoverChoiceAction, RearrangeCardsAction, \
+from hearthstone.simulator.agent.actions import StandardAction, DiscoverChoiceAction, RearrangeCardsAction, \
     HeroDiscoverAction
+from hearthstone.simulator.agent.agent import Agent
 
 if typing.TYPE_CHECKING:
     from hearthstone.simulator.core.cards import MonsterCard

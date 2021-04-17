@@ -7,7 +7,7 @@ from torch.distributions import Categorical
 from torch.nn import LayerNorm
 from torch.nn.init import xavier_uniform_
 
-from hearthstone.simulator.agent import Action, RearrangeCardsAction, StandardAction, DiscoverChoiceAction
+from hearthstone.simulator.agent.actions import Action, RearrangeCardsAction, StandardAction, DiscoverChoiceAction
 from hearthstone.training.pytorch.encoding import default_encoder
 from hearthstone.training.pytorch.encoding.default_encoder import EncodedActionSet
 from hearthstone.training.pytorch.encoding.state_encoding import State, Encoder, InvalidAction

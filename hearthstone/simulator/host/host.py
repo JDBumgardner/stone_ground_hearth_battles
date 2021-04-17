@@ -7,7 +7,9 @@ from hearthstone.simulator.core.tavern import Tavern
 from hearthstone.simulator.replay.replay import Replay, ReplayStep
 
 if typing.TYPE_CHECKING:
-    from hearthstone.simulator.agent import Action, AnnotatingAgent
+    from hearthstone.simulator.agent import agent
+    from hearthstone.simulator.agent.agent import AnnotatingAgent
+    from hearthstone.simulator.agent.actions import Action
     from hearthstone.simulator.core.randomizer import Randomizer
     from hearthstone.simulator.replay.observer import Observer
 
@@ -31,7 +33,7 @@ class Host:
             observers = []
         self.observers = FrozenList(observers)
 
-    def _apply_and_record(self, player_name: str, action: 'Action', agent_annotation: agent.Annotation = None):
+    def _apply_and_record(self, player_name: str, action: 'Action', agent_annotation: 'agent.Annotation' = None):
         observer_annotations = {}
         for observer in self.observers:
             annotation = observer.on_action(self.tavern, player_name, action)

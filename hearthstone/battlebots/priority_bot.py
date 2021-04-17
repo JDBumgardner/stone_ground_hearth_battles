@@ -1,10 +1,9 @@
 import typing
-from typing import List
-from hearthstone.simulator.agent import generate_valid_actions, BuyAction, EndPhaseAction, SummonAction, SellAction, \
-    DiscoverChoiceAction, RearrangeCardsAction, HeroDiscoverAction, FreezeDecision
-from hearthstone.simulator.agent import TavernUpgradeAction, RerollAction
-from hearthstone.battlebots.bot_types import PriorityFunctionBot
 
+from hearthstone.battlebots.bot_types import PriorityFunctionBot
+from hearthstone.simulator.agent.actions import StandardAction, generate_valid_actions, BuyAction, EndPhaseAction, \
+    SummonAction, DiscoverChoiceAction, RearrangeCardsAction, HeroDiscoverAction, FreezeDecision, TavernUpgradeAction, \
+    RerollAction, SellAction
 from hearthstone.simulator.core.player import Player, StoreIndex
 
 if typing.TYPE_CHECKING:
