@@ -2,9 +2,9 @@ import logging
 import random
 
 from hearthstone.battlebots.stochastic_priority_bot import LearnedPriorityBot
-from hearthstone.simulator.host import RoundRobinHost
 from hearthstone.ladder.ladder import Contestant, update_ratings, print_standings, load_ratings, save_ratings, \
     all_contestants
+from hearthstone.simulator.host import RoundRobinHost
 
 
 def main():
@@ -25,7 +25,7 @@ def main():
         winner_names = list(reversed([name for name, player in host.tavern.losers]))
         print("---------------------------------------------------------------")
         print(winner_names)
-        #print(host.tavern.losers[-1][1].in_play)
+        # print(host.tavern.losers[-1][1].in_play)
         ranked_contestants = sorted(round_contestants, key=lambda c: winner_names.index(c.name))
         update_ratings(ranked_contestants)
         print_standings(contestants)
@@ -33,7 +33,8 @@ def main():
             contestant.games_played += 1
         if learning_bot_contestant in round_contestants:
             learning_bot.learn_from_game(ranked_contestants.index(learning_bot_contestant))
-            print("Favorite cards: ", sorted(learning_bot.priority_dict.items(), key=lambda item: item[1], reverse=True))
+            print("Favorite cards: ",
+                  sorted(learning_bot.priority_dict.items(), key=lambda item: item[1], reverse=True))
             learning_bot.save_to_file(bot_file)
 
     save_ratings(contestants, standings_path)

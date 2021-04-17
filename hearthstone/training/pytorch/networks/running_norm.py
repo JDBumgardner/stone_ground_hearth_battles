@@ -62,13 +62,15 @@ class PPONormalizer(nn.Module):
                 with torch.no_grad():
                     flattened = value.reshape((-1,) + self.shape)
                     num_updates = flattened.shape[0]
-                    coefficients = torch.pow(self.gamma, torch.arange(num_updates)).view((num_updates,) + (1,) * (len(flattened.shape) -1) )
+                    coefficients = torch.pow(self.gamma, torch.arange(num_updates)).view(
+                        (num_updates,) + (1,) * (len(flattened.shape) - 1))
                     self.exponential_mean = self.gamma ** num_updates * self.exponential_mean + flattened * coefficients
                     self.welford_aggregator.update(self.exponential_mean)
             if self.welford_aggregator.count > 2:
                 return value / (self.welford_aggregator.stdev() + self.epsilon)
             else:
                 return value
+
 
 class EMANormalizer(nn.Module):
     def __init__(self, shape: torch.Size, gamma: float, epsilon: float = 1e-5):

@@ -1,5 +1,4 @@
 import asyncio
-
 import logging
 import os
 
@@ -8,6 +7,7 @@ import torch
 from hearthstone.training.pytorch.worker.distributed.tensorize_batch import _tensorize_batch, _untensorize_batch
 
 logger = logging.getLogger(__name__)
+
 
 class RemoteNet:
     def __init__(self, net_name: str, inference_queue):
@@ -18,10 +18,10 @@ class RemoteNet:
         loop = asyncio.get_event_loop()
         f = loop.create_future()
         self.inference_queue.rpc_async().infer(self.net_name, args).add_done_callback(lambda fut:
-                                                                         loop.call_soon_threadsafe(
-                                                                             f.set_result, fut.value()
-                                                                         )
-                                                                         )
+                                                                                      loop.call_soon_threadsafe(
+                                                                                          f.set_result, fut.value()
+                                                                                      )
+                                                                                      )
         return await f
 
 
@@ -68,10 +68,10 @@ class BatchedRemoteNet:
 
             logger.debug(f"Calling RPC {os.getpid()}")
             self.inference_queue.rpc_async().infer(self.net_name, args).add_done_callback(lambda fut:
-                                                                             loop.call_soon_threadsafe(
-                                                                                 f.set_result, fut.value()
-                                                                             )
-                                                                             )
+                                                                                          loop.call_soon_threadsafe(
+                                                                                              f.set_result, fut.value()
+                                                                                          )
+                                                                                          )
             response = await f
             logger.debug(f"RPC complete {os.getpid()}")
             for future, result in zip(

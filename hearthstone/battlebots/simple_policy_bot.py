@@ -10,7 +10,6 @@ from hearthstone.simulator.agent import Agent, generate_valid_actions, TavernUpg
     SellAction, StandardAction, BuyAction, SummonAction, DiscoverChoiceAction, RearrangeCardsAction, HeroDiscoverAction
 
 if typing.TYPE_CHECKING:
-
     from hearthstone.simulator.core.player import Player
 
 
@@ -34,16 +33,16 @@ class SimplePolicyBot(Agent):
 
     def learn_from_game(self, place: int, learning_rate: float):
         for card, score in self.current_game_buy.items():
-            self.priority_buy_dict[card] += (self.average_placement-place) * score * learning_rate
+            self.priority_buy_dict[card] += (self.average_placement - place) * score * learning_rate
         for card, score in self.current_game_summon.items():
-            self.priority_summon_dict[card] += (self.average_placement-place) * score * learning_rate
+            self.priority_summon_dict[card] += (self.average_placement - place) * score * learning_rate
         for card, score in self.current_game_sell.items():
             self.priority_sell_dict[card] += (self.average_placement - place) * score * learning_rate
         self.reroll_priority += (self.average_placement - place) * score * learning_rate
         self.current_game_buy = defaultdict(lambda: 0.0)
         self.current_game_summon = defaultdict(lambda: 0.0)
         self.current_game_sell = defaultdict(lambda: 0.0)
-        self.average_placement = (self.average_placement * self.number_of_games + place) / (self.number_of_games +1)
+        self.average_placement = (self.average_placement * self.number_of_games + place) / (self.number_of_games + 1)
         self.number_of_games += 1
 
     def save_to_file(self, path):
@@ -75,7 +74,8 @@ class SimplePolicyBot(Agent):
 
     async def discover_choice_action(self, player: 'Player') -> DiscoverChoiceAction:
         discover_cards = player.discover_queue[0]
-        discover_cards = sorted(discover_cards, key=lambda card: self.priority_buy_dict[type(card).__name__], reverse=True)
+        discover_cards = sorted(discover_cards, key=lambda card: self.priority_buy_dict[type(card).__name__],
+                                reverse=True)
         return DiscoverChoiceAction(player.discover_queue[0].index(discover_cards[0]))
 
     async def hero_discover_action(self, player: 'Player') -> 'HeroDiscoverAction':
@@ -99,7 +99,7 @@ class SimplePolicyBot(Agent):
         softmax = [score / sum(exponentials) for score in exponentials]
         chosen_index = ranked_actions.index(choice)
         gradients = [-1 * x * softmax[chosen_index] for x in softmax]
-        gradients[chosen_index] = softmax[chosen_index]*(1 - softmax[chosen_index])
+        gradients[chosen_index] = softmax[chosen_index] * (1 - softmax[chosen_index])
         for (score, action), gradient in zip(ranked_actions, gradients):
             if type(action) is BuyAction:
                 self.current_game_buy[type(player.store[action.index]).__name__] += gradient

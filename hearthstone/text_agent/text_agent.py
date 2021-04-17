@@ -76,39 +76,47 @@ class TextAgent(Agent):
         await self.connection.send(
             f"available monster types: {[monster_type.name for monster_type in player.tavern.available_types]}\n")
         await self.connection.send(f"\nCurrent standings:\n")
-        for i, contenstant in enumerate(sorted(player.tavern.players.values(), key=lambda plyr: plyr.health, reverse=True)):
+        for i, contenstant in enumerate(
+                sorted(player.tavern.players.values(), key=lambda plyr: plyr.health, reverse=True)):
             build = contenstant.current_build()
             if build == (None, None):
                 build = "Mixed Minions"
             else:
                 build = str(build[0]) + 'S ' + str(build[1])
-            await self.connection.send(f"{i + 1}: {str(contenstant):<53} [{str(max(contenstant.health, 0)) + ' health,':<12} tier {contenstant.tavern_tier},\t {build}]\n")
+            await self.connection.send(
+                f"{i + 1}: {str(contenstant):<53} [{str(max(contenstant.health, 0)) + ' health,':<12} tier {contenstant.tavern_tier},\t {build}]\n")
         await self.connection.send(f"\nYour next opponent: {player.next_opponent().hero}\n\n")
         await self.print_player_card_list("store", player.store)
         await self.print_player_card_list("board", player.in_play)
         await self.print_player_card_list("hand", player.hand)
         await self.connection.send(f"Your current triple rewards are {player.triple_rewards}\n")
-        await self.connection.send(f"you have {player.coins} coins and {player.health} health and your tavern is level {player.tavern_tier}\n")
+        await self.connection.send(
+            f"you have {player.coins} coins and {player.health} health and your tavern is level {player.tavern_tier}\n")
         if player.gold_coins >= 1:
             await self.connection.send(f"you have {player.gold_coins} gold coins\n")
         if player.bananas >= 1:
-            await self.connection.send(f"you have {player.bananas - player.big_bananas} bananas and {player.big_bananas} big bananas\n")
+            await self.connection.send(
+                f"you have {player.bananas - player.big_bananas} bananas and {player.big_bananas} big bananas\n")
         await self.connection.send("available actions are: \n")
         await self.connection.send('purchase: "p 0" purchases the 0th indexed monster from the store\n')
         await self.connection.send(
             'summon: "s 0 [1] [2]" summons the 0th indexed monster from your hand with battlecry targets index 1 and 2 in board card is placed at the end of the board\n')
         await self.connection.send('redeem: "r 1" sells the 1 indexed monster from the board\n')
         await self.connection.send('reroll store: "R" will reroll the store\n')
-        await self.connection.send(f'upgrade tavern: "u" will upgrade the tavern (current upgrade cost: {player.tavern_upgrade_cost if player.tavern_tier < 6 else 0})\n')
-        await self.connection.send(f'hero power: "h [b] [0]" will activate your hero power with ability target index 0 on the board (current cost: {player.hero.power_cost})\n')
+        await self.connection.send(
+            f'upgrade tavern: "u" will upgrade the tavern (current upgrade cost: {player.tavern_upgrade_cost if player.tavern_tier < 6 else 0})\n')
+        await self.connection.send(
+            f'hero power: "h [b] [0]" will activate your hero power with ability target index 0 on the board (current cost: {player.hero.power_cost})\n')
         if player.hero.hero_info() is not None:
             await self.connection.send(f'hero info: {player.hero.hero_info()}\n')
         await self.connection.send('triple rewards: "t" will use your highest tavern tier triple rewards\n')
         if player.gold_coins >= 1:
             await self.connection.send('coin tokens: "c" will use a coin token\n')
         if player.bananas >= 1:
-            await self.connection.send('bananas: "b b 0" will use a banana on the 0 index board minion, "b s 0" will use a banana on the 0 index store minion\n')
-        await self.connection.send('end turn: "e f" ends the turn and freezes the shop, "e u" ends the turn and unfreezes the shop, "e" ends the turn with no changes\n')
+            await self.connection.send(
+                'bananas: "b b 0" will use a banana on the 0 index board minion, "b s 0" will use a banana on the 0 index store minion\n')
+        await self.connection.send(
+            'end turn: "e f" ends the turn and freezes the shop, "e u" ends the turn and unfreezes the shop, "e" ends the turn with no changes\n')
         await self.connection.send("input action here: ")
         user_input = await self.connection.receive_line()
         while True:
@@ -257,4 +265,5 @@ class TextAgent(Agent):
             await self.connection.send(f"{index} {hero}\n")
 
     async def game_over(self, player: 'Player', ranking: int):
-        await self.connection.send(f'\n\n**************you have been killed you were ranked #{ranking}*******************')
+        await self.connection.send(
+            f'\n\n**************you have been killed you were ranked #{ranking}*******************')

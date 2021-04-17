@@ -18,7 +18,7 @@ class Host:
     tavern: Tavern
     agents: Dict[str, 'AnnotatingAgent']
     replay: Replay
-    observers: FrozenList # [Observer]
+    observers: FrozenList  # [Observer]
 
     def __init__(self, agents: Dict[str, 'AnnotatingAgent'], observers: Optional[List['Observer']] = None,
                  randomizer: Optional['Randomizer'] = None):
@@ -63,5 +63,3 @@ class Host:
 
     def get_replay(self) -> Replay:
         raise NotImplementedError()
-
-

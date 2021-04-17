@@ -3,7 +3,6 @@ from typing import Any
 from hearthstone.simulator.agent.actions import HeroChoiceAction, DiscoverChoiceAction, \
     RearrangeCardsAction, StandardAction
 from hearthstone.simulator.core.player import HeroChoiceIndex
-
 from hearthstone.simulator.core.tavern import Player
 
 Annotation = Any
@@ -98,5 +97,3 @@ class Agent(AnnotatingAgent):
 
     async def annotated_hero_discover_action(self, player: 'Player') -> ('HeroDiscoverAction', Annotation):
         return await self.hero_discover_action(player), None
-
-

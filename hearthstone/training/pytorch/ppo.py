@@ -12,7 +12,8 @@ from torch import optim, nn
 from torch.utils.tensorboard import SummaryWriter
 
 from hearthstone.ladder.ladder import Contestant, load_ratings, ContestantAgentGenerator
-from hearthstone.simulator.agent.actions import RearrangeCardsAction, BuyAction, EndPhaseAction, SellAction, SummonAction, \
+from hearthstone.simulator.agent.actions import RearrangeCardsAction, BuyAction, EndPhaseAction, SellAction, \
+    SummonAction, \
     RerollAction, DiscoverChoiceAction, TavernUpgradeAction, TripleRewardsAction, HeroPowerAction, FreezeDecision, \
     BananaAction, RedeemGoldCoinAction
 from hearthstone.simulator.core.hero import EmptyHero
@@ -72,7 +73,7 @@ class PPOLearner(GlobalStepContext):
         # Encoder is shared to reuse tensors passed between processes
         self.encoder = DefaultEncoder()
         if self.hparams['parallelism.shared_tensor_pool']:
-            self.encoder = SharedTensorPoolEncoder(self.encoder, self.hparams['parallelism.method']=="process")
+            self.encoder = SharedTensorPoolEncoder(self.encoder, self.hparams['parallelism.method'] == "process")
 
         self.tensorboard_accum = PPOTensorboard(False, False)
 
@@ -98,9 +99,10 @@ class PPOLearner(GlobalStepContext):
                     normalize_advantage: bool
                     ) -> bool:
         for minibatch_idx, minibatch in enumerate(replay_buffer.sample_minibatches(minibatch_size)):
-            stop_early = self.learn_minibatch(epoch, minibatch_idx, tensorboard, optimizer, learning_net, minibatch, policy_weight, entropy_weight,
-                                 ppo_epsilon,
-                                 gradient_clipping, normalize_advantage)
+            stop_early = self.learn_minibatch(epoch, minibatch_idx, tensorboard, optimizer, learning_net, minibatch,
+                                              policy_weight, entropy_weight,
+                                              ppo_epsilon,
+                                              gradient_clipping, normalize_advantage)
             self.global_step += 1
             if stop_early:
                 return True
@@ -142,8 +144,8 @@ class PPOLearner(GlobalStepContext):
             transition_batch = tensorize_batch(sub_batch, self.get_device())
 
             actions, action_log_probs, value, debug = learning_net(transition_batch.state,
-                                                                        transition_batch.valid_actions,
-                                                                        transition_batch.action)
+                                                                   transition_batch.valid_actions,
+                                                                   transition_batch.action)
 
             # The advantage is the difference between the expected value before taking the action and the value after updating
             advantage = transition_batch.gae_return - transition_batch.value
@@ -177,17 +179,19 @@ class PPOLearner(GlobalStepContext):
             loss = policy_loss * policy_weight + value_loss + entropy_loss
             loss.backward()
             self.tensorboard_accum.update(learning_net, transition_batch, debug, value,
-               advantage, normalized_advantage, value_error,
-               policy_loss, unclipped_policy_loss, clipped_policy_loss,
-               value_loss, entropy_loss, entropy_weight,
-               action_log_probs, log_ratio)
+                                          advantage, normalized_advantage, value_error,
+                                          policy_loss, unclipped_policy_loss, clipped_policy_loss,
+                                          value_loss, entropy_loss, entropy_weight,
+                                          action_log_probs, log_ratio)
 
         if gradient_clipping:
             torch.nn.utils.clip_grad_norm_(learning_net.parameters(), gradient_clipping)
         optimizer.step()
         early_stopped = approx_kl_divergence_welford.mean() > self.hparams['approx_kl_limit']
-        self.tensorboard_accum.flush(tensorboard, epoch, minibatch_idx, approx_kl_divergence_welford.mean(), early_stopped,
-                                self.hparams['batch.max_in_memory'], len(minibatch), optimizer.state_dict(), self.global_step)
+        self.tensorboard_accum.flush(tensorboard, epoch, minibatch_idx, approx_kl_divergence_welford.mean(),
+                                     early_stopped,
+                                     self.hparams['batch.max_in_memory'], len(minibatch), optimizer.state_dict(),
+                                     self.global_step)
         return early_stopped
 
     def get_device(self) -> torch.device:
@@ -294,7 +298,8 @@ class PPOLearner(GlobalStepContext):
         # Set gradient descent algorithm
         if self.hparams["optimizer"] == "adam":
             # {https://en.wikipedia.org/wiki/Stochastic_gradient_descent#Adam}
-            optimizer = optim.Adam(learning_net.parameters(), lr=self.hparams["adam.lr"], weight_decay=self.hparams["adam.weight_decay"])
+            optimizer = optim.Adam(learning_net.parameters(), lr=self.hparams["adam.lr"],
+                                   weight_decay=self.hparams["adam.weight_decay"])
         elif self.hparams["optimizer"] == "sgd":
             # {https://en.wikipedia.org/wiki/Stochastic_gradient_descent}
             optimizer = optim.SGD(learning_net.parameters(), lr=self.hparams["sgd_lr"],
@@ -323,7 +328,8 @@ class PPOLearner(GlobalStepContext):
         if self.hparams['parallelism.method']:
             if self.hparams['parallelism.method'] == "distributed":
                 worker_pool = DistributedWorkerPool(num_workers=self.hparams['parallelism.num_workers'],
-                                                    games_per_worker=self.hparams['parallelism.distributed.games_per_worker'],
+                                                    games_per_worker=self.hparams[
+                                                        'parallelism.distributed.games_per_worker'],
                                                     use_batched_inference=True,
                                                     max_batch_size=self.hparams['batch.max_in_memory'],
                                                     replay_sink=ExperiencePostProcessor(replay_buffer, gae_annotator,
@@ -360,11 +366,11 @@ class PPOLearner(GlobalStepContext):
                 for i in range(self.hparams["ppo_epochs"]):
                     self.handle_export(learning_bot_contestant, learning_net, other_contestants)
                     stop_early = self.learn_epoch(i, tensorboard, optimizer, learning_net, replay_buffer,
-                                     self.hparams['batch.minibatch_size'],
-                                     self.hparams["policy_weight"],
-                                     self.hparams["entropy_weight"], self.hparams["ppo_epsilon"],
-                                     self.hparams["gradient_clipping"],
-                                     self.hparams["normalize_advantage"])
+                                                  self.hparams['batch.minibatch_size'],
+                                                  self.hparams["policy_weight"],
+                                                  self.hparams["entropy_weight"], self.hparams["ppo_epsilon"],
+                                                  self.hparams["gradient_clipping"],
+                                                  self.hparams["normalize_advantage"])
                     if stop_early:
                         break
                 if self.hparams['parallelism.shared_tensor_pool']:
@@ -439,7 +445,8 @@ class PPOTensorboard:
         self.small_batch_grad_norm = 0.0
         self.big_batch_grad_norm = 0.0
 
-    def update(self, net: nn.Module, transition_batch: TransitionBatch, debug: ActorCriticGameStepDebugInfo, value: torch.Tensor,
+    def update(self, net: nn.Module, transition_batch: TransitionBatch, debug: ActorCriticGameStepDebugInfo,
+               value: torch.Tensor,
                advantage: torch.Tensor, normalized_advantage: torch.Tensor, value_error: torch.Tensor,
                policy_loss: torch.Tensor, unclipped_policy_loss: torch.Tensor, clipped_policy_loss: torch.Tensor,
                value_loss: torch.Tensor, entropy_loss: torch.Tensor, entropy_weight: float,
@@ -470,9 +477,10 @@ class PPOTensorboard:
         self.entropy_loss_sum += entropy_loss * new_count
         self.entropy_loss_main_dist_approx_welford.update(entropy_weight * action_log_probs.masked_select(
             transition_batch.valid_actions.rearrange_phase.logical_not()))
-        self.entropy_loss_main_dist_exact_welford.update(entropy_weight * (debug.component_policy.exp() * debug.component_policy).sum(
-            dim=1).masked_select(
-            transition_batch.valid_actions.rearrange_phase.logical_not()))
+        self.entropy_loss_main_dist_exact_welford.update(
+            entropy_weight * (debug.component_policy.exp() * debug.component_policy).sum(
+                dim=1).masked_select(
+                transition_batch.valid_actions.rearrange_phase.logical_not()))
         self.entropy_loss_main_dist_min_welford.update(
             - entropy_weight * (transition_batch.valid_actions.player_action_tensor.sum(
                 dim=1) + transition_batch.valid_actions.card_action_tensor.flatten(1).sum(
@@ -482,15 +490,15 @@ class PPOTensorboard:
             transition_batch.valid_actions.rearrange_phase))
         self.entropy_loss_rearrange_min_welford.update(- entropy_weight *
                                                        (transition_batch.valid_actions.cards_to_rearrange[:,
-                                                         1] + 1).masked_select(
-                                                            transition_batch.valid_actions.rearrange_phase).float().lgamma())
+                                                        1] + 1).masked_select(
+                                                           transition_batch.valid_actions.rearrange_phase).float().lgamma())
         self.kl_divergence_main_dist_exact_welford.update((debug.component_policy.exp() * (
                 debug.component_policy - transition_batch.debug_component_policy)).sum(dim=1).masked_select(
             transition_batch.valid_actions.rearrange_phase.logical_not()))
         self.kl_divergence_main_dist_approx_welford.update(-log_ratio.masked_select(
-                                        transition_batch.valid_actions.rearrange_phase.logical_not()))
+            transition_batch.valid_actions.rearrange_phase.logical_not()))
         self.kl_divergence_rearrange_approx_welford.update(-log_ratio.masked_select(
-                                        transition_batch.valid_actions.rearrange_phase))
+            transition_batch.valid_actions.rearrange_phase))
         self.return_welford.update(transition_batch.retn)
         self.gae_return_welford.update(transition_batch.gae_return)
         self.terminal_value_welford.update(value.masked_select(transition_batch.is_terminal))
@@ -501,7 +509,8 @@ class PPOTensorboard:
         self.actions += transition_batch.action
         self.terminal_action_count += transition_batch.is_terminal.sum()
 
-    def flush(self, tensorboard: SummaryWriter, epoch:int, minibatch_idx: int, approx_kl_divergence: torch.Tensor, early_stopped:bool,
+    def flush(self, tensorboard: SummaryWriter, epoch: int, minibatch_idx: int, approx_kl_divergence: torch.Tensor,
+              early_stopped: bool,
               small_batch_size: int, big_batch_size: int, optimizer_state, step):
         tensorboard.add_scalar("reward/mean", self.reward_welford.mean(), step)
         tensorboard.add_scalar("reward/stddev", self.reward_welford.stdev(), step)
@@ -538,11 +547,13 @@ class PPOTensorboard:
                                step)
 
         if epoch == 0 and minibatch_idx == 0:
-            tensorboard.add_scalar("kl_divergence/before_learning_main_dist", self.kl_divergence_main_dist_exact_welford.mean(), step)
+            tensorboard.add_scalar("kl_divergence/before_learning_main_dist",
+                                   self.kl_divergence_main_dist_exact_welford.mean(), step)
             tensorboard.add_scalar("kl_divergence/before_learning_approx", approx_kl_divergence, step)
         if early_stopped:
             tensorboard.add_scalar("kl_divergence/early_stopped_epoch", epoch, step)
-            tensorboard.add_scalar("kl_divergence/early_stopped_main_dist", self.kl_divergence_main_dist_exact_welford.mean(), step)
+            tensorboard.add_scalar("kl_divergence/early_stopped_main_dist",
+                                   self.kl_divergence_main_dist_exact_welford.mean(), step)
             tensorboard.add_scalar("kl_divergence/early_stopped_approx", approx_kl_divergence, step)
         tensorboard.add_scalar("avg_policy_loss/unclipped", self.policy_loss_unclipped_sum / self.count, step)
         tensorboard.add_scalar("avg_policy_loss/clipped", self.policy_loss_clipped_sum / self.count, step)
@@ -551,11 +562,13 @@ class PPOTensorboard:
         tensorboard.add_scalar("actions/endphase",
                                sum(type(action) is EndPhaseAction for action in self.actions), step)
         tensorboard.add_scalar("actions/endphase_no_freeze", sum(
-            type(action) is EndPhaseAction and action.freeze == FreezeDecision.NO_FREEZE for action in self.actions), step)
+            type(action) is EndPhaseAction and action.freeze == FreezeDecision.NO_FREEZE for action in self.actions),
+                               step)
         tensorboard.add_scalar("actions/endphase_freeze", sum(
             type(action) is EndPhaseAction and action.freeze == FreezeDecision.FREEZE for action in self.actions), step)
         tensorboard.add_scalar("actions/endphase_unfreeze", sum(
-            type(action) is EndPhaseAction and action.freeze == FreezeDecision.UNFREEZE for action in self.actions), step)
+            type(action) is EndPhaseAction and action.freeze == FreezeDecision.UNFREEZE for action in self.actions),
+                               step)
         tensorboard.add_scalar("actions/rearrange",
                                sum(type(action) is RearrangeCardsAction for action in self.actions), step)
         tensorboard.add_scalar("actions/buy", sum(type(action) is BuyAction for action in self.actions), step)
@@ -599,7 +612,7 @@ class PPOTensorboard:
                                                self.big_batch_grad_norm / big_batch_size - self.small_batch_grad_norm / small_batch_size) / (
                                                big_batch_size - small_batch_size)
             gradient_noise_estimate = (
-                                                  self.small_batch_grad_norm / small_batch_size ** 2 - self.big_batch_grad_norm / big_batch_size ** 2) / (
+                                              self.small_batch_grad_norm / small_batch_size ** 2 - self.big_batch_grad_norm / big_batch_size ** 2) / (
                                               1.0 / small_batch_size - 1.0 / self.big_batch_grad_norm)
             tensorboard.add_scalar("gradients/gradient_signal_est", gradient_signal_estimate, step)
             tensorboard.add_scalar("gradients/gradient_noise_est", gradient_noise_estimate, step)
@@ -636,6 +649,7 @@ class PPOTensorboard:
         if self.expensive_metrics:
             for tag, parm in learning_net.named_parameters():
                 tensorboard.add_histogram(f"gradients_{tag}/train", parm.grad.data, step)
+
 
 def main():
     ppo_learner = PPOLearner(PPOHyperparameters({

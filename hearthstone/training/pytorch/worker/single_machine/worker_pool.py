@@ -136,7 +136,7 @@ class WorkerPool:
         final_boards = replay.observer_annotations["FinalBoardAnnotator"]
         print("---------------------------------------------------------------")
         print(winner_names)
-        print("["+", ".join(final_boards[learning_bot_contestant.name])+"]")
+        print("[" + ", ".join(final_boards[learning_bot_contestant.name]) + "]")
         ranked_contestants = sorted([c for c in all_contestants if c.name in winner_names],
                                     key=lambda c: winner_names.index(c.name))
         update_ratings(ranked_contestants)

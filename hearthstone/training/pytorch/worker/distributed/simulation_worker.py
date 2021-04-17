@@ -3,12 +3,8 @@ import random
 import time
 from typing import List
 
-import logging
-import traceback
 import torch
-import typing as typing
 from torch.distributed import rpc
-from torch.distributed.rpc import RRef
 
 from hearthstone.asyncio import asyncio_utils
 from hearthstone.ladder.ladder import Contestant
@@ -58,7 +54,7 @@ class SimulationWorker:
             for _, net in nets.items():
                 await net.start_worker()
             tasks = [asyncio.create_task(self.play_game(learning_bot_contestant, other_contestants, game_size)) for _ in
-                  range(num_games)]
+                     range(num_games)]
             result = await asyncio.gather(
                 *tasks)
             for _, net in nets.items():

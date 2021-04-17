@@ -3,7 +3,6 @@ from typing import Any
 from hearthstone.simulator.agent.actions import Action
 from hearthstone.simulator.core.tavern import Tavern
 
-
 Annotation = Any
 
 

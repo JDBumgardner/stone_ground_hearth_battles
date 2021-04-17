@@ -70,7 +70,6 @@ class Feature:
         return num
 
 
-
 class ScalarFeature(Feature):
     def __init__(self, feat: Callable[[Any], Any], dtype=None):
         self._dtype = dtype or np.float32
@@ -185,6 +184,7 @@ class ActionComponent:
     """
     A component of a potentially multi-part action.
     """
+
     def valid(self, player: 'Player'):
         raise NotImplementedError()
 

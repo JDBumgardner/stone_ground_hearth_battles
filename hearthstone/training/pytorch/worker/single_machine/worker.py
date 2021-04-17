@@ -7,7 +7,6 @@ from torch.utils.tensorboard import SummaryWriter
 
 from hearthstone.ladder.ladder import Contestant, update_ratings, print_standings
 from hearthstone.simulator.host.round_robin_host import RoundRobinHost
-from hearthstone.simulator.replay.replay import Replay
 from hearthstone.training.pytorch.gae import GAEAnnotator
 from hearthstone.training.pytorch.replay_buffer import EpochBuffer
 from hearthstone.training.pytorch.surveillance import GlobalStepContext
@@ -51,7 +50,8 @@ class Worker:
             winner_names = list(reversed([name for name, player in host.tavern.losers]))
             print("---------------------------------------------------------------")
             print(winner_names)
-            print(host.tavern.players[self.learning_bot_contestant.name].in_play, host.tavern.players[self.learning_bot_contestant.name].hero)
+            print(host.tavern.players[self.learning_bot_contestant.name].in_play,
+                  host.tavern.players[self.learning_bot_contestant.name].hero)
             ranked_contestants = sorted(round_contestants, key=lambda c: winner_names.index(c.name))
             update_ratings(ranked_contestants)
             print_standings([self.learning_bot_contestant] + self.other_contestants)

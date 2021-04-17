@@ -70,8 +70,10 @@ class TransformerWithContextEncoder(nn.Module):
         if redundant:
             card_encoding_size += encoding.player_encoding().size()[0]
         self.fc_cards = nn.Linear(card_encoding_size, self.width - 1)
-        self.encoder_layer = TransformerEncoderPostNormLayer(d_model=width, dim_feedforward=width*4, nhead=4, dropout=0.0, activation=activation)
-        self.transformer_encoder = nn.TransformerEncoder(self.encoder_layer, num_layers=num_layers, norm=LayerNorm(width))
+        self.encoder_layer = TransformerEncoderPostNormLayer(d_model=width, dim_feedforward=width * 4, nhead=4,
+                                                             dropout=0.0, activation=activation)
+        self.transformer_encoder = nn.TransformerEncoder(self.encoder_layer, num_layers=num_layers,
+                                                         norm=LayerNorm(width))
         self._reset_parameters()
 
     def forward(self, state: State) -> Tuple[torch.Tensor, torch.Tensor]:
@@ -141,9 +143,12 @@ class HearthstoneTransformerNet(nn.Module):
         nn.init.constant_(self.fc_card_position.weight, 0)
 
         # Additional network for battlecry target selection
-        target_selection_width = self.card_hidden_size+4  # +1 for encoding the card being played, but divisible by 4.
-        target_selection_encoder = TransformerEncoderPostNormLayer(d_model=target_selection_width, dim_feedforward=target_selection_width*4, nhead=4, dropout=0.0, activation=activation_function)
-        self.target_selection_transformer = nn.TransformerEncoder(target_selection_encoder, num_layers=1, norm=LayerNorm(target_selection_width))
+        target_selection_width = self.card_hidden_size + 4  # +1 for encoding the card being played, but divisible by 4.
+        target_selection_encoder = TransformerEncoderPostNormLayer(d_model=target_selection_width,
+                                                                   dim_feedforward=target_selection_width * 4, nhead=4,
+                                                                   dropout=0.0, activation=activation_function)
+        self.target_selection_transformer = nn.TransformerEncoder(target_selection_encoder, num_layers=1,
+                                                                  norm=LayerNorm(target_selection_width))
         self.target_selection_fc = nn.Linear(target_selection_width, 1)
 
         nn.init.constant_(self.target_selection_fc.weight, 0)
@@ -183,7 +188,9 @@ class HearthstoneTransformerNet(nn.Module):
         component_distribution = Categorical(policy.exp())
         if chosen_actions:
             component_samples = torch.tensor(
-                [self.encoding.get_action_index(action) if isinstance(action, (StandardAction, DiscoverChoiceAction)) else 0 for action in
+                [self.encoding.get_action_index(action) if isinstance(action,
+                                                                      (StandardAction, DiscoverChoiceAction)) else 0 for
+                 action in
                  chosen_actions], dtype=torch.int, device=policy.device)
         else:
             component_samples = component_distribution.sample()

@@ -7,7 +7,7 @@ import torch
 from torch import nn
 
 from hearthstone.simulator.agent.actions import StandardAction, DiscoverChoiceAction, RearrangeCardsAction, \
-     HeroDiscoverAction, Action
+    HeroDiscoverAction, Action
 from hearthstone.simulator.agent.agent import AnnotatingAgent
 from hearthstone.training.pytorch.encoding.default_encoder import \
     EncodedActionSet
@@ -72,7 +72,8 @@ class PytorchBot(AnnotatingAgent):
         assert isinstance(action, RearrangeCardsAction)
         return action, ac_game_step_info
 
-    async def annotated_discover_choice_action(self, player: 'Player') -> (DiscoverChoiceAction, ActorCriticGameStepInfo):
+    async def annotated_discover_choice_action(self, player: 'Player') -> (
+    DiscoverChoiceAction, ActorCriticGameStepInfo):
         action, ac_game_step_info = await self.act(player, False)
         assert isinstance(action, DiscoverChoiceAction)
         return action, ac_game_step_info
@@ -82,4 +83,3 @@ class PytorchBot(AnnotatingAgent):
 
     async def game_over(self, player: 'Player', ranking: int) -> Dict[str, Any]:
         return {'ranking': ranking}
-

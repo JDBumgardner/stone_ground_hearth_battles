@@ -32,8 +32,8 @@ def enum_to_int(value: Optional[enum.Enum]) -> int:
 
 CARD_TYPE_TO_INT = {card_type: ind for ind, card_type in enumerate(PrintingPress.cards)}
 INT_TO_CARD_TYPE = {ind: card_type for ind, card_type in enumerate(PrintingPress.cards)}
-HERO_TYPE_TO_INT = {hero_type: ind for ind, hero_type in enumerate([EmptyHero]+VALHALLA)}
-INT_TO_HERO_TYPE = {ind: hero_type for ind, hero_type in enumerate([EmptyHero]+VALHALLA)}
+HERO_TYPE_TO_INT = {hero_type: ind for ind, hero_type in enumerate([EmptyHero] + VALHALLA)}
+INT_TO_HERO_TYPE = {ind: hero_type for ind, hero_type in enumerate([EmptyHero] + VALHALLA)}
 
 
 def default_card_encoding() -> Feature:
@@ -128,7 +128,8 @@ def discover_indices() -> List[DiscoverIndex]:
 
 def _all_actions() -> ActionSet:
     player_action_set = [TripleRewardsAction(), TavernUpgradeAction(), RerollAction(), HeroPowerAction(),
-                         RedeemGoldCoinAction(), EndPhaseAction(FreezeDecision.NO_FREEZE), EndPhaseAction(FreezeDecision.FREEZE),
+                         RedeemGoldCoinAction(), EndPhaseAction(FreezeDecision.NO_FREEZE),
+                         EndPhaseAction(FreezeDecision.FREEZE),
                          EndPhaseAction(FreezeDecision.UNFREEZE)]
     store_action_set = [
         [BuyAction(index), InvalidAction(), InvalidAction(), InvalidAction(), HeroPowerAction(store_target=index),

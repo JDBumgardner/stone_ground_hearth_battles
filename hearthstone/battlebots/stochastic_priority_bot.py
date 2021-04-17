@@ -10,7 +10,6 @@ from hearthstone.simulator.agent import Agent, generate_valid_actions, TavernUpg
     FreezeDecision
 
 if typing.TYPE_CHECKING:
-
     from hearthstone.simulator.core.player import Player, StoreIndex
 
 
@@ -25,13 +24,13 @@ class LearnedPriorityBot(Agent):
         self.set_priority_function()
         self.local_random = random.Random(seed)
         self.rand_factor = rand_factor
-        self.current_game_cards = defaultdict(lambda:0)
+        self.current_game_cards = defaultdict(lambda: 0)
 
     def learn_from_game(self, place: int):
         for card, score in self.current_game_cards.items():
-            self.priority_dict[card] += (3-place) * score
+            self.priority_dict[card] += (3 - place) * score
 
-        self.current_game_cards = defaultdict(lambda:0)
+        self.current_game_cards = defaultdict(lambda: 0)
 
     def set_priority_function(self):
         self.priority = lambda player, card: self.priority_dict[type(card).__name__]
@@ -52,7 +51,8 @@ class LearnedPriorityBot(Agent):
 
     def adjusted_priority(self, player, card):
         score = self.priority(player, card)
-        num_existing = len([existing for existing in player.hand + player.in_play if type(existing) == type(card) and not existing.golden])
+        num_existing = len([existing for existing in player.hand + player.in_play if
+                            type(existing) == type(card) and not existing.golden])
         if num_existing == 2:
             score += 100000
         elif num_existing == 1:
@@ -74,9 +74,13 @@ class LearnedPriorityBot(Agent):
 
         if top_hand_priority is not None:
             if player.room_on_board():
-                return [action for action in all_actions if type(action) is SummonAction and self.adjusted_priority(player, action.card) == top_hand_priority][0]
+                return [action for action in all_actions if
+                        type(action) is SummonAction and self.adjusted_priority(player,
+                                                                                action.card) == top_hand_priority][0]
             else:
-                return [action for action in all_actions if type(action) is SellAction and self.adjusted_priority(player, player.in_play[action.index]) == bottom_board_priority][0]
+                return [action for action in all_actions if
+                        type(action) is SellAction and self.adjusted_priority(player, player.in_play[
+                            action.index]) == bottom_board_priority][0]
 
         if top_store_priority is not None:
             force_buy = False

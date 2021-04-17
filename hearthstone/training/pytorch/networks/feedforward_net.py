@@ -1,9 +1,9 @@
 import torch
+import torch.nn.functional as F
 from torch import nn
 
 from hearthstone.training.pytorch.encoding.default_encoder import EncodedActionSet
-from hearthstone.training.pytorch.encoding.state_encoding import State, Feature, Encoder
-import torch.nn.functional as F
+from hearthstone.training.pytorch.encoding.state_encoding import State, Encoder
 
 
 class HearthstoneFFNet(nn.Module):
@@ -70,9 +70,10 @@ class HearthstoneFFNet(nn.Module):
                     self.value_hidden_layers[i](x_value))
         policy = self.fc_policy(x_policy)
         # Disable invalid actions with a "masked" softmax
-        valid_action_tensor = torch.cat((valid_actions.player_action_tensor.flatten(1), valid_actions.card_action_tensor.flatten(1)), dim=1)
+        valid_action_tensor = torch.cat(
+            (valid_actions.player_action_tensor.flatten(1), valid_actions.card_action_tensor.flatten(1)), dim=1)
         policy = policy.masked_fill(valid_action_tensor.logical_not(), -1e30)
-        
+
         # The policy network outputs an array of the log probability of each action.
         policy = F.log_softmax(policy, dim=1)
         # The value network outputs the linear combination of the last hidden layer. The value layer predicts the total reward at the end of the game,

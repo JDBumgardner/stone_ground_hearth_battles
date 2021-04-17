@@ -23,7 +23,7 @@ class MamaBear(MonsterCard):
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         if (event.event is EVENTS.SUMMON_BUY or (
                 event.event is EVENTS.SUMMON_COMBAT and event.card in context.friendly_war_party.board)) and event.card.check_type(
-                MONSTER_TYPES.BEAST) and event.card != self:
+            MONSTER_TYPES.BEAST) and event.card != self:
             bonus = 8 if self.golden else 4
             event.card.attack += bonus
             event.card.health += bonus
@@ -253,7 +253,8 @@ class RedWhelp(MonsterCard):
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         if event.event is EVENTS.COMBAT_PREPHASE:
-            self.damage = len([card for card in context.friendly_war_party.board if card.check_type(MONSTER_TYPES.DRAGON)])
+            self.damage = len(
+                [card for card in context.friendly_war_party.board if card.check_type(MONSTER_TYPES.DRAGON)])
         if event.event is EVENTS.COMBAT_START:
             num_damage_instances = 2 if self.golden else 1
             for _ in range(num_damage_instances):
@@ -1149,6 +1150,7 @@ class ReplicatingMenace(MonsterCard):
                 if self.golden:
                     microbot.golden_transformation([])
                 context.friendly_war_party.summon_in_combat(microbot, context, summon_index + i + 1)
+
         self.base_deathrattle = types.MethodType(base_deathrattle, self)
         super().__init__()
 
@@ -1417,7 +1419,8 @@ class TheTideRazor(MonsterCard):
         summon_index = context.friendly_war_party.get_index(self)
         i = 0
         for _ in range(count):
-            pirates = [card_type for card_type in PrintingPress.all_types() if card_type.check_type(MONSTER_TYPES.PIRATE)]
+            pirates = [card_type for card_type in PrintingPress.all_types() if
+                       card_type.check_type(MONSTER_TYPES.PIRATE)]
             random_minion_type = context.randomizer.select_summon_minion(pirates)
             for _ in range(context.summon_minion_multiplier()):
                 context.friendly_war_party.summon_in_combat(random_minion_type(), context, summon_index + i + 1)
@@ -1511,7 +1514,8 @@ class NatPagleExtremeAngler(MonsterCard):
         if event.event is EVENTS.AFTER_ATTACK_DAMAGE and self == event.card and not event.foe.is_targetable():
             for _ in range(2 if self.golden else 1):
                 if context.friendly_war_party.owner.room_in_hand():
-                    available_cards = [card for card in context.friendly_war_party.owner.tavern.deck.unique_cards() if card.tier <= context.friendly_war_party.owner.tavern_tier]
+                    available_cards = [card for card in context.friendly_war_party.owner.tavern.deck.unique_cards() if
+                                       card.tier <= context.friendly_war_party.owner.tavern_tier]
                     random_minion = context.randomizer.select_gain_card(available_cards)
                     context.friendly_war_party.owner.tavern.deck.remove_card(random_minion)
                     context.friendly_war_party.owner.gain_hand_card(random_minion)
@@ -1725,7 +1729,7 @@ class KangorsApprentice(MonsterCard):
         count = 4 if self.golden else 2
         summon_index = context.friendly_war_party.get_index(self)
         dead_mechs = [dead_minion for dead_minion in context.friendly_war_party.dead_minions if
-                          dead_minion.check_type(MONSTER_TYPES.MECH)]
+                      dead_minion.check_type(MONSTER_TYPES.MECH)]
         for index, mech in enumerate(dead_mechs[:count]):
             summon_minion = mech.unbuffed_copy()
             context.friendly_war_party.summon_in_combat(summon_minion, context, summon_index + index + 1)
@@ -1759,7 +1763,8 @@ class SeabreakerGoliath(MonsterCard):
 
     def overkill(self, context: CombatPhaseContext):
         bonus = 4 if self.golden else 2
-        pirates = [card for card in context.friendly_war_party.board if card.check_type(MONSTER_TYPES.PIRATE) and card != self]
+        pirates = [card for card in context.friendly_war_party.board if
+                   card.check_type(MONSTER_TYPES.PIRATE) and card != self]
         for pirate in pirates:
             pirate.attack += bonus
             pirate.health += bonus
@@ -1784,7 +1789,8 @@ class Amalgadon(MonsterCard):
     mana_cost = 8
 
     def base_battlecry(self, targets: List['MonsterCard'], context: 'BuyPhaseContext'):
-        count = len(one_minion_per_type(context.owner.in_play, context.randomizer, excluded_card=self)) * (2 if self.golden else 1)
+        count = len(one_minion_per_type(context.owner.in_play, context.randomizer, excluded_card=self)) * (
+            2 if self.golden else 1)
         for _ in range(count):
             available_adaptations = valid_adaptations(self)
             adaptation = context.randomizer.select_adaptation(available_adaptations)
@@ -1894,7 +1900,8 @@ class PrimalfinLookout(MonsterCard):
     mana_cost = 3
 
     def base_battlecry(self, targets: List['MonsterCard'], context: 'BuyPhaseContext'):
-        murloc_in_play = [card for card in context.owner.in_play if card.check_type(MONSTER_TYPES.MURLOC) and card != self]
+        murloc_in_play = [card for card in context.owner.in_play if
+                          card.check_type(MONSTER_TYPES.MURLOC) and card != self]
         if murloc_in_play:
             num_discovers = 2 if self.golden else 1
             for _ in range(num_discovers):
@@ -1929,7 +1936,8 @@ class PartyElemental(MonsterCard):
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         if event.event is EVENTS.SUMMON_BUY and event.card.check_type(MONSTER_TYPES.ELEMENTAL) and event.card != self:
-            other_elementals = [card for card in context.owner.in_play if card.check_type(MONSTER_TYPES.ELEMENTAL) and card != self]
+            other_elementals = [card for card in context.owner.in_play if
+                                card.check_type(MONSTER_TYPES.ELEMENTAL) and card != self]
             num_buffs = 2 if self.golden else 1
             if other_elementals:
                 for _ in range(num_buffs):
@@ -2164,7 +2172,8 @@ class WildfireElemental(MonsterCard):
             excess_damage = max(event.foe.health * -1, 0)
             adjacent_enemies = context.enemy_war_party.adjacent_minions(event.foe)
             if adjacent_enemies:
-                adjacent_targets = adjacent_enemies if self.golden else [context.randomizer.select_enemy_minion(adjacent_enemies)]
+                adjacent_targets = adjacent_enemies if self.golden else [
+                    context.randomizer.select_enemy_minion(adjacent_enemies)]
                 for card in adjacent_targets:
                     card.take_damage(excess_damage, context.enemy_context(), self)
 
@@ -2268,7 +2277,7 @@ class Bigfernal(MonsterCard):
     def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if (event.event is EVENTS.SUMMON_BUY or (
                 event.event is EVENTS.SUMMON_COMBAT and event.card in context.friendly_war_party.board)) and event.card.check_type(
-                MONSTER_TYPES.DEMON) and not event.card == self:
+            MONSTER_TYPES.DEMON) and not event.card == self:
             bonus = 2 if self.golden else 1
             self.attack += bonus
             self.health += bonus
@@ -2333,7 +2342,8 @@ class FishOfNZoth(MonsterCard):
         if event.event is EVENTS.DIES and not event.card == self and event.card.deathrattles and event.card in context.friendly_war_party.board:
             for deathrattle in event.card.deathrattles:
                 for _ in range(2 if self.golden else 1):
-                    self.deathrattles.append(deathrattle)  # TODO: this should gain golden deathrattles if dead card is golden
+                    self.deathrattles.append(
+                        deathrattle)  # TODO: this should gain golden deathrattles if dead card is golden
 
 
 class RingWatcher(MonsterCard):
@@ -2387,11 +2397,15 @@ class SoulDevourer(MonsterCard):
 
 
 class PrintingPress:
-    cards: Set[Type['MonsterCard']] = set(member[1] for member in getmembers(sys.modules[__name__], lambda member: isclass(member) and issubclass(member, MonsterCard) and member.__module__ == __name__))
+    cards: Set[Type['MonsterCard']] = set(member[1] for member in getmembers(sys.modules[__name__],
+                                                                             lambda member: isclass(
+                                                                                 member) and issubclass(member,
+                                                                                                        MonsterCard) and member.__module__ == __name__))
     cards_per_tier = {1: 16, 2: 15, 3: 13, 4: 11, 5: 9, 6: 7}
 
     @classmethod
-    def make_cards(cls, available_types: List['MONSTER_TYPES'], include_graveyard: Optional[bool] = False) -> 'CardList':
+    def make_cards(cls, available_types: List['MONSTER_TYPES'],
+                   include_graveyard: Optional[bool] = False) -> 'CardList':
         cardlist = []
         for card in cls.cards | (REMOVED_CARDS if include_graveyard else set()):
             if not card.base_token and (card.pool in available_types or card.pool == MONSTER_TYPES.ALL):

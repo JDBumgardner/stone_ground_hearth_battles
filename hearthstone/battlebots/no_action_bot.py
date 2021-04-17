@@ -1,7 +1,6 @@
 import typing
-from typing import List
 
-from hearthstone.simulator.agent.actions import  StandardAction, EndPhaseAction, DiscoverChoiceAction, \
+from hearthstone.simulator.agent.actions import StandardAction, EndPhaseAction, DiscoverChoiceAction, \
     RearrangeCardsAction, HeroDiscoverAction, FreezeDecision
 from hearthstone.simulator.agent.agent import Agent
 

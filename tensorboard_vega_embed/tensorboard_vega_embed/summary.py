@@ -22,9 +22,8 @@ from tensorboard.compat.proto import summary_pb2
 from tensorboard.compat.proto.summary_pb2 import Summary
 from tensorboard.compat.proto.tensor_pb2 import TensorProto
 from tensorboard.compat.proto.tensor_shape_pb2 import TensorShapeProto
-from torch.utils.tensorboard import FileWriter, SummaryWriter
-
 from tensorboard_vega_embed import metadata
+from torch.utils.tensorboard import SummaryWriter
 
 
 def vega_embed(writer: SummaryWriter, tag, vega_json, step=None, description=None):

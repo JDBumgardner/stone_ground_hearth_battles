@@ -164,7 +164,8 @@ class PlayerDeadEvent(CardEvent):
 
 
 class ResultsBroadcastEvent(CardEvent):
-    def __init__(self, winner: Optional['Player'] = None, loser: Optional['Player'] = None, tie: Optional[bool] = False):
+    def __init__(self, winner: Optional['Player'] = None, loser: Optional['Player'] = None,
+                 tie: Optional[bool] = False):
         super().__init__(EVENTS.RESULTS_BROADCAST)
         self.winner = winner
         self.loser = loser
@@ -189,7 +190,8 @@ class BuyPhaseContext:
         return summon_multiplier
 
     def battlecry_multiplier(self) -> int:
-        return max([card.battlecry_multiplier() for card in self.owner.in_play] + [self.owner.hero.battlecry_multiplier()])
+        return max(
+            [card.battlecry_multiplier() for card in self.owner.in_play] + [self.owner.hero.battlecry_multiplier()])
 
 
 class CombatPhaseContext:
@@ -212,7 +214,8 @@ class CombatPhaseContext:
             card.handle_event(event, self.enemy_context())
 
     def enemy_context(self):
-        return CombatPhaseContext(self.enemy_war_party, self.friendly_war_party, self.randomizer, self.event_queue, self.damaged_minions)
+        return CombatPhaseContext(self.enemy_war_party, self.friendly_war_party, self.randomizer, self.event_queue,
+                                  self.damaged_minions)
 
     def summon_minion_multiplier(self) -> int:
         summon_multiplier = 1

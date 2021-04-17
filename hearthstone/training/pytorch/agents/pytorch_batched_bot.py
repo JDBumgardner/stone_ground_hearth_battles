@@ -4,7 +4,7 @@ import threading
 from typing import Dict, List, Any, Tuple
 
 import torch
-from torch import nn, multiprocessing
+from torch import nn
 
 from hearthstone.simulator.agent.actions import StandardAction, RearrangeCardsAction, DiscoverChoiceAction, \
     HeroDiscoverAction, Action
@@ -15,7 +15,8 @@ from hearthstone.training.pytorch.replay import ActorCriticGameStepDebugInfo, Ac
 
 
 class BatchedInferencePytorchBot(AnnotatingAgent):
-    def __init__(self, queue: 'BatchedInferenceQueue', net_name: str, encoder: Encoder, annotate: bool = True, device: torch.device=None):
+    def __init__(self, queue: 'BatchedInferenceQueue', net_name: str, encoder: Encoder, annotate: bool = True,
+                 device: torch.device = None):
         self.authors = ["Jeremy Salwen"]
         self.queue = queue
         self.net_name = net_name
@@ -57,7 +58,8 @@ class BatchedInferencePytorchBot(AnnotatingAgent):
         assert isinstance(action, RearrangeCardsAction)
         return action, ac_game_step_info
 
-    async def annotated_discover_choice_action(self, player: 'Player') -> (DiscoverChoiceAction, ActorCriticGameStepInfo):
+    async def annotated_discover_choice_action(self, player: 'Player') -> (
+    DiscoverChoiceAction, ActorCriticGameStepInfo):
         action, ac_game_step_info = self.act(player, False)
         assert isinstance(action, DiscoverChoiceAction)
         return action, ac_game_step_info
@@ -72,7 +74,7 @@ class BatchedInferencePytorchBot(AnnotatingAgent):
 class InferenceFuture:
     def __init__(self):
         self.value = None
-        self.done_flag =  threading.Event()
+        self.done_flag = threading.Event()
 
     def set(self, value):
         self.value = value
@@ -143,14 +145,15 @@ class BatchedInferenceQueue:
 
                 # Run inference on batched tensor
                 state_batch, valid_actions_batch = self._tensorize_batch([args for _, args in batched_tasks])
-                output_actions, action_log_probs, value, debug_info = self.nets[name](state_batch, valid_actions_batch, None)
+                output_actions, action_log_probs, value, debug_info = self.nets[name](state_batch, valid_actions_batch,
+                                                                                      None)
                 for i, (future, _) in enumerate(batched_tasks):
-                    future.set((output_actions[i:i+1],
-                                action_log_probs[i:i+1].detach(),
-                                value[i:i+1].detach(),
+                    future.set((output_actions[i:i + 1],
+                                action_log_probs[i:i + 1].detach(),
+                                value[i:i + 1].detach(),
                                 ActorCriticGameStepDebugInfo(
-                                    component_policy=debug_info.component_policy[i:i+1].detach(),
-                                    permutation_logits=debug_info.permutation_logits[i:i+1].detach(),
+                                    component_policy=debug_info.component_policy[i:i + 1].detach(),
+                                    permutation_logits=debug_info.permutation_logits[i:i + 1].detach(),
                                 )
                                 ))
             self.communication_event.wait(1)

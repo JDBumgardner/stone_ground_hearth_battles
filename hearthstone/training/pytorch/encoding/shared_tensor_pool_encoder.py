@@ -1,24 +1,18 @@
 import collections
 import queue
-from typing import List, Optional
+from typing import List
 
 import torch
 
 from hearthstone.simulator.agent.actions import StandardAction
 from hearthstone.simulator.core.player import Player
-from hearthstone.training.pytorch.encoding.default_encoder import DEFAULT_PLAYER_ENCODING, DEFAULT_CARDS_ENCODING, \
-    ALL_ACTIONS, ALL_ACTIONS_DICT
 from hearthstone.training.pytorch.encoding.state_encoding import State, EncodedActionSet, Feature, Encoder
-import torch.multiprocessing as mp
-from queue import Queue
-import numpy as np
-
-from hearthstone.training.pytorch.replay import ActorCriticGameStepInfo
 
 # A global singleton queue, since multiprocessing can't handle passing the queue through as a function argument.
 global_process_tensor_queue: queue.Queue = torch.multiprocessing.Queue()
 
 global_thread_tensor_queue: collections.deque = collections.deque()
+
 
 class SharedTensorPoolEncoder(Encoder):
     def __init__(self, base_encoder: Encoder, multiprocess: bool):

@@ -1,6 +1,6 @@
 import typing
 from collections import deque
-from typing import Optional, Tuple, List
+from typing import Optional, Tuple
 
 from hearthstone.simulator.core.events import EVENTS
 from hearthstone.simulator.core.randomizer import Randomizer, DefaultRandomizer
@@ -11,14 +11,16 @@ if typing.TYPE_CHECKING:
 
 
 class CombatEventQueue:
-    def __init__(self, war_party_1: 'WarParty', war_party_2: 'WarParty', randomizer: Optional['Randomizer'] = DefaultRandomizer()):
+    def __init__(self, war_party_1: 'WarParty', war_party_2: 'WarParty',
+                 randomizer: Optional['Randomizer'] = DefaultRandomizer()):
         self.randomizer = randomizer
         self.queues = {
             EVENTS.DEATHRATTLE_TRIGGERED: {war_party_1: deque(), war_party_2: deque()},
             EVENTS.DIES: {war_party_1: deque(), war_party_2: deque()}
         }
 
-    def load_minion(self, event: 'EVENTS', war_party: 'WarParty', minion: 'MonsterCard', foe: Optional['MonsterCard'] = None):
+    def load_minion(self, event: 'EVENTS', war_party: 'WarParty', minion: 'MonsterCard',
+                    foe: Optional['MonsterCard'] = None):
         self.queues[event][war_party].append((minion, foe))
 
     def get_next_minion(self, event: 'EVENTS') -> Tuple['MonsterCard', Optional['MonsterCard'], 'WarParty', 'WarParty']:

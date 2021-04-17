@@ -1,4 +1,3 @@
-import asyncio
 import itertools
 import typing
 from typing import Dict, List, Optional
@@ -42,7 +41,8 @@ class RoundRobinHost(Host):
                 elif i > 40:
                     break
                 else:
-                    action, agent_annotation = asyncio_utils.get_or_create_event_loop().run_until_complete(agent.annotated_buy_phase_action(player))
+                    action, agent_annotation = asyncio_utils.get_or_create_event_loop().run_until_complete(
+                        agent.annotated_buy_phase_action(player))
                     self._apply_and_record(player_name, action, agent_annotation)
                     yield
                     if type(action) is EndPhaseAction:
@@ -50,12 +50,14 @@ class RoundRobinHost(Host):
             if player.dead:
                 continue
             if len(player.in_play) > 1:
-                rearrange_action, agent_annotation = asyncio_utils.get_or_create_event_loop().run_until_complete(agent.annotated_rearrange_cards(player))
+                rearrange_action, agent_annotation = asyncio_utils.get_or_create_event_loop().run_until_complete(
+                    agent.annotated_rearrange_cards(player))
                 self._apply_and_record(player_name, rearrange_action, agent_annotation)
         self.tavern.combat_step()
         if self.tavern.game_over():
             for position, (name, player) in enumerate(reversed(self.tavern.losers)):
-                annotation = asyncio_utils.get_or_create_event_loop().run_until_complete(self.agents[name].game_over(player, position))
+                annotation = asyncio_utils.get_or_create_event_loop().run_until_complete(
+                    self.agents[name].game_over(player, position))
                 self.replay.agent_annotate(name, annotation)
             self._on_game_over()
 

@@ -60,4 +60,3 @@ class Replay:
                 end_phase_actions = set()
                 tavern.buying_step()
         return tavern
-

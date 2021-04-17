@@ -15,7 +15,8 @@ if typing.TYPE_CHECKING:
     from hearthstone.simulator.core.player import Player
 
 
-def one_minion_per_type(cards: List['MonsterCard'], randomizer: 'Randomizer', excluded_card: Optional['MonsterCard'] = None) -> List['MonsterCard']:
+def one_minion_per_type(cards: List['MonsterCard'], randomizer: 'Randomizer',
+                        excluded_card: Optional['MonsterCard'] = None) -> List['MonsterCard']:
     minions = []
     restricted_cards = [card for card in cards]
     if excluded_card is not None:
@@ -36,6 +37,7 @@ def one_minion_per_type(cards: List['MonsterCard'], randomizer: 'Randomizer', ex
 BOOL_ATTRIBUTE_LIST = ["divine_shield", "magnetic", "poisonous", "taunt",
                        "windfury", "cleave", "reborn", "mega_windfury"
                        ]
+
 
 class MonsterCard:
     coin_cost = 3
@@ -89,7 +91,7 @@ class MonsterCard:
         self.dealt_lethal_damage_by = None
 
     def __repr__(self):
-        rep = f"{type(self).__name__} {self.attack}/{self.health} (t{self.tier})" #  TODO: add a proper enum to the monster typing
+        rep = f"{type(self).__name__} {self.attack}/{self.health} (t{self.tier})"  # TODO: add a proper enum to the monster typing
         if self.dead:
             rep += ", [dead]"
         if self.battlecry:
@@ -108,7 +110,8 @@ class MonsterCard:
 
         return "{" + rep + "}"
 
-    def take_damage(self, damage: int, combat_phase_context: CombatPhaseContext, foe: Optional['MonsterCard'] = None, defending: Optional[bool] = True):
+    def take_damage(self, damage: int, combat_phase_context: CombatPhaseContext, foe: Optional['MonsterCard'] = None,
+                    defending: Optional[bool] = True):
         if self.divine_shield and not damage <= 0:
             self.divine_shield = False
             combat_phase_context.broadcast_combat_event(events.DivineShieldLostEvent(self, foe=foe))
@@ -280,7 +283,7 @@ class CardList:
 
     def draw(self, player: 'Player', num: int) -> List['MonsterCard']:
         valid_cards = []
-        for tier in range(player.tavern_tier+1):
+        for tier in range(player.tavern_tier + 1):
             valid_cards.extend(self.cards_by_tier[tier])
 
         selected_cards = []

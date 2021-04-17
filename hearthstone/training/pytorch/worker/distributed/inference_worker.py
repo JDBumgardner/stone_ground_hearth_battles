@@ -1,9 +1,9 @@
 import collections
+import logging
 import threading
 import time
 from typing import Dict
 
-import logging
 import torch
 from torch import nn
 from torch.distributed import rpc
@@ -51,7 +51,8 @@ class InferenceWorker:
         while self.communication_queue:
             net_name, future, args = self.communication_queue.popleft()
             self.queued_tasks_by_name[net_name].append((future, args))
-        logger.debug("queued task size  {} {}".format(len(self.queued_tasks_by_name), sum([len(v) for k, v in self.queued_tasks_by_name.items()])))
+        logger.debug("queued task size  {} {}".format(len(self.queued_tasks_by_name),
+                                                      sum([len(v) for k, v in self.queued_tasks_by_name.items()])))
 
     def _worker_thread(self):
         while True:
@@ -78,13 +79,14 @@ class InferenceWorker:
                 self.inference_count += 1
                 self.inference_example_count += state_batch[0].shape[0]
 
-                logger.debug("Inference #{}: {} requests, {} total batch size, {} average batch size".format(self.inference_count, len(batched_tasks),
-                                                  state_batch[0].shape[0],
-                                                  float(self.inference_example_count) / self.inference_count))
+                logger.debug("Inference #{}: {} requests, {} total batch size, {} average batch size".format(
+                    self.inference_count, len(batched_tasks),
+                    state_batch[0].shape[0],
+                    float(self.inference_example_count) / self.inference_count))
 
                 net = self.nets[net_name]
                 output_actions, action_log_probs, value, debug_info = net(state_batch, valid_actions_batch,
-                                                                        chosen_actions_batch)
+                                                                          chosen_actions_batch)
                 for (future, _), unbatched in zip(
                         batched_tasks,
                         _untensorize_batch(batch_args, output_actions, action_log_probs, value, debug_info,

@@ -2,7 +2,6 @@ import typing
 from typing import Union, Tuple, Optional, List
 
 from hearthstone.simulator.core.cards import CardLocation
-
 from hearthstone.simulator.core.events import BuyPhaseContext, CombatPhaseContext, CardEvent
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 
@@ -75,10 +74,12 @@ class Hero:
             if board_index is None and store_index is None:
                 return False
             if board_index is not None:
-                if CardLocation.BOARD not in self.power_target_location or not context.owner.valid_board_index(board_index):
+                if CardLocation.BOARD not in self.power_target_location or not context.owner.valid_board_index(
+                        board_index):
                     return False
             if store_index is not None:
-                if CardLocation.STORE not in self.power_target_location or not context.owner.valid_store_index(store_index):
+                if CardLocation.STORE not in self.power_target_location or not context.owner.valid_store_index(
+                        store_index):
                     return False
         if not self.hero_power_valid_impl(context, board_index, store_index):
             return False

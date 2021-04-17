@@ -12,7 +12,8 @@ if typing.TYPE_CHECKING:
 
 
 class PriorityStorageBot(Agent):
-    def __init__(self, authors: List[str], priority: Callable[['Player', 'MonsterCard'], float], storage_priority: Callable[['Player', 'MonsterCard'], float], seed: int):
+    def __init__(self, authors: List[str], priority: Callable[['Player', 'MonsterCard'], float],
+                 storage_priority: Callable[['Player', 'MonsterCard'], float], seed: int):
         if not authors:
             authors = ["Jacob Bumgardner", "Jeremy Salwen", "Diana Valverde"]
         self.authors = authors
@@ -40,26 +41,31 @@ class PriorityStorageBot(Agent):
 
         if top_hand_priority:
             if player.room_on_board():
-                return [action for action in all_actions if type(action) is SummonAction and self.priority(player, action.card) == top_hand_priority][0]
+                return [action for action in all_actions if
+                        type(action) is SummonAction and self.priority(player, action.card) == top_hand_priority][0]
             else:
                 if top_hand_priority > bottom_board_priority and player.coins >= 2:
-                    return [action for action in all_actions if type(action) is SellAction and self.priority(player, player.in_play[action.index]) == bottom_board_priority][0]
+                    return [action for action in all_actions if type(action) is SellAction and self.priority(player,
+                                                                                                             player.in_play[
+                                                                                                                 action.index]) == bottom_board_priority][
+                        0]
 
         if top_store_priority:
             if player.room_in_hand():
-                buy_action = BuyAction([StoreIndex(i) for i, card in enumerate(player.store) if self.priority(player, card) == top_store_priority][0])
+                buy_action = BuyAction([StoreIndex(i) for i, card in enumerate(player.store) if
+                                        self.priority(player, card) == top_store_priority][0])
                 if buy_action.valid(player):
                     return buy_action
             elif bottom_board_priority < top_store_priority and player.coins >= 2:
                 pass
-
 
         bottom_hand_storage_priority = min([self.storage_priority(player, card) for card in player.hand], default=None)
         top_store_storage_priority = max([self.storage_priority(player, card) for card in player.store], default=None)
 
         if top_store_storage_priority:
             if player.room_in_hand():
-                buy_action = BuyAction([StoreIndex(i) for i, card in enumerate(player.store) if self.storage_priority(player, card) == top_store_storage_priority][0])
+                buy_action = BuyAction([StoreIndex(i) for i, card in enumerate(player.store) if
+                                        self.storage_priority(player, card) == top_store_storage_priority][0])
                 if buy_action.valid(player):
                     return buy_action
 

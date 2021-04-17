@@ -1,17 +1,15 @@
 import random
 import typing
-from typing import List
 
-from hearthstone.simulator.agent.agent import Agent
 from hearthstone.simulator.agent.actions import StandardAction, generate_valid_actions, BuyAction, EndPhaseAction, \
     SummonAction, DiscoverChoiceAction, RearrangeCardsAction, HeroDiscoverAction, FreezeDecision
+from hearthstone.simulator.agent.agent import Agent
 
 if typing.TYPE_CHECKING:
-
     from hearthstone.simulator.core.player import Player
 
 
-class CheapoBot(Agent): 
+class CheapoBot(Agent):
     authors = ["Brian Kelly"]
 
     def __init__(self, seed: int):

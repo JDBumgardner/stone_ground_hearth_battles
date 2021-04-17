@@ -12,7 +12,7 @@ class PlackettLuceTest(unittest.TestCase):
 
         self.assertTrue(
             (sample.masked_fill(sample == -1, sample.shape[-1]).sort(-1).values == torch.arange(0, sample.shape[-1]))
-             .masked_fill(sample == -1, True).all())
+                .masked_fill(sample == -1, True).all())
         if permutation_sizes is not None and (permutation_sizes > 0).any():
             indices = (permutation_sizes.unsqueeze(-1).expand((*sample.shape[:-1], 1)) - 1)
             self.assertTrue(torch.eq(sample.cumsum(-1).gather(-1, indices).squeeze(-1),
@@ -40,7 +40,7 @@ class PlackettLuceTest(unittest.TestCase):
         logits = torch.Tensor([10.0, 20.0, 30.0, 40.0])
         distribution = PlackettLuce(logits)
         sample = distribution.sample()
-        self.assertIsPermutation(sample, (4, ))
+        self.assertIsPermutation(sample, (4,))
         log_prob = distribution.log_prob(sample)
         self.assertEqual(log_prob.shape, logits.shape[:-1])
 
@@ -115,8 +115,7 @@ class PlackettLuceTest(unittest.TestCase):
         sample = distribution.sample((10,))
         self.assertEqual(sample.shape, (10, 1, 0))
         log_prob = distribution.log_prob(sample)
-        self.assertTrue(torch.eq(log_prob, torch.Tensor([0]*10)).all())
-
+        self.assertTrue(torch.eq(log_prob, torch.Tensor([0] * 10)).all())
 
     def test_size_two_prob(self):
         logits = torch.Tensor([0, 0])

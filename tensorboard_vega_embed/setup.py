@@ -20,13 +20,12 @@ from __future__ import print_function
 
 import setuptools
 
-
 setuptools.setup(
     name="tensorboard_vega_embed",
     version="0.1.0",
     description="Tensorboard plugin for embedding vega/vega-lite/altair plots.",
     packages=["tensorboard_vega_embed"],
-    package_data={"tensorboard_vega_embed": ["svelte_frontend/public/**"],},
+    package_data={"tensorboard_vega_embed": ["svelte_frontend/public/**"], },
     entry_points={
         "tensorboard_plugins": [
             "vega_embedx = tensorboard_vega_embed.plugin:VegaEmbedXPlugin",

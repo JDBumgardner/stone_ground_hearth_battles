@@ -29,14 +29,21 @@ class PriorityBot(PriorityFunctionBot):
 
         if top_hand_priority:
             if player.room_on_board():
-                return [action for action in all_actions if type(action) is SummonAction and self.priority(player, player.hand[action.index]) == top_hand_priority][0]
+                return [action for action in all_actions if type(action) is SummonAction and self.priority(player,
+                                                                                                           player.hand[
+                                                                                                               action.index]) == top_hand_priority][
+                    0]
             else:
                 if top_hand_priority > bottom_board_priority:
-                    return [action for action in all_actions if type(action) is SellAction and self.priority(player, player.in_play[action.index]) == bottom_board_priority][0]
+                    return [action for action in all_actions if type(action) is SellAction and self.priority(player,
+                                                                                                             player.in_play[
+                                                                                                                 action.index]) == bottom_board_priority][
+                        0]
 
         if top_store_priority:
             if player.room_on_board() or bottom_board_priority < top_store_priority:
-                buy_action = BuyAction([StoreIndex(i) for i, card in enumerate(player.store) if self.priority(player, card) == top_store_priority][0])
+                buy_action = BuyAction([StoreIndex(i) for i, card in enumerate(player.store) if
+                                        self.priority(player, card) == top_store_priority][0])
                 if buy_action.valid(player):
                     return buy_action
 

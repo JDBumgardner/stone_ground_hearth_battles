@@ -77,11 +77,11 @@ class TensorboardAltairAnnotator(Observer):
 
 def _action_chart(df: pd.DataFrame, name: str, action_name: str, max_size: int):
     ranked_text = alt.Chart(df).mark_text().transform_lookup(lookup="step_in_game",
-                       from_=alt.LookupSelection(key="step_in_game",
-                                                 selection="gamestep_hover",
-                                                 fields=["step_in_game"]),
-                       as_="looked_up_step"
-                       ).transform_filter(
+                                                             from_=alt.LookupSelection(key="step_in_game",
+                                                                                       selection="gamestep_hover",
+                                                                                       fields=["step_in_game"]),
+                                                             as_="looked_up_step"
+                                                             ).transform_filter(
         (alt.datum.step_in_game == alt.datum.looked_up_step)
     ).transform_window(
         row_number='row_number()'
@@ -98,8 +98,9 @@ def _action_chart(df: pd.DataFrame, name: str, action_name: str, max_size: int):
                               tooltip=tooltip_fields)
 
 
-def _card_list_chart(name: str, action_name: str, cards_list: List[List[str]], action_probs: List[List[float]], max_size:int,
-                     rearrange_logits:Optional[List[List[float]]]=None):
+def _card_list_chart(name: str, action_name: str, cards_list: List[List[str]], action_probs: List[List[float]],
+                     max_size: int,
+                     rearrange_logits: Optional[List[List[float]]] = None):
     df = pd.DataFrame({
         name: cards_list,
         "action_probability": action_probs,
@@ -123,13 +124,15 @@ def _player_action_chart(action_probs: List[List[float]], max_size: int):
     return _action_chart(df, "basic_actions", "action", max_size)
 
 
-def calc_action_probs(policy: torch.Tensor, valid_actions: EncodedActionSet, store: List[str], hand: List[str], board:List[str]) -> (List, List, List, List):
+def calc_action_probs(policy: torch.Tensor, valid_actions: EncodedActionSet, store: List[str], hand: List[str],
+                      board: List[str]) -> (List, List, List, List):
     with torch.no_grad():
         encoder = DefaultEncoder()
-        flat_valid_actions = torch.cat((valid_actions.player_action_tensor.flatten(0), valid_actions.card_action_tensor.flatten(0)), dim=0)
+        flat_valid_actions = torch.cat(
+            (valid_actions.player_action_tensor.flatten(0), valid_actions.card_action_tensor.flatten(0)), dim=0)
         policy = policy.to("cpu").masked_fill(flat_valid_actions.to("cpu").logical_not(), -1e30).squeeze().exp()
         basic_action_probs = [float(policy[encoder.get_action_index(action)]) for action in
-                          default_encoder.ALL_ACTIONS.player_action_set]
+                              default_encoder.ALL_ACTIONS.player_action_set]
 
     action_probs = defaultdict(lambda: 0.0)
     for action in itertools.chain(default_encoder.ALL_ACTIONS.player_action_set,
@@ -157,7 +160,7 @@ def plot_replay(replay: Replay, player_name: str, tensorboard: SummaryWriter, gl
     def valid_step(step: ReplayStep) -> Any:
         return step.player == player_name and isinstance(step.action, StandardAction)
 
-    scalar_columns =  ["turn_count", "health", "coins", "avg_enemy_health", "dead_players", "action", "action_type"]
+    scalar_columns = ["turn_count", "health", "coins", "avg_enemy_health", "dead_players", "action", "action_type"]
     columns = {
         field: [getattr(step.observer_annotations.get("TensorboardAltairAnnotator"), field) for step in game_steps if
                 valid_step(step)]
@@ -192,12 +195,13 @@ def plot_replay(replay: Replay, player_name: str, tensorboard: SummaryWriter, gl
             continue
 
         annotations: TensorboardAltairAnnotation = step.observer_annotations.get("TensorboardAltairAnnotator")
-        basic_action_prob, buy_prob, summon_prob, sell_prob = calc_action_probs(step.agent_annotation.debug.component_policy,
-                                                                                step.agent_annotation.valid_actions,
-                                                                                annotations.store,
-                                                                                annotations.hand,
-                                                                                annotations.board,
-                                                                                )
+        basic_action_prob, buy_prob, summon_prob, sell_prob = calc_action_probs(
+            step.agent_annotation.debug.component_policy,
+            step.agent_annotation.valid_actions,
+            annotations.store,
+            annotations.hand,
+            annotations.board,
+            )
         rearrange_logit = step.agent_annotation.debug.permutation_logits.squeeze(0).tolist()
         assert len(rearrange_logit) == len(annotations.board)
         stores.append(annotations.store)
@@ -275,10 +279,11 @@ def plot_replay(replay: Replay, player_name: str, tensorboard: SummaryWriter, gl
         opacity=alt.condition((alt.datum.step_in_game == alt.datum.looked_up_step), alt.value(1), alt.value(0.4))
     ).properties(width=999)
 
-
     basic_action_chart = _player_action_chart(basic_action_probs, len(
-        default_encoder.ALL_ACTIONS.player_action_set)).properties(title='Basic Actions: ' + annotations.hero, width=400)
-    board_chart = _card_list_chart('board', 'sell', boards, sell_probs, 7, rearrange_logits).properties(title='On Board', width=400)
+        default_encoder.ALL_ACTIONS.player_action_set)).properties(title='Basic Actions: ' + annotations.hero,
+                                                                   width=400)
+    board_chart = _card_list_chart('board', 'sell', boards, sell_probs, 7, rearrange_logits).properties(
+        title='On Board', width=400)
     hand_chart = _card_list_chart('hand', 'summon', hands, summon_probs, 10).properties(title='In Hand', width=400)
     store_chart = _card_list_chart('store', 'buy', stores, buy_probs, 7).properties(title='In Store', width=400)
 
@@ -288,5 +293,3 @@ def plot_replay(replay: Replay, player_name: str, tensorboard: SummaryWriter, gl
     json = full_chart.to_json()
     tensorboard_vega_embed.summary.vega_embed(tensorboard, "GameSummary", json,
                                               global_step_context.get_global_step())
-
-

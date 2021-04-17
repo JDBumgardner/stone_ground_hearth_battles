@@ -24,14 +24,13 @@ import json
 import os
 
 import six
+import werkzeug
 from tensorboard.plugins import base_plugin
 from tensorboard.util import tensor_util
-import werkzeug
-from werkzeug.middleware.shared_data import SharedDataMiddleware
-from werkzeug.middleware.dispatcher import DispatcherMiddleware
-from werkzeug import wrappers
-
 from tensorboard_vega_embed import metadata
+from werkzeug import wrappers
+from werkzeug.middleware.dispatcher import DispatcherMiddleware
+from werkzeug.middleware.shared_data import SharedDataMiddleware
 
 
 class VegaEmbedXPlugin(base_plugin.TBPlugin):
@@ -99,8 +98,8 @@ class VegaEmbedXPlugin(base_plugin.TBPlugin):
         try:
             data = [
                 {
-                    "step" : event.step,
-                    "vega_spec" : tensor_util.make_ndarray(event.tensor_proto).item().decode("utf-8")
+                    "step": event.step,
+                    "vega_spec": tensor_util.make_ndarray(event.tensor_proto).item().decode("utf-8")
                 }
                 for event in self._multiplexer.Tensors(run, tag)
             ]

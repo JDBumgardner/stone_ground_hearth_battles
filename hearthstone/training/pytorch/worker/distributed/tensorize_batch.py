@@ -9,8 +9,8 @@ from hearthstone.training.pytorch.replay import ActorCriticGameStepDebugInfo
 
 
 def _tensorize_batch(batch: List[Tuple[State, EncodedActionSet, Optional[List[Action]]]],
-                     device:torch.device) -> Tuple[
-        StateBatch, EncodedActionSet, Optional[List[Action]]]:
+                     device: torch.device) -> Tuple[
+    StateBatch, EncodedActionSet, Optional[List[Action]]]:
     player_tensor = torch.cat([b[0].player_tensor for b in batch], dim=0).detach()
     cards_tensor = torch.cat([b[0].cards_tensor for b in batch], dim=0).detach()
     valid_player_actions_tensor = torch.cat(
@@ -40,13 +40,13 @@ def _untensorize_batch(batch_args: List[Tuple[State, EncodedActionSet, Optional[
     for (player_state_tensor, _), _, _ in batch_args:
         batch_entry_size = player_state_tensor.shape[0]
         result.append((output_actions[i:i + batch_entry_size],
-             action_log_probs[i:i + batch_entry_size].detach().to(device),
-             value[i:i + batch_entry_size].detach().to(device),
-             ActorCriticGameStepDebugInfo(
-                 component_policy=debug_info.component_policy[i:i + batch_entry_size].detach().to(device),
-                 permutation_logits=debug_info.permutation_logits[i:i + batch_entry_size].detach().to(device),
-             )
-             ))
+                       action_log_probs[i:i + batch_entry_size].detach().to(device),
+                       value[i:i + batch_entry_size].detach().to(device),
+                       ActorCriticGameStepDebugInfo(
+                           component_policy=debug_info.component_policy[i:i + batch_entry_size].detach().to(device),
+                           permutation_logits=debug_info.permutation_logits[i:i + batch_entry_size].detach().to(device),
+                       )
+                       ))
         i += batch_entry_size
 
     return result

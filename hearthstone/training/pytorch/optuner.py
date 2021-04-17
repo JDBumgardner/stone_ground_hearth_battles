@@ -42,9 +42,9 @@ def main():
     """
     study = optuna.create_study(
         storage="postgres://localhost/optuna", study_name="ppo_study",
-                                direction="maximize",
-                                load_if_exists=True,
-                                pruner=optuna.pruners.NopPruner())
+        direction="maximize",
+        load_if_exists=True,
+        pruner=optuna.pruners.NopPruner())
     try:
         try:
             with joblib.parallel_backend("multiprocessing"):

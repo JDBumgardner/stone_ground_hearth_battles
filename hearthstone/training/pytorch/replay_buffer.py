@@ -1,8 +1,7 @@
 import collections
-import logging
 import random
 from queue import Queue
-from typing import List, Generator, Optional, Union
+from typing import List, Generator, Union
 
 from hearthstone.simulator.replay.replay import Replay
 from hearthstone.training.pytorch.replay import ActorCriticGameStepInfo

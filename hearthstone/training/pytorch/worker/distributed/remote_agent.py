@@ -1,4 +1,4 @@
-from torch.distributed.rpc import RRef, rpc_sync
+from torch.distributed.rpc import RRef
 
 from hearthstone.simulator.agent import AnnotatingAgent, Annotation, DiscoverChoiceAction, StandardAction, \
     RearrangeCardsAction, HeroChoiceAction
@@ -25,4 +25,3 @@ class RemoteAgent(AnnotatingAgent):
 
     async def game_over(self, player: 'Player', ranking: int) -> Annotation:
         return self.remote_agent.rpc_sync().game_over(player, ranking)
-

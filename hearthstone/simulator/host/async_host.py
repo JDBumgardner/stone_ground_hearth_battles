@@ -3,12 +3,10 @@ import itertools
 from typing import Dict, Optional, List
 
 from hearthstone.asyncio import asyncio_utils
-from hearthstone.simulator.agent import agent
-from hearthstone.simulator.agent.actions import EndPhaseAction, Action, BuyAction
+from hearthstone.simulator.agent.actions import EndPhaseAction
 from hearthstone.simulator.core.randomizer import Randomizer
-from hearthstone.simulator.core.tavern import Tavern
 from hearthstone.simulator.host.host import Host
-from hearthstone.simulator.replay.replay import Replay, ReplayStep
+from hearthstone.simulator.replay.replay import Replay
 
 
 class AsyncHost(Host):
@@ -70,6 +68,7 @@ class AsyncHost(Host):
             async def report_game_over(name, player):
                 annotation = await self.agents[name].game_over(player, position)
                 self.replay.agent_annotate(name, annotation)
+
             game_over_tasks = []
             for position, (name, player) in enumerate(reversed(self.tavern.losers)):
                 game_over_tasks.append(asyncio.create_task(report_game_over(name, player)))

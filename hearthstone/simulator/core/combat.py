@@ -12,7 +12,6 @@ if typing.TYPE_CHECKING:
     from hearthstone.simulator.core.randomizer import Randomizer
     from hearthstone.simulator.core.cards import MonsterCard
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -47,7 +46,8 @@ class WarParty:
                 return self.board[index]
         return None
 
-    def get_attack_target(self, randomizer: 'Randomizer', attacker: Optional['MonsterCard'] = None) -> Optional['MonsterCard']:
+    def get_attack_target(self, randomizer: 'Randomizer', attacker: Optional['MonsterCard'] = None) -> Optional[
+        'MonsterCard']:
         if attacker is None:
             return None
         attack_targets = attacker.valid_attack_targets(self.live_minions())
@@ -75,7 +75,8 @@ class WarParty:
         return self.board.index(card)
 
     def attackers(self) -> List['MonsterCard']:
-        return [board_member for board_member in self.board if not board_member.dead and not board_member.cant_attack and board_member.attack > 0]
+        return [board_member for board_member in self.board if
+                not board_member.dead and not board_member.cant_attack and board_member.attack > 0]
 
     def room_on_board(self) -> bool:
         return len(self.live_minions()) < self.owner.maximum_board_size
@@ -130,7 +131,8 @@ def fight_boards(war_party_1: 'WarParty', war_party_2: 'WarParty', randomizer: '
                 break
             if attacker and not attacker.dead:
                 logger.debug(f'{attacking_war_party.owner} is attacking {defending_war_party.owner}')
-                start_attack(attacker, defender, attacking_war_party, defending_war_party, randomizer, combat_event_queue, damaged_minions)
+                start_attack(attacker, defender, attacking_war_party, defending_war_party, randomizer,
+                             combat_event_queue, damaged_minions)
         if not defending_war_party.attackers():
             break
         attacking_war_party, defending_war_party = defending_war_party, attacking_war_party
@@ -151,21 +153,27 @@ def player_damage(half_board_1: 'WarParty', half_board_2: 'WarParty', randomizer
     elif monster_damage_1 > 0:
         logger.debug(f'{half_board_1.owner} has won the fight')
         logger.debug(f'{half_board_2.owner} took {monster_damage_1 + half_board_1.owner.tavern_tier} damage.')
-        logger.debug(f"{half_board_1.owner}'s remaining board: {[card for card in half_board_1.board if not card.dead]}")
+        logger.debug(
+            f"{half_board_1.owner}'s remaining board: {[card for card in half_board_1.board if not card.dead]}")
         damage_dealt = monster_damage_1 + half_board_1.owner.tavern_tier
         half_board_2.owner.health -= damage_dealt
         half_board_1.owner.broadcast_buy_phase_event(events.EndCombatEvent(won_combat=True), randomizer)
-        half_board_2.owner.broadcast_buy_phase_event(events.EndCombatEvent(won_combat=False, damage_taken=damage_dealt), randomizer)
-        half_board_1.owner.broadcast_global_event(events.ResultsBroadcastEvent(winner=half_board_1.owner, loser=half_board_2.owner))
+        half_board_2.owner.broadcast_buy_phase_event(events.EndCombatEvent(won_combat=False, damage_taken=damage_dealt),
+                                                     randomizer)
+        half_board_1.owner.broadcast_global_event(
+            events.ResultsBroadcastEvent(winner=half_board_1.owner, loser=half_board_2.owner))
     elif monster_damage_2 > 0:
         logger.debug(f'{half_board_2.owner} has won the fight')
         logger.debug(f'{half_board_1.owner} took {monster_damage_2 + half_board_2.owner.tavern_tier} damage.')
-        logger.debug(f"{half_board_2.owner}'s remaining board: {[card for card in half_board_2.board if not card.dead]}")
+        logger.debug(
+            f"{half_board_2.owner}'s remaining board: {[card for card in half_board_2.board if not card.dead]}")
         damage_dealt = monster_damage_2 + half_board_2.owner.tavern_tier
         half_board_1.owner.health -= damage_dealt
-        half_board_1.owner.broadcast_buy_phase_event(events.EndCombatEvent(won_combat=False, damage_taken=damage_dealt), randomizer)
+        half_board_1.owner.broadcast_buy_phase_event(events.EndCombatEvent(won_combat=False, damage_taken=damage_dealt),
+                                                     randomizer)
         half_board_2.owner.broadcast_buy_phase_event(events.EndCombatEvent(won_combat=True), randomizer)
-        half_board_1.owner.broadcast_global_event(events.ResultsBroadcastEvent(winner=half_board_2.owner, loser=half_board_1.owner))
+        half_board_1.owner.broadcast_global_event(
+            events.ResultsBroadcastEvent(winner=half_board_2.owner, loser=half_board_1.owner))
     else:
         logger.debug('neither player won (no minions left)')
         half_board_1.owner.broadcast_buy_phase_event(events.EndCombatEvent(won_combat=False), randomizer)
@@ -173,10 +181,12 @@ def player_damage(half_board_1: 'WarParty', half_board_2: 'WarParty', randomizer
         half_board_1.owner.broadcast_global_event(events.ResultsBroadcastEvent(tie=True))
 
 
-def start_attack(attacker: 'MonsterCard', defender: 'MonsterCard', attacking_war_party: 'WarParty', defending_war_party: 'WarParty',
+def start_attack(attacker: 'MonsterCard', defender: 'MonsterCard', attacking_war_party: 'WarParty',
+                 defending_war_party: 'WarParty',
                  randomizer: 'Randomizer', event_queue: 'CombatEventQueue', damaged_minions: Set['MonsterCard']):
     logger.debug(f'{attacker} is attacking {defender}')
-    combat_phase_context = CombatPhaseContext(attacking_war_party, defending_war_party, randomizer, event_queue, damaged_minions)
+    combat_phase_context = CombatPhaseContext(attacking_war_party, defending_war_party, randomizer, event_queue,
+                                              damaged_minions)
     combat_phase_context.enemy_context().broadcast_combat_event(events.IsAttackedEvent(defender))
     combat_phase_context.broadcast_combat_event(events.OnAttackEvent(attacker))
 

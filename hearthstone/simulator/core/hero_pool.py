@@ -1,10 +1,9 @@
 import copy
-import logging
 import sys
 from inspect import getmembers, isclass
 from typing import Union, Tuple, Optional
 
-from hearthstone.simulator.core import combat, events, hero
+from hearthstone.simulator.core import combat, events
 from hearthstone.simulator.core.card_pool import Amalgam, EmperorCobra, Snake, FishOfNZoth
 from hearthstone.simulator.core.cards import CardLocation
 from hearthstone.simulator.core.combat import logger
@@ -120,7 +119,8 @@ class FungalmancerFlurgl(Hero):
     pool = MONSTER_TYPES.MURLOC
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
-        if event.event is EVENTS.SELL and event.card.check_type(MONSTER_TYPES.MURLOC) and context.owner.store_size() < context.owner.maximum_store_size:
+        if event.event is EVENTS.SELL and event.card.check_type(
+                MONSTER_TYPES.MURLOC) and context.owner.store_size() < context.owner.maximum_store_size:
             murlocs = [card for card in context.owner.tavern.deck.unique_cards() if
                        card.check_type(MONSTER_TYPES.MURLOC) and card.tier <= context.owner.tavern_tier]
             card = context.randomizer.select_add_to_store(murlocs)
@@ -140,7 +140,7 @@ class KaelthasSunstrider(Hero):
                 self.buy_counter = 0
 
     def hero_info(self) -> Optional[str]:
-        return f'{3-self.buy_counter} buys left until hero power bonus'
+        return f'{3 - self.buy_counter} buys left until hero power bonus'
 
 
 class LichBazhial(Hero):
@@ -315,7 +315,8 @@ class ArchVillianRafaam(Hero):
 
 class Malygos(Hero):
     base_power_cost = 0
-    power_target_location = [CardLocation.BOARD, CardLocation.STORE]  # TODO: are there other hero powers with multiple target locations?
+    power_target_location = [CardLocation.BOARD,
+                             CardLocation.STORE]  # TODO: are there other hero powers with multiple target locations?
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
@@ -364,10 +365,11 @@ class ArannaStarseeker(Hero):
         if event.event is EVENTS.REFRESHED_STORE or event.event is EVENTS.BUY_START:
             self.total_rerolls += 1 if event.event is EVENTS.REFRESHED_STORE else 0
             if self.total_rerolls >= 5:
-                context.owner.extend_store(context.owner.tavern.deck.draw(context.owner, 7 - context.owner.store_size()))
+                context.owner.extend_store(
+                    context.owner.tavern.deck.draw(context.owner, 7 - context.owner.store_size()))
 
     def hero_info(self) -> Optional[str]:
-        return f'{max(5-self.total_rerolls, 0)} refreshes left'
+        return f'{max(5 - self.total_rerolls, 0)} refreshes left'
 
 
 class DinotamerBrann(Hero):
@@ -378,7 +380,8 @@ class DinotamerBrann(Hero):
         context.owner.return_cards()
         predicate = lambda card: card.base_battlecry
         context.owner.extend_store(
-            [context.owner.tavern.deck.draw_with_predicate(context.owner, predicate) for _ in range(context.owner.refresh_size())])
+            [context.owner.tavern.deck.draw_with_predicate(context.owner, predicate) for _ in
+             range(context.owner.refresh_size())])
 
 
 class Alexstrasza(Hero):
@@ -486,7 +489,7 @@ class RagnarosTheFirelord(Hero):
                 context.owner.in_play[i].health += 3
 
     def hero_info(self) -> Optional[str]:
-        return f'{max(25-self.minions_killed, 0)} minions left'
+        return f'{max(25 - self.minions_killed, 0)} minions left'
 
 
 class Rakanishu(Hero):
@@ -535,7 +538,8 @@ class InfiniteToki(Hero):
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
         context.owner.return_cards()
-        number_of_cards = min(context.owner.refresh_size(), context.owner.maximum_store_size - context.owner.store_size())
+        number_of_cards = min(context.owner.refresh_size(),
+                              context.owner.maximum_store_size - context.owner.store_size())
         context.owner.extend_store(context.owner.tavern.deck.draw(context.owner, number_of_cards - 1))
         if context.owner.maximum_store_size > context.owner.store_size():
             higher_tier_minions = [card for card in context.owner.tavern.deck.unique_cards() if
@@ -672,7 +676,8 @@ class TheGreatAkazamzarak(Hero):
                     self.secrets.remove(SECRETS.SPLITTING_IMAGE)
                     summon_index = context.friendly_war_party.get_index(event.card)
                     for i in range(context.summon_minion_multiplier()):
-                        context.friendly_war_party.summon_in_combat(copy.deepcopy(event.card), context, summon_index+1+i)
+                        context.friendly_war_party.summon_in_combat(copy.deepcopy(event.card), context,
+                                                                    summon_index + 1 + i)
                 if SECRETS.VENOMSTRIKE_TRAP in self.secrets and context.friendly_war_party.room_on_board():
                     logger.debug(f'{SECRETS.VENOMSTRIKE_TRAP} triggers')
                     self.secrets.remove(SECRETS.VENOMSTRIKE_TRAP)
@@ -698,7 +703,7 @@ class TheGreatAkazamzarak(Hero):
                 for i in range(context.summon_minion_multiplier()):
                     new_copy = event.card.unbuffed_copy()
                     new_copy.health = 1
-                    context.friendly_war_party.summon_in_combat(new_copy, context, summon_index+1+i)
+                    context.friendly_war_party.summon_in_combat(new_copy, context, summon_index + 1 + i)
 
             if SECRETS.AVENGE in self.secrets and context.friendly_war_party.live_minions():
                 logger.debug(f'{SECRETS.AVENGE} triggers')
@@ -771,7 +776,7 @@ class SilasDarkmoon(Hero):
                     context.owner.triple_rewards.append(TripleRewardCard(context.owner.tavern_tier))
 
     def hero_info(self) -> Optional[str]:
-        return f'{3-self.tickets_purchased} ticket buys left until discover reward'
+        return f'{3 - self.tickets_purchased} ticket buys left until discover reward'
 
 
 class SirFinleyMrrgglton(Hero):
@@ -781,7 +786,9 @@ class SirFinleyMrrgglton(Hero):
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_START and context.owner.tavern.turn_count == 0:
-            hero_pool = [hero_type() for hero_type in VALHALLA if (hero_type.pool in context.owner.tavern.available_types or hero_type.pool == MONSTER_TYPES.ALL) and hero_type != type(self)]
+            hero_pool = [hero_type() for hero_type in VALHALLA if (
+                        hero_type.pool in context.owner.tavern.available_types or hero_type.pool == MONSTER_TYPES.ALL) and hero_type != type(
+                self)]
             hero_choices = []
             for _ in range(3):
                 random_hero = context.randomizer.select_hero(hero_pool)
@@ -793,7 +800,8 @@ class SirFinleyMrrgglton(Hero):
     def select_discover(self, discover_index: 'DiscoverIndex'):
         self.player.hero_options = self.discover_choices[:]
         self.player.choose_hero(HeroChoiceIndex(discover_index))
-        self.player.hero.handle_event(events.BuyStartEvent(), BuyPhaseContext(self.player, self.player.tavern.randomizer))
+        self.player.hero.handle_event(events.BuyStartEvent(),
+                                      BuyPhaseContext(self.player, self.player.tavern.randomizer))
         self.discover_choices = []
 
 
@@ -868,7 +876,7 @@ class CThun(Hero):
         self.power_uses = 0
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
-                              store_index: Optional['StoreIndex'] = None):
+                        store_index: Optional['StoreIndex'] = None):
         self.power_uses += 1
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
@@ -911,4 +919,5 @@ class Greybough(Hero):
 # TODO: add Tickatus... and darkmoon prizes (ugh)
 
 
-VALHALLA = [member[1] for member in getmembers(sys.modules[__name__], lambda member: isclass(member) and member.__module__ == __name__)]
+VALHALLA = [member[1] for member in
+            getmembers(sys.modules[__name__], lambda member: isclass(member) and member.__module__ == __name__)]

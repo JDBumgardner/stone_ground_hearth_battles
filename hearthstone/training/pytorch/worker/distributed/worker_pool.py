@@ -1,7 +1,7 @@
+import logging
 import os
 from typing import List
 
-import logging
 import torch
 from torch import multiprocessing
 from torch.distributed import rpc
@@ -62,7 +62,7 @@ class DistributedWorkerPool:
             start_method="forkserver",
             join=False
         )
-        rpc.init_rpc(INFERENCE_PROCESS_NAME, rank=0, world_size=num_workers+1,
+        rpc.init_rpc(INFERENCE_PROCESS_NAME, rank=0, world_size=num_workers + 1,
                      rpc_backend_options=rpc_backed_options(self.num_workers))
 
         if self.batched:
@@ -106,5 +106,3 @@ class DistributedWorkerPool:
             self.inference_worker.kill_worker_thread()
         rpc.shutdown()
         self.process_context.join()
-
-

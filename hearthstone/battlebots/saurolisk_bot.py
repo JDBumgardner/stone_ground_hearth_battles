@@ -1,6 +1,5 @@
 import random
 import typing
-from typing import List
 
 from hearthstone.simulator.agent.actions import StandardAction, generate_valid_actions, BuyAction, EndPhaseAction, \
     SummonAction, \
@@ -8,15 +7,15 @@ from hearthstone.simulator.agent.actions import StandardAction, generate_valid_a
     FreezeDecision
 from hearthstone.simulator.agent.agent import Agent
 from hearthstone.simulator.core.card_pool import RabidSaurolisk
-
 from hearthstone.simulator.core.player import Player, BoardIndex
 
 if typing.TYPE_CHECKING:
-    from hearthstone.simulator.core.cards import MonsterCard
+    pass
 
 
 class SauroliskBot(Agent):
     authors = ["Jake Bumgardner"]
+
     def __init__(self, seed: int):
         self.local_random = random.Random(seed)
 
@@ -40,7 +39,8 @@ class SauroliskBot(Agent):
         if summon_actions:
             return summon_actions[0]
 
-        buy_actions = [action for action in all_actions if type(action) is BuyAction and self.desired_card(player.store[action.index])]
+        buy_actions = [action for action in all_actions if
+                       type(action) is BuyAction and self.desired_card(player.store[action.index])]
         if buy_actions:
             return buy_actions[0]
 
@@ -62,4 +62,3 @@ class SauroliskBot(Agent):
 
     async def hero_discover_action(self, player: 'Player') -> 'HeroDiscoverAction':
         return HeroDiscoverAction(self.local_random.choice(range(len(player.hero.discover_choices))))
-

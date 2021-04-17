@@ -6,7 +6,6 @@ from hearthstone.battlebots.priority_functions import PriorityFunctions
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 from hearthstone.simulator.core.randomizer import DefaultRandomizer
 from hearthstone.simulator.host.async_host import AsyncHost
-import hearthstone.simulator.core.hero_pool
 
 
 class GameplayTests(unittest.TestCase):

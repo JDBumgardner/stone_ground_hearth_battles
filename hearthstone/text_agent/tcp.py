@@ -1,17 +1,17 @@
 import asyncio
-import random
 import ipaddress
-from typing import Optional, Dict, Tuple, Set
+import random
+from typing import Optional, Dict, Set
+
 from aioupnp.upnp import UPnP, UPnPError
+
 from hearthstone.text_agent.lighthouse_speech import LIGHTHOUSE_SPEECH
 from hearthstone.text_agent.text_agent import TextAgentProtocol
-
 
 INSULTS = ['fucker', 'douchebag', 'sweetheart', 'incel', 'son of a hamster', 'foot sniffer', 'proud boy', 'hgh bull',
            'MAGA hatter', 'Shillary', 'sleepy', 'low energy', 'schmeeb', LIGHTHOUSE_SPEECH]
 
 TELNET_CTRL_C = b'\xff\xf4\xff\xfd\x06'
-
 
 CARRIER_GRADE_NAT_SUBNET = ipaddress.ip_network('100.64.0.0/10')
 IPV4_TO_6_RELAY_SUBNET = ipaddress.ip_network('192.88.99.0/24')
@@ -84,7 +84,8 @@ class GameServer:
                 set_port_mapping = True
                 print("set port mapping")
             try:
-                server = await asyncio_utils.get_or_create_event_loop().create_server(self.handle_connection, interface, mapped_port)
+                server = await asyncio_utils.get_or_create_event_loop().create_server(self.handle_connection, interface,
+                                                                                      mapped_port)
                 print(f"starting server on {interface}:{mapped_port}")
                 async with server:
                     await server.serve_forever()

@@ -3,8 +3,7 @@ from typing import Dict
 import torch
 from torch import nn
 
-from hearthstone.training.pytorch.encoding.default_encoder import DEFAULT_PLAYER_ENCODING, DEFAULT_CARDS_ENCODING, \
-    DefaultEncoder
+from hearthstone.training.pytorch.encoding.default_encoder import DefaultEncoder
 from hearthstone.training.pytorch.networks.feedforward_net import HearthstoneFFNet
 from hearthstone.training.pytorch.networks.transformer_net import HearthstoneTransformerNet
 

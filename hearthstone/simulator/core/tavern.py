@@ -1,7 +1,7 @@
 import enum
 from typing import Dict, Optional
 
-from hearthstone.simulator.core import hero, combat, events
+from hearthstone.simulator.core import combat, events
 from hearthstone.simulator.core.card_pool import PrintingPress
 from hearthstone.simulator.core.cards import CardList
 from hearthstone.simulator.core.combat import WarParty
@@ -47,7 +47,7 @@ class Tavern:
         self.players[name] = player
         return player
 
-    def add_player_with_hero(self, name: str, hero: Hero=None) -> Player:
+    def add_player_with_hero(self, name: str, hero: Hero = None) -> Player:
         assert self.game_state == GameState.HERO_SELECTION
         if hero is not None:
             self.hero_pool = [remaining_hero for remaining_hero in self.hero_pool if type(remaining_hero) != type(hero)]
@@ -85,7 +85,8 @@ class Tavern:
                 return p1
         raise IndexError("Player not found in tavern pairings {}".format(player))
 
-    def _generate_pairings(self): #TODO figure out algorithm for ded guy someone in the bottom 3 fights the last ded guy
+    def _generate_pairings(
+            self):  # TODO figure out algorithm for ded guy someone in the bottom 3 fights the last ded guy
         fighting_players = [player for player in self.players.values() if not player.dead]
         if len(fighting_players) % 2 != 0:
             last_dead_player = self.losers[-1][1]
@@ -102,7 +103,8 @@ class Tavern:
                 if (name, player) not in self.losers:
                     self.losers.append((name, player))
         if self.turn_count > self._max_turn_count:
-            remaining_players = [(name, player) for name, player in self.players.items() if (name, player) not in self.losers]
+            remaining_players = [(name, player) for name, player in self.players.items() if
+                                 (name, player) not in self.losers]
             self.losers.extend(sorted(remaining_players, key=lambda e: e[1].health))
 
     def game_over(self):

@@ -6,7 +6,6 @@ from hearthstone.simulator.agent.actions import generate_valid_actions, Standard
 from hearthstone.simulator.agent.agent import Agent
 
 if typing.TYPE_CHECKING:
-
     from hearthstone.simulator.core.player import Player
 
 

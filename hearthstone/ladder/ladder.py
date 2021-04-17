@@ -5,7 +5,6 @@ from typing import List, Callable
 
 import trueskill
 
-from hearthstone.simulator.agent.agent import AnnotatingAgent
 from hearthstone.battlebots.cheapo_bot import CheapoBot
 from hearthstone.battlebots.get_bot_contestants import get_priority_bot_contestant_tuples, \
     get_priority_heuristics_bot_contestant_tuples
@@ -13,11 +12,12 @@ from hearthstone.battlebots.no_action_bot import NoActionBot
 from hearthstone.battlebots.random_bot import RandomBot
 from hearthstone.battlebots.saurolisk_bot import SauroliskBot
 from hearthstone.battlebots.supremacy_bot import SupremacyBot
+from hearthstone.simulator.agent.agent import AnnotatingAgent
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 from hearthstone.simulator.host.round_robin_host import RoundRobinHost
+from hearthstone.training.pytorch.agents.pytorch_bot import PytorchBot
 from hearthstone.training.pytorch.encoding.default_encoder import DefaultEncoder
 from hearthstone.training.pytorch.networks.save_load import load_from_saved
-from hearthstone.training.pytorch.agents.pytorch_bot import PytorchBot
 
 
 class ContestantAgentGenerator:
@@ -31,7 +31,7 @@ class ContestantAgentGenerator:
 
 
 class Contestant:
-    def __init__(self, name,  agent_generator: Callable[[], AnnotatingAgent], initial_trueskill=None):
+    def __init__(self, name, agent_generator: Callable[[], AnnotatingAgent], initial_trueskill=None):
         self.name = name
         self.agent_generator = agent_generator
         self.elo = 1200
@@ -88,9 +88,11 @@ def all_contestants():
     all_bots += [Contestant(f"NoActionBot ", lambda: NoActionBot())]
     all_bots += [Contestant(f"CheapoBot", lambda: CheapoBot(3))]
     all_bots += [Contestant(f"SupremacyBot {t}", lambda: SupremacyBot(t, False, i)) for i, t in
-                 enumerate([MONSTER_TYPES.MURLOC, MONSTER_TYPES.BEAST, MONSTER_TYPES.MECH, MONSTER_TYPES.DRAGON, MONSTER_TYPES.DEMON, MONSTER_TYPES.PIRATE])]
+                 enumerate([MONSTER_TYPES.MURLOC, MONSTER_TYPES.BEAST, MONSTER_TYPES.MECH, MONSTER_TYPES.DRAGON,
+                            MONSTER_TYPES.DEMON, MONSTER_TYPES.PIRATE])]
     all_bots += [Contestant(f"SupremacyUpgradeBot {t}", lambda: SupremacyBot(t, True, i)) for i, t in
-                 enumerate([MONSTER_TYPES.MURLOC, MONSTER_TYPES.BEAST, MONSTER_TYPES.MECH, MONSTER_TYPES.DRAGON, MONSTER_TYPES.DEMON, MONSTER_TYPES.PIRATE])]
+                 enumerate([MONSTER_TYPES.MURLOC, MONSTER_TYPES.BEAST, MONSTER_TYPES.MECH, MONSTER_TYPES.DRAGON,
+                            MONSTER_TYPES.DEMON, MONSTER_TYPES.PIRATE])]
     all_bots += [Contestant("SauroliskBot", lambda: SauroliskBot(5))]
     all_bots += [Contestant(name, lambda: bot) for name, bot in get_priority_bot_contestant_tuples()]
     all_bots += [Contestant(name, lambda: bot) for name, bot in get_priority_heuristics_bot_contestant_tuples()]
@@ -148,7 +150,8 @@ def load_ratings(contestants: List[Contestant], path):
     for contestant in contestants:
         if contestant.name in standings_dict:
             contestant.elo = standings_dict[contestant.name]["elo"]
-            contestant.trueskill = trueskill.Rating(standings_dict[contestant.name]["trueskill.mu"], standings_dict[contestant.name]["trueskill.sigma"])
+            contestant.trueskill = trueskill.Rating(standings_dict[contestant.name]["trueskill.mu"],
+                                                    standings_dict[contestant.name]["trueskill.sigma"])
             contestant.games_played = standings_dict[contestant.name]["games_played"]
 
 
@@ -164,4 +167,3 @@ def save_ratings(contestants: List[Contestant], path):
         in ranked_contestants]
     with open(path, "w") as f:
         json.dump(standings, f, indent=4)
-

@@ -7,6 +7,7 @@ class RankingAnnotator(Observer):
     """
     This annotator simply records the final ranking at the end of the game.
     """
+
     def name(self) -> str:
         return "RankingAnnotator"
 

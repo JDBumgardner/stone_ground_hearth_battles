@@ -33,4 +33,6 @@ class ElistraTheImmortal(MonsterCard):
     legendary = True
 
 
-REMOVED_CARDS = set(member[1] for member in getmembers(sys.modules[__name__], lambda member: isclass(member) and issubclass(member, MonsterCard) and member.__module__ == __name__))
+REMOVED_CARDS = set(member[1] for member in getmembers(sys.modules[__name__],
+                                                       lambda member: isclass(member) and issubclass(member,
+                                                                                                     MonsterCard) and member.__module__ == __name__))
