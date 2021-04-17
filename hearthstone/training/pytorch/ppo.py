@@ -12,7 +12,7 @@ from torch import optim, nn
 from torch.utils.tensorboard import SummaryWriter
 
 from hearthstone.ladder.ladder import Contestant, load_ratings, ContestantAgentGenerator
-from hearthstone.simulator.agent import RearrangeCardsAction, BuyAction, EndPhaseAction, SellAction, SummonAction, \
+from hearthstone.simulator.agent.actions import RearrangeCardsAction, BuyAction, EndPhaseAction, SellAction, SummonAction, \
     RerollAction, DiscoverChoiceAction, TavernUpgradeAction, TripleRewardsAction, HeroPowerAction, FreezeDecision, \
     BananaAction, RedeemGoldCoinAction
 from hearthstone.simulator.core.hero import EmptyHero

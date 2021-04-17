@@ -4,7 +4,7 @@ from typing import List, Optional
 
 import torch
 
-from hearthstone.simulator.agent import StandardAction
+from hearthstone.simulator.agent.actions import StandardAction
 from hearthstone.simulator.core.player import Player
 from hearthstone.training.pytorch.encoding.default_encoder import DEFAULT_PLAYER_ENCODING, DEFAULT_CARDS_ENCODING, \
     ALL_ACTIONS, ALL_ACTIONS_DICT

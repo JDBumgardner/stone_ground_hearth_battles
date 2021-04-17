@@ -6,8 +6,9 @@ from typing import Dict, List, Any, Tuple
 import torch
 from torch import nn, multiprocessing
 
-from hearthstone.simulator.agent import AnnotatingAgent, StandardAction, RearrangeCardsAction, DiscoverChoiceAction, \
+from hearthstone.simulator.agent.actions import StandardAction, RearrangeCardsAction, DiscoverChoiceAction, \
     HeroDiscoverAction, Action
+from hearthstone.simulator.agent.agent import AnnotatingAgent
 from hearthstone.training.pytorch.encoding.state_encoding import EncodedActionSet, State, Encoder
 from hearthstone.training.pytorch.policy_gradient import StateBatch
 from hearthstone.training.pytorch.replay import ActorCriticGameStepDebugInfo, ActorCriticGameStepInfo
