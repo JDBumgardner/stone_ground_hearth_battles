@@ -37,3 +37,9 @@ profiles, run, e.g.
 ```shell
 $ PYTHONPATH=. python -m cProfile -o benchmarks/profiles/simulation.cprof benchmarks/benchmark_simulation.py
 ```
+
+The resulting profile can be viewed using snakeviz:
+
+```shell
+$ snakeviz benchmarks/profiles/simulation.cprof
+```
