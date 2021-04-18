@@ -35,5 +35,5 @@ Therefore, we have benchmarks to profile the performance of our simulator, and i
 profiles, run, e.g.
 
 ```shell
-$ PYTHONPATH=. python -m cProfile benchmarks/benchmark_simulation.py -o benchmarks/profiles/simulation.cprof
+$ PYTHONPATH=. python -m cProfile -o benchmarks/profiles/simulation.cprof benchmarks/benchmark_simulation.py
 ```
