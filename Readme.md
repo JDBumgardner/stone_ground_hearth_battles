@@ -35,7 +35,7 @@ Therefore, we have benchmarks to profile the performance of our simulator, and i
 profiles, run, e.g.
 
 ```shell
-$ PYTHONPATH=. python -m cProfile -o benchmarks/profiles/simulation.cprof benchmarks/benchmark_simulation.py
+$ PYTHONPATH=. python3 -m cProfile -o benchmarks/profiles/simulation.cprof benchmarks/benchmark_simulation.py
 ```
 
 The resulting profile can be viewed using snakeviz:
