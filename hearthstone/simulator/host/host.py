@@ -22,9 +22,7 @@ class Host:
 
     def __init__(self, agents: Dict[str, 'AnnotatingAgent'], observers: Optional[List['Observer']] = None,
                  randomizer: Optional['Randomizer'] = None):
-        self.tavern = Tavern()
-        if randomizer:
-            self.tavern.randomizer = randomizer
+        self.tavern = Tavern(randomizer=randomizer)
         self.agents = agents
         for player_name in sorted(agents.keys()):  # Sorting is important for replays to be exact with RNG.
             self.tavern.add_player(player_name)

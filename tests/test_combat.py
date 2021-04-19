@@ -2,6 +2,8 @@ import random
 import unittest
 from collections import deque
 
+import logging
+
 from hearthstone.simulator.core.adaptations import AdaptBuffs
 from hearthstone.simulator.core.card_graveyard import *
 from hearthstone.simulator.core.card_pool import *

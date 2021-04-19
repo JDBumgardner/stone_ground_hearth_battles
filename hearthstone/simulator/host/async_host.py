@@ -10,10 +10,6 @@ from hearthstone.simulator.replay.replay import Replay
 
 
 class AsyncHost(Host):
-    def __init__(self, agents: Dict[str, 'AnnotatingAgent'],
-                 observers: Optional[List['Observer']] = None,
-                 randomizer: Optional[Randomizer] = None):
-        super().__init__(agents, observers, randomizer)
 
     def start_game(self):
         asyncio_utils.get_or_create_event_loop().run_until_complete(self.async_start_game())
@@ -48,6 +44,8 @@ class AsyncHost(Host):
                     break
                 else:
                     action, agent_annotation = await agent.annotated_buy_phase_action(player)
+                    print(sum(self.tavern.randomizer.rand.getstate()[1]))
+                    print(player_name, action, player.coins, player.store, player.in_play)
                     self._apply_and_record(player_name, action, agent_annotation)
                     if type(action) is EndPhaseAction:
                         break

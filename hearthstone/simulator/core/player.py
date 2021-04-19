@@ -131,9 +131,7 @@ class Player:
         self.broadcast_buy_phase_event(events.TavernUpgradeEvent())
 
     def valid_upgrade_tavern(self) -> bool:
-        if self.dead:
-            return False
-        if self.discover_queue:
+        if not self.valid_standard_action():
             return False
         if self.tavern_tier >= self.max_tier():
             return False

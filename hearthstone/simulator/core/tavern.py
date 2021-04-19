@@ -9,16 +9,17 @@ from hearthstone.simulator.core.hero import Hero
 from hearthstone.simulator.core.hero_pool import VALHALLA
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 from hearthstone.simulator.core.player import Player
-from hearthstone.simulator.core.randomizer import DefaultRandomizer
+from hearthstone.simulator.core.randomizer import DefaultRandomizer, Randomizer
 
 
 class Tavern:
-    def __init__(self, restrict_types: Optional[bool] = True, include_graveyard: Optional[bool] = False):
+    def __init__(self, randomizer: Optional[Randomizer] = None,
+                 restrict_types: Optional[bool] = True, include_graveyard: Optional[bool] = False):
         self.players: Dict[str, Player] = {}
         self.turn_count = 0
         self._max_turn_count = 50
         self.current_player_pairings = []
-        self.randomizer = DefaultRandomizer()
+        self.randomizer = randomizer or DefaultRandomizer()
         self.available_types = MONSTER_TYPES.single_types()
         if restrict_types:
             self.restrict_monster_types()
@@ -29,8 +30,11 @@ class Tavern:
         self.game_state = GameState.HERO_SELECTION
 
     def restrict_monster_types(self):
+        print(f"The Seed is {self.randomizer.seed}")
         for _ in range(2):
-            self.available_types.remove(self.randomizer.select_monster_type(self.available_types, 0))
+            monster_types = self.randomizer.select_monster_type(self.available_types, 0)
+            print(f"Removing monster types {monster_types}")
+            self.available_types.remove(monster_types)
 
     def select_three_heroes(self):
         hero_choices = []
@@ -43,6 +47,7 @@ class Tavern:
     def add_player(self, name: str) -> Player:
         assert self.game_state == GameState.HERO_SELECTION
         hero_choices = self.select_three_heroes()
+        print(f"Player {name} has these hero choices: {hero_choices}")
         player = Player(self, name, hero_choices)
         self.players[name] = player
         return player

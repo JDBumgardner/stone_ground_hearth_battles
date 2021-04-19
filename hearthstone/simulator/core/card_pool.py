@@ -1,7 +1,7 @@
 import sys
 import types
 from inspect import getmembers, isclass
-from typing import Union, List, Set, Type, Optional
+from typing import Union, List, Type, Optional
 
 from hearthstone.simulator.core import combat
 from hearthstone.simulator.core.adaptations import valid_adaptations
@@ -2397,17 +2397,17 @@ class SoulDevourer(MonsterCard):
 
 
 class PrintingPress:
-    cards: Set[Type['MonsterCard']] = set(member[1] for member in getmembers(sys.modules[__name__],
-                                                                             lambda member: isclass(
-                                                                                 member) and issubclass(member,
-                                                                                                        MonsterCard) and member.__module__ == __name__))
+    cards: List[Type['MonsterCard']] = [member[1] for member in getmembers(sys.modules[__name__],
+                                                                           lambda member: isclass(
+                                                                               member) and issubclass(member,
+                                                                                                      MonsterCard) and member.__module__ == __name__)]
     cards_per_tier = {1: 16, 2: 15, 3: 13, 4: 11, 5: 9, 6: 7}
 
     @classmethod
     def make_cards(cls, available_types: List['MONSTER_TYPES'],
                    include_graveyard: Optional[bool] = False) -> 'CardList':
         cardlist = []
-        for card in cls.cards | (REMOVED_CARDS if include_graveyard else set()):
+        for card in cls.cards + (REMOVED_CARDS if include_graveyard else []):
             if not card.base_token and (card.pool in available_types or card.pool == MONSTER_TYPES.ALL):
                 cardlist.extend([card() for _ in range(cls.cards_per_tier[card.tier])])
         return CardList(cardlist)

@@ -12,8 +12,8 @@ if typing.TYPE_CHECKING:
 
 class CombatEventQueue:
     def __init__(self, war_party_1: 'WarParty', war_party_2: 'WarParty',
-                 randomizer: Optional['Randomizer'] = DefaultRandomizer()):
-        self.randomizer = randomizer
+                 randomizer: Optional['Randomizer'] = None):
+        self.randomizer = randomizer or DefaultRandomizer()
         self.queues = {
             EVENTS.DEATHRATTLE_TRIGGERED: {war_party_1: deque(), war_party_2: deque()},
             EVENTS.DIES: {war_party_1: deque(), war_party_2: deque()}

@@ -3,7 +3,7 @@ import typing
 from typing import List, Callable
 
 from hearthstone.simulator.agent.actions import StandardAction, generate_valid_actions, BuyAction, EndPhaseAction, \
-    SummonAction, DiscoverChoiceAction, RearrangeCardsAction, HeroDiscoverAction, FreezeDecision
+    SummonAction, DiscoverChoiceAction, RearrangeCardsAction, HeroDiscoverAction, FreezeDecision, RerollAction
 from hearthstone.simulator.agent.agent import Agent
 from hearthstone.simulator.core.player import Player, StoreIndex
 
@@ -35,7 +35,7 @@ class HeroBot(Agent):
         if not player.room_on_board():
             hero_actions = [action for action in all_actions if type(action) is HeroPowerAction]
             if hero_actions:
-                return random.choice(hero_actions)
+                return self.local_random.choice(hero_actions)
 
         top_hand_priority = max([self.priority(player, card) for card in player.hand], default=None)
         top_store_priority = max([self.priority(player, card) for card in player.store], default=None)

@@ -79,7 +79,7 @@ class DefaultRandomizer(Randomizer):
         return self.rand.choice(cards)
 
     def select_player_pairings(self, players: List['Player']) -> List[Tuple['Player', 'Player']]:
-        random.shuffle(players)
+        self.rand.shuffle(players)
         number_of_battles = len(players) // 2
         return list(zip(players[:number_of_battles], players[number_of_battles:]))
 

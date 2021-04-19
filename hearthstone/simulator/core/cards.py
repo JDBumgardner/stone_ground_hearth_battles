@@ -1,9 +1,11 @@
+import collections
 import copy
 import enum
 import itertools
 import typing
 from collections import defaultdict
 from typing import List, Optional, Callable, Type, Union, Iterator
+from boltons.setutils import IndexedSet
 
 from hearthstone.simulator.core import events
 from hearthstone.simulator.core.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
@@ -277,7 +279,8 @@ class MonsterCard:
 
 class CardList:
     def __init__(self, cards: List[MonsterCard]):
-        self.cards_by_tier = defaultdict(lambda: set())
+        # We use an IndexedSet instead of a set here for deterministic iteration order.
+        self.cards_by_tier = defaultdict(lambda: IndexedSet())
         for card in cards:
             self.cards_by_tier[card.tier].add(card)
 
