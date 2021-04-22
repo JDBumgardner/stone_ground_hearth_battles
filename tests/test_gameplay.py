@@ -1,5 +1,7 @@
 import unittest
 
+import logging
+
 from hearthstone.battlebots.early_game_bot import EarlyGameBot
 from hearthstone.battlebots.priority_bot import PriorityBot
 from hearthstone.battlebots.priority_functions import PriorityFunctions
@@ -22,6 +24,7 @@ class GameplayTests(unittest.TestCase):
         host.play_game()
 
     def test_replay_same_outcome(self):
+        logging.basicConfig(level=logging.DEBUG)
         # TODO make replays work so this test passes.  This requires handling the ordering of players joining and
         # Choosing their heros.
         host = AsyncHost({
@@ -35,7 +38,7 @@ class GameplayTests(unittest.TestCase):
         host.play_game()
         replay = host.get_replay()
         replayed_tavern = replay.run_replay()
-        self.assertListEqual(host.tavern.losers, replayed_tavern.losers)
+        self.assertListEqual([name for name, _ in host.tavern.losers], [name for name, _ in replayed_tavern.losers])
 
 
 if __name__ == '__main__':

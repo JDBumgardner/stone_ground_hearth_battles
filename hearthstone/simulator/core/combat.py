@@ -3,6 +3,8 @@ import logging
 import typing
 from typing import Optional, List, Set
 
+from boltons.setutils import IndexedSet
+
 from hearthstone.simulator.core import events
 from hearthstone.simulator.core.combat_event_queue import CombatEventQueue
 from hearthstone.simulator.core.events import CombatPhaseContext, EVENTS
@@ -107,7 +109,7 @@ def fight_boards(war_party_1: 'WarParty', war_party_2: 'WarParty', randomizer: '
     #  Expect to pass half boards into fight_boards in random order i.e. by shuffling players in combat step
     #  Half boards are copies, the originals state cannot be changed in the combat step
     combat_event_queue = CombatEventQueue(war_party_1, war_party_2, randomizer)
-    damaged_minions = set()
+    damaged_minions = IndexedSet()
     context = CombatPhaseContext(war_party_1, war_party_2, randomizer, combat_event_queue, damaged_minions)
     context.broadcast_combat_event(events.CombatPrePhaseEvent())
     logger.debug(
@@ -131,6 +133,7 @@ def fight_boards(war_party_1: 'WarParty', war_party_2: 'WarParty', randomizer: '
                 break
             if attacker and not attacker.dead:
                 logger.debug(f'{attacking_war_party.owner} is attacking {defending_war_party.owner}')
+                logger.debug(f'War Parties: {attacking_war_party.board} {defending_war_party.board}')
                 start_attack(attacker, defender, attacking_war_party, defending_war_party, randomizer,
                              combat_event_queue, damaged_minions)
         if not defending_war_party.attackers():

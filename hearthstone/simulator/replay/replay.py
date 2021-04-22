@@ -59,11 +59,12 @@ class Replay:
             print(len(end_phase_actions), len(self.players))
             replay_step.action.apply(tavern.players[replay_step.player])
             if len(end_phase_actions) + len(tavern.losers) == len(self.players):
-                while i + 1 < len(self.steps) and self.steps[i + 1].action is RearrangeCardsAction:
+                while i + 1 < len(self.steps) and type(self.steps[i + 1].action) is RearrangeCardsAction:
                     self.steps[i + 1].action.apply(tavern.players[replay_step.player])
                     i += 1
                 tavern.combat_step()
                 end_phase_actions = set()
-                tavern.buying_step()
+                if not tavern.game_over():
+                    tavern.buying_step()
             i += 1
         return tavern

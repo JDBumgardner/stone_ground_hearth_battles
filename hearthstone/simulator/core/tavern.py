@@ -1,5 +1,8 @@
+import collections
 import enum
 from typing import Dict, Optional
+
+import logging
 
 from hearthstone.simulator.core import combat, events
 from hearthstone.simulator.core.card_pool import PrintingPress
@@ -11,11 +14,12 @@ from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 from hearthstone.simulator.core.player import Player
 from hearthstone.simulator.core.randomizer import DefaultRandomizer, Randomizer
 
+logger = logging.getLogger(__name__)
 
 class Tavern:
     def __init__(self, randomizer: Optional[Randomizer] = None,
                  restrict_types: Optional[bool] = True, include_graveyard: Optional[bool] = False):
-        self.players: Dict[str, Player] = {}
+        self.players: collections.OrderedDict[str, Player] = collections.OrderedDict()
         self.turn_count = 0
         self._max_turn_count = 50
         self.current_player_pairings = []
@@ -98,6 +102,7 @@ class Tavern:
             fighting_players.append(last_dead_player)
 
         self.current_player_pairings = self.randomizer.select_player_pairings(fighting_players)
+        logging.debug(f"Paired players: {self.current_player_pairings}")
 
     def _update_losers(self):
         for name, player in self.players.items():
