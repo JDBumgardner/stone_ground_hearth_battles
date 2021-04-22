@@ -203,7 +203,8 @@ def plot_replay(replay: Replay, player_name: str, tensorboard: SummaryWriter, gl
             annotations.board,
             )
         rearrange_logit = step.agent_annotation.debug.permutation_logits.squeeze(0).tolist()
-        assert len(rearrange_logit) == len(annotations.board), (rearrange_logit, annotations.board)
+        assert len(rearrange_logit) >= len(annotations.board)
+        rearrange_logit = rearrange_logit[:len(annotations.board)]
         stores.append(annotations.store)
         hands.append(annotations.hand)
         boards.append(annotations.board)
