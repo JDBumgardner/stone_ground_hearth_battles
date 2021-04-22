@@ -44,8 +44,6 @@ class AsyncHost(Host):
                     break
                 else:
                     action, agent_annotation = await agent.annotated_buy_phase_action(player)
-                    print(sum(self.tavern.randomizer.rand.getstate()[1]))
-                    print(player_name, action, player.coins, player.store, player.in_play)
                     self._apply_and_record(player_name, action, agent_annotation)
                     if type(action) is EndPhaseAction:
                         break

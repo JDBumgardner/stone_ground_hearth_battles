@@ -230,7 +230,7 @@ class RedeemGoldCoinAction(StandardAction):
         player.redeem_gold_coin()
 
     def valid(self, player: 'Player') -> bool:
-        return player.gold_coins >= 1 and not player.dead
+        return player.gold_coins >= 1 and player.valid_standard_action()
 
 
 class BananaAction(StandardAction):
