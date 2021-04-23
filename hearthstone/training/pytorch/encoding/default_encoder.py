@@ -128,7 +128,7 @@ def discover_indices() -> List[DiscoverIndex]:
 
 def _all_actions() -> ActionSet:
     player_action_set = [TripleRewardsAction(), TavernUpgradeAction(), RerollAction(), HeroPowerAction(),
-                         HeroDiscoverAction(0), RedeemGoldCoinAction(), EndPhaseAction(FreezeDecision.NO_FREEZE),
+                         HeroDiscoverAction(DiscoverIndex(0)), RedeemGoldCoinAction(), EndPhaseAction(FreezeDecision.NO_FREEZE),
                          EndPhaseAction(FreezeDecision.FREEZE),
                          EndPhaseAction(FreezeDecision.UNFREEZE)]
     store_action_set = [

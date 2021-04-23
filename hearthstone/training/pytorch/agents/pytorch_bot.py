@@ -64,7 +64,7 @@ class PytorchBot(AnnotatingAgent):
 
     async def annotated_buy_phase_action(self, player: 'Player') -> (StandardAction, ActorCriticGameStepInfo):
         action, ac_game_step_info = await self.act(player, False)
-        assert isinstance(action, StandardAction)
+        assert isinstance(action, StandardAction), action
         return action, ac_game_step_info
 
     async def annotated_rearrange_cards(self, player: 'Player') -> (RearrangeCardsAction, ActorCriticGameStepInfo):

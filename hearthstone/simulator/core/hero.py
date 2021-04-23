@@ -99,7 +99,7 @@ class Hero:
         pass
 
     def valid_select_discover(self, discover_index: 'DiscoverIndex') -> bool:
-        return self.discover_choices and discover_index in range(len(self.discover_choices))
+        return bool(self.discover_choices) and discover_index in range(len(self.discover_choices))
 
     def hero_info(self) -> Optional[str]:
         return None
