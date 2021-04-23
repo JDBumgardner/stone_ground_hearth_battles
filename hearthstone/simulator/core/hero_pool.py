@@ -643,7 +643,7 @@ class TheGreatAkazamzarak(Hero):
         available_secrets = SECRETS.remaining_secrets(self)
         if self.discovered_ice_block and SECRETS.ICE_BLOCK in available_secrets:
             available_secrets.remove(SECRETS.ICE_BLOCK)
-        for _ in range(3)
+        for _ in range(3):
             if available_secrets:
                 secret = context.randomizer.select_secret(available_secrets)
                 available_secrets.remove(secret)
