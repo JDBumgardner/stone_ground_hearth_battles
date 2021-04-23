@@ -360,7 +360,7 @@ class PPOLearner(GlobalStepContext):
                 replay_buffer.clear()
                 continue
             if len(replay_buffer) >= min_replay_buffer_size:
-                print(len(replay_buffer))
+                print(f"Replay buffer contains {len(replay_buffer)} transitions.")
                 learning_net.train()
                 print(f"Running {self.hparams['ppo_epochs']} epochs of PPO optimization...")
                 for i in range(self.hparams["ppo_epochs"]):

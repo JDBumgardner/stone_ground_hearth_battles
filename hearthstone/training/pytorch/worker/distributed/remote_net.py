@@ -17,11 +17,13 @@ class RemoteNet:
     async def __call__(self, *args):
         loop = asyncio.get_event_loop()
         f = loop.create_future()
-        self.inference_queue.rpc_async().infer(self.net_name, args).add_done_callback(lambda fut:
-                                                                                      loop.call_soon_threadsafe(
-                                                                                          f.set_result, fut.value()
-                                                                                      )
-                                                                                      )
+        self.inference_queue.rpc_async().infer(
+            self.net_name, args).add_done_callback(
+            lambda fut:
+            loop.call_soon_threadsafe(
+                f.set_result, fut.value()
+            )
+        )
         return await f
 
 

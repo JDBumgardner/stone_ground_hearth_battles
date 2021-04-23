@@ -6,7 +6,7 @@ import torch
 
 from hearthstone.simulator.agent.actions import TripleRewardsAction, TavernUpgradeAction, RerollAction, \
     EndPhaseAction, SummonAction, BuyAction, SellAction, StandardAction, DiscoverChoiceAction, HeroPowerAction, \
-    FreezeDecision, BananaAction, RedeemGoldCoinAction
+    FreezeDecision, BananaAction, RedeemGoldCoinAction, HeroDiscoverAction
 from hearthstone.simulator.core.card_pool import PrintingPress
 from hearthstone.simulator.core.cards import CardLocation
 from hearthstone.simulator.core.hero import EmptyHero
@@ -128,7 +128,7 @@ def discover_indices() -> List[DiscoverIndex]:
 
 def _all_actions() -> ActionSet:
     player_action_set = [TripleRewardsAction(), TavernUpgradeAction(), RerollAction(), HeroPowerAction(),
-                         RedeemGoldCoinAction(), EndPhaseAction(FreezeDecision.NO_FREEZE),
+                         HeroDiscoverAction(0), RedeemGoldCoinAction(), EndPhaseAction(FreezeDecision.NO_FREEZE),
                          EndPhaseAction(FreezeDecision.FREEZE),
                          EndPhaseAction(FreezeDecision.UNFREEZE)]
     store_action_set = [

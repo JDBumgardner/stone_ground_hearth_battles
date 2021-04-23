@@ -643,10 +643,11 @@ class TheGreatAkazamzarak(Hero):
         available_secrets = SECRETS.remaining_secrets(self)
         if self.discovered_ice_block and SECRETS.ICE_BLOCK in available_secrets:
             available_secrets.remove(SECRETS.ICE_BLOCK)
-        for _ in range(3):
-            secret = context.randomizer.select_secret(available_secrets)
-            available_secrets.remove(secret)
-            self.discover_choices.append(secret)
+        for _ in range(3)
+            if available_secrets:
+                secret = context.randomizer.select_secret(available_secrets)
+                available_secrets.remove(secret)
+                self.discover_choices.append(secret)
 
     def select_discover(self, discover_index: 'DiscoverIndex'):
         secret = self.discover_choices[discover_index]

@@ -495,7 +495,7 @@ class Player:
         return self.hero.valid_select_discover(discover_index)
 
     def valid_standard_action(self):
-        return not self.dead and not self.discover_queue
+        return not self.dead and not self.discover_queue and not self.hero.discover_choices
 
     def current_build(self) -> Tuple[Optional['MONSTER_TYPES'], Optional[int]]:
         cards_by_type = {monster_type.name: 0 for monster_type in MONSTER_TYPES.single_types()}
