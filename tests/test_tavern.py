@@ -1,3 +1,4 @@
+import logging
 import unittest
 
 from hearthstone.simulator.agent.actions import generate_standard_actions, EndPhaseAction
@@ -558,8 +559,8 @@ class CardTests(BattleGroundsTestCase):
         player_1.purchase(StoreIndex(0))
         player_1.summon_from_hand(HandIndex(0))
         player_1.sell_minion(BoardIndex(0))
-        self.assertEqual(player_1.store[0].attack, 4)
-        self.assertEqual(player_1.store[0].health, 5)
+        self.assertEqual(player_1.store[0].attack, 5)
+        self.assertEqual(player_1.store[0].health, 4)
 
     def test_deck_swabbie(self):
         tavern = Tavern(restrict_types=False)
@@ -929,7 +930,7 @@ class CardTests(BattleGroundsTestCase):
         self.assertCardListEquals(player_1.in_play, [PackLeader])
         player_1.summon_from_hand(HandIndex(0))
         self.assertCardListEquals(player_1.in_play, [PackLeader, RabidSaurolisk])
-        self.assertEqual(player_1.in_play[0].attack, 2)
+        self.assertEqual(player_1.in_play[0].attack, 3)
         self.assertEqual(player_1.in_play[0].health, 3)
         self.assertEqual(player_1.in_play[1].attack, 5)
         self.assertEqual(player_1.in_play[1].health, 2)
@@ -1771,17 +1772,17 @@ class CardTests(BattleGroundsTestCase):
         player_1.hero_power()
         self.assertCardListEquals(player_1.in_play, [MurlocTidehunter, MurlocScout, FiendishServant,
                                                      DragonspawnLieutenant, Sellemental, AlleyCat, TabbyCat])
-        self.assertEqual(player_1.in_play[0].attack, player_1.in_play[0].base_attack + 2)
+        self.assertEqual(player_1.in_play[0].attack, player_1.in_play[0].base_attack + 1)
         self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health + 1)
         self.assertEqual(player_1.in_play[1].attack, player_1.in_play[1].base_attack)
         self.assertEqual(player_1.in_play[1].health, player_1.in_play[1].base_health)
-        self.assertEqual(player_1.in_play[2].attack, player_1.in_play[2].base_attack + 2)
+        self.assertEqual(player_1.in_play[2].attack, player_1.in_play[2].base_attack + 1)
         self.assertEqual(player_1.in_play[2].health, player_1.in_play[2].base_health + 1)
-        self.assertEqual(player_1.in_play[3].attack, player_1.in_play[3].base_attack + 2)
+        self.assertEqual(player_1.in_play[3].attack, player_1.in_play[3].base_attack + 1)
         self.assertEqual(player_1.in_play[3].health, player_1.in_play[3].base_health + 1)
-        self.assertEqual(player_1.in_play[4].attack, player_1.in_play[4].base_attack + 2)
+        self.assertEqual(player_1.in_play[4].attack, player_1.in_play[4].base_attack + 1)
         self.assertEqual(player_1.in_play[4].health, player_1.in_play[4].base_health + 1)
-        self.assertEqual(player_1.in_play[5].attack, player_1.in_play[5].base_attack + 2)
+        self.assertEqual(player_1.in_play[5].attack, player_1.in_play[5].base_attack + 1)
         self.assertEqual(player_1.in_play[5].health, player_1.in_play[5].base_health + 1)
         self.assertEqual(player_1.in_play[6].attack, player_1.in_play[6].base_attack)
         self.assertEqual(player_1.in_play[6].health, player_1.in_play[6].base_health)
@@ -2104,7 +2105,7 @@ class CardTests(BattleGroundsTestCase):
         player_1.summon_from_hand(HandIndex(0))
         player_1.hero_power(board_index=BoardIndex(0))
         self.assertEqual(len(player_1.in_play), 0)
-        self.assertEqual(len(player_1.discover_queue[0]), 3)
+        self.assertEqual(len(player_1.discover_queue[0]), 2)
         for card in player_1.discover_queue[0]:
             self.assertEqual(card.tier, 2)
 
@@ -2120,7 +2121,7 @@ class CardTests(BattleGroundsTestCase):
         player_1.summon_from_hand(HandIndex(0))
         player_1.hero_power(board_index=BoardIndex(0))
         self.assertEqual(len(player_1.in_play), 0)
-        self.assertEqual(len(player_1.discover_queue[0]), 3)
+        self.assertEqual(len(player_1.discover_queue[0]), 2)
         for card in player_1.discover_queue[0]:
             self.assertEqual(card.tier, 1)
 
