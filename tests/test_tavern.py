@@ -3791,6 +3791,20 @@ class CardTests(BattleGroundsTestCase):
         self.assertEqual(player_2.health, 34)
         self.assertEqual(player_1.in_play[1].attack, player_1.in_play[1].base_attack + 2)
 
+    def test_overlord_saurfang(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong", OverlordSaurfang())
+        player_2 = tavern.add_player_with_hero("lucy")
+        for _ in range(4):
+            tavern.buying_step()
+            tavern.combat_step()
+        tavern.buying_step()
+        player_1.hero_power()
+        player_1.purchase(StoreIndex(0))
+        player_1.purchase(StoreIndex(0))
+        self.assertEqual(player_1.hand[0].attack, player_1.hand[0].base_attack + 5)
+        self.assertEqual(player_1.hand[1].attack, player_1.hand[1].base_attack)
+
 
 if __name__ == '__main__':
     unittest.main()
