@@ -1757,6 +1757,20 @@ class CombatTests(BattleGroundsTestCase):
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 38)
 
+    def test_barrens_blacksmith(self):
+        tavern = Tavern()
+        adam = tavern.add_player_with_hero("Adam")
+        ethan = tavern.add_player_with_hero("Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        blacksmith = BarrensBlacksmith()
+        blacksmith.taunt = True
+        adams_war_party.board = [blacksmith, AlleyCat()]
+        ethans_war_party.board = [DragonspawnLieutenant(), DragonspawnLieutenant(), AlleyCat(), PackLeader()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+
 
 if __name__ == '__main__':
     unittest.main()

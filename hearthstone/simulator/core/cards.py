@@ -92,6 +92,7 @@ class MonsterCard:
         self.token = self.base_token
         self.link: Optional['MonsterCard'] = None  # links a card during combat to itself in the buy phase board
         self.dealt_lethal_damage_by = None
+        self.frenzy_triggered = False
 
     def __repr__(self):
         rep = f"{type(self).__name__} {self.attack}/{self.health} (t{self.tier})"  # TODO: add a proper enum to the monster typing
@@ -128,6 +129,9 @@ class MonsterCard:
             combat_phase_context.broadcast_combat_event(events.CardDamagedEvent(self, foe=foe))
             if self.is_dying():
                 self.dealt_lethal_damage_by = foe
+            elif self.health >= 0 and not self.dead and not self.frenzy_triggered:
+                self.frenzy(combat_phase_context)
+                self.frenzy_triggered = True
 
     def resolve_death(self, context: CombatPhaseContext, foe: Optional['MonsterCard'] = None):
         if self.is_dying():
@@ -201,6 +205,9 @@ class MonsterCard:
             context.owner.remove_board_card(self)
 
     def overkill(self, context: CombatPhaseContext):
+        return
+
+    def frenzy(self, context: CombatPhaseContext):
         return
 
     def dissolve(self) -> List['MonsterCard']:

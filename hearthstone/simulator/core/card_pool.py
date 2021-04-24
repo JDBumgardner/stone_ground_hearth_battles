@@ -1241,15 +1241,15 @@ class KingBagurgle(MonsterCard):
     mana_cost = 6
 
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
+        bonus = 4 if self.golden else 2
         for card in context.owner.in_play:
             if card.check_type(MONSTER_TYPES.MURLOC) and card != self:
-                bonus = 4 if self.golden else 2
                 card.attack += bonus
                 card.health += bonus
 
     def base_deathrattle(self, context: CombatPhaseContext):
+        bonus = 4 if self.golden else 2
         for card in context.friendly_war_party.board:
-            bonus = 4 if self.golden else 2
             if card.check_type(MONSTER_TYPES.MURLOC) and card != self:
                 card.attack += bonus
                 card.health += bonus
@@ -1321,9 +1321,9 @@ class GoldrinnTheGreatWolf(MonsterCard):
     mana_cost = 8
 
     def base_deathrattle(self, context: CombatPhaseContext):
+        bonus = 10 if self.golden else 5
         for card in context.friendly_war_party.board:
             if card.check_type(MONSTER_TYPES.BEAST):
-                bonus = 10 if self.golden else 5
                 card.attack += bonus
                 card.health += bonus
 
@@ -2256,7 +2256,7 @@ class Bigfernal(MonsterCard):
     def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if (event.event is EVENTS.SUMMON_BUY or (
                 event.event is EVENTS.SUMMON_COMBAT and event.card in context.friendly_war_party.board)) and event.card.check_type(
-            MONSTER_TYPES.DEMON) and not event.card == self:
+                MONSTER_TYPES.DEMON) and not event.card == self:
             bonus = 2 if self.golden else 1
             self.attack += bonus
             self.health += bonus
@@ -2370,6 +2370,20 @@ class SoulDevourer(MonsterCard):
 
     def valid_battlecry_target(self, card: 'MonsterCard') -> bool:
         return card.check_type(MONSTER_TYPES.DEMON)
+
+
+class BarrensBlacksmith(MonsterCard):
+    tier = 3
+    monster_type = None
+    base_attack = 3
+    base_health = 5
+
+    def frenzy(self, context: CombatPhaseContext):
+        bonus = 4 if self.golden else 2
+        for card in context.friendly_war_party.board:
+            if card != self:
+                card.attack += bonus
+                card.health += bonus
 
 
 # TODO: add Faceless Taverngoer - add option to target store minions
