@@ -3,10 +3,11 @@ from typing import Optional, Tuple
 
 import torch
 
+from hearthstone.testing.battlegrounds_test_case import BattleGroundsTestCase
 from plackett_luce.plackett_luce import PlackettLuce
 
 
-class PlackettLuceTest(unittest.TestCase):
+class PlackettLuceTest(BattleGroundsTestCase):
     def assertIsPermutation(self, sample: torch.Tensor, shape: Tuple, permutation_sizes: Optional[torch.Tensor] = None):
         self.assertEqual(sample.shape, shape)
 

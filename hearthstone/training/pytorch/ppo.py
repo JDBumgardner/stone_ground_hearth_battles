@@ -665,7 +665,7 @@ def main():
         'opponents.max_pool_size': 7,
         'adam.lr': 1e-4,
         'adam.weight_decay': 5e-5,
-        'batch.min_replay_buffer_size': 400000,
+        'batch.min_replay_buffer_size': 40000,
         'batch.minibatch_size': 16384,
         'batch.max_in_memory': 1024,
         'cuda': True,

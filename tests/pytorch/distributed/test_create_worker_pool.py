@@ -3,13 +3,14 @@ import unittest
 
 import torch
 
+from hearthstone.testing.battlegrounds_test_case import BattleGroundsTestCase
 from hearthstone.training.pytorch.worker.distributed.worker_pool import DistributedWorkerPool
 from hearthstone.training.pytorch.worker.postprocessing import ReplaySink
 
 logging.basicConfig(level=logging.DEBUG)
 
 
-class PytorchDistributedTests(unittest.TestCase):
+class PytorchDistributedTests(BattleGroundsTestCase):
 
     def test_create_worker_pool(self):
         p = DistributedWorkerPool(5,

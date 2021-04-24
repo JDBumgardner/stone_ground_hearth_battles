@@ -2,6 +2,8 @@ import typing
 from collections import deque
 from typing import Optional, Tuple
 
+import autoslot
+
 from hearthstone.simulator.core.events import EVENTS
 from hearthstone.simulator.core.randomizer import Randomizer, DefaultRandomizer
 
@@ -10,7 +12,7 @@ if typing.TYPE_CHECKING:
     from hearthstone.simulator.core.combat import WarParty
 
 
-class CombatEventQueue:
+class CombatEventQueue(autoslot.Slots):
     def __init__(self, war_party_1: 'WarParty', war_party_2: 'WarParty',
                  randomizer: Optional['Randomizer'] = None):
         self.randomizer = randomizer or DefaultRandomizer()
@@ -39,7 +41,7 @@ class CombatEventQueue:
         return minion, foe, friendly_war_party, enemy_war_party
 
     def all_empty(self) -> bool:
-        return all(not bool(queue) for event in self.queues.keys() for queue in self.queues[event].values())
+        return all(not bool(queue) for pairs in self.queues.values() for queue in pairs.values())
 
     def event_empty(self, event: 'EVENTS') -> bool:
         return all(not bool(queue) for queue in self.queues[event].values())

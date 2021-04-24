@@ -8,9 +8,10 @@ from hearthstone.battlebots.priority_functions import PriorityFunctions
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 from hearthstone.simulator.core.randomizer import DefaultRandomizer
 from hearthstone.simulator.host.async_host import AsyncHost
+from hearthstone.testing.battlegrounds_test_case import BattleGroundsTestCase
 
 
-class GameplayTests(unittest.TestCase):
+class GameplayTests(BattleGroundsTestCase):
     def test_basic_bots(self):
         host = AsyncHost({
             "battlerattler_priority_bot": PriorityFunctions.battlerattler_priority_bot(1, EarlyGameBot),

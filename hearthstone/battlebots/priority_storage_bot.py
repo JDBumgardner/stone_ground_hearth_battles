@@ -2,7 +2,7 @@ import random
 import typing
 from typing import List, Callable
 
-from hearthstone.simulator.agent import Agent, StandardAction, generate_valid_actions, BuyAction, EndPhaseAction, \
+from hearthstone.simulator.agent import Agent, StandardAction, generate_standard_actions, BuyAction, EndPhaseAction, \
     SummonAction, \
     TavernUpgradeAction, RerollAction, SellAction, DiscoverChoiceAction, RearrangeCardsAction, HeroDiscoverAction, \
     FreezeDecision
@@ -28,7 +28,7 @@ class PriorityStorageBot(Agent):
 
     async def buy_phase_action(self, player: 'Player') -> StandardAction:
 
-        all_actions = list(generate_valid_actions(player))
+        all_actions = list(generate_standard_actions(player))
 
         if player.tavern_tier < 2:
             upgrade_action = TavernUpgradeAction()

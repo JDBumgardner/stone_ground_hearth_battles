@@ -66,8 +66,7 @@ class HearthstoneFFNet(nn.Module):
             if self.shared:
                 x_value = x_policy
             else:
-                x_value = self.activation(
-                    self.value_hidden_layers[i](x_value))
+                x_value = self.activation(self.value_hidden_layers[i](x_value))
         policy = self.fc_policy(x_policy)
         # Disable invalid actions with a "masked" softmax
         valid_action_tensor = torch.cat(

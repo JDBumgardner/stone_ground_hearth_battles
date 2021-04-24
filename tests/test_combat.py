@@ -12,9 +12,10 @@ from hearthstone.simulator.core.hero_pool import *
 from hearthstone.simulator.core.player import Player
 from hearthstone.simulator.core.randomizer import DefaultRandomizer
 from hearthstone.simulator.core.tavern import Tavern
+from hearthstone.testing.battlegrounds_test_case import BattleGroundsTestCase
 
 
-class CombatTests(unittest.TestCase):
+class CombatTests(BattleGroundsTestCase):
 
     def test_taunt(self):
         diana = Player.new_player_with_hero(Tavern(), "Diana")

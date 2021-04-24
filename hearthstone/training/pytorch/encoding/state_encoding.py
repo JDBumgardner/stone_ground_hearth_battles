@@ -95,7 +95,7 @@ class OnehotFeature(Feature):
         view[self.extractor(obj)] = 1.0
 
     def size(self) -> Tuple:
-        return (self.num_classes,)
+        return self.num_classes,
 
     def dtype(self) -> np.dtype:
         return self._dtype

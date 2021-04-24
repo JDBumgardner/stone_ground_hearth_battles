@@ -5,6 +5,8 @@ import itertools
 import typing
 from collections import defaultdict
 from typing import List, Optional, Callable, Type, Union, Iterator
+
+import autoslot
 from boltons.setutils import IndexedSet
 
 from hearthstone.simulator.core import events

@@ -4,7 +4,7 @@ import typing
 from collections import defaultdict
 from typing import List
 
-from hearthstone.simulator.agent import Agent, generate_valid_actions, TavernUpgradeAction, RerollAction, \
+from hearthstone.simulator.agent import Agent, generate_standard_actions, TavernUpgradeAction, RerollAction, \
     EndPhaseAction, \
     SellAction, StandardAction, BuyAction, SummonAction, DiscoverChoiceAction, RearrangeCardsAction, HeroDiscoverAction, \
     FreezeDecision
@@ -61,7 +61,7 @@ class LearnedPriorityBot(Agent):
         return score
 
     async def buy_phase_action(self, player: 'Player') -> StandardAction:
-        all_actions = list(generate_valid_actions(player))
+        all_actions = list(generate_standard_actions(player))
 
         if player.tavern_tier < 2:
             upgrade_action = TavernUpgradeAction()

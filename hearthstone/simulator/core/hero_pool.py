@@ -504,6 +504,10 @@ class Rakanishu(Hero):
 
 
 class MrBigglesworth(Hero):
+    def __init__(self):
+        super().__init__()
+        self.dead_discover_queue = []
+
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.PLAYER_DEAD and bool(event.player.in_play):
             discovered_cards = []
@@ -514,7 +518,11 @@ class MrBigglesworth(Hero):
                     board.remove(enemy_minion)
                     enemy_minion.token = True
                     discovered_cards.append(enemy_minion)
-            context.owner.discover_queue.append(discovered_cards)
+            self.dead_discover_queue.append(discovered_cards)
+        elif event.event is EVENTS.BUY_START:
+            context.owner.discover_queue += self.dead_discover_queue
+            self.dead_discover_queue = []
+
 
 
 class Nozdormu(Hero):

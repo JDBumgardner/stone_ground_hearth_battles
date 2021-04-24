@@ -2,7 +2,7 @@ import random
 import typing
 from typing import List, Callable
 
-from hearthstone.simulator.agent.actions import StandardAction, generate_valid_actions, BuyAction, EndPhaseAction, \
+from hearthstone.simulator.agent.actions import StandardAction, generate_standard_actions, BuyAction, EndPhaseAction, \
     SummonAction, \
     SellAction, TavernUpgradeAction, RerollAction, DiscoverChoiceAction, RearrangeCardsAction, HeroDiscoverAction, \
     FreezeDecision
@@ -28,7 +28,7 @@ class EarlyGameBot(Agent):
         return RearrangeCardsAction(permutation)
 
     async def buy_phase_action(self, player: 'Player') -> StandardAction:
-        all_actions = list(generate_valid_actions(player))
+        all_actions = list(generate_standard_actions(player))
 
         if player.tavern.turn_count == 0:
             token_store_index = [StoreIndex(player.store.index(card)) for card in player.store if

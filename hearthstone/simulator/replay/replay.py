@@ -1,11 +1,13 @@
 from typing import List, Any, Dict, Optional
 
+import autoslot
+
 from hearthstone.simulator.agent.actions import EndPhaseAction, Action, HeroChoiceAction, RearrangeCardsAction
 from hearthstone.simulator.core.randomizer import DefaultRandomizer
 from hearthstone.simulator.core.tavern import Tavern
 
 
-class ReplayStep:
+class ReplayStep(autoslot.Slots):
     def __init__(self, player: str, action: 'Action', agent_annotation: Any = None,
                  observer_annotations: Optional[Dict[str, Any]] = None):
         self.player = player

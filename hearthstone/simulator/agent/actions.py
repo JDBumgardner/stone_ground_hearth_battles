@@ -2,6 +2,8 @@ import enum
 import itertools
 from typing import List, Optional, Generator
 
+import autoslot
+
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 from hearthstone.simulator.core.player import HeroChoiceIndex, StoreIndex, HandIndex, BoardIndex
 
@@ -12,11 +14,14 @@ class FreezeDecision(enum.Enum):
     UNFREEZE = 2
 
 
-class Action:
+class Action(autoslot.Slots):
     def apply(self, player: 'Player'):
         pass
 
     def valid(self, player: 'Player') -> bool:
+        return False
+
+    def base_valid(self, player: 'Player') -> bool:
         return False
 
     def str_in_context(self, player: 'Player') -> str:
@@ -89,11 +94,11 @@ class HeroDiscoverAction(Action):
 
 
 class StandardAction(Action):
-    pass
+    def valid(self, player: 'Player') -> bool:
+        return player.valid_standard_action() and self.base_valid(player)
 
 
 class BuyAction(StandardAction):
-
     def __init__(self, index: StoreIndex):
         self.index = index
 
@@ -103,8 +108,8 @@ class BuyAction(StandardAction):
     def apply(self, player: 'Player'):
         player.purchase(self.index)
 
-    def valid(self, player: 'Player'):
-        return player.valid_purchase(self.index)
+    def base_valid(self, player: 'Player') -> bool:
+        return player.base_valid_purchase(self.index)
 
     def str_in_context(self, player: 'Player') -> str:
         return f"Buy({player.store[self.index]})"
@@ -123,8 +128,8 @@ class SummonAction(StandardAction):
     def apply(self, player: 'Player'):
         player.summon_from_hand(self.index, self.targets)
 
-    def valid(self, player: 'Player') -> bool:
-        return player.valid_summon_from_hand(self.index, self.targets)
+    def base_valid(self, player: 'Player') -> bool:
+        return player.base_valid_summon_from_hand(self.index, self.targets)
 
     def str_in_context(self, player: 'Player') -> str:
         return f"Summon({player.hand[self.index]},{self.targets})"
@@ -141,8 +146,8 @@ class SellAction(StandardAction):
     def apply(self, player: 'Player'):
         player.sell_minion(self.index)
 
-    def valid(self, player: 'Player') -> bool:
-        return player.valid_sell_minion(self.index)
+    def base_valid(self, player: 'Player') -> bool:
+        return player.base_valid_sell_minion(self.index)
 
     def str_in_context(self, player: 'Player') -> str:
         return f"Sell({player.in_play[self.index]})"
@@ -162,10 +167,8 @@ class EndPhaseAction(StandardAction):
         elif self.freeze == FreezeDecision.UNFREEZE:
             player.unfreeze()
 
-    def valid(self, player: 'Player') -> bool:
-        if self.freeze == FreezeDecision.UNFREEZE and not any(card.frozen for card in player.store):
-            return False
-        return not player.dead and not player.discover_queue
+    def base_valid(self, player: 'Player') -> bool:
+        return self.freeze != FreezeDecision.UNFREEZE or any(card.frozen for card in player.store)
 
 
 class RerollAction(StandardAction):
@@ -175,8 +178,8 @@ class RerollAction(StandardAction):
     def apply(self, player: 'Player'):
         player.reroll_store()
 
-    def valid(self, player: 'Player') -> bool:
-        return player.valid_reroll()
+    def base_valid(self, player: 'Player') -> bool:
+        return player.base_valid_reroll()
 
 
 class TavernUpgradeAction(StandardAction):
@@ -186,8 +189,8 @@ class TavernUpgradeAction(StandardAction):
     def apply(self, player: 'Player'):
         player.upgrade_tavern()
 
-    def valid(self, player: 'Player') -> bool:
-        return player.valid_upgrade_tavern()
+    def base_valid(self, player: 'Player') -> bool:
+        return player.base_valid_upgrade_tavern()
 
     def str_in_context(self, player: 'Player') -> str:
         return f"TavernUpgrade({player.tavern_tier}, {player.tavern_upgrade_cost})"
@@ -204,8 +207,8 @@ class HeroPowerAction(StandardAction):
     def apply(self, player: 'Player'):
         player.hero_power(self.board_target, self.store_target)
 
-    def valid(self, player: 'Player') -> bool:
-        return player.valid_hero_power(self.board_target, self.store_target)
+    def base_valid(self, player: 'Player') -> bool:
+        return player.base_valid_hero_power(self.board_target, self.store_target)
 
 
 class TripleRewardsAction(StandardAction):
@@ -215,8 +218,8 @@ class TripleRewardsAction(StandardAction):
     def apply(self, player: 'Player'):
         player.play_triple_rewards()
 
-    def valid(self, player: 'Player') -> bool:
-        return player.valid_triple_rewards()
+    def base_valid(self, player: 'Player') -> bool:
+        return player.base_valid_triple_rewards()
 
     def str_in_context(self, player: 'Player') -> str:
         return f"TripleRewards({player.triple_rewards[-1]})"
@@ -229,8 +232,8 @@ class RedeemGoldCoinAction(StandardAction):
     def apply(self, player: 'Player'):
         player.redeem_gold_coin()
 
-    def valid(self, player: 'Player') -> bool:
-        return player.gold_coins >= 1 and player.valid_standard_action()
+    def base_valid(self, player: 'Player') -> bool:
+        return player.gold_coins >= 1
 
 
 class BananaAction(StandardAction):
@@ -244,45 +247,51 @@ class BananaAction(StandardAction):
     def apply(self, player: 'Player'):
         player.use_banana(self.board_target, self.store_target)
 
-    def valid(self, player: 'Player') -> bool:
-        return player.valid_use_banana(self.board_target, self.store_target)
+    def base_valid(self, player: 'Player') -> bool:
+        return player.base_valid_use_banana(self.board_target, self.store_target)
+
+def yield_if_base_valid(player: 'Player', action: 'StandardAction') -> Generator[StandardAction, None, None]:
+    if action.base_valid(player):
+        yield action
 
 
-def generate_valid_actions(player: 'Player') -> Generator[StandardAction, None, None]:
-    return (action for action in generate_all_actions(player) if action.valid(player))
-
-
-def generate_all_actions(player: 'Player') -> Generator[StandardAction, None, None]:
-    yield TripleRewardsAction()
-    yield TavernUpgradeAction()
-    yield RerollAction()
+def generate_standard_actions(player: 'Player') -> Generator[StandardAction, None, None]:
+    if not player.valid_standard_action():
+        return
     yield EndPhaseAction(FreezeDecision.NO_FREEZE)
     yield EndPhaseAction(FreezeDecision.FREEZE)
     yield EndPhaseAction(FreezeDecision.UNFREEZE)
-    yield HeroPowerAction()
-    yield RedeemGoldCoinAction()
+
+    yield from yield_if_base_valid(player, TripleRewardsAction())
+    yield from yield_if_base_valid(player, TavernUpgradeAction())
+    yield from yield_if_base_valid(player, RerollAction())
+    yield from yield_if_base_valid(player, HeroPowerAction())
+    yield from yield_if_base_valid(player, RedeemGoldCoinAction())
     for index in range(len(player.in_play)):
         yield SellAction(BoardIndex(index))
-        yield HeroPowerAction(board_target=BoardIndex(index))
-        yield BananaAction(board_target=BoardIndex(index))
+        yield from yield_if_base_valid(player, HeroPowerAction(board_target=BoardIndex(index)))
+        yield from yield_if_base_valid(player, BananaAction(board_target=BoardIndex(index)))
+
     for index in range(len(player.store)):
-        yield BuyAction(StoreIndex(index))
-        yield HeroPowerAction(store_target=StoreIndex(index))
-        yield BananaAction(store_target=StoreIndex(index))
-    for index, card in enumerate(player.hand):
-        if card.num_battlecry_targets:
-            valid_target_indices = [index for index, target in enumerate(player.in_play) if
-                                    card.valid_battlecry_target(target)]
-            possible_num_targets = [num_targets for num_targets in card.num_battlecry_targets if
-                                    num_targets <= len(valid_target_indices)]
-            if not possible_num_targets:
-                possible_num_targets = [len(valid_target_indices)]
-            for num_targets in possible_num_targets:
-                for targets in itertools.combinations(valid_target_indices, num_targets):
-                    yield SummonAction(HandIndex(index), [BoardIndex(target_index) for target_index in targets])
-        else:
-            yield SummonAction(HandIndex(index), [])
-        if card.magnetic:
-            for target_index, target_card in enumerate(player.in_play):
-                if target_card.check_type(MONSTER_TYPES.MECH):
-                    yield SummonAction(HandIndex(index), [BoardIndex(target_index)])
+        yield from yield_if_base_valid(player, BuyAction(StoreIndex(index)))
+        yield from yield_if_base_valid(player, HeroPowerAction(store_target=StoreIndex(index)))
+        yield from yield_if_base_valid(player, BananaAction(store_target=StoreIndex(index)))
+
+    if player.room_on_board():
+        for index, card in enumerate(player.hand):
+            if card.num_battlecry_targets:
+                valid_target_indices = [index for index, target in enumerate(player.in_play) if
+                                        card.valid_battlecry_target(target)]
+                possible_num_targets = [num_targets for num_targets in card.num_battlecry_targets if
+                                        num_targets <= len(valid_target_indices)]
+                if not possible_num_targets:
+                    possible_num_targets = [len(valid_target_indices)]
+                for num_targets in possible_num_targets:
+                    for targets in itertools.combinations(valid_target_indices, num_targets):
+                        yield SummonAction(HandIndex(index), [BoardIndex(target_index) for target_index in targets])
+            else:
+                yield SummonAction(HandIndex(index), [])
+            if card.magnetic:
+                for target_index, target_card in enumerate(player.in_play):
+                    if target_card.check_type(MONSTER_TYPES.MECH):
+                        yield SummonAction(HandIndex(index), [BoardIndex(target_index)])

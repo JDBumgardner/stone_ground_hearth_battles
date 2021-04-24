@@ -59,7 +59,7 @@ class PytorchBot(AnnotatingAgent):
                     gae_info=None,
                     debug=debug
                 )
-
+            assert action.valid(player), action
             return action, ac_game_step_info
 
     async def annotated_buy_phase_action(self, player: 'Player') -> (StandardAction, ActorCriticGameStepInfo):

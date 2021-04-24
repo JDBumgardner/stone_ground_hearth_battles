@@ -57,7 +57,6 @@ class TransformerEncoderPostNormLayer(nn.Module):
         src = src + src2
         return src
 
-
 class TransformerWithContextEncoder(nn.Module):
     # TODO "redundant" arg should be implemented as a different state encoding instead
     def __init__(self, encoding: Encoder, width: int, num_layers: int, activation: str, redundant=False):
@@ -117,10 +116,7 @@ class HearthstoneTransformerNet(nn.Module):
         self.normalize_observations = normalize_observations
         if normalize_observations:
             self.observation_normalizer = ObservationNormalizer(encoding=encoding, gamma=normalization_momentum)
-        # dummy_state = State(
-        #     torch.zeros((1, *encoding.player_encoding().size())),
-        #     torch.zeros((1,*encoding.cards_encoding().size()))
-        # )
+
         self.policy_encoder = TransformerWithContextEncoder(encoding, hidden_size, hidden_layers,
                                                             activation_function, redundant=redundant)
         if shared:
@@ -178,7 +174,7 @@ class HearthstoneTransformerNet(nn.Module):
         # Flatten the policy
         policy = torch.cat((player_policy.flatten(1), card_policy.flatten(1)), dim=1)
 
-        # The policy network outputs an array of the log probability of each action.
+        # The policy network outputs an array of the log probability of each action component.
         policy = F.log_softmax(policy, dim=1)
         # The value network outputs the linear combination of the representation of the player in the last layer,
         # which will be between -3.5 (8th place) at the minimum and 3.5 (1st place) at the max.
@@ -195,6 +191,20 @@ class HearthstoneTransformerNet(nn.Module):
         else:
             component_samples = component_distribution.sample()
         component_log_probs = component_distribution.log_prob(component_samples)
+
+        # Here we compute the target selection scores for battlecry/magentic targets
+        # target_encoded_player = torch.torch.cat(
+        #     (policy_encoded_player,
+        #      torch.zeros((policy_encoded_player.shape[0], 4), device=policy_encoded_player.device)), dim=1)
+        # sampled_action_mask = torch.zeros_like(policy).scatter(1, component_samples.unsqueeze(-1), 1)
+        # active_cards = torch.max(torch.reshape(sampled_action_mask[:, player_policy.shape[1]:], card_policy.shape),
+        #                          dim=2).values
+        # target_encoded_cards = torch.cat(
+        #     (policy_encoded_cards, active_cards.unsqueeze(-1).expand(active_cards.shape + (4,))), dim=2)
+        #
+        # target_full_rep = torch.cat((target_encoded_player.unsqueeze(1), target_encoded_cards), dim=1).permute(1, 0, 2)
+        # target_full_rep: torch.Tensor = self.target_selection_transformer(target_full_rep).permute(1, 0, 2)
+        # target_policy = self.target_selection_fc(target_full_rep[:, 1:])
 
         # We compute a score saying how to order the cards on the board, and use the Plackett Luce distribution to
         # sample permutations.

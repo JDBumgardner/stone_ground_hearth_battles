@@ -5,9 +5,10 @@ from hearthstone.simulator.core.combat import WarParty
 from hearthstone.simulator.core.combat_event_queue import CombatEventQueue
 from hearthstone.simulator.core.events import EVENTS
 from hearthstone.simulator.core.tavern import Tavern
+from hearthstone.testing.battlegrounds_test_case import BattleGroundsTestCase
 
 
-class CombatEventQueueTest(unittest.TestCase):
+class CombatEventQueueTest(BattleGroundsTestCase):
     def test_empty(self):
         tavern = Tavern()
         player_1 = tavern.add_player_with_hero("Player 1")

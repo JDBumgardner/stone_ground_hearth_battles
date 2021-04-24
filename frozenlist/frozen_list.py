@@ -2,6 +2,8 @@ from typing import List
 
 
 class FrozenList:
+    __slots__ = ["_private_list_dont_modify"]
+
     def __init__(self, l: List):
         self._private_list_dont_modify = l
 

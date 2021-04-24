@@ -1,6 +1,6 @@
 import unittest
 
-from hearthstone.simulator.agent.actions import generate_all_actions, EndPhaseAction
+from hearthstone.simulator.agent.actions import generate_standard_actions, EndPhaseAction
 from hearthstone.simulator.core.adaptations import AdaptBuffs
 from hearthstone.simulator.core.card_graveyard import *
 from hearthstone.simulator.core.card_pool import *
@@ -10,6 +10,7 @@ from hearthstone.simulator.core.hero_pool import *
 from hearthstone.simulator.core.player import StoreIndex, HandIndex, BoardIndex, DiscoverIndex, Player
 from hearthstone.simulator.core.randomizer import DefaultRandomizer
 from hearthstone.simulator.core.tavern import Tavern
+from hearthstone.testing.battlegrounds_test_case import BattleGroundsTestCase
 
 
 def force_card(cards: List[MonsterCard], card_type) -> MonsterCard:
@@ -38,7 +39,7 @@ class RepeatedCardForcer(DefaultRandomizer):
         return force_card(cards, next_card_type)
 
 
-class CardTests(unittest.TestCase):
+class CardTests(BattleGroundsTestCase):
     def assertCardListEquals(self, cards, expected, msg=None):
         self.assertListEqual([type(card) for card in cards], expected, msg=msg)
 
@@ -3157,7 +3158,7 @@ class CardTests(unittest.TestCase):
         player_1.hero_power()
         self.assertEqual(player_1.health, 0)
         self.assertTrue(player_1.dead)
-        for action in generate_all_actions(player_1):
+        for action in generate_standard_actions(player_1):
             if type(action) != EndPhaseAction:
                 self.assertFalse(action.valid(player_1))
 

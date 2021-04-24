@@ -3,14 +3,14 @@ import unittest
 
 from torch import multiprocessing
 
-logging.basicConfig(level=logging.DEBUG)
+from hearthstone.testing.battlegrounds_test_case import BattleGroundsTestCase
 
 
 def test_fn(rank):
     print(f"hello world {rank}")
 
 
-class PytorchDistributedTests(unittest.TestCase):
+class PytorchDistributedTests(BattleGroundsTestCase):
     def test_multiprocessing_forkserver(self):
         process_context = multiprocessing.start_processes(
             test_fn,

@@ -20,6 +20,8 @@ class BuyPhaseEvent:
     pass
 
 
+TEST_MODE = False
+
 StoreIndex = typing.NewType("StoreIndex", int)
 HandIndex = typing.NewType("HandIndex", int)
 BoardIndex = typing.NewType("BoardIndex", int)
@@ -80,15 +82,24 @@ class Player:
 
     @property
     def in_play(self):
-        return FrozenList(self._in_play)
+        if TEST_MODE:
+            return FrozenList(self._in_play)
+        else:
+            return self._in_play
 
     @property
     def hand(self):
-        return FrozenList(self._hand)
+        if TEST_MODE:
+            return FrozenList(self._hand)
+        else:
+            return self._hand
 
     @property
     def store(self):
-        return FrozenList(self._store)
+        if TEST_MODE:
+            return FrozenList(self._store)
+        else:
+            return self._store
 
     @staticmethod
     def new_player_with_hero(tavern: Optional['Tavern'], name: str, hero: Optional['Hero'] = None) -> 'Player':
@@ -133,6 +144,9 @@ class Player:
     def valid_upgrade_tavern(self) -> bool:
         if not self.valid_standard_action():
             return False
+        return self.base_valid_upgrade_tavern()
+
+    def base_valid_upgrade_tavern(self) -> bool:
         if self.tavern_tier >= self.max_tier():
             return False
         if self.coins < self.tavern_upgrade_cost:
@@ -152,7 +166,12 @@ class Player:
         self.played_minions.append(type(card))
 
     def valid_summon_from_hand(self, index: HandIndex, targets: Optional[List[BoardIndex]] = None) -> bool:
-        if not self.room_to_summon(index):
+        if not self.valid_standard_action():
+            return False
+        return self.base_valid_summon_from_hand(index, targets)
+
+    def base_valid_summon_from_hand(self, index: HandIndex, targets: Optional[List[BoardIndex]] = None) -> bool:
+        if not self.base_room_to_summon(index):
             return False
 
         card = self.hand[index]
@@ -186,6 +205,9 @@ class Player:
     def room_to_summon(self, index: HandIndex):
         if not self.valid_standard_action():
             return False
+        return self.base_room_to_summon(index)
+
+    def base_room_to_summon(self, index: HandIndex):
         if not self.valid_hand_index(index):
             return False
         if not self.room_on_board():
@@ -201,6 +223,9 @@ class Player:
     def valid_triple_rewards(self) -> bool:
         if not self.valid_standard_action():
             return False
+        return self.base_valid_triple_rewards()
+
+    def base_valid_triple_rewards(self) -> bool:
         return bool(self.triple_rewards)
 
     def draw_discover(self, predicate: Callable[[
@@ -255,6 +280,9 @@ class Player:
     def valid_purchase(self, index: 'StoreIndex') -> bool:
         if not self.valid_standard_action():
             return False
+        return self.base_valid_purchase(index)
+
+    def base_valid_purchase(self, index: 'StoreIndex') -> bool:
         if not self.valid_store_index(index):
             return False
         if self.coins < self.minion_cost:
@@ -287,6 +315,9 @@ class Player:
     def valid_reroll(self) -> bool:
         if not self.valid_standard_action():
             return False
+        return self.base_valid_reroll()
+
+    def base_valid_reroll(self) -> bool:
         return self.coins >= self.refresh_store_cost or self.free_refreshes >= 1
 
     def return_cards(self, unfreeze: Optional[bool] = True):
@@ -317,6 +348,9 @@ class Player:
     def valid_sell_minion(self, index: 'BoardIndex') -> bool:
         if not self.valid_standard_action():
             return False
+        return self.base_valid_sell_minion(index)
+
+    def base_valid_sell_minion(self, index: 'BoardIndex') -> bool:
         return self.valid_board_index(index)
 
     def hero_power(self, board_index: Optional['BoardIndex'] = None, store_index: Optional['StoreIndex'] = None):
@@ -326,6 +360,10 @@ class Player:
                          store_target: Optional['StoreIndex'] = None) -> bool:
         if not self.valid_standard_action():
             return False
+        return self.base_valid_hero_power(board_target, store_target)
+
+    def base_valid_hero_power(self, board_target: Optional['BoardIndex'] = None,
+                              store_target: Optional['StoreIndex'] = None) -> bool:
         return self.hero.hero_power_valid(BuyPhaseContext(self, self.tavern.randomizer), board_target, store_target)
 
     def broadcast_buy_phase_event(self, event: 'CardEvent', randomizer: Optional['Randomizer'] = None):
@@ -459,6 +497,10 @@ class Player:
                          store_index: Optional['StoreIndex'] = None) -> bool:
         if not self.valid_standard_action():
             return False
+        return self.base_valid_use_banana(board_index, store_index)
+
+    def base_valid_use_banana(self, board_index: Optional['BoardIndex'] = None,
+                             store_index: Optional['StoreIndex'] = None) -> bool:
         if self.bananas <= 0:
             return False
         if board_index == store_index:

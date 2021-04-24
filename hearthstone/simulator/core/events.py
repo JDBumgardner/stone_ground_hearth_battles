@@ -2,6 +2,8 @@ import enum
 import typing
 from typing import Optional, List, Set
 
+import autoslot
+
 if typing.TYPE_CHECKING:
     from hearthstone.simulator.core.combat_event_queue import CombatEventQueue
     from hearthstone.simulator.core.player import Player
@@ -37,7 +39,7 @@ class EVENTS(enum.Enum):
     DEATHRATTLE_TRIGGERED = 24
 
 
-class CardEvent:
+class CardEvent(autoslot.Slots):
     def __init__(self, eventid: EVENTS):
         self.event = eventid
         self.card = None
@@ -178,7 +180,7 @@ class AddToStoreEvent(CardEvent):
         self.card = card
 
 
-class BuyPhaseContext:
+class BuyPhaseContext(autoslot.Slots):
     def __init__(self, owner: 'Player', randomizer: 'Randomizer'):
         self.owner = owner
         self.randomizer = randomizer
@@ -194,7 +196,7 @@ class BuyPhaseContext:
             [card.battlecry_multiplier() for card in self.owner.in_play] + [self.owner.hero.battlecry_multiplier()])
 
 
-class CombatPhaseContext:
+class CombatPhaseContext(autoslot.Slots):
     def __init__(self, friendly_war_party: 'WarParty', enemy_war_party: 'WarParty', randomizer: 'Randomizer',
                  combat_event_queue: 'CombatEventQueue', damaged_minions: Set['MonsterCard']):
         self.friendly_war_party = friendly_war_party

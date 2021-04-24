@@ -1,9 +1,10 @@
 import unittest
 
 from frozenlist.frozen_list import FrozenList
+from hearthstone.testing.battlegrounds_test_case import BattleGroundsTestCase
 
 
-class MyTestCase(unittest.TestCase):
+class MyTestCase(BattleGroundsTestCase):
     def test_creation(self):
         l = [1, 2, 3]
         f = FrozenList(l)

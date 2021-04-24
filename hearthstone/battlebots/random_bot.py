@@ -1,7 +1,7 @@
 import random
 import typing
 
-from hearthstone.simulator.agent.actions import generate_valid_actions, StandardAction, DiscoverChoiceAction, \
+from hearthstone.simulator.agent.actions import generate_standard_actions, StandardAction, DiscoverChoiceAction, \
     RearrangeCardsAction, HeroDiscoverAction
 from hearthstone.simulator.agent.agent import Agent
 
@@ -21,7 +21,7 @@ class RandomBot(Agent):
         return RearrangeCardsAction(permutation)
 
     async def buy_phase_action(self, player: 'Player') -> StandardAction:
-        all_actions = list(generate_valid_actions(player))
+        all_actions = list(generate_standard_actions(player))
         return self.local_random.choice(all_actions)
 
     async def discover_choice_action(self, player: 'Player') -> DiscoverChoiceAction:

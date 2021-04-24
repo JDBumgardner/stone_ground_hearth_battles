@@ -1,7 +1,7 @@
 import random
 import typing
 
-from hearthstone.simulator.agent.actions import StandardAction, generate_valid_actions, BuyAction, EndPhaseAction, \
+from hearthstone.simulator.agent.actions import StandardAction, generate_standard_actions, BuyAction, EndPhaseAction, \
     SummonAction, DiscoverChoiceAction, RearrangeCardsAction, HeroDiscoverAction, FreezeDecision
 from hearthstone.simulator.agent.agent import Agent
 
@@ -21,7 +21,7 @@ class CheapoBot(Agent):
         return RearrangeCardsAction(permutation)
 
     async def buy_phase_action(self, player: 'Player') -> StandardAction:
-        all_actions = list(generate_valid_actions(player))
+        all_actions = list(generate_standard_actions(player))
 
         summon_actions = [action for action in all_actions if type(action) is SummonAction]
         if summon_actions:
