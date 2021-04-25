@@ -963,16 +963,14 @@ class OverlordSaurfang(Hero):
 
     def __init__(self):
         super().__init__()
-        self.attack_bonus = 0
         self.bonus_applied = False
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_START:
-            self.attack_bonus += 1
             self.bonus_applied = False
         elif event.event is EVENTS.BUY:
             if self.hero_power_used and not self.bonus_applied:
-                event.card.attack += self.attack_bonus
+                event.card.attack += context.owner.tavern.turn_count + 1
                 self.bonus_applied = True
 
 
