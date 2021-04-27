@@ -95,6 +95,8 @@ def tensorize_batch(transitions: List[ActorCriticGameStepInfo], device: torch.de
         [transition.valid_actions.player_action_tensor for transition in transitions]).detach()
     valid_card_actions_tensor = torch.stack(
         [transition.valid_actions.card_action_tensor for transition in transitions]).detach()
+    valid_battlecry_target_tensor = torch.stack(
+        [transition.valid_actions.battlecry_target_tensor for transition in transitions]).detach()
     rearrange_phase = torch.stack([transition.valid_actions.rearrange_phase for transition in transitions]).detach()
     cards_to_rearrange = torch.stack(
         [transition.valid_actions.cards_to_rearrange for transition in transitions]).detach()
@@ -111,8 +113,13 @@ def tensorize_batch(transitions: List[ActorCriticGameStepInfo], device: torch.de
     return TransitionBatch(StateBatch(player_tensor.to(device), cards_tensor.to(device)),
                            EncodedActionSet(valid_player_actions_tensor.to(device),
                                             valid_card_actions_tensor.to(device),
+                                            valid_battlecry_target_tensor.to(device),
                                             rearrange_phase.to(device),
-                                            cards_to_rearrange.to(device)),
+                                            cards_to_rearrange.to(device),
+                                            transitions[0].valid_actions.store_start,
+                                            transitions[0].valid_actions.hand_start,
+                                            transitions[0].valid_actions.board_start,
+                                            ),
                            action_list,
                            action_log_prob_tensor.to(device),
                            value_tensor.to(device),
