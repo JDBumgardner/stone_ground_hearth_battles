@@ -1,8 +1,9 @@
 from typing import Optional, List
 
-from hearthstone.simulator.agent import SummonAction, SellAction, EndPhaseAction, RerollAction, TavernUpgradeAction, \
-    HeroPowerAction, TripleRewardsAction, RedeemGoldCoinAction, BuyAction, StandardAction, Agent, BananaAction, \
-    DiscoverChoiceAction, HeroChoiceAction, RearrangeCardsAction, HeroDiscoverAction, FreezeDecision
+from hearthstone.simulator.agent.actions import HeroChoiceAction, RearrangeCardsAction, StandardAction, BuyAction, \
+    SummonAction, SellAction, EndPhaseAction, FreezeDecision, RerollAction, TavernUpgradeAction, HeroPowerAction, \
+    TripleRewardsAction, RedeemGoldCoinAction, BananaAction, DiscoverChoiceAction, HeroDiscoverAction
+from hearthstone.simulator.agent.agent import Agent
 from hearthstone.simulator.core.cards import CardLocation, MonsterCard
 from hearthstone.simulator.core.hero import Hero
 from hearthstone.simulator.core.player import HandIndex, BoardIndex, StoreIndex, Player, DiscoverIndex, HeroChoiceIndex

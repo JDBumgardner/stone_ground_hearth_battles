@@ -5,7 +5,7 @@ from typing import Union, Tuple, Optional
 
 from hearthstone.simulator.core import combat, events
 from hearthstone.simulator.core.card_pool import Amalgam, EmperorCobra, Snake, FishOfNZoth
-from hearthstone.simulator.core.cards import CardLocation
+from hearthstone.simulator.core.cards import CardLocation, one_minion_per_type
 from hearthstone.simulator.core.combat import logger
 from hearthstone.simulator.core.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
 from hearthstone.simulator.core.hero import Hero
@@ -524,7 +524,6 @@ class MrBigglesworth(Hero):
             self.dead_discover_queue = []
 
 
-
 class Nozdormu(Hero):
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_START:
@@ -923,6 +922,56 @@ class Greybough(Hero):
             event.card.attack += 1
             event.card.health += 2
             event.card.taunt = True
+
+
+class QueenWagtoggle(Hero):
+    base_power_cost = 1
+
+    def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                        store_index: Optional['StoreIndex'] = None):
+        for card in one_minion_per_type(context.owner.in_play, context.randomizer):
+            card.attack += 1
+            card.health += 1
+
+
+class CaptainHooktusk(Hero):
+    base_power_cost = 0
+    power_target_location = [CardLocation.BOARD]
+
+    def hero_power_valid_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                              store_index: Optional['StoreIndex'] = None):
+        return context.owner.room_in_hand()
+
+    def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                        store_index: Optional['StoreIndex'] = None):
+        board_minion = context.owner.pop_board_card(board_index)
+        context.owner.tavern.deck.return_cards(board_minion.dissolve())
+        predicate = lambda card: (
+                                     card.tier == board_minion.tier - 1 if board_minion.tier > 1 else card.tier == 1) and type(
+            card) != type(board_minion)
+        discoverables = [card for card in context.owner.tavern.deck.unique_cards() if predicate(card)]
+        discovered_cards = []
+        for _ in range(2):
+            discovered_cards.append(context.randomizer.select_discover_card(discoverables))
+            discoverables.remove(discovered_cards[-1])
+            context.owner.tavern.deck.remove_card(discovered_cards[-1])
+        context.owner.discover_queue.append(discovered_cards)
+
+
+class OverlordSaurfang(Hero):
+    base_power_cost = 1
+
+    def __init__(self):
+        super().__init__()
+        self.bonus_applied = False
+
+    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.BUY_START:
+            self.bonus_applied = False
+        elif event.event is EVENTS.BUY:
+            if self.hero_power_used and not self.bonus_applied:
+                event.card.attack += context.owner.tavern.turn_count + 1
+                self.bonus_applied = True
 
 
 # TODO: add Tickatus... and darkmoon prizes (ugh)

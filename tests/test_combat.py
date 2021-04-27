@@ -327,19 +327,6 @@ class CombatTests(BattleGroundsTestCase):
         self.assertEqual(ethan.health, 40)
         self.assertEqual(len(adams_war_party.board), 5)
 
-    def test_piloted_shredder(self):
-        adam = Player.new_player_with_hero(Tavern(), "Adam")
-        ethan = Player.new_player_with_hero(Tavern(), "Ethan")
-        adams_war_party = WarParty(adam)
-        ethans_war_party = WarParty(ethan)
-        adams_war_party.board = [PilotedShredder()]
-        ethans_war_party.board = [FreedealingGambler()]
-        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
-        self.assertEqual(adam.health, 40)
-        self.assertNotEqual(ethan.health, 40)
-        self.assertNotEqual(len(adams_war_party.board), 1)
-        self.assertEqual(adams_war_party.board[1].mana_cost, 2)
-
     def test_soul_juggler(self):
         adam = Player.new_player_with_hero(Tavern(), "Adam")
         ethan = Player.new_player_with_hero(Tavern(), "Ethan")
@@ -375,22 +362,24 @@ class CombatTests(BattleGroundsTestCase):
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 34)
 
-    class PilotedShredderRandomizer(DefaultRandomizer):
+    class SneedsOldShredderRandomizer(DefaultRandomizer):
         def select_summon_minion(self, card_types: List['Type']) -> 'Type':
             khadgar = [card_type for card_type in card_types if card_type == Khadgar]
             return khadgar[0]
 
-    def test_khadgar_piloted_shredder(self):
+    def test_khadgar_sneeds_old_shredder(self):
         logging.basicConfig(level=logging.DEBUG)
         adam = Player.new_player_with_hero(Tavern(), "Adam")
         ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
-        piloted_shredder = PilotedShredder()
-        piloted_shredder.golden_transformation([])
-        adams_war_party.board = [piloted_shredder, Khadgar()]
-        ethans_war_party.board = [MalGanis()]
-        fight_boards(adams_war_party, ethans_war_party, self.PilotedShredderRandomizer())
+        sneeds = SneedsOldShredder()
+        sneeds.golden_transformation([])
+        nadina = NadinaTheRed()
+        nadina.golden_transformation([])
+        adams_war_party.board = [sneeds, Khadgar()]
+        ethans_war_party.board = [nadina]
+        fight_boards(adams_war_party, ethans_war_party, self.SneedsOldShredderRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 18)
 
@@ -784,7 +773,7 @@ class CombatTests(BattleGroundsTestCase):
         self.assertFalse(adams_war_party.board[0].dead)
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 30)
-        self.assertEqual(adams_war_party.board[0].attack, 9)
+        self.assertEqual(adams_war_party.board[0].attack, 10)
         self.assertEqual(adams_war_party.board[1].attack, 9)
         self.assertEqual(adams_war_party.board[1].health, 9)
 
@@ -799,7 +788,7 @@ class CombatTests(BattleGroundsTestCase):
         self.assertFalse(adams_war_party.board[0].dead)
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 25)
-        self.assertEqual(adams_war_party.board[0].attack, 14)
+        self.assertEqual(adams_war_party.board[0].attack, 15)
         self.assertEqual(adams_war_party.board[1].attack, 14)
         self.assertEqual(adams_war_party.board[1].health, 14)
 
@@ -1062,8 +1051,10 @@ class CombatTests(BattleGroundsTestCase):
         ethans_war_party = WarParty(ethan)
         wildfire_elemental = WildfireElemental()
         wildfire_elemental.golden_transformation([])
+        garr = LieutenantGarr()
+        garr.attack -= 1
         adams_war_party.board = [wildfire_elemental, TwilightEmissary()]
-        ethans_war_party.board = [BloodsailCannoneer(), CapnHoggarr(), LieutenantGarr(), CapnHoggarr(), AlleyCat()]
+        ethans_war_party.board = [BloodsailCannoneer(), CapnHoggarr(), garr, CapnHoggarr(), AlleyCat()]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
@@ -1418,15 +1409,15 @@ class CombatTests(BattleGroundsTestCase):
             else:
                 return card_types[0]
 
-    def test_piloted_shredder_khadgar_same_minion(self):
+    def test_sneeds_old_shredder_khadgar_same_minion(self):
         tavern = Tavern()
         adam = tavern.add_player_with_hero("Adam")
         ethan = tavern.add_player_with_hero("Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
-        piloted_shredder = PilotedShredder()
-        piloted_shredder.taunt = True
-        adams_war_party.board = [piloted_shredder, Khadgar()]
+        sneeds = SneedsOldShredder()
+        sneeds.taunt = True
+        adams_war_party.board = [sneeds, Khadgar()]
         ethans_war_party.board = [LieutenantGarr(), LieutenantGarr(), LieutenantGarr(), LieutenantGarr()]
         fight_boards(adams_war_party, ethans_war_party, self.TestKhadgarSummonsRandomizer())
         self.assertEqual(adam.health, 40)
@@ -1765,6 +1756,20 @@ class CombatTests(BattleGroundsTestCase):
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 38)
+
+    def test_barrens_blacksmith(self):
+        tavern = Tavern()
+        adam = tavern.add_player_with_hero("Adam")
+        ethan = tavern.add_player_with_hero("Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        blacksmith = BarrensBlacksmith()
+        blacksmith.taunt = True
+        adams_war_party.board = [blacksmith, AlleyCat()]
+        ethans_war_party.board = [DragonspawnLieutenant(), DragonspawnLieutenant(), AlleyCat(), PackLeader()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
 
 
 if __name__ == '__main__':
