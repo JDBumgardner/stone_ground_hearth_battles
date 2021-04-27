@@ -64,13 +64,13 @@ class AsyncHost(Host):
 
         self.tavern.combat_step()
         if self.tavern.game_over():
-            async def report_game_over(name, player):
+            async def report_game_over(name, player, position):
                 annotation = await self.agents[name].game_over(player, position)
                 self.replay.agent_annotate(name, annotation)
 
             game_over_tasks = []
             for position, (name, player) in enumerate(reversed(self.tavern.losers)):
-                game_over_tasks.append(asyncio_utils.create_task(report_game_over(name, player), logger=logger))
+                game_over_tasks.append(asyncio_utils.create_task(report_game_over(name, player, position), logger=logger))
             await asyncio.gather(*game_over_tasks)
             self._on_game_over()
 
