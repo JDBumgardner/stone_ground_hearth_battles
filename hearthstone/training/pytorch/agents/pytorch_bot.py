@@ -43,8 +43,12 @@ class PytorchBot(AnnotatingAgent):
                 EncodedActionSet(
                     valid_actions_mask.player_action_tensor.unsqueeze(0),
                     valid_actions_mask.card_action_tensor.unsqueeze(0),
+                    valid_actions_mask.battlecry_target_tensor.unsqueeze(0),
                     valid_actions_mask.rearrange_phase.unsqueeze(0),
-                    valid_actions_mask.cards_to_rearrange.unsqueeze(0)),
+                    valid_actions_mask.cards_to_rearrange.unsqueeze(0),
+                    valid_actions_mask.store_start,
+                    valid_actions_mask.hand_start,
+                    valid_actions_mask.board_start),
                 None)
             assert (len(actions) == 1)
             action = actions[0]

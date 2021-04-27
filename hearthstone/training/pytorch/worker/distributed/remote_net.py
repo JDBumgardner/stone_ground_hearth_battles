@@ -4,6 +4,7 @@ import os
 
 import torch
 
+from hearthstone.asyncio import asyncio_utils
 from hearthstone.training.pytorch.worker.distributed.tensorize_batch import _tensorize_batch, _untensorize_batch
 
 logger = logging.getLogger(__name__)
@@ -48,7 +49,7 @@ class BatchedRemoteNet:
     async def start_worker(self):
         assert self._worker_task is None
         self._stop_worker = False
-        self._worker_task = asyncio.create_task(self.worker_task())
+        self._worker_task = asyncio_utils.create_task(self.worker_task(), logger=logger)
 
     async def stop_worker(self):
         self._stop_worker = True

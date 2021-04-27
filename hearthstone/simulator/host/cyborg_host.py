@@ -1,10 +1,14 @@
 import asyncio
 
+import logging
+
+from hearthstone.asyncio import asyncio_utils
 from hearthstone.battlebots.early_game_bot import EarlyGameBot
 from hearthstone.battlebots.priority_functions import PriorityFunctions
 from hearthstone.simulator.agent import EndPhaseAction
 from hearthstone.simulator.host.async_host import AsyncHost
 
+logger = logging.getLogger(__name__)
 
 class CyborgArena(AsyncHost):
     async def async_play_round(self):
@@ -63,12 +67,12 @@ class CyborgArena(AsyncHost):
             if player.dead:
                 continue
             perform_player_action_tasks.append(
-                asyncio.create_task(perform_player_actions(self.agents[player_name], player)))
+                asyncio_utils.create_task(perform_player_actions(self.agents[player_name], player), logger=logger))
         await asyncio.gather(*perform_player_action_tasks)
 
         self.tavern.combat_step()
         if self.tavern.game_over():
             game_over_tasks = []
             for position, (name, player) in enumerate(reversed(self.tavern.losers)):
-                game_over_tasks.append(asyncio.create_task(self.agents[name].game_over(player, position)))
+                game_over_tasks.append(asyncio_utils.create_task(self.agents[name].game_over(player, position), logger=logger))
             await asyncio.gather(*game_over_tasks)

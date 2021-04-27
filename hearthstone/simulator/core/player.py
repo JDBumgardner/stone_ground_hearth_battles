@@ -88,14 +88,14 @@ class Player:
             return self._in_play
 
     @property
-    def hand(self):
+    def hand(self) -> List[MonsterCard]:
         if TEST_MODE:
             return FrozenList(self._hand)
         else:
             return self._hand
 
     @property
-    def store(self):
+    def store(self) -> List[MonsterCard]:
         if TEST_MODE:
             return FrozenList(self._store)
         else:

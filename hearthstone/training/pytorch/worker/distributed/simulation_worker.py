@@ -3,6 +3,7 @@ import random
 import time
 from typing import List
 
+import logging
 import torch
 from torch.distributed import rpc
 
@@ -16,6 +17,7 @@ from hearthstone.training.pytorch.agents.pytorch_bot import PytorchBot
 from hearthstone.training.pytorch.tensorboard_altair import TensorboardAltairAnnotator
 from hearthstone.training.pytorch.worker.distributed.remote_net import RemoteNet, BatchedRemoteNet
 
+logger = logging.getLogger(__name__)
 
 class SimulationWorker:
     def __init__(self, inference_worker):
@@ -53,7 +55,7 @@ class SimulationWorker:
                         contestant.agent_generator.kwargs['net'] = nets[contestant.name]
             for _, net in nets.items():
                 await net.start_worker()
-            tasks = [asyncio.create_task(self.play_game(learning_bot_contestant, other_contestants, game_size)) for _ in
+            tasks = [asyncio_utils.create_task(self.play_game(learning_bot_contestant, other_contestants, game_size), logger=logger) for _ in
                      range(num_games)]
             result = await asyncio.gather(
                 *tasks)

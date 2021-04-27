@@ -1,12 +1,13 @@
 import collections
 import queue
-from typing import List
+from typing import List, Union
 
 import torch
 
 from hearthstone.simulator.agent.actions import StandardAction
 from hearthstone.simulator.core.player import Player
-from hearthstone.training.pytorch.encoding.state_encoding import State, EncodedActionSet, Feature, Encoder
+from hearthstone.training.pytorch.encoding.state_encoding import State, EncodedActionSet, Feature, Encoder, \
+    ActionComponent
 
 # A global singleton queue, since multiprocessing can't handle passing the queue through as a function argument.
 global_process_tensor_queue: queue.Queue = torch.multiprocessing.Queue()
@@ -74,8 +75,8 @@ class SharedTensorPoolEncoder(Encoder):
     def action_encoding_size(self) -> int:
         return self.base_encoder.action_encoding_size()
 
-    def get_action_index(self, action: StandardAction) -> int:
-        return self.base_encoder.get_action_index(action)
+    def get_action_component_index(self, action: Union[StandardAction, ActionComponent]) -> int:
+        return self.base_encoder.get_action_component_index(action)
 
-    def get_indexed_action(self, index: int) -> StandardAction:
-        return self.base_encoder.get_indexed_action(index)
+    def get_indexed_action_component(self, index: int) -> ActionComponent:
+        return self.base_encoder.get_indexed_action_component(index)

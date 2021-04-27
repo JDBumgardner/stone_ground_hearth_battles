@@ -30,6 +30,7 @@ def rpc_backed_options(num_workers):
 
 
 def run_worker(rank, num_workers: int):
+    logging.basicConfig(level=logging.WARN)
     os.environ['MASTER_ADDR'] = 'localhost'
     os.environ['MASTER_PORT'] = '29500'
     rpc.init_rpc(SIMULATOR_PROCESS_NAMES.format(rank), rank=rank + 1, world_size=num_workers + 1,

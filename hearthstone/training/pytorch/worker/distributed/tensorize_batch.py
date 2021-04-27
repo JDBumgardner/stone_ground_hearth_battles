@@ -17,16 +17,23 @@ def _tensorize_batch(batch: List[Tuple[State, EncodedActionSet, Optional[List[Ac
         [b[1].player_action_tensor for b in batch], dim=0).detach()
     valid_card_actions_tensor = torch.cat(
         [b[1].card_action_tensor for b in batch], dim=0).detach()
+    valid_battlecry_target_tensor = torch.cat(
+        [b[1].battlecry_target_tensor for b in batch], dim=0).detach()
     rearrange_phase = torch.cat([b[1].rearrange_phase for b in batch], dim=0).detach()
     cards_to_rearrange = torch.cat(
         [b[1].cards_to_rearrange for b in batch], dim=0).detach()
     chosen_actions = None if batch[0][2] is None else [b[2] for b in batch]
     return (StateBatch(player_tensor=player_tensor.to(device),
                        cards_tensor=cards_tensor.to(device)),
-            EncodedActionSet(player_action_tensor=valid_player_actions_tensor.to(device),
-                             card_action_tensor=valid_card_actions_tensor.to(device),
-                             rearrange_phase=rearrange_phase.to(device),
-                             cards_to_rearrange=cards_to_rearrange.to(device)),
+            EncodedActionSet(player_action_tensor=valid_player_actions_tensor,
+                             card_action_tensor=valid_card_actions_tensor,
+                             battlecry_target_tensor=valid_battlecry_target_tensor,
+                             rearrange_phase=rearrange_phase,
+                             cards_to_rearrange=cards_to_rearrange,
+                             store_start=batch[0][1].store_start,
+                             hand_start=batch[0][1].hand_start,
+                             board_start=batch[0][1].board_start
+                             ).to(device),
             chosen_actions,
             )
 

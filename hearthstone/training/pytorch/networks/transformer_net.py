@@ -7,10 +7,12 @@ from torch.distributions import Categorical
 from torch.nn import LayerNorm
 from torch.nn.init import xavier_uniform_
 
-from hearthstone.simulator.agent.actions import Action, RearrangeCardsAction, StandardAction, DiscoverChoiceAction
+from hearthstone.simulator.agent.actions import Action, RearrangeCardsAction, StandardAction, DiscoverChoiceAction, \
+    SummonAction
+from hearthstone.simulator.core.player import HandIndex, BoardIndex
 from hearthstone.training.pytorch.encoding import default_encoder
 from hearthstone.training.pytorch.encoding.default_encoder import EncodedActionSet
-from hearthstone.training.pytorch.encoding.state_encoding import State, Encoder, InvalidAction
+from hearthstone.training.pytorch.encoding.state_encoding import State, Encoder, InvalidAction, SummonComponent
 from hearthstone.training.pytorch.networks.running_norm import ObservationNormalizer
 from hearthstone.training.pytorch.replay import ActorCriticGameStepDebugInfo
 from plackett_luce.plackett_luce import PlackettLuce
@@ -156,7 +158,7 @@ class HearthstoneTransformerNet(nn.Module):
         if not isinstance(state, State):
             state = State(state[0], state[1])
         if not isinstance(valid_actions, EncodedActionSet):
-            valid_actions = EncodedActionSet(valid_actions[0], valid_actions[1], valid_actions[2], valid_actions[3])
+            valid_actions = EncodedActionSet(*valid_actions)
 
         if self.normalize_observations:
             state = self.observation_normalizer(state)
@@ -184,37 +186,63 @@ class HearthstoneTransformerNet(nn.Module):
         component_distribution = Categorical(policy.exp())
         if chosen_actions:
             component_samples = torch.tensor(
-                [self.encoding.get_action_index(action) if isinstance(action,
-                                                                      (StandardAction, DiscoverChoiceAction)) else 0 for
-                 action in
-                 chosen_actions], dtype=torch.int, device=policy.device)
+                [self.encoding.get_action_component_index(action) if isinstance(action,
+                                                                                (StandardAction,
+                                                                                 DiscoverChoiceAction)) else 0
+                 for action in chosen_actions], dtype=torch.int64, device=policy.device)
         else:
             component_samples = component_distribution.sample()
         component_log_probs = component_distribution.log_prob(component_samples)
 
-        # Here we compute the target selection scores for battlecry/magentic targets
-        # target_encoded_player = torch.torch.cat(
-        #     (policy_encoded_player,
-        #      torch.zeros((policy_encoded_player.shape[0], 4), device=policy_encoded_player.device)), dim=1)
-        # sampled_action_mask = torch.zeros_like(policy).scatter(1, component_samples.unsqueeze(-1), 1)
-        # active_cards = torch.max(torch.reshape(sampled_action_mask[:, player_policy.shape[1]:], card_policy.shape),
-        #                          dim=2).values
-        # target_encoded_cards = torch.cat(
-        #     (policy_encoded_cards, active_cards.unsqueeze(-1).expand(active_cards.shape + (4,))), dim=2)
-        #
-        # target_full_rep = torch.cat((target_encoded_player.unsqueeze(1), target_encoded_cards), dim=1).permute(1, 0, 2)
-        # target_full_rep: torch.Tensor = self.target_selection_transformer(target_full_rep).permute(1, 0, 2)
-        # target_policy = self.target_selection_fc(target_full_rep[:, 1:])
+        # Here we compute the target selection scores for battlecry/magnetic targets
+        target_encoded_player = torch.torch.cat(
+            (policy_encoded_player,
+             torch.zeros((policy_encoded_player.shape[0], 4), device=policy_encoded_player.device)), dim=1)
+
+        sampled_action_mask = torch.zeros_like(policy, dtype=torch.bool).scatter(1, component_samples.unsqueeze(-1), True)
+        active_cards = torch.max(torch.reshape(sampled_action_mask[:, player_policy.shape[1]:], card_policy.shape),
+                                 dim=2).values
+
+        hand_size = valid_actions.battlecry_target_tensor.shape[1]
+        board_size = valid_actions.battlecry_target_tensor.shape[2] -1
+        summoned_hand_cards = active_cards[:, valid_actions.hand_start:valid_actions.hand_start + hand_size]
+        # TODO: Note that this is only true because Summon is currently the only hand-card action.
+        is_summon_action = torch.max(summoned_hand_cards, dim=1).values
+
+        target_encoded_cards = torch.cat(
+            (policy_encoded_cards, active_cards.unsqueeze(-1).expand(active_cards.shape + (4,))), dim=2)
+        target_full_rep = torch.cat((target_encoded_player.unsqueeze(1), target_encoded_cards), dim=1).permute(1, 0, 2)
+        target_full_rep: torch.Tensor = self.target_selection_transformer(target_full_rep).permute(1, 0, 2)
+
+        valid_board_targets = (valid_actions.battlecry_target_tensor * summoned_hand_cards.unsqueeze(-1)).sum(dim=1)
+
+        target_no_target_rep = target_full_rep[:, 0:1]
+        target_board_rep = target_full_rep[:, 1 + valid_actions.board_start: 1 + valid_actions.board_start + board_size]
+
+        target_policy = self.target_selection_fc(torch.cat((target_no_target_rep, target_board_rep), dim=1)).squeeze(-1)
+        target_policy = target_policy.masked_fill(valid_board_targets.logical_not(), -1e30)
+        target_policy = F.log_softmax(target_policy, dim=1)
+        target_distribution = Categorical(target_policy.exp())
+
+        if chosen_actions:
+            battlecry_target_samples = torch.tensor(
+                [action.targets[0] if isinstance(action, (SummonAction)) and action.targets else 0
+                 for action in chosen_actions], dtype=torch.int, device=policy.device)
+        else:
+            battlecry_target_samples = target_distribution.sample()
+        battlecry_target_log_probs = target_distribution.log_prob(battlecry_target_samples).masked_fill(
+            is_summon_action, 0.0)
+
 
         # We compute a score saying how to order the cards on the board, and use the Plackett Luce distribution to
         # sample permutations.
         card_position_scores = self.fc_card_position(policy_encoded_cards).squeeze(-1)
-        card_position_start_index = int(valid_actions.cards_to_rearrange[:, 0].max())
-        card_position_max_length = int(valid_actions.cards_to_rearrange[:, 1].max())
-        assert card_position_start_index == int(valid_actions.cards_to_rearrange[:, 0].min())
+        card_position_start_index = valid_actions.board_start
+        card_position_max_length = int(valid_actions.cards_to_rearrange.max())
+
         permutation_distribution = PlackettLuce(
             card_position_scores[:, card_position_start_index: card_position_start_index + card_position_max_length],
-            valid_actions.cards_to_rearrange[:, 1] * valid_actions.rearrange_phase)
+            valid_actions.cards_to_rearrange * valid_actions.rearrange_phase)
         if chosen_actions:
             permutation_samples = torch.tensor(
                 [action.permutation + [0] * (card_position_max_length - len(action.permutation))
@@ -226,21 +254,26 @@ class HearthstoneTransformerNet(nn.Module):
         permutation_log_probs = permutation_distribution.log_prob(permutation_samples)
 
         output_actions = chosen_actions or [InvalidAction() for _ in range(valid_actions.player_action_tensor.shape[0])]
-        action_log_probs = torch.where(valid_actions.rearrange_phase,
-                                       permutation_log_probs,
-                                       component_log_probs)
+
         # Convert to numpy first for faster random access
         component_samples_numpy = component_samples.detach().cpu().numpy()
+        battlecry_target_samples_numpy = battlecry_target_samples.detach().cpu().numpy()
         for i in range(valid_actions.player_action_tensor.shape[0]):
             if chosen_actions:
                 output_actions[i] = chosen_actions[i]
             else:
                 if valid_actions.rearrange_phase[i]:
                     output_actions[i] = RearrangeCardsAction(
-                        permutation_samples[i, :valid_actions.cards_to_rearrange[i, 1]].tolist())
+                        permutation_samples[i, :valid_actions.cards_to_rearrange[i]].tolist())
                 else:
-                    output_actions[i] = self.encoding.get_indexed_action(component_samples_numpy[i])
+                    output_actions[i] = self.encoding.get_indexed_action_component(component_samples_numpy[i])
+                    if isinstance(output_actions[i], SummonComponent):
+                        battlecry_targets = [] if battlecry_target_samples_numpy[i] == 0 else [BoardIndex(battlecry_target_samples_numpy[i]-1)]
+                        output_actions[i] = SummonAction(HandIndex(output_actions[i].index), battlecry_targets)
 
+        action_log_probs = torch.where(valid_actions.rearrange_phase,
+                                       permutation_log_probs,
+                                       component_log_probs * battlecry_target_log_probs)
         debug_info = ActorCriticGameStepDebugInfo(
             component_policy=policy,
             permutation_logits=permutation_distribution.logits

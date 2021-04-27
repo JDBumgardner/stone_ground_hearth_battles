@@ -1,12 +1,12 @@
 import copy
-from typing import NamedTuple, Any, Tuple, Callable, List
+from typing import NamedTuple, Any, Tuple, Callable, List, Union
 
 import numpy as np
 import torch
 
-from hearthstone.simulator.agent.actions import StandardAction
+from hearthstone.simulator.agent.actions import StandardAction, Action
 from hearthstone.simulator.core.cards import MonsterCard, CardLocation
-from hearthstone.simulator.core.player import Player, BoardIndex
+from hearthstone.simulator.core.player import Player, BoardIndex, HandIndex
 
 
 class State(NamedTuple):
@@ -166,16 +166,33 @@ class SortedByValueFeature(Feature):
 
 
 class EncodedActionSet(NamedTuple):
-    player_action_tensor: torch.Tensor  # Boolean
-    card_action_tensor: torch.Tensor  # Boolean
+    # Boolean tensor. Dimensions are (batch index, action index)
+    player_action_tensor: torch.Tensor
+    # Boolean tensor. Dimensions are (batch index, card index, action index)
+    card_action_tensor: torch.Tensor
+    # Boolean tensor. Dimensions are (batch index, hand index, target index)
+    # Note that for the target index, the 0th index is no-target, and the remainder are the board indices.
+    battlecry_target_tensor: torch.Tensor  # Boolean tensor
+
     rearrange_phase: torch.Tensor  # Boolean
     cards_to_rearrange: torch.Tensor  # Start and length index as integers
 
+    # TODO: Move these into Encoder instead of EncodedActionSet
+    store_start: int
+    hand_start: int
+    board_start: int
+
     def to(self, device: torch.device):
         if device:
-            return EncodedActionSet(self.player_action_tensor.to(device), self.card_action_tensor.to(device),
-                                    self.rearrange_phase.to(device),
-                                    self.cards_to_rearrange.to(device))
+            return EncodedActionSet(
+                self.player_action_tensor.to(device), self.card_action_tensor.to(device),
+                self.battlecry_target_tensor.to(device),
+                self.rearrange_phase.to(device),
+                self.cards_to_rearrange.to(device),
+                self.store_start,
+                self.hand_start,
+                self.board_start,
+            )
         else:
             return self
 
@@ -190,16 +207,21 @@ class ActionComponent:
 
 
 class SummonComponent(ActionComponent):
-    def __init__(self, index: BoardIndex):
+    def __init__(self, index: HandIndex):
         self.index = index
 
     def valid(self, player: 'Player'):
         return player.room_to_summon(self.index)
 
+    def __repr__(self):
+        return f"Summon({self.index}, ?)"
+
 
 class ActionSet(NamedTuple):
     player_action_set: List[ActionComponent]
     card_action_set: List[List[ActionComponent]]
+    # First dimension is card played, second dimension is card targeted (with 0 index meaning no card).
+    battlecry_action_set: List[List[ActionComponent]]
 
 
 class InvalidAction(StandardAction):
@@ -229,8 +251,8 @@ class Encoder:
     def action_encoding_size(self) -> int:
         raise NotImplemented()
 
-    def get_action_index(self, action: StandardAction) -> int:
+    def get_action_component_index(self, action: Union[ActionComponent, Action]) -> int:
         raise NotImplemented()
 
-    def get_indexed_action(self, index: int) -> StandardAction:
+    def get_indexed_action_component(self, index: int) -> ActionComponent:
         raise NotImplemented()

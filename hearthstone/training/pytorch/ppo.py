@@ -215,7 +215,8 @@ class PPOLearner(GlobalStepContext):
                                                                   encoded_state.cards_tensor.unsqueeze(0)),
                                                             EncodedActionSet(
                                                                 valid_actions_mask.player_action_tensor.unsqueeze(0),
-                                                                valid_actions_mask.card_action_tensor.unsqueeze(0))))
+                                                                valid_actions_mask.card_action_tensor.unsqueeze(0),
+                                                                )))
 
     def load_latest_saved_versions(self, run, n) -> Dict[int, nn.Module]:
         resume_from_dir = "../../../data/learning/pytorch/saved_models/{}".format(run)
@@ -489,8 +490,7 @@ class PPOTensorboard:
         self.entropy_loss_rearrange_approx_welford.update(entropy_weight * action_log_probs.masked_select(
             transition_batch.valid_actions.rearrange_phase))
         self.entropy_loss_rearrange_min_welford.update(- entropy_weight *
-                                                       (transition_batch.valid_actions.cards_to_rearrange[:,
-                                                        1] + 1).masked_select(
+                                                       (transition_batch.valid_actions.cards_to_rearrange + 1).masked_select(
                                                            transition_batch.valid_actions.rearrange_phase).float().lgamma())
         self.kl_divergence_main_dist_exact_welford.update((debug.component_policy.exp() * (
                 debug.component_policy - transition_batch.debug_component_policy)).sum(dim=1).masked_select(

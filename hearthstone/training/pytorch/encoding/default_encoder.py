@@ -1,12 +1,12 @@
 import enum
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Union
 
 import numpy as np
 import torch
 
 from hearthstone.simulator.agent.actions import TripleRewardsAction, TavernUpgradeAction, RerollAction, \
-    EndPhaseAction, SummonAction, BuyAction, SellAction, StandardAction, DiscoverChoiceAction, HeroPowerAction, \
-    FreezeDecision, BananaAction, RedeemGoldCoinAction, HeroDiscoverAction
+    EndPhaseAction, BuyAction, SellAction, DiscoverChoiceAction, HeroPowerAction, \
+    FreezeDecision, BananaAction, RedeemGoldCoinAction, HeroDiscoverAction, SummonAction, Action
 from hearthstone.simulator.core.card_pool import PrintingPress
 from hearthstone.simulator.core.cards import CardLocation
 from hearthstone.simulator.core.hero import EmptyHero
@@ -15,7 +15,7 @@ from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 from hearthstone.simulator.core.player import Player, StoreIndex, HandIndex, BoardIndex, DiscoverIndex
 from hearthstone.training.pytorch.encoding.state_encoding import State, \
     LocatedCard, Feature, ScalarFeature, OnehotFeature, CombinedFeature, ListOfFeatures, SortedByValueFeature, \
-    EncodedActionSet, Encoder, InvalidAction, ActionSet
+    EncodedActionSet, Encoder, InvalidAction, ActionSet, SummonComponent, ActionComponent
 
 MAX_ENCODED_STORE = 7
 MAX_ENCODED_HAND = 10
@@ -132,19 +132,26 @@ def _all_actions() -> ActionSet:
                          EndPhaseAction(FreezeDecision.FREEZE),
                          EndPhaseAction(FreezeDecision.UNFREEZE)]
     store_action_set = [
-        [BuyAction(index), InvalidAction(), InvalidAction(), InvalidAction(), HeroPowerAction(store_target=index),
-         BananaAction(store_target=index)] for index in store_indices()]
+        [BuyAction(index), InvalidAction(), InvalidAction(), HeroPowerAction(store_target=index),
+         BananaAction(store_target=index)]
+        for index in store_indices()]
     hand_action_set = [
-        [InvalidAction(), SummonAction(index), SummonAction(index, [BoardIndex(0)]), InvalidAction(), InvalidAction(),
+        [InvalidAction(), SummonComponent(index), InvalidAction(), InvalidAction(),
          InvalidAction()] for index in hand_indices()]
     board_action_set = [
-        [InvalidAction(), InvalidAction(), InvalidAction(), SellAction(index), HeroPowerAction(board_target=index),
+        [InvalidAction(), InvalidAction(), SellAction(index), HeroPowerAction(board_target=index),
          BananaAction(board_target=index)] for index in board_indices()]
     discover_action_set = [
-        [InvalidAction(), InvalidAction(), InvalidAction(),
+        [InvalidAction(), InvalidAction(),
          InvalidAction(), DiscoverChoiceAction(index), InvalidAction()] for index in
         discover_indices()]
-    return ActionSet(player_action_set, store_action_set + hand_action_set + board_action_set + discover_action_set)
+
+    battlecry_action_set = [
+        [SummonAction(hand_index, [])] + [SummonAction(hand_index, [board_index]) for board_index in board_indices()]
+        for hand_index in hand_indices()
+    ]
+    return ActionSet(player_action_set, store_action_set + hand_action_set + board_action_set + discover_action_set,
+                     battlecry_action_set)
 
 
 ALL_ACTIONS = _all_actions()
@@ -181,12 +188,17 @@ class DefaultEncoder(Encoder):
             for j, action in enumerate(card_actions):
                 cards_action_array[i, j] = action.valid(player)
         cards_action_tensor = torch.from_numpy(cards_action_array)
+        battlecry_target_array = np.zeros((len(actions.battlecry_action_set), len(actions.battlecry_action_set[0])), dtype=bool)
+        for i, card_actions in enumerate(actions.battlecry_action_set):
+            for j, action in enumerate(card_actions):
+                battlecry_target_array[i, j] = action.valid(player)
+        battlecry_target_tensor = torch.from_numpy(battlecry_target_array)
 
         cards_to_rearrange = torch.tensor(
-            [MAX_ENCODED_STORE + MAX_ENCODED_HAND, len(player.in_play)], dtype=torch.long)
+            len(player.in_play), dtype=torch.long)
 
-        return EncodedActionSet(player_action_tensor, cards_action_tensor, torch.tensor(rearrange_phase),
-                                cards_to_rearrange)
+        return EncodedActionSet(player_action_tensor, cards_action_tensor, battlecry_target_tensor, torch.tensor(rearrange_phase),
+                                cards_to_rearrange, 0, MAX_ENCODED_STORE, MAX_ENCODED_STORE + MAX_ENCODED_HAND)
 
     def player_encoding(self) -> Feature:
         return DEFAULT_PLAYER_ENCODING
@@ -199,10 +211,12 @@ class DefaultEncoder(Encoder):
         card_action_size = len(ALL_ACTIONS.card_action_set) * len(ALL_ACTIONS.card_action_set[0])
         return player_action_size + card_action_size
 
-    def get_action_index(self, action: StandardAction) -> int:
+    def get_action_component_index(self, action: Union[ActionComponent, Action]) -> int:
+        if isinstance(action, SummonAction):
+            action = SummonComponent(action.index)
         return ALL_ACTIONS_DICT[str(action)]
 
-    def get_indexed_action(self, index: int) -> StandardAction:
+    def get_indexed_action_component(self, index: int) -> ActionComponent:
         if index < len(ALL_ACTIONS.player_action_set):
             return ALL_ACTIONS.player_action_set[index]
         else:

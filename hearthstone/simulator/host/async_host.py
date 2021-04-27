@@ -2,12 +2,15 @@ import asyncio
 import itertools
 from typing import Dict, Optional, List
 
+import logging
+
 from hearthstone.asyncio import asyncio_utils
 from hearthstone.simulator.agent.actions import EndPhaseAction
 from hearthstone.simulator.core.randomizer import Randomizer
 from hearthstone.simulator.host.host import Host
 from hearthstone.simulator.replay.replay import Replay
 
+logger = logging.getLogger(__name__)
 
 class AsyncHost(Host):
 
@@ -21,7 +24,7 @@ class AsyncHost(Host):
 
         player_choice_tasks = []
         for player_name, player in self.tavern.players.items():
-            player_choice_tasks.append(asyncio.create_task(set_player_choice(player_name, player)))
+            player_choice_tasks.append(asyncio_utils.create_task(set_player_choice(player_name, player), logger=logger))
         await asyncio.gather(*player_choice_tasks)
 
     def play_round(self):
@@ -56,7 +59,7 @@ class AsyncHost(Host):
             if player.dead:
                 continue
             perform_player_action_tasks.append(
-                asyncio.create_task(perform_player_actions(player_name, self.agents[player_name], player)))
+                asyncio_utils.create_task(perform_player_actions(player_name, self.agents[player_name], player), logger=logger))
         await asyncio.gather(*perform_player_action_tasks)
 
         self.tavern.combat_step()
@@ -67,7 +70,7 @@ class AsyncHost(Host):
 
             game_over_tasks = []
             for position, (name, player) in enumerate(reversed(self.tavern.losers)):
-                game_over_tasks.append(asyncio.create_task(report_game_over(name, player)))
+                game_over_tasks.append(asyncio_utils.create_task(report_game_over(name, player), logger=logger))
             await asyncio.gather(*game_over_tasks)
             self._on_game_over()
 

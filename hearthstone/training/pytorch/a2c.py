@@ -9,7 +9,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 from hearthstone.ladder.ladder import Contestant, update_ratings, print_standings, save_ratings
 from hearthstone.simulator.host import RoundRobinHost
-from hearthstone.training.pytorch.encoding.default_encoder import get_indexed_action, \
+from hearthstone.training.pytorch.encoding.default_encoder import get_indexed_action_component, \
     DefaultEncoder
 from hearthstone.training.pytorch.encoding.state_encoding import Transition
 from hearthstone.training.pytorch.networks.feedforward_net import HearthstoneFFNet
@@ -47,7 +47,7 @@ def learn(tensorboard: SummaryWriter, optimizer: optim.Adam, learning_net: nn.Mo
     tensorboard.add_histogram("value/train", value, global_step)
     tensorboard.add_histogram("next_value/train", next_value, global_step)
     tensorboard.add_histogram("advantage/train", advantage, global_step)
-    tensorboard.add_text("action/train", str(get_indexed_action(int(transition_batch.action[0]))), global_step)
+    tensorboard.add_text("action/train", str(get_indexed_action_component(int(transition_batch.action[0]))), global_step)
     tensorboard.add_scalar("avg_reward/train",
                            transition_batch.reward.masked_select(transition_batch.is_terminal).float().mean(),
                            global_step)

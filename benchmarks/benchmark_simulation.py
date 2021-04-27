@@ -1,8 +1,13 @@
 import asyncio
 
+import logging
+
+from hearthstone.asyncio import asyncio_utils
 from hearthstone.battlebots.random_bot import RandomBot
 from hearthstone.simulator.core.randomizer import DefaultRandomizer
 from hearthstone.simulator.host.async_host import AsyncHost
+
+logger = logging.getLogger(__name__)
 
 
 async def main():
@@ -11,7 +16,7 @@ async def main():
              ]
     for j, host in enumerate(hosts):
         host.tavern.randomizer = DefaultRandomizer(j)
-    tasks = [asyncio.create_task(host.async_play_game()) for host in hosts]
+    tasks = [asyncio_utils.create_task(host.async_play_game(), logger=logger) for host in hosts]
     await asyncio.gather(*tasks)
 
 
