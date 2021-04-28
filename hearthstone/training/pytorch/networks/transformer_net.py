@@ -233,7 +233,6 @@ class HearthstoneTransformerNet(nn.Module):
         battlecry_target_log_probs = target_distribution.log_prob(battlecry_target_samples).masked_fill(
             is_summon_action.logical_not(), 0.0)
 
-
         # We compute a score saying how to order the cards on the board, and use the Plackett Luce distribution to
         # sample permutations.
         card_position_scores = self.fc_card_position(policy_encoded_cards).squeeze(-1)
@@ -273,7 +272,7 @@ class HearthstoneTransformerNet(nn.Module):
 
         action_log_probs = torch.where(valid_actions.rearrange_phase,
                                        permutation_log_probs,
-                                       component_log_probs * battlecry_target_log_probs)
+                                       component_log_probs + battlecry_target_log_probs)
         debug_info = ActorCriticGameStepDebugInfo(
             component_policy=policy,
             permutation_logits=permutation_distribution.logits
