@@ -231,7 +231,7 @@ class HearthstoneTransformerNet(nn.Module):
         else:
             battlecry_target_samples = target_distribution.sample()
         battlecry_target_log_probs = target_distribution.log_prob(battlecry_target_samples).masked_fill(
-            is_summon_action, 0.0)
+            is_summon_action.logical_not(), 0.0)
 
 
         # We compute a score saying how to order the cards on the board, and use the Plackett Luce distribution to
