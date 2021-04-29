@@ -226,7 +226,7 @@ class HearthstoneTransformerNet(nn.Module):
 
         if chosen_actions:
             battlecry_target_samples = torch.tensor(
-                [action.targets[0] if isinstance(action, (SummonAction)) and action.targets else 0
+                [action.targets[0] + 1 if isinstance(action, (SummonAction)) and action.targets else 0
                  for action in chosen_actions], dtype=torch.int, device=policy.device)
         else:
             battlecry_target_samples = target_distribution.sample()
@@ -267,7 +267,8 @@ class HearthstoneTransformerNet(nn.Module):
                 else:
                     output_actions[i] = self.encoding.get_indexed_action_component(component_samples_numpy[i])
                     if isinstance(output_actions[i], SummonComponent):
-                        battlecry_targets = [] if battlecry_target_samples_numpy[i] == 0 else [BoardIndex(battlecry_target_samples_numpy[i]-1)]
+                        battlecry_targets = [] if battlecry_target_samples_numpy[i] == 0 else [
+                            BoardIndex(battlecry_target_samples_numpy[i] - 1)]
                         output_actions[i] = SummonAction(HandIndex(output_actions[i].index), battlecry_targets)
 
         action_log_probs = torch.where(valid_actions.rearrange_phase,
