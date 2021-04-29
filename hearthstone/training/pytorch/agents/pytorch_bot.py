@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 class PytorchBot(AnnotatingAgent):
     def __init__(self, net: nn.Module, encoder: Encoder, annotate: bool = True, device: Optional[torch.device] = None):
         self.authors = ["Jeremy Salwen"]
-        self.net: nn.Module = net
+        self.net: nn.Module = net.to(device)
         self.encoder: Encoder = encoder
         self.annotate = annotate
         self.device = device

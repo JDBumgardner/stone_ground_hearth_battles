@@ -83,3 +83,6 @@ class BatchedRemoteNet:
                                        *response,
                                        torch.device('cpu'))):
                 future.set_result(result)
+
+    def to(self, device: torch.device):
+        return self
