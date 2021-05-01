@@ -12,3 +12,4 @@ tensorboard~=2.3.0
 torchvision~=0.8.2
 numpy~=1.19.4
 aioupnp~=0.0.17
+pettingzoo
