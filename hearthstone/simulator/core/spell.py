@@ -1,21 +1,29 @@
+import typing
 from typing import Optional, List
 
 from hearthstone.simulator.core.cards import CardLocation
-from hearthstone.simulator.core.events import BuyPhaseContext
-from hearthstone.simulator.core.player import BoardIndex, StoreIndex
+
+if typing.TYPE_CHECKING:
+    from hearthstone.simulator.core.events import BuyPhaseContext
+    from hearthstone.simulator.core.player import BoardIndex, StoreIndex
 
 
 class Spell:
     base_cost: int = 0
     target_location: Optional[List['CardLocation']] = None
 
-    def __init__(self):
+    def __init__(self, tier: Optional[int] = None):
         self.cost = self.base_cost
+        self.tier = tier
 
     def __repr__(self):
-        return type(self).__name__
+        rep = f"{type(self).__name__}"
+        if self.tier is not None:
+            rep += f"({self.tier})"
+        return "{" + rep + "}"
 
-    def valid(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None, store_index: Optional['StoreIndex'] = None) -> bool:
+    def valid(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+              store_index: Optional['StoreIndex'] = None) -> bool:
         if context.owner.coins < self.cost:
             return False
         if self.target_location is None and (board_index is not None or store_index is not None):
@@ -33,5 +41,6 @@ class Spell:
                     return False
         return True
 
-    def on_play(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None, store_index: Optional['StoreIndex'] = None):
+    def on_play(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                store_index: Optional['StoreIndex'] = None):
         pass

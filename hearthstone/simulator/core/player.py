@@ -8,7 +8,6 @@ from hearthstone.simulator.core.cards import MonsterCard
 from hearthstone.simulator.core.events import BuyPhaseContext, CardEvent
 from hearthstone.simulator.core.hero import EmptyHero
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
-
 from hearthstone.simulator.core.spell import Spell
 from hearthstone.simulator.core.spell_pool import TripleRewardCard
 
@@ -518,3 +517,26 @@ class Player:
             return None, None
         else:
             return ranked[0][0], ranked[0][1]
+
+    def valid_play_spell(self, index: 'HandIndex', board_index: Optional['BoardIndex'] = None,
+                         store_index: Optional['StoreIndex'] = None):
+        if not self.valid_standard_action():
+            return False
+        return self.base_valid_play_spell(index, board_index, store_index)
+
+    def base_valid_play_spell(self, index: 'HandIndex', board_index: Optional['BoardIndex'] = None,
+                              store_index: Optional['StoreIndex'] = None):
+        if not self.valid_spell_index(index):
+            return False
+
+        spell = self.spells[index]
+        if not spell.valid(BuyPhaseContext(self, self.tavern.randomizer), board_index, store_index):
+            return False
+
+        return True
+
+    def play_spell(self, index: 'HandIndex', board_index: Optional['BoardIndex'] = None,
+                   store_index: Optional['StoreIndex'] = None):
+        assert self.valid_play_spell(index, board_index, store_index)
+        spell = self.pop_spell(index)
+        spell.on_play(BuyPhaseContext(self, self.tavern.randomizer), board_index, store_index)

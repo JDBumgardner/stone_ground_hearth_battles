@@ -323,7 +323,7 @@ class CardTests(BattleGroundsTestCase):
         self.assertEqual(player_1.in_play[2].attack, 2)
         self.assertEqual(player_1.in_play[1].health, 2)
         self.assertEqual(player_1.in_play[2].health, 2)
-        self.assertEqual([card.level for card in player_1.triple_rewards], [2])
+        self.assertEqual([card.tier for card in player_1.triple_rewards], [2])
 
     def test_golden_token(self):
         tavern = Tavern(restrict_types=False)
@@ -353,7 +353,7 @@ class CardTests(BattleGroundsTestCase):
         self.assertEqual(player_1.in_play[0].golden, False)
         self.assertEqual(player_1.triple_rewards, [])
         player_1.summon_from_hand(HandIndex(0))
-        self.assertEqual([card.level for card in player_1.triple_rewards], [2])
+        self.assertEqual([card.tier for card in player_1.triple_rewards], [2])
 
     def test_buffed_golden(self):
         tavern = Tavern(restrict_types=False)
@@ -399,7 +399,7 @@ class CardTests(BattleGroundsTestCase):
         tavern.buying_step()
         player_1.purchase(StoreIndex(0))
         player_1.summon_from_hand(HandIndex(0))
-        self.assertEqual([card.level for card in player_1.triple_rewards], [2])
+        self.assertEqual([card.tier for card in player_1.triple_rewards], [2])
         player_1.play_triple_rewards()
         player_1.select_discover(DiscoverIndex(0))
         print(f"Player 1's hand is: {player_1.hand}")
@@ -431,7 +431,7 @@ class CardTests(BattleGroundsTestCase):
             tavern.combat_step()
         tavern.buying_step()
         player_1.summon_from_hand(HandIndex(0))
-        self.assertEqual([card.level for card in player_1.triple_rewards], [2])
+        self.assertEqual([card.tier for card in player_1.triple_rewards], [2])
         player_1.upgrade_tavern()
         player_2.upgrade_tavern()
         tavern.combat_step()
@@ -444,7 +444,7 @@ class CardTests(BattleGroundsTestCase):
         self.assertCardListEquals(player_1.hand, [FreedealingGambler])
         self.assertEqual(player_1.hand[0].golden, True)
         player_1.summon_from_hand(HandIndex(0))
-        self.assertEqual([card.level for card in player_1.triple_rewards], [3])
+        self.assertEqual([card.tier for card in player_1.triple_rewards], [3])
 
     def test_micro_machine(self):
         tavern = Tavern(restrict_types=False)
@@ -2152,7 +2152,7 @@ class CardTests(BattleGroundsTestCase):
         tavern.buying_step()
         self.assertEqual(len(player_1.triple_rewards), 2)
         for reward in player_1.triple_rewards:
-            self.assertEqual(reward.level, 3)
+            self.assertEqual(reward.tier, 3)
 
     def test_southsea_strongarm(self):
         tavern = Tavern(restrict_types=False)
@@ -3115,7 +3115,7 @@ class CardTests(BattleGroundsTestCase):
             tavern.combat_step()
         self.assertEqual(player_1.hero.tickets_purchased, 0)
         self.assertEqual(len(player_1.triple_rewards), 1)
-        self.assertEqual(player_1.triple_rewards[0].level, 1)
+        self.assertEqual(player_1.triple_rewards[0].tier, 1)
 
     class TestBigBananaRandomizer(DefaultRandomizer):
         def select_random_number(self, lo: int, hi: int) -> int:

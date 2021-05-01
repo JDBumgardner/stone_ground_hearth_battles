@@ -212,7 +212,8 @@ class HeroPowerAction(StandardAction):
 
 
 class PlaySpellAction(StandardAction):
-    def __init__(self, index: 'HandIndex', board_target: Optional['BoardIndex'] = None, store_target: Optional['StoreIndex'] = None):
+    def __init__(self, index: 'HandIndex', board_target: Optional['BoardIndex'] = None,
+                 store_target: Optional['StoreIndex'] = None):
         self.index = index
         self.board_target = board_target
         self.store_target = store_target
