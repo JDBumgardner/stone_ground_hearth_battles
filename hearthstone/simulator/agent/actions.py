@@ -251,6 +251,16 @@ def generate_standard_actions(player: 'Player') -> Generator[StandardAction, Non
         yield from yield_if_base_valid(player, BuyAction(StoreIndex(index)))
         yield from yield_if_base_valid(player, HeroPowerAction(store_target=StoreIndex(index)))
 
+    for index in range(len(player.spells)):
+        yield PlaySpellAction(HandIndex(index))
+        for board_index in range(len(player.in_play)):
+            yield from yield_if_base_valid(player,
+                                           PlaySpellAction(HandIndex(index), board_target=BoardIndex(board_index)))
+
+        for store_index in range(len(player.store)):
+            yield from yield_if_base_valid(player,
+                                           PlaySpellAction(HandIndex(index), store_target=StoreIndex(store_index)))
+
     if player.room_on_board():
         for index, card in enumerate(player.hand):
             if card.num_battlecry_targets:
