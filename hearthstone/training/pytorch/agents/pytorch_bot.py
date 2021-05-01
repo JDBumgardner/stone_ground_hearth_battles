@@ -77,7 +77,7 @@ class PytorchBot(AnnotatingAgent):
         return action, ac_game_step_info
 
     async def annotated_discover_choice_action(self, player: 'Player') -> (
-    DiscoverChoiceAction, ActorCriticGameStepInfo):
+            DiscoverChoiceAction, ActorCriticGameStepInfo):
         action, ac_game_step_info = await self.act(player, False)
         assert isinstance(action, DiscoverChoiceAction), action
         return action, ac_game_step_info

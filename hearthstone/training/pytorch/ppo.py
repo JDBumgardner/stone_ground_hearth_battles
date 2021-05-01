@@ -678,7 +678,7 @@ def main():
         'nn.architecture': 'transformer',
         'nn.state_encoder': 'Default',
         'nn.hidden_layers': 3,
-        'nn.hidden_size': 128,
+        'nn.hidden_size': 64,
         'nn.activation': 'gelu',
         'nn.shared': False,
         'nn.encoding.redundant': True,
