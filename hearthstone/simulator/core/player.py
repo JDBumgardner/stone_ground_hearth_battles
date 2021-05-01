@@ -10,6 +10,7 @@ from hearthstone.simulator.core.hero import EmptyHero
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 
 from hearthstone.simulator.core.spell import Spell
+from hearthstone.simulator.core.spell_pool import TripleRewardCard
 
 if typing.TYPE_CHECKING:
     from hearthstone.simulator.core.tavern import Tavern
@@ -165,7 +166,7 @@ class Player:
         card = self._hand.pop(index)
         self.gain_board_card(card)
         if card.golden:
-            self.triple_rewards.append(TripleRewardCard(min(self.tavern_tier + 1, 6)))
+            self.gain_spell(TripleRewardCard(min(self.tavern_tier + 1, 6)))
         target_cards = [self.in_play[target] for target in targets]
         self.broadcast_buy_phase_event(events.SummonBuyEvent(card, target_cards))
         self.played_minions.append(type(card))

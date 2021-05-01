@@ -10,6 +10,7 @@ from hearthstone.simulator.core.cards import MonsterCard, one_minion_per_type, C
 from hearthstone.simulator.core.combat import logger
 from hearthstone.simulator.core.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
+from hearthstone.simulator.core.spell_pool import GoldCoin
 
 
 class MamaBear(MonsterCard):
@@ -2229,8 +2230,7 @@ class WardenOfOld(MonsterCard):
 
     def base_deathrattle(self, context: 'CombatPhaseContext'):
         for _ in range(2 if self.golden else 1):
-            if context.friendly_war_party.owner.room_in_hand():
-                context.friendly_war_party.owner.gold_coins += 1
+            context.friendly_war_party.owner.gain_spell(GoldCoin())
 
 
 class ArmOfTheEmpire(MonsterCard):

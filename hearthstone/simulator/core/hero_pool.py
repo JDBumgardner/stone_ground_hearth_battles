@@ -12,7 +12,7 @@ from hearthstone.simulator.core.hero import Hero
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 from hearthstone.simulator.core.player import BoardIndex, StoreIndex, DiscoverIndex, HeroChoiceIndex
 from hearthstone.simulator.core.secrets import SECRETS
-from hearthstone.simulator.core.spell_pool import TripleRewardCard
+from hearthstone.simulator.core.spell_pool import TripleRewardCard, GoldCoin, Prize, Banana, BigBanana, RecruitmentMap
 
 
 class Pyramad(Hero):
@@ -148,12 +148,12 @@ class LichBazhial(Hero):
 
     def hero_power_valid_impl(self, context: BuyPhaseContext, board_index: Optional['BoardIndex'] = None,
                               store_index: Optional['StoreIndex'] = None):
-        return context.owner.room_in_hand()
+        return context.owner.room_in_hand()  # can you use the power with room in hand?
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
         context.owner.take_damage(2)
-        context.owner.gold_coins += 1
+        context.owner.gain_spell(GoldCoin())
 
 
 class SkycapnKragg(Hero):
@@ -399,49 +399,27 @@ class KingMukla(Hero):
 
     def hero_power_valid_impl(self, context: BuyPhaseContext, board_index: Optional['BoardIndex'] = None,
                               store_index: Optional['StoreIndex'] = None):
-        return context.owner.room_in_hand()
+        return context.owner.room_in_hand()  # can you use the power with room in hand?
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
         for _ in range(2):
-            if context.owner.room_in_hand():
-                context.owner.bananas += 1
-                if context.randomizer.select_random_number(1, 3) == 1:
-                    context.owner.big_bananas += 1
+            if context.randomizer.select_random_number(1, 3) == 1:
+                context.owner.gain_spell(BigBanana())
+            else:
+                context.owner.gain_spell(Banana())
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_END and self.hero_power_used:
             for player in context.owner.tavern.players.values():
-                if player != context.owner and player.room_in_hand():
-                    player.bananas += 1
+                if player != context.owner:
+                    player.gain_spell(Banana())
 
 
 class EliseStarseeker(Hero):
-    base_power_cost = 3
-    multiple_power_uses_per_turn = True
-
-    def __init__(self):
-        super().__init__()
-        self.recruitment_maps = []
-
-    def occupied_hand_slots(self) -> int:
-        return len(self.recruitment_maps)
-
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
-        if event.event is EVENTS.TAVERN_UPGRADE and context.owner.room_in_hand():
-            self.recruitment_maps.append(context.owner.tavern_tier)
-
-    def hero_power_valid_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
-                              store_index: Optional['StoreIndex'] = None):
-        return bool(self.recruitment_maps)
-
-    def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
-                        store_index: Optional['StoreIndex'] = None):
-        discover_tier = self.recruitment_maps.pop()
-        context.owner.draw_discover(lambda card: card.tier == discover_tier)
-
-    def hero_info(self) -> Optional[str]:
-        return f'current recruitment maps: {["tier " + str(map) for map in self.recruitment_maps]}'
+        if event.event is EVENTS.TAVERN_UPGRADE:
+            context.owner.gain_spell(RecruitmentMap(context.owner.tavern_tier))
 
 
 class AlAkir(Hero):
@@ -781,7 +759,7 @@ class SilasDarkmoon(Hero):
                 event.card.ticket = False
                 if self.tickets_purchased == 3:
                     self.tickets_purchased = 0
-                    context.owner.triple_rewards.append(TripleRewardCard(context.owner.tavern_tier))
+                    context.owner.gain_spell(Prize(context.owner.tavern_tier))
 
     def hero_info(self) -> Optional[str]:
         return f'{3 - self.tickets_purchased} ticket buys left until discover reward'
@@ -838,13 +816,15 @@ class LordBarov(Hero):
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.RESULTS_BROADCAST and self.winning_pick is not None:
             if event.winner == self.winning_pick:
-                context.owner.gold_coins += 3
-                self.winning_pick = None
+                num_gold_coins = 3
             elif event.tie:
-                context.owner.gold_coins += 1
-                self.winning_pick = None
+                num_gold_coins = 1
             elif event.loser == self.winning_pick:
-                self.winning_pick = None
+                num_gold_coins = 0
+
+            for _ in range(num_gold_coins):
+                context.owner.gain_spell(GoldCoin())
+            self.winning_pick = None
 
 
 class MaievShadowsong(Hero):
