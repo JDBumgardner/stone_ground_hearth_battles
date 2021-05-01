@@ -211,44 +211,21 @@ class HeroPowerAction(StandardAction):
         return player.base_valid_hero_power(self.board_target, self.store_target)
 
 
-class TripleRewardsAction(StandardAction):
-    def __repr__(self):
-        return f"TripleRewards()"
-
-    def apply(self, player: 'Player'):
-        player.play_triple_rewards()
-
-    def base_valid(self, player: 'Player') -> bool:
-        return player.base_valid_triple_rewards()
-
-    def str_in_context(self, player: 'Player') -> str:
-        return f"TripleRewards({player.triple_rewards[-1]})"
-
-
-class RedeemGoldCoinAction(StandardAction):
-    def __repr__(self):
-        return f"RedeemGoldCoin()"
-
-    def apply(self, player: 'Player'):
-        player.redeem_gold_coin()
-
-    def base_valid(self, player: 'Player') -> bool:
-        return player.gold_coins >= 1
-
-
-class BananaAction(StandardAction):
-    def __init__(self, board_target: Optional['BoardIndex'] = None, store_target: Optional['StoreIndex'] = None):
+class PlaySpellAction(StandardAction):
+    def __init__(self, index: 'HandIndex', board_target: Optional['BoardIndex'] = None, store_target: Optional['StoreIndex'] = None):
+        self.index = index
         self.board_target = board_target
         self.store_target = store_target
 
     def __repr__(self):
-        return f"Banana({self.board_target}, {self.store_target})"
+        return f"PlaySpell({self.index}, [{self.board_target}, {self.store_target}])"
 
     def apply(self, player: 'Player'):
-        player.use_banana(self.board_target, self.store_target)
+        player.play_spell(self.index, self.board_target, self.store_target)
 
     def base_valid(self, player: 'Player') -> bool:
-        return player.base_valid_use_banana(self.board_target, self.store_target)
+        return player.base_valid_play_spell(self.index, self.board_target, self.store_target)
+
 
 def yield_if_base_valid(player: 'Player', action: 'StandardAction') -> Generator[StandardAction, None, None]:
     if action.base_valid(player):
@@ -262,20 +239,16 @@ def generate_standard_actions(player: 'Player') -> Generator[StandardAction, Non
     yield EndPhaseAction(FreezeDecision.FREEZE)
     yield EndPhaseAction(FreezeDecision.UNFREEZE)
 
-    yield from yield_if_base_valid(player, TripleRewardsAction())
     yield from yield_if_base_valid(player, TavernUpgradeAction())
     yield from yield_if_base_valid(player, RerollAction())
     yield from yield_if_base_valid(player, HeroPowerAction())
-    yield from yield_if_base_valid(player, RedeemGoldCoinAction())
     for index in range(len(player.in_play)):
         yield SellAction(BoardIndex(index))
         yield from yield_if_base_valid(player, HeroPowerAction(board_target=BoardIndex(index)))
-        yield from yield_if_base_valid(player, BananaAction(board_target=BoardIndex(index)))
 
     for index in range(len(player.store)):
         yield from yield_if_base_valid(player, BuyAction(StoreIndex(index)))
         yield from yield_if_base_valid(player, HeroPowerAction(store_target=StoreIndex(index)))
-        yield from yield_if_base_valid(player, BananaAction(store_target=StoreIndex(index)))
 
     if player.room_on_board():
         for index, card in enumerate(player.hand):
