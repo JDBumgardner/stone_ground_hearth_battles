@@ -8,7 +8,8 @@ from hearthstone.simulator.core.cards import MonsterCard
 from hearthstone.simulator.core.events import BuyPhaseContext, CardEvent
 from hearthstone.simulator.core.hero import EmptyHero
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
-from hearthstone.simulator.core.triple_reward_card import TripleRewardCard
+
+from hearthstone.simulator.core.spell import Spell
 
 if typing.TYPE_CHECKING:
     from hearthstone.simulator.core.tavern import Tavern
@@ -39,7 +40,6 @@ class Player:
         self.health = None
         self.tavern_tier = 1
         self._coins = 0
-        self.triple_rewards = []
         self.discover_queue: List[List['MonsterCard']] = []
         self.maximum_board_size = 7
         self.maximum_hand_size = 10
@@ -50,10 +50,8 @@ class Player:
         self._hand: List[MonsterCard] = []
         self._in_play: List[MonsterCard] = []
         self._store: List[MonsterCard] = []
+        self._spells: List[Spell] = []
         self.minion_cost = 3
-        self.gold_coins = 0
-        self.bananas = 0  # tracks total number of bananas (big and small)
-        self.big_bananas = 0  # tracks how many bananas are big
         self.purchased_minions: List['Type'] = []
         self.played_minions: List['Type'] = []
         self.last_opponent_warband: List['MonsterCard'] = []
@@ -100,6 +98,13 @@ class Player:
             return FrozenList(self._store)
         else:
             return self._store
+
+    @property
+    def spells(self) -> List[Spell]:
+        if TEST_MODE:
+            return FrozenList(self._spells)
+        else:
+            return self._spells
 
     @staticmethod
     def new_player_with_hero(tavern: Optional['Tavern'], name: str, hero: Optional['Hero'] = None) -> 'Player':
@@ -213,20 +218,6 @@ class Player:
         if not self.room_on_board():
             return False
         return True
-
-    def play_triple_rewards(self):
-        if not self.triple_rewards:
-            return
-        discover_tier = self.triple_rewards.pop(-1).level
-        self.draw_discover(lambda card: card.tier == discover_tier)
-
-    def valid_triple_rewards(self) -> bool:
-        if not self.valid_standard_action():
-            return False
-        return self.base_valid_triple_rewards()
-
-    def base_valid_triple_rewards(self) -> bool:
-        return bool(self.triple_rewards)
 
     def draw_discover(self, predicate: Callable[[
                                                     'MonsterCard'], bool]):  # TODO: Jarett help make discoverables unique are cards with more copies in the deck more likely to be discovered?
@@ -385,8 +376,7 @@ class Player:
         self._in_play = [self._in_play[i] for i in permutation]
 
     def hand_size(self):
-        return len(self.hand) + len(
-            self.triple_rewards) + self.gold_coins + self.bananas + self.hero.occupied_hand_slots()
+        return len(self.hand) + len(self.spells) + self.hero.occupied_hand_slots()
 
     def room_in_hand(self):
         return self.hand_size() < self.maximum_hand_size
@@ -421,11 +411,6 @@ class Player:
             if self.health <= 0:
                 self.resolve_death()
 
-    def redeem_gold_coin(self):
-        if self.gold_coins >= 1:
-            self.gold_coins -= 1
-            self.coins += 1
-
     def gain_hand_card(self, card: 'MonsterCard'):
         if self.room_in_hand():
             self._hand.append(card)
@@ -436,6 +421,10 @@ class Player:
             self._in_play.append(card)
             if check_for_triples:
                 self.check_golden(type(card))
+
+    def gain_spell(self, spell: 'Spell'):
+        if self.room_in_hand():
+            self.spells.append(spell)
 
     def add_to_store(self, card: 'MonsterCard'):
         if self.store_size() < self.maximum_store_size:
@@ -457,6 +446,9 @@ class Player:
         card.frozen = False
         self._store.remove(card)
 
+    def remove_spell(self, spell: 'Spell'):
+        self.spells.remove(spell)
+
     def pop_hand_card(self, index: int) -> 'MonsterCard':
         return self._hand.pop(index)
 
@@ -465,6 +457,9 @@ class Player:
 
     def pop_store_card(self, index: int) -> 'MonsterCard':
         return self._store.pop(index)
+
+    def pop_spell(self, index: int) -> 'Spell':
+        return self._spells.pop(index)
 
     def valid_board_index(self, index: 'BoardIndex') -> bool:
         return 0 <= index < len(self.in_play)
@@ -475,41 +470,11 @@ class Player:
     def valid_store_index(self, index: 'StoreIndex') -> bool:
         return 0 <= index < len(self.store)
 
+    def valid_spell_index(self, index: 'HandIndex') -> bool:
+        return 0 <= index < len(self._spells)
+
     def plus_coins(self, amt: int):
         self.coins = min(self.coins + amt, 10)
-
-    def use_banana(self, board_index: Optional['BoardIndex'] = None, store_index: Optional['StoreIndex'] = None):
-        assert self.valid_use_banana(board_index, store_index)
-        assert self.big_bananas <= self.bananas
-        self.bananas -= 1
-        bonus = 1
-        if self.big_bananas > 0:  # for now, big bananas will always be used first
-            self.big_bananas -= 1
-            bonus = 2
-        if board_index is not None:
-            self.in_play[board_index].attack += bonus
-            self.in_play[board_index].health += bonus
-        if store_index is not None:
-            self.store[store_index].attack += bonus
-            self.store[store_index].health += bonus
-
-    def valid_use_banana(self, board_index: Optional['BoardIndex'] = None,
-                         store_index: Optional['StoreIndex'] = None) -> bool:
-        if not self.valid_standard_action():
-            return False
-        return self.base_valid_use_banana(board_index, store_index)
-
-    def base_valid_use_banana(self, board_index: Optional['BoardIndex'] = None,
-                             store_index: Optional['StoreIndex'] = None) -> bool:
-        if self.bananas <= 0:
-            return False
-        if board_index == store_index:
-            return False
-        if board_index is not None and not self.valid_board_index(board_index):
-            return False
-        if store_index is not None and not self.valid_store_index(store_index):
-            return False
-        return True
 
     def resolve_death(self):
         # assert not self.dead and self.health <= 0

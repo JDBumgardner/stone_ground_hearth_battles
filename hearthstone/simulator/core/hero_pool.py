@@ -12,7 +12,7 @@ from hearthstone.simulator.core.hero import Hero
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 from hearthstone.simulator.core.player import BoardIndex, StoreIndex, DiscoverIndex, HeroChoiceIndex
 from hearthstone.simulator.core.secrets import SECRETS
-from hearthstone.simulator.core.triple_reward_card import TripleRewardCard
+from hearthstone.simulator.core.spell_pool import TripleRewardCard
 
 
 class Pyramad(Hero):
@@ -342,7 +342,7 @@ class AFKay(Hero):
                 context.owner.coins = 0
             elif context.owner.tavern.turn_count == 2:
                 for _ in range(2):
-                    context.owner.triple_rewards.append(TripleRewardCard(3))
+                    context.owner.gain_spell(TripleRewardCard(3))
 
 
 class EdwinVanCleef(Hero):

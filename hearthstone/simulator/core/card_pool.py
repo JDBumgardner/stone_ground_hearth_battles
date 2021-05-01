@@ -1884,8 +1884,9 @@ class PrimalfinLookout(MonsterCard):
         if murloc_in_play:
             num_discovers = 2 if self.golden else 1
             for _ in range(num_discovers):
-                context.owner.draw_discover(lambda card: card.check_type(
-                    MONSTER_TYPES.MURLOC) and card.tier <= context.owner.tavern_tier and type(card) != type(self))
+                if context.owner.room_in_hand():
+                    context.owner.draw_discover(lambda card: card.check_type(
+                        MONSTER_TYPES.MURLOC) and card.tier <= context.owner.tavern_tier and type(card) != type(self))
 
 
 class Murozond(MonsterCard):
