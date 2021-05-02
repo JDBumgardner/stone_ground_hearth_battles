@@ -1,4 +1,3 @@
-import logging
 import unittest
 
 from hearthstone.simulator.agent.actions import generate_standard_actions, EndPhaseAction
@@ -8,7 +7,7 @@ from hearthstone.simulator.core.card_pool import *
 from hearthstone.simulator.core.cards import MonsterCard
 from hearthstone.simulator.core.hero_graveyard import *
 from hearthstone.simulator.core.hero_pool import *
-from hearthstone.simulator.core.player import StoreIndex, HandIndex, BoardIndex, DiscoverIndex, Player
+from hearthstone.simulator.core.player import StoreIndex, HandIndex, BoardIndex, DiscoverIndex, Player, SpellIndex
 from hearthstone.simulator.core.randomizer import DefaultRandomizer
 from hearthstone.simulator.core.tavern import Tavern
 from hearthstone.testing.battlegrounds_test_case import BattleGroundsTestCase
@@ -313,7 +312,7 @@ class CardTests(BattleGroundsTestCase):
         self.assertEqual(player_1.hand[0].golden, True)
         self.assertCardListEquals(player_1.in_play, [TabbyCat])
         self.assertEqual(player_1.in_play[0].golden, False)
-        self.assertEqual(player_1.triple_rewards, [])
+        self.assertEqual(len(player_1.spells), 0)
         player_1.summon_from_hand(HandIndex(0))
         self.assertCardListEquals(player_1.hand, [])
         self.assertCardListEquals(player_1.in_play, [TabbyCat, AlleyCat, TabbyCat])
@@ -323,7 +322,8 @@ class CardTests(BattleGroundsTestCase):
         self.assertEqual(player_1.in_play[2].attack, 2)
         self.assertEqual(player_1.in_play[1].health, 2)
         self.assertEqual(player_1.in_play[2].health, 2)
-        self.assertEqual([card.tier for card in player_1.triple_rewards], [2])
+        self.assertCardListEquals(player_1.spells, [TripleRewardCard])
+        self.assertEqual(player_1.spells[0].tier, 2)
 
     def test_golden_token(self):
         tavern = Tavern(restrict_types=False)
@@ -344,16 +344,17 @@ class CardTests(BattleGroundsTestCase):
         self.assertCardListEquals(player_1.in_play, [TabbyCat, TabbyCat])
         self.assertEqual(player_1.in_play[0].golden, False)
         self.assertEqual(player_1.in_play[1].golden, False)
-        self.assertEqual(player_1.triple_rewards, [])
+        self.assertEqual(len(player_1.spells), 0)
         player_1.summon_from_hand(HandIndex(0))
 
         self.assertCardListEquals(player_1.hand, [TabbyCat])
         self.assertEqual(player_1.hand[0].golden, True)
         self.assertCardListEquals(player_1.in_play, [AlleyCat])
         self.assertEqual(player_1.in_play[0].golden, False)
-        self.assertEqual(player_1.triple_rewards, [])
+        self.assertEqual(len(player_1.spells), 0)
         player_1.summon_from_hand(HandIndex(0))
-        self.assertEqual([card.tier for card in player_1.triple_rewards], [2])
+        self.assertCardListEquals(player_1.spells, [TripleRewardCard])
+        self.assertEqual(player_1.spells[0].tier, 2)
 
     def test_buffed_golden(self):
         tavern = Tavern(restrict_types=False)
@@ -399,8 +400,9 @@ class CardTests(BattleGroundsTestCase):
         tavern.buying_step()
         player_1.purchase(StoreIndex(0))
         player_1.summon_from_hand(HandIndex(0))
-        self.assertEqual([card.tier for card in player_1.triple_rewards], [2])
-        player_1.play_triple_rewards()
+        self.assertCardListEquals(player_1.spells, [TripleRewardCard])
+        self.assertEqual(player_1.spells[0].tier, 2)
+        player_1.play_spell(SpellIndex(0))
         player_1.select_discover(DiscoverIndex(0))
         print(f"Player 1's hand is: {player_1.hand}")
         self.assertCardListEquals(player_1.hand, [FreedealingGambler])
@@ -431,20 +433,22 @@ class CardTests(BattleGroundsTestCase):
             tavern.combat_step()
         tavern.buying_step()
         player_1.summon_from_hand(HandIndex(0))
-        self.assertEqual([card.tier for card in player_1.triple_rewards], [2])
+        self.assertCardListEquals(player_1.spells, [TripleRewardCard])
+        self.assertEqual(player_1.spells[0].tier, 2)
         player_1.upgrade_tavern()
         player_2.upgrade_tavern()
         tavern.combat_step()
         tavern.buying_step()
         player_1.purchase(StoreIndex(0))
         player_1.purchase(StoreIndex(0))
-        player_1.play_triple_rewards()
+        player_1.play_spell(SpellIndex(0))
         player_1.select_discover(DiscoverIndex(0))
         print(player_1.hand)
         self.assertCardListEquals(player_1.hand, [FreedealingGambler])
         self.assertEqual(player_1.hand[0].golden, True)
         player_1.summon_from_hand(HandIndex(0))
-        self.assertEqual([card.tier for card in player_1.triple_rewards], [3])
+        self.assertCardListEquals(player_1.spells, [TripleRewardCard])
+        self.assertEqual(player_1.spells[0].tier, 3)
 
     def test_micro_machine(self):
         tavern = Tavern(restrict_types=False)
@@ -1151,11 +1155,11 @@ class CardTests(BattleGroundsTestCase):
         player_2 = tavern.add_player_with_hero("lucy")
         tavern.buying_step()
         player_1.hero_power()
-        self.assertEqual(player_1.gold_coins, 1)
-        player_1.redeem_gold_coin()
+        self.assertCardListEquals(player_1.spells, [GoldCoin])
+        player_1.play_spell(SpellIndex(0))
         self.assertEqual(player_1.health, 38)
         self.assertEqual(player_1.coins, 4)
-        self.assertEqual(player_1.gold_coins, 0)
+        self.assertEqual(len(player_1.spells), 0)
 
     def test_skycapn_kragg(self):
         tavern = Tavern(restrict_types=False)
@@ -2143,15 +2147,15 @@ class CardTests(BattleGroundsTestCase):
         player_2 = tavern.add_player_with_hero("lucy")
         tavern.buying_step()
         self.assertEqual(player_1.coins, 0)
-        self.assertEqual(len(player_1.triple_rewards), 0)
+        self.assertEqual(len(player_1.spells), 0)
         tavern.combat_step()
         tavern.buying_step()
         self.assertEqual(player_1.coins, 0)
-        self.assertEqual(len(player_1.triple_rewards), 0)
+        self.assertEqual(len(player_1.spells), 0)
         tavern.combat_step()
         tavern.buying_step()
-        self.assertEqual(len(player_1.triple_rewards), 2)
-        for reward in player_1.triple_rewards:
+        self.assertCardListEquals(player_1.spells, [TripleRewardCard, TripleRewardCard])
+        for reward in player_1.spells:
             self.assertEqual(reward.tier, 3)
 
     def test_southsea_strongarm(self):
@@ -2224,10 +2228,12 @@ class CardTests(BattleGroundsTestCase):
         self.assertCardListEquals(player_1.in_play, [MurlocTidecaller, PrimalfinLookout])
         self.assertTrue(player_1.in_play[1].golden)
         self.assertEqual(len(player_1.discover_queue), 2)
-        player_1.play_triple_rewards()
-        self.assertEqual(len(player_1.discover_queue), 3)
-        for _ in range(3):
+        self.assertCardListEquals(player_1.spells, [TripleRewardCard])
+        for _ in range(2):
             player_1.select_discover(DiscoverIndex(0))
+        player_1.play_spell(SpellIndex(0))
+        self.assertEqual(len(player_1.discover_queue), 1)
+        player_1.select_discover(DiscoverIndex(0))
         self.assertEqual(len(player_1.hand), 3)
         self.assertEqual(len(player_1.discover_queue), 0)
 
@@ -2272,7 +2278,7 @@ class CardTests(BattleGroundsTestCase):
         self.assertCardListEquals(player_1.in_play, [DragonspawnLieutenant, Murozond, Goldgrubber])
         self.assertTrue(player_1.in_play[1].golden)
         self.assertTrue(player_1.in_play[2].golden)
-        self.assertEqual(len(player_1.triple_rewards), 2)
+        self.assertEqual(len(player_1.spells), 2)
 
     def test_aranna_starseeker(self):
         tavern = Tavern(restrict_types=False)
@@ -2327,21 +2333,18 @@ class CardTests(BattleGroundsTestCase):
         player_4 = tavern.add_player_with_hero("thing_2")
         tavern.buying_step()
         player_1.hero_power()
-        self.assertEqual(player_1.bananas, 2)
-        self.assertEqual(player_1.big_bananas, 0)
+        self.assertCardListEquals(player_1.spells, [Banana, Banana])
         for player in list(tavern.players.values())[1:]:
-            self.assertEqual(player.bananas, 0)
-            self.assertEqual(player.big_bananas, 0)
+            self.assertEqual(len(player.spells), 0)
         tavern.combat_step()
-        self.assertEqual(player_1.bananas, 2)
+        self.assertCardListEquals(player_1.spells, [Banana, Banana])
         for player in list(tavern.players.values())[1:]:
-            self.assertEqual(player.bananas, 1)
-            self.assertEqual(player.big_bananas, 0)
+            self.assertCardListEquals(player.spells, [Banana])
 
         tavern.buying_step()
-        player_1.use_banana(store_index=StoreIndex(0))
-        player_1.use_banana(store_index=StoreIndex(0))
-        self.assertEqual(player_1.bananas, 0)
+        player_1.play_spell(SpellIndex(0), store_index=StoreIndex(0))
+        player_1.play_spell(SpellIndex(0), store_index=StoreIndex(0))
+        self.assertEqual(len(player_1.spells), 0)
         self.assertEqual(player_1.store[0].attack, player_1.store[0].base_attack + 2)
         self.assertEqual(player_1.store[0].health, player_1.store[0].base_health + 2)
 
@@ -2350,10 +2353,12 @@ class CardTests(BattleGroundsTestCase):
         player_1 = tavern.add_player_with_hero("Dante_Kong", EliseStarseeker())
         player_2 = tavern.add_player_with_hero("lucy")
         self.upgrade_to_tier(tavern, 2)
-        self.assertEqual(len(player_1.hero.recruitment_maps), 1)
-        self.assertEqual(player_1.hero.recruitment_maps[0], 2)
+        self.assertCardListEquals(player_1.spells, [RecruitmentMap])
+        self.assertEqual(player_1.spells[0].tier, 2)
         tavern.buying_step()
-        player_1.hero_power()
+        self.assertEqual(player_1.coins, 5)
+        player_1.play_spell(SpellIndex(0))
+        self.assertEqual(player_1.coins, 2)
         self.assertEqual(len(player_1.discover_queue), 1)
         player_1.select_discover(DiscoverIndex(0))
         self.assertEqual(len(player_1.hand), 1)
@@ -3114,8 +3119,8 @@ class CardTests(BattleGroundsTestCase):
             player_1.purchase(StoreIndex(0))
             tavern.combat_step()
         self.assertEqual(player_1.hero.tickets_purchased, 0)
-        self.assertEqual(len(player_1.triple_rewards), 1)
-        self.assertEqual(player_1.triple_rewards[0].tier, 1)
+        self.assertCardListEquals(player_1.spells, [Prize])
+        self.assertEqual(player_1.spells[0].tier, 1)
 
     class TestBigBananaRandomizer(DefaultRandomizer):
         def select_random_number(self, lo: int, hi: int) -> int:
@@ -3130,23 +3135,18 @@ class CardTests(BattleGroundsTestCase):
         player_4 = tavern.add_player_with_hero("thing_2")
         tavern.buying_step()
         player_1.hero_power()
-        self.assertEqual(player_1.bananas, 2)
-        self.assertEqual(player_1.big_bananas, 2)
+        self.assertCardListEquals(player_1.spells, [BigBanana, BigBanana])
         for player in list(tavern.players.values())[1:]:
-            self.assertEqual(player.bananas, 0)
-            self.assertEqual(player.big_bananas, 0)
+            self.assertEqual(len(player.spells), 0)
         tavern.combat_step()
-        self.assertEqual(player_1.bananas, 2)
-        self.assertEqual(player_1.big_bananas, 2)
+        self.assertCardListEquals(player_1.spells, [BigBanana, BigBanana])
         for player in list(tavern.players.values())[1:]:
-            self.assertEqual(player.bananas, 1)
-            self.assertEqual(player.big_bananas, 0)
+            self.assertCardListEquals(player.spells, [Banana])
 
         tavern.buying_step()
-        player_1.use_banana(store_index=StoreIndex(0))
-        player_1.use_banana(store_index=StoreIndex(0))
-        self.assertEqual(player_1.bananas, 0)
-        self.assertEqual(player_1.big_bananas, 0)
+        player_1.play_spell(SpellIndex(0), store_index=StoreIndex(0))
+        player_1.play_spell(SpellIndex(0), store_index=StoreIndex(0))
+        self.assertEqual(len(player_1.spells), 0)
         self.assertEqual(player_1.store[0].attack, player_1.store[0].base_attack + 4)
         self.assertEqual(player_1.store[0].health, player_1.store[0].base_health + 4)
 
@@ -3299,7 +3299,7 @@ class CardTests(BattleGroundsTestCase):
         player_1.hero_select_discover(DiscoverIndex(0))
         self.assertEqual(player_1.hero.winning_pick, player_1)
         tavern.combat_step()
-        self.assertEqual(player_1.gold_coins, 3)
+        self.assertCardListEquals(player_1.spells, [GoldCoin, GoldCoin, GoldCoin])
         self.assertIsNone(player_1.hero.winning_pick)
 
     def test_lord_barov_loser(self):
@@ -3322,7 +3322,7 @@ class CardTests(BattleGroundsTestCase):
         player_1.hero_select_discover(DiscoverIndex(1))
         self.assertEqual(player_1.hero.winning_pick, player_2)
         tavern.combat_step()
-        self.assertEqual(player_1.gold_coins, 0)
+        self.assertEqual(len(player_1.spells), 0)
         self.assertIsNone(player_1.hero.winning_pick)
 
     def test_lord_barov_4_players(self):
@@ -3345,7 +3345,7 @@ class CardTests(BattleGroundsTestCase):
         player_3.hero_select_discover(DiscoverIndex(0))
         self.assertEqual(player_3.hero.winning_pick, player_1)
         tavern.combat_step()
-        self.assertEqual(player_3.gold_coins, 3)
+        self.assertCardListEquals(player_3.spells, [GoldCoin, GoldCoin, GoldCoin])
         self.assertIsNone(player_3.hero.winning_pick)
 
     class TestLordBarovTieRandomizer(DefaultRandomizer):
@@ -3375,7 +3375,7 @@ class CardTests(BattleGroundsTestCase):
         player_1.hero_select_discover(DiscoverIndex(0))
         self.assertEqual(player_1.hero.winning_pick, player_1)
         tavern.combat_step()
-        self.assertEqual(player_1.gold_coins, 1)
+        self.assertCardListEquals(player_1.spells, [GoldCoin])
         self.assertIsNone(player_1.hero.winning_pick)
 
     class TestMrrggltonRatKingRandomizer(DefaultRandomizer):

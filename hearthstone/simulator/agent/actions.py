@@ -5,7 +5,8 @@ from typing import List, Optional, Generator
 import autoslot
 
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
-from hearthstone.simulator.core.player import HeroChoiceIndex, StoreIndex, HandIndex, BoardIndex
+from hearthstone.simulator.core.player import HeroChoiceIndex, StoreIndex, HandIndex, BoardIndex, SpellIndex, Player, \
+    DiscoverIndex
 
 
 class FreezeDecision(enum.Enum):
@@ -212,7 +213,7 @@ class HeroPowerAction(StandardAction):
 
 
 class PlaySpellAction(StandardAction):
-    def __init__(self, index: 'HandIndex', board_target: Optional['BoardIndex'] = None,
+    def __init__(self, index: 'SpellIndex', board_target: Optional['BoardIndex'] = None,
                  store_target: Optional['StoreIndex'] = None):
         self.index = index
         self.board_target = board_target
@@ -252,14 +253,14 @@ def generate_standard_actions(player: 'Player') -> Generator[StandardAction, Non
         yield from yield_if_base_valid(player, HeroPowerAction(store_target=StoreIndex(index)))
 
     for index in range(len(player.spells)):
-        yield PlaySpellAction(HandIndex(index))
+        yield PlaySpellAction(SpellIndex(index))
         for board_index in range(len(player.in_play)):
             yield from yield_if_base_valid(player,
-                                           PlaySpellAction(HandIndex(index), board_target=BoardIndex(board_index)))
+                                           PlaySpellAction(SpellIndex(index), board_target=BoardIndex(board_index)))
 
         for store_index in range(len(player.store)):
             yield from yield_if_base_valid(player,
-                                           PlaySpellAction(HandIndex(index), store_target=StoreIndex(store_index)))
+                                           PlaySpellAction(SpellIndex(index), store_target=StoreIndex(store_index)))
 
     if player.room_on_board():
         for index, card in enumerate(player.hand):

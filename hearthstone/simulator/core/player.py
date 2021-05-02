@@ -25,6 +25,7 @@ TEST_MODE = False
 
 StoreIndex = typing.NewType("StoreIndex", int)
 HandIndex = typing.NewType("HandIndex", int)
+SpellIndex = typing.NewType("SpellIndex", int)
 BoardIndex = typing.NewType("BoardIndex", int)
 DiscoverIndex = typing.NewType("DiscoverIndex", int)
 HeroChoiceIndex = typing.NewType("HeroChoiceIndex", int)
@@ -424,7 +425,7 @@ class Player:
 
     def gain_spell(self, spell: 'Spell'):
         if self.room_in_hand():
-            self.spells.append(spell)
+            self._spells.append(spell)
 
     def add_to_store(self, card: 'MonsterCard'):
         if self.store_size() < self.maximum_store_size:
@@ -470,7 +471,7 @@ class Player:
     def valid_store_index(self, index: 'StoreIndex') -> bool:
         return 0 <= index < len(self.store)
 
-    def valid_spell_index(self, index: 'HandIndex') -> bool:
+    def valid_spell_index(self, index: 'SpellIndex') -> bool:
         return 0 <= index < len(self._spells)
 
     def plus_coins(self, amt: int):
@@ -518,25 +519,24 @@ class Player:
         else:
             return ranked[0][0], ranked[0][1]
 
-    def valid_play_spell(self, index: 'HandIndex', board_index: Optional['BoardIndex'] = None,
+    def valid_play_spell(self, index: 'SpellIndex', board_index: Optional['BoardIndex'] = None,
                          store_index: Optional['StoreIndex'] = None):
         if not self.valid_standard_action():
             return False
         return self.base_valid_play_spell(index, board_index, store_index)
 
-    def base_valid_play_spell(self, index: 'HandIndex', board_index: Optional['BoardIndex'] = None,
+    def base_valid_play_spell(self, index: 'SpellIndex', board_index: Optional['BoardIndex'] = None,
                               store_index: Optional['StoreIndex'] = None):
         if not self.valid_spell_index(index):
             return False
-
         spell = self.spells[index]
         if not spell.valid(BuyPhaseContext(self, self.tavern.randomizer), board_index, store_index):
             return False
-
         return True
 
-    def play_spell(self, index: 'HandIndex', board_index: Optional['BoardIndex'] = None,
+    def play_spell(self, index: 'SpellIndex', board_index: Optional['BoardIndex'] = None,
                    store_index: Optional['StoreIndex'] = None):
         assert self.valid_play_spell(index, board_index, store_index)
         spell = self.pop_spell(index)
+        self.coins -= spell.cost
         spell.on_play(BuyPhaseContext(self, self.tavern.randomizer), board_index, store_index)

@@ -1309,7 +1309,7 @@ class CombatTests(BattleGroundsTestCase):
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
-        self.assertEqual(adam.gold_coins, 1)
+        self.assertListEqual([type(card) for card in adam.spells], [GoldCoin])
 
     def test_arm_of_the_empire(self):
         tavern = Tavern()
