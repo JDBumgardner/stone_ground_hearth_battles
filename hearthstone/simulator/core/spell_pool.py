@@ -1,4 +1,6 @@
+import sys
 import typing
+from inspect import getmembers, isclass
 from typing import Optional
 
 from hearthstone.simulator.core.cards import CardLocation
@@ -59,3 +61,7 @@ class BigBanana(Spell):
             target = context.owner.store[store_index]
         target.attack += 2
         target.health += 2
+
+
+ALL_SPELLS = [member[1] for member in
+              getmembers(sys.modules[__name__], lambda member: isclass(member) and member.__module__ == __name__)]
