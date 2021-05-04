@@ -11,3 +11,4 @@ venv/*
 /data/learning/pytorch/saved_models/*
 /benchmarks/profiles/*
 *~
+/rust/pyrite_hearth_battles/target/*
