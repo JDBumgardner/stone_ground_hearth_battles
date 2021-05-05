@@ -909,7 +909,7 @@ class Tickatus(Hero):
         if event.event is EVENTS.BUY_START and (context.owner.tavern.turn_count + 1) % 4 == 0 and self.prize_tier < 5:
             self.prize_tier += 1
             if context.owner.room_in_hand():
-                prize_options = DARKMOON_PRIZES[self.prize_tier]
+                prize_options = DARKMOON_PRIZES[self.prize_tier][:]
                 selected_prizes = []
                 for _ in range(3):
                     spell_type = context.randomizer.select_spell(prize_options)
