@@ -1,11 +1,12 @@
+import collections
 import random
 import typing
 from typing import List, Callable
 
-from hearthstone.simulator.agent import Agent, StandardAction, generate_standard_actions, BuyAction, EndPhaseAction, \
-    SummonAction, \
-    TavernUpgradeAction, RerollAction, SellAction, DiscoverChoiceAction, RearrangeCardsAction, HeroDiscoverAction, \
-    FreezeDecision
+from hearthstone.simulator.agent.actions import RearrangeCardsAction, StandardAction, generate_standard_actions, \
+    TavernUpgradeAction, SummonAction, SellAction, BuyAction, RerollAction, EndPhaseAction, FreezeDecision, \
+    DiscoverChoiceAction, HeroDiscoverAction
+from hearthstone.simulator.core.cards import MonsterCard
 
 if typing.TYPE_CHECKING:
     from hearthstone.simulator.core.player import Player, StoreIndex
@@ -81,7 +82,7 @@ class PriorityStorageBot(Agent):
         return DiscoverChoiceAction(player.discover_queue[0].index(discover_cards[0]))
 
     async def hero_discover_action(self, player: 'Player') -> 'HeroDiscoverAction':
-        return HeroDiscoverAction(self.local_random.choice(range(len(player.hero.discover_queue))))
+        return HeroDiscoverAction(self.local_random.choice(range(len(player.hero.discover_queue[0]))))
 
 
 def priority_st_ad_tr_bot(seed: int):
@@ -91,7 +92,7 @@ def priority_st_ad_tr_bot(seed: int):
                             type(existing) == type(card) and not existing.golden])
         if num_existing == 2:
             score += 50
-        counts = {}
+        counts = collections.OrderedDict()
         for existing in player.hand + player.in_play:
             counts[existing.monster_type] = counts.setdefault(existing.monster_type, 0) + 1
         score += counts.setdefault(card.monster_type, 0)

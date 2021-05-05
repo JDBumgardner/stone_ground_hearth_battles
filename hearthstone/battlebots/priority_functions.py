@@ -1,3 +1,4 @@
+import collections
 import typing
 from typing import Callable
 
@@ -79,7 +80,7 @@ class PriorityFunctions:
             elif num_existing == 1:
                 score += 3
 
-            counts = {}
+            counts = collections.OrderedDict()
             for existing in player.hand + player.in_play:
                 counts[existing.monster_type] = counts.setdefault(existing.monster_type, 0) + 1
             score += counts.setdefault(card.monster_type, 0)
@@ -129,7 +130,7 @@ class PriorityFunctions:
             elif num_existing == 1:
                 score += 3
 
-            counts = {}
+            counts = collections.OrderedDict()
             for existing in player.hand + player.in_play:
                 counts[existing.monster_type] = counts.setdefault(existing.monster_type, 0) + 1
             score += counts.setdefault(card.monster_type, 0)

@@ -28,4 +28,4 @@ class RandomBot(Agent):
         return DiscoverChoiceAction(self.local_random.choice(range(len(player.discover_queue[0]))))
 
     async def hero_discover_action(self, player: 'Player') -> 'HeroDiscoverAction':
-        return HeroDiscoverAction(self.local_random.choice(range(len(player.hero.discover_queue))))
+        return HeroDiscoverAction(self.local_random.choice(range(len(player.hero.discover_queue[0]))))

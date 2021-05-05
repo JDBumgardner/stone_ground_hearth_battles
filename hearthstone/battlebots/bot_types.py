@@ -33,4 +33,4 @@ class PriorityFunctionBot(Agent):
         pass
 
     async def hero_discover_action(self, player: 'Player') -> 'HeroDiscoverAction':
-        return HeroDiscoverAction(self.local_random.choice(range(len(player.hero.discover_queue))))
+        return HeroDiscoverAction(self.local_random.choice(range(len(player.hero.discover_queue[0]))))

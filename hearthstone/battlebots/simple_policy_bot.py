@@ -5,9 +5,10 @@ import typing
 from collections import defaultdict
 from typing import List, Optional
 
-from hearthstone.simulator.agent import Agent, generate_standard_actions, TavernUpgradeAction, RerollAction, \
-    EndPhaseAction, \
-    SellAction, StandardAction, BuyAction, SummonAction, DiscoverChoiceAction, RearrangeCardsAction, HeroDiscoverAction
+from hearthstone.simulator.agent.actions import RearrangeCardsAction, generate_standard_actions, StandardAction, \
+    TavernUpgradeAction, DiscoverChoiceAction, HeroDiscoverAction, BuyAction, SellAction, SummonAction, EndPhaseAction, \
+    RerollAction
+from hearthstone.simulator.agent.agent import Agent
 
 if typing.TYPE_CHECKING:
     from hearthstone.simulator.core.player import Player
@@ -79,7 +80,7 @@ class SimplePolicyBot(Agent):
         return DiscoverChoiceAction(player.discover_queue[0].index(discover_cards[0]))
 
     async def hero_discover_action(self, player: 'Player') -> 'HeroDiscoverAction':
-        return HeroDiscoverAction(self.local_random.choice(range(len(player.hero.discover_queue))))
+        return HeroDiscoverAction(self.local_random.choice(range(len(player.hero.discover_queue[0]))))
 
     def score_action(self, player: Player, action: StandardAction) -> Optional[float]:
         if type(action) is BuyAction:
