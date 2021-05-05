@@ -93,6 +93,7 @@ class MonsterCard:
         self.link: Optional['MonsterCard'] = None  # links a card during combat to itself in the buy phase board
         self.dealt_lethal_damage_by = None
         self.frenzy_triggered = False
+        self.gruul_rules = False
 
     def __repr__(self):
         rep = f"{type(self).__name__} {self.attack}/{self.health} (t{self.tier})"  # TODO: add a proper enum to the monster typing
@@ -160,6 +161,10 @@ class MonsterCard:
                 if self.battlecry:
                     for _ in range(context.battlecry_multiplier()):
                         self.battlecry(event.targets, context)
+            elif event.event is EVENTS.BUY_END:
+                if self.gruul_rules:
+                    self.attack += 2
+                    self.health += 2
         if not self.dead or self == event.card:  # minions will trigger their own death events
             self.handle_event_powers(event, context)
 

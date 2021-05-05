@@ -235,7 +235,7 @@ class TextAgent(Agent):
 
     async def hero_discover_action(self, player: 'Player') -> 'HeroDiscoverAction':
         await self.connection.send(f"player {player.name}, you must choose a discover option.\n")
-        await self.print_player_card_list("discovery choices", player.hero.discover_choices)
+        await self.print_player_card_list("discovery choices", player.hero.discover_queue)
         await self.connection.send("input index to discover here: ")
         user_input = await self.connection.receive_line()
         while True:
@@ -250,7 +250,7 @@ class TextAgent(Agent):
         if not user_input.isnumeric():
             return None
         choice_index = int(user_input)
-        if choice_index in range(len(player.hero.discover_choices)):
+        if choice_index in range(len(player.hero.discover_queue)):
             return HeroDiscoverAction(DiscoverIndex(choice_index))
         else:
             return None

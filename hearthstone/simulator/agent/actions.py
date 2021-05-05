@@ -91,7 +91,7 @@ class HeroDiscoverAction(Action):
         return player.valid_hero_select_discover(self.discover_index)
 
     def str_in_context(self, player: 'Player') -> str:
-        return f"Choose({player.hero.discover_choices[self.discover_index]})"
+        return f"Choose({player.hero.discover_queue[self.discover_index]})"
 
 
 class StandardAction(Action):

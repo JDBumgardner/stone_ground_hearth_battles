@@ -34,7 +34,7 @@ class RoundRobinHost(Host):
                     discover_choice_action, agent_annotation = asyncio_utils.get_or_create_event_loop().run_until_complete(
                         agent.annotated_discover_choice_action(player))
                     self._apply_and_record(player_name, discover_choice_action, agent_annotation)
-                elif player.hero.discover_choices:
+                elif player.hero.discover_queue:
                     hero_discover_action, agent_annotation = asyncio_utils.get_or_create_event_loop().run_until_complete(
                         agent.annotated_hero_discover_action(player))
                     self._apply_and_record(player_name, hero_discover_action, agent_annotation)

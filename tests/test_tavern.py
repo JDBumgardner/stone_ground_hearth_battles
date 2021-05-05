@@ -1155,9 +1155,9 @@ class CardTests(BattleGroundsTestCase):
         player_2 = tavern.add_player_with_hero("lucy")
         tavern.buying_step()
         player_1.hero_power()
+        self.assertEqual(player_1.health, 38)
         self.assertCardListEquals(player_1.spells, [GoldCoin])
         player_1.play_spell(SpellIndex(0))
-        self.assertEqual(player_1.health, 38)
         self.assertEqual(player_1.coins, 4)
         self.assertEqual(len(player_1.spells), 0)
 
@@ -2360,12 +2360,7 @@ class CardTests(BattleGroundsTestCase):
         player_1.play_spell(SpellIndex(0))
         self.assertEqual(player_1.coins, 2)
         self.assertEqual(len(player_1.discover_queue), 1)
-        player_1.select_discover(DiscoverIndex(0))
-        self.assertEqual(len(player_1.hand), 1)
-        self.assertEqual(len(player_1.discover_queue), 0)
-        tavern.combat_step()
-        tavern.buying_step()
-        player_1.purchase(StoreIndex(0))
+        self.assertTrue(all(card.tier == 2 for card in player_1.discover_queue[0]))
 
     def test_party_elemental(self):
         tavern = Tavern(restrict_types=False)
@@ -3121,6 +3116,8 @@ class CardTests(BattleGroundsTestCase):
         self.assertEqual(player_1.hero.tickets_purchased, 0)
         self.assertCardListEquals(player_1.spells, [Prize])
         self.assertEqual(player_1.spells[0].tier, 1)
+        player_1.play_spell(SpellIndex(0))
+        self.assertTrue(all(card.tier == 1 for card in player_1.discover_queue[0]))
 
     class TestBigBananaRandomizer(DefaultRandomizer):
         def select_random_number(self, lo: int, hi: int) -> int:
@@ -3169,10 +3166,10 @@ class CardTests(BattleGroundsTestCase):
         player_2 = tavern.add_player_with_hero("lucy")
         tavern.buying_step()
         player_1.hero_power()
-        self.assertEqual(len(player_1.hero.discover_choices), 3)
+        self.assertEqual(len(player_1.hero.discover_queue[0]), 3)
         player_1.hero_select_discover(DiscoverIndex(0))
         self.assertEqual(len(player_1.hero.secrets), 1)
-        self.assertEqual(len(player_1.hero.discover_choices), 0)
+        self.assertEqual(len(player_1.hero.discover_queue), 0)
 
     class TestAkazamzarakIceBlockRandomizer(DefaultRandomizer):
         def select_secret(self, secrets: List['SECRETS']) -> 'SECRETS':
@@ -3262,7 +3259,7 @@ class CardTests(BattleGroundsTestCase):
         for hero in tavern.hero_pool:
             self.assertNotEqual(type(hero), SirFinleyMrrgglton)
         tavern.buying_step()
-        self.assertEqual(len(player_1.hero.discover_choices), 3)
+        self.assertEqual(len(player_1.hero.discover_queue[0]), 3)
         self.assertEqual(type(player_1.hero), SirFinleyMrrgglton)
         player_1.hero_select_discover(DiscoverIndex(0))
         self.assertNotEqual(type(player_1.hero), SirFinleyMrrgglton)
@@ -3294,7 +3291,7 @@ class CardTests(BattleGroundsTestCase):
         self.assertCardListEquals(player_1.in_play, [RockpoolHunter])
         self.assertCardListEquals(player_2.in_play, [DeckSwabbie])
         player_1.hero_power()
-        self.assertEqual(len(player_1.hero.discover_choices), 2)
+        self.assertEqual(len(player_1.hero.discover_queue[0]), 2)
         self.assertEqual(tavern.current_player_pairings, [(player_1, player_2)])
         player_1.hero_select_discover(DiscoverIndex(0))
         self.assertEqual(player_1.hero.winning_pick, player_1)
@@ -3317,7 +3314,7 @@ class CardTests(BattleGroundsTestCase):
         self.assertCardListEquals(player_1.in_play, [RockpoolHunter])
         self.assertCardListEquals(player_2.in_play, [DeckSwabbie])
         player_1.hero_power()
-        self.assertEqual(len(player_1.hero.discover_choices), 2)
+        self.assertEqual(len(player_1.hero.discover_queue[0]), 2)
         self.assertEqual(tavern.current_player_pairings, [(player_1, player_2)])
         player_1.hero_select_discover(DiscoverIndex(1))
         self.assertEqual(player_1.hero.winning_pick, player_2)
@@ -3340,7 +3337,7 @@ class CardTests(BattleGroundsTestCase):
         self.assertCardListEquals(player_1.in_play, [RockpoolHunter])
         self.assertCardListEquals(player_2.in_play, [DeckSwabbie])
         player_3.hero_power()
-        self.assertEqual(len(player_3.hero.discover_choices), 2)
+        self.assertEqual(len(player_3.hero.discover_queue[0]), 2)
         self.assertEqual(tavern.current_player_pairings, [(player_1, player_2)])
         player_3.hero_select_discover(DiscoverIndex(0))
         self.assertEqual(player_3.hero.winning_pick, player_1)
@@ -3370,7 +3367,7 @@ class CardTests(BattleGroundsTestCase):
         self.assertCardListEquals(player_1.in_play, [DeckSwabbie])
         self.assertCardListEquals(player_2.in_play, [DeckSwabbie])
         player_1.hero_power()
-        self.assertEqual(len(player_1.hero.discover_choices), 2)
+        self.assertEqual(len(player_1.hero.discover_queue[0]), 2)
         self.assertEqual(tavern.current_player_pairings, [(player_1, player_2)])
         player_1.hero_select_discover(DiscoverIndex(0))
         self.assertEqual(player_1.hero.winning_pick, player_1)
@@ -3804,6 +3801,22 @@ class CardTests(BattleGroundsTestCase):
         player_1.purchase(StoreIndex(0))
         self.assertEqual(player_1.hand[0].attack, player_1.hand[0].base_attack + 5)
         self.assertEqual(player_1.hand[1].attack, player_1.hand[1].base_attack)
+
+    def test_tickatus(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong", Tickatus())
+        player_2 = tavern.add_player_with_hero("lucy")
+        for i in range(4):
+            for _ in range(3):
+                tavern.buying_step()
+                tavern.combat_step()
+            tavern.buying_step()
+            self.assertEqual(len(player_1.hero.discover_queue[0]), 3)
+            self.assertTrue(all(spell.darkmoon_prize_tier == i + 1 for spell in player_1.hero.discover_queue[0]))
+            player_1.hero_select_discover(DiscoverIndex(0))
+            self.assertEqual(len(player_1.hero.discover_queue), 0)
+            self.assertEqual(player_1.spells[i].darkmoon_prize_tier, i + 1)
+            tavern.combat_step()
 
 
 if __name__ == '__main__':

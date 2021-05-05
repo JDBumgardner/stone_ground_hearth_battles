@@ -9,7 +9,7 @@ from hearthstone.simulator.core.events import BuyPhaseContext, CardEvent
 from hearthstone.simulator.core.hero import EmptyHero
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 from hearthstone.simulator.core.spell import Spell
-from hearthstone.simulator.core.spell_pool import TripleRewardCard
+from hearthstone.simulator.core.spell_pool import TripleRewardCard, TheUnlimitedCoin
 
 if typing.TYPE_CHECKING:
     from hearthstone.simulator.core.tavern import Tavern
@@ -48,6 +48,7 @@ class Player:
         self.refresh_store_cost = 1
         self._tavern_upgrade_costs = (0, 5, 7, 8, 9, 10)
         self._tavern_upgrade_cost = 5
+        self.tavern_cost_reduction = 1
         self._hand: List[MonsterCard] = []
         self._in_play: List[MonsterCard] = []
         self._store: List[MonsterCard] = []
@@ -58,7 +59,12 @@ class Player:
         self.last_opponent_warband: List['MonsterCard'] = []
         self.dead = False
         self.nomi_bonus = 0
-        self.free_refreshes = 0
+        self._free_refreshes = 0
+        self.new_recruit = False
+        self.the_good_stuff = False
+        self.the_unlimited_coins_played = 0
+        self.battlecry_multiplier = 1
+        self.num_turn_start_free_refreshes = 0
 
     def __repr__(self):
         return f"{self.hero} ({self.name})"
@@ -119,13 +125,25 @@ class Player:
     def coin_income_rate(self):
         return min(self.tavern.turn_count + 3, 10)
 
+    @property
+    def free_refreshes(self):
+        return self._free_refreshes
+
+    def plus_free_refreshes(self, num: int):
+        self._free_refreshes = max(num, self._free_refreshes)
+
     def buying_step(self):
         self.reset_purchased_minions_list()
         self.reset_played_minions_list()
         self.apply_turn_start_income()
+        self.apply_darkmoon_prize_effects()
         self.draw(unfreeze=False)
         self.hero.on_buy_step()
         self.broadcast_buy_phase_event(events.BuyStartEvent())
+
+    def at_buy_end(self):
+        self.decrease_tavern_upgrade_cost()
+        self.return_unlimited_coins()
 
     def reset_purchased_minions_list(self):
         self.purchased_minions = []
@@ -136,8 +154,17 @@ class Player:
     def apply_turn_start_income(self):
         self.coins = self.coin_income_rate
 
+    def apply_darkmoon_prize_effects(self):
+        self.battlecry_multiplier = 1
+        self.plus_free_refreshes(self.num_turn_start_free_refreshes)
+
     def decrease_tavern_upgrade_cost(self):
-        self.tavern_upgrade_cost -= 1
+        self.tavern_upgrade_cost -= self.tavern_cost_reduction
+
+    def return_unlimited_coins(self):
+        for _ in range(self.the_unlimited_coins_played):
+            self.gain_spell(TheUnlimitedCoin())
+        self.the_unlimited_coins_played = 0
 
     def upgrade_tavern(self):
         assert self.valid_upgrade_tavern()
@@ -253,7 +280,7 @@ class Player:
 
     def draw(self, unfreeze: Optional[bool] = True):
         self.return_cards(unfreeze)
-        number_of_cards = (3 + self.tavern_tier // 2 - len(self.store))
+        number_of_cards = (3 + self.tavern_tier // 2 - len(self.store)) + int(self.new_recruit)
         number_of_cards = min(number_of_cards, self.maximum_store_size - self.store_size())
         self.extend_store(self.tavern.deck.draw(self, number_of_cards))
 
@@ -297,8 +324,8 @@ class Player:
 
     def reroll_store(self):
         assert self.valid_reroll()
-        if self.free_refreshes >= 1:
-            self.free_refreshes -= 1
+        if self._free_refreshes >= 1:
+            self._free_refreshes -= 1
         else:
             self.coins -= self.refresh_store_cost
         self.draw()
@@ -310,7 +337,7 @@ class Player:
         return self.base_valid_reroll()
 
     def base_valid_reroll(self) -> bool:
-        return self.coins >= self.refresh_store_cost or self.free_refreshes >= 1
+        return self.coins >= self.refresh_store_cost or self._free_refreshes >= 1
 
     def return_cards(self, unfreeze: Optional[bool] = True):
         if unfreeze:
@@ -400,7 +427,8 @@ class Player:
         self.minion_cost = self.hero.minion_cost()
         self.refresh_store_cost = self.hero.refresh_cost()
         self._tavern_upgrade_costs = self.hero.tavern_upgrade_costs()
-        self.tavern_upgrade_cost = self.hero.tavern_upgrade_costs()[1]
+        if self.tavern.turn_count == 0:
+            self.tavern_upgrade_cost = self.hero.tavern_upgrade_costs()[1]
 
     def valid_choose_hero(self, hero_index: HeroChoiceIndex):
         return hero_index in range(len(self.hero_options))
@@ -426,11 +454,13 @@ class Player:
     def gain_spell(self, spell: 'Spell'):
         if self.room_in_hand():
             self._spells.append(spell)
+            spell.on_gain(BuyPhaseContext(self, self.tavern.randomizer))
 
     def add_to_store(self, card: 'MonsterCard'):
         if self.store_size() < self.maximum_store_size:
             self._store.append(card)
             card.apply_nomi_buff(self)
+            card.health += int(self.the_good_stuff)
             self.broadcast_buy_phase_event(events.AddToStoreEvent(card))
 
     def extend_store(self, cards: List['MonsterCard']):
@@ -475,7 +505,7 @@ class Player:
         return 0 <= index < len(self._spells)
 
     def plus_coins(self, amt: int):
-        self.coins = min(self.coins + amt, 10)
+        self.coins += amt
 
     def resolve_death(self):
         # assert not self.dead and self.health <= 0
@@ -495,7 +525,7 @@ class Player:
                 return p
 
     def hero_select_discover(self, discover_index: 'DiscoverIndex'):
-        self.hero.select_discover(discover_index)
+        self.hero.select_discover(discover_index, BuyPhaseContext(self, self.tavern.randomizer))
 
     def valid_hero_select_discover(self, discover_index: 'DiscoverIndex'):
         if self.dead:
@@ -503,7 +533,7 @@ class Player:
         return self.hero.valid_select_discover(discover_index)
 
     def valid_standard_action(self):
-        return not self.dead and not self.discover_queue and not self.hero.discover_choices
+        return not self.dead and not self.discover_queue and not self.hero.discover_queue
 
     def current_build(self) -> Tuple[Optional['MONSTER_TYPES'], Optional[int]]:
         cards_by_type = {monster_type.name: 0 for monster_type in MONSTER_TYPES.single_types()}

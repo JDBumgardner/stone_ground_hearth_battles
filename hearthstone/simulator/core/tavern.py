@@ -75,7 +75,7 @@ class Tavern:
         assert self.game_state == GameState.BUY_PHASE
         self.game_state = GameState.COMBAT_PHASE
         for player_name, player in self.players.items():
-            player.decrease_tavern_upgrade_cost()
+            player.at_buy_end()
             player.broadcast_buy_phase_event(events.BuyEndEvent())
         for player_1, player_2 in self.current_player_pairings:
             combat.fight_boards(WarParty(player_1), WarParty(player_2), self.randomizer)

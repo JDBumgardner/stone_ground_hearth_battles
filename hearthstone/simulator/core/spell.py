@@ -11,6 +11,7 @@ if typing.TYPE_CHECKING:
 class Spell:
     base_cost: int = 0
     target_location: Optional[List['CardLocation']] = None
+    darkmoon_prize_tier: int = 0
 
     def __init__(self, tier: Optional[int] = None):
         self.cost = self.base_cost
@@ -43,4 +44,7 @@ class Spell:
 
     def on_play(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                 store_index: Optional['StoreIndex'] = None):
+        pass
+
+    def on_gain(self, context: 'BuyPhaseContext'):
         pass

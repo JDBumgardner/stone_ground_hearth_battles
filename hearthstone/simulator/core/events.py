@@ -192,8 +192,8 @@ class BuyPhaseContext(autoslot.Slots):
         return summon_multiplier
 
     def battlecry_multiplier(self) -> int:
-        return max(
-            [card.battlecry_multiplier() for card in self.owner.in_play] + [self.owner.hero.battlecry_multiplier()])
+        return max(*[card.battlecry_multiplier() for card in self.owner.in_play],
+                   self.owner.hero.battlecry_multiplier(), self.owner.battlecry_multiplier)
 
 
 class CombatPhaseContext(autoslot.Slots):

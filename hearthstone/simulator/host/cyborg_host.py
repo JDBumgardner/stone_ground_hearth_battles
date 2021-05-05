@@ -27,7 +27,7 @@ class CyborgArena(AsyncHost):
                         discovered_card = await agent.discover_choice_action(player)
 
                     player.select_discover(discovered_card)
-                elif player.hero.discover_choices:
+                elif player.hero.discover_queue:
                     try:
                         discovered_choice = await agent.hero_discover_action(player)
                     except ConnectionError:

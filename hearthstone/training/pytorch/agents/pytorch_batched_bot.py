@@ -65,7 +65,7 @@ class BatchedInferencePytorchBot(AnnotatingAgent):
         return action, ac_game_step_info
 
     async def annotated_hero_discover_action(self, player: 'Player') -> ('HeroDiscoverAction', ActorCriticGameStepInfo):
-        return HeroDiscoverAction(random.choice(range(len(player.hero.discover_choices)))), None
+        return HeroDiscoverAction(random.choice(range(len(player.hero.discover_queue)))), None
 
     async def game_over(self, player: 'Player', ranking: int) -> Dict[str, Any]:
         return {'ranking': ranking}

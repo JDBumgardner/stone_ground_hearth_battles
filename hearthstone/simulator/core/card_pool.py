@@ -2118,7 +2118,7 @@ class RefreshingAnomaly(MonsterCard):
     mana_cost = 1
 
     def base_battlecry(self, targets: List['MonsterCard'], context: 'BuyPhaseContext'):
-        context.owner.free_refreshes = max((2 if self.golden else 1), context.owner.free_refreshes)
+        context.owner.plus_free_refreshes(2 if self.golden else 1)
 
 
 class MajordomoExecutus(MonsterCard):
@@ -2385,6 +2385,23 @@ class BarrensBlacksmith(MonsterCard):
             if card != self:
                 card.attack += bonus
                 card.health += bonus
+
+
+class ArgentBraggart(MonsterCard):
+    tier = 6
+    monster_type = None
+    base_attack = 1
+    base_health = 1
+    base_token = True  # argent braggart is not in the minion pool
+
+    def __init__(self):
+        super().__init__()
+        self.token = False
+
+    def base_battlecry(self, targets: List['MonsterCard'], context: 'BuyPhaseContext'):
+        multiplier = 2 if self.golden else 1
+        self.attack = max(card.attack for card in context.owner.in_play) * multiplier
+        self.health = max(card.health for card in context.owner.in_play) * multiplier
 
 
 # TODO: add Faceless Taverngoer - add option to target store minions

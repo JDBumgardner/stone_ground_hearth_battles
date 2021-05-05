@@ -10,6 +10,7 @@ if typing.TYPE_CHECKING:
     from hearthstone.simulator.core.cards import MonsterCard
     from hearthstone.simulator.core.hero import Hero
     from hearthstone.simulator.core.player import Player
+    from hearthstone.simulator.core.spell import Spell
 
 
 class Randomizer:
@@ -65,6 +66,9 @@ class Randomizer:
         raise NotImplementedError()
 
     def select_event_queue(self, queues: List[deque]) -> deque:
+        raise NotImplementedError()
+
+    def select_spell(self, spell: List['Spell']) -> 'Spell':
         raise NotImplementedError()
 
 
@@ -130,3 +134,6 @@ class DefaultRandomizer(Randomizer):
 
     def select_event_queue(self, queues: List[deque]) -> deque:
         return self.rand.choice(queues)
+
+    def select_spell(self, spells: List['Spell']) -> 'Spell':
+        return self.rand.choice(spells)

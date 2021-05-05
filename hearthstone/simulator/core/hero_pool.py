@@ -1,10 +1,9 @@
-import copy
 import sys
 from inspect import getmembers, isclass
 from typing import Union, Tuple, Optional
 
 from hearthstone.simulator.core import combat, events
-from hearthstone.simulator.core.card_pool import Amalgam, EmperorCobra, Snake, FishOfNZoth
+from hearthstone.simulator.core.card_pool import Amalgam, FishOfNZoth
 from hearthstone.simulator.core.cards import CardLocation, one_minion_per_type
 from hearthstone.simulator.core.combat import logger
 from hearthstone.simulator.core.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
@@ -12,7 +11,8 @@ from hearthstone.simulator.core.hero import Hero
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 from hearthstone.simulator.core.player import BoardIndex, StoreIndex, DiscoverIndex, HeroChoiceIndex
 from hearthstone.simulator.core.secrets import SECRETS
-from hearthstone.simulator.core.spell_pool import TripleRewardCard, GoldCoin, Prize, Banana, BigBanana, RecruitmentMap
+from hearthstone.simulator.core.spell_pool import TripleRewardCard, GoldCoin, Prize, Banana, BigBanana, RecruitmentMap, \
+    DARKMOON_PRIZES
 
 
 class Pyramad(Hero):
@@ -43,7 +43,7 @@ class PatchWerk(Hero):
 
 
 class Deathwing(Hero):
-    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.COMBAT_PREPHASE:
             all_minions = context.friendly_war_party.board + context.enemy_war_party.board
             for minion in all_minions:
@@ -56,7 +56,7 @@ class Deathwing(Hero):
 class MillificentManastorm(Hero):
     pool = MONSTER_TYPES.MECH
 
-    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.ADD_TO_STORE:
             if event.card.check_type(MONSTER_TYPES.MECH):
                 event.card.attack += 1
@@ -87,7 +87,7 @@ class PatchesThePirate(Hero):
     base_power_cost = 3
     pool = MONSTER_TYPES.PIRATE
 
-    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY and event.card.check_type(MONSTER_TYPES.PIRATE):
             self.power_cost = max(0, self.power_cost - 1)
 
@@ -107,7 +107,7 @@ class PatchesThePirate(Hero):
 
 
 class DancinDeryl(Hero):
-    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.SELL and context.owner.store:
             for _ in range(2):
                 card = context.randomizer.select_from_store(context.owner.store)
@@ -118,7 +118,7 @@ class DancinDeryl(Hero):
 class FungalmancerFlurgl(Hero):
     pool = MONSTER_TYPES.MURLOC
 
-    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.SELL and event.card.check_type(
                 MONSTER_TYPES.MURLOC) and context.owner.store_size() < context.owner.maximum_store_size:
             murlocs = [card for card in context.owner.tavern.deck.unique_cards() if
@@ -131,7 +131,7 @@ class FungalmancerFlurgl(Hero):
 class KaelthasSunstrider(Hero):
     buy_counter = 0
 
-    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY:
             self.buy_counter += 1
             if self.buy_counter == 3:
@@ -166,7 +166,7 @@ class SkycapnKragg(Hero):
 
 
 class TheCurator(Hero):
-    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_START and context.owner.tavern.turn_count == 0:
             context.owner.gain_board_card(Amalgam())
 
@@ -177,7 +177,7 @@ class TheRatKing(Hero):
         super().__init__()
         self.current_type = None
 
-    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_START:
             available_types = [monster_type for monster_type in MONSTER_TYPES.single_types() if
                                monster_type != self.current_type and monster_type in context.owner.tavern.available_types]
@@ -194,7 +194,7 @@ class TheRatKing(Hero):
 class Ysera(Hero):
     pool = MONSTER_TYPES.DRAGON
 
-    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.REFRESHED_STORE or event.event is EVENTS.BUY_START and context.owner.store_size() < context.owner.maximum_store_size:
             dragons = [card for card in context.owner.tavern.deck.unique_cards() if
                        card.check_type(MONSTER_TYPES.DRAGON) and card.tier <= context.owner.tavern_tier]
@@ -243,7 +243,7 @@ class CaptainEudora(Hero):
 
 
 class ForestWardenOmu(Hero):
-    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.TAVERN_UPGRADE:
             context.owner.coins += 2
 
@@ -280,7 +280,7 @@ class RenoJackson(Hero):
         self.target = target
         self.can_use_power = False
 
-    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.SELL and event.card == self.target:
             event.card.golden = False  # only add 1 copy to pool when sold
 
@@ -305,7 +305,7 @@ class JandiceBarov(Hero):
 class ArchVillianRafaam(Hero):
     base_power_cost = 1
 
-    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.DIES and event.card in context.enemy_war_party.board and self.hero_power_used:
             if len(context.enemy_war_party.dead_minions) == 1 and context.friendly_war_party.owner.room_in_hand():
                 card_copy = type(event.card)()
@@ -336,7 +336,7 @@ class Malygos(Hero):
 
 
 class AFKay(Hero):
-    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_START:
             if context.owner.tavern.turn_count in (0, 1):
                 context.owner.coins = 0
@@ -361,7 +361,7 @@ class ArannaStarseeker(Hero):
         super().__init__()
         self.total_rerolls = 0
 
-    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.REFRESHED_STORE or event.event is EVENTS.BUY_START:
             self.total_rerolls += 1 if event.event is EVENTS.REFRESHED_STORE else 0
             if self.total_rerolls >= 5:
@@ -387,7 +387,7 @@ class DinotamerBrann(Hero):
 class Alexstrasza(Hero):
     pool = MONSTER_TYPES.DRAGON
 
-    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.TAVERN_UPGRADE and context.owner.tavern_tier == 5:
             for _ in range(2):
                 if context.owner.room_in_hand():
@@ -409,7 +409,7 @@ class KingMukla(Hero):
             else:
                 context.owner.gain_spell(Banana())
 
-    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_END and self.hero_power_used:
             for player in context.owner.tavern.players.values():
                 if player != context.owner:
@@ -417,13 +417,13 @@ class KingMukla(Hero):
 
 
 class EliseStarseeker(Hero):
-    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.TAVERN_UPGRADE:
             context.owner.gain_spell(RecruitmentMap(context.owner.tavern_tier))
 
 
 class AlAkir(Hero):
-    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.COMBAT_START and len(context.friendly_war_party.board) >= 1:
             leftmost_minion = context.friendly_war_party.board[0]
             leftmost_minion.windfury = True
@@ -438,7 +438,7 @@ class Chenvaala(Hero):
         super().__init__()
         self.play_counter = 0
 
-    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.SUMMON_BUY and event.card.check_type(MONSTER_TYPES.ELEMENTAL):
             self.play_counter += 1
             if self.play_counter == 3:
@@ -456,7 +456,7 @@ class RagnarosTheFirelord(Hero):
         self.minions_killed = 0
         self.sulfuras = False
 
-    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.DIES and event.card in context.enemy_war_party.board:
             self.minions_killed += 1
             if self.minions_killed == 25:
@@ -486,7 +486,7 @@ class MrBigglesworth(Hero):
         super().__init__()
         self.dead_discover_queue = []
 
-    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.PLAYER_DEAD and bool(event.player.in_play):
             discovered_cards = []
             board = [card.copy() for card in event.player.in_play]
@@ -503,13 +503,13 @@ class MrBigglesworth(Hero):
 
 
 class Nozdormu(Hero):
-    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_START:
-            context.owner.free_refreshes = max(1, context.owner.free_refreshes)
+            context.owner.plus_free_refreshes(1)
 
 
 class Sindragosa(Hero):
-    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_END:
             for card in context.owner.store:
                 if card.frozen:
@@ -551,7 +551,7 @@ class TheLichKing(Hero):
                         store_index: Optional['StoreIndex'] = None):
         self.target = context.owner.in_play[board_index]
 
-    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.SELL and event.card == self.target:
             self.target = None
         if event.event is EVENTS.BUY_END and self.target is not None:
@@ -584,7 +584,7 @@ class TessGreymane(Hero):
         else:
             context.owner.draw()
 
-    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY and event.card in self.refreshed_cards:
             event.card.token = False
             self.refreshed_cards.remove(event.card)
@@ -606,7 +606,7 @@ class Shudderwock(Hero):
             return 2
         return 1
 
-    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.SUMMON_BUY and event.card.battlecry and self.hero_power_used:
             self.battlecries_counted += 1
 
@@ -616,7 +616,6 @@ class TheGreatAkazamzarak(Hero):
 
     def __init__(self):
         super().__init__()
-        self.secrets = []
         self.discovered_ice_block = False
 
     def hero_power_valid_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
@@ -628,82 +627,28 @@ class TheGreatAkazamzarak(Hero):
         available_secrets = SECRETS.remaining_secrets(self)
         if self.discovered_ice_block and SECRETS.ICE_BLOCK in available_secrets:
             available_secrets.remove(SECRETS.ICE_BLOCK)
+
+        secrets = []
         for _ in range(3):
             if available_secrets:
                 secret = context.randomizer.select_secret(available_secrets)
                 available_secrets.remove(secret)
-                self.discover_choices.append(secret)
+                secrets.append(secret)
+        self.discover_queue.append(secrets)
 
-    def select_discover(self, discover_index: 'DiscoverIndex'):
-        secret = self.discover_choices[discover_index]
+    def select_discover(self, discover_index: 'DiscoverIndex', context: 'BuyPhaseContext'):
+        secret = self.discover_queue[0].pop(discover_index)
         if secret == SECRETS.ICE_BLOCK:
             self.discovered_ice_block = True
         self.secrets.append(secret)
-        self.discover_choices = []
-
-    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
-        if event.event is EVENTS.BUY_START and SECRETS.COMPETETIVE_SPIRIT in self.secrets:
-            logger.debug(f'{SECRETS.COMPETETIVE_SPIRIT} triggers')
-            self.secrets.remove(SECRETS.COMPETETIVE_SPIRIT)
-            for card in context.owner.in_play:
-                card.attack += 1
-                card.health += 1
-        if event.event is EVENTS.BUY_END:
-            self.give_immunity = False
-        if event.event is EVENTS.END_COMBAT and context.owner.health <= 0 and SECRETS.ICE_BLOCK in self.secrets:
-            logger.debug(f'{SECRETS.ICE_BLOCK} triggers')
-            self.secrets.remove(SECRETS.ICE_BLOCK)
-            context.owner.health += event.damage_taken
-            self.give_immunity = True
-        if event.event is EVENTS.IS_ATTACKED and event.card in context.friendly_war_party.board:
-            if context.friendly_war_party.room_on_board():
-                if SECRETS.SPLITTING_IMAGE in self.secrets and context.friendly_war_party.room_on_board():
-                    logger.debug(f'{SECRETS.SPLITTING_IMAGE} triggers')
-                    self.secrets.remove(SECRETS.SPLITTING_IMAGE)
-                    summon_index = context.friendly_war_party.get_index(event.card)
-                    for i in range(context.summon_minion_multiplier()):
-                        context.friendly_war_party.summon_in_combat(copy.deepcopy(event.card), context,
-                                                                    summon_index + 1 + i)
-                if SECRETS.VENOMSTRIKE_TRAP in self.secrets and context.friendly_war_party.room_on_board():
-                    logger.debug(f'{SECRETS.VENOMSTRIKE_TRAP} triggers')
-                    self.secrets.remove(SECRETS.VENOMSTRIKE_TRAP)
-                    for _ in range(context.summon_minion_multiplier()):
-                        cobra = EmperorCobra()
-                        context.friendly_war_party.summon_in_combat(cobra, context)
-                if SECRETS.SNAKE_TRAP in self.secrets and context.friendly_war_party.room_on_board():
-                    self.secrets.remove(SECRETS.SNAKE_TRAP)
-                    logger.debug(f'{SECRETS.SNAKE_TRAP} triggers')
-                    for _ in range(3 * context.summon_minion_multiplier()):
-                        snake = Snake()
-                        context.friendly_war_party.summon_in_combat(snake, context)
-            if SECRETS.AUTODEFENSE_MATRIX in self.secrets and not event.card.divine_shield:
-                logger.debug(f'{SECRETS.AUTODEFENSE_MATRIX} triggers')
-                self.secrets.remove(SECRETS.AUTODEFENSE_MATRIX)
-                event.card.divine_shield = True
-
-        if event.event is EVENTS.DIES and event.card in context.friendly_war_party.board:
-            if SECRETS.REDEMPTION in self.secrets:
-                logger.debug(f'{SECRETS.REDEMPTION} triggers')
-                self.secrets.remove(SECRETS.REDEMPTION)
-                summon_index = context.friendly_war_party.get_index(event.card)
-                for i in range(context.summon_minion_multiplier()):
-                    new_copy = event.card.unbuffed_copy()
-                    new_copy.health = 1
-                    context.friendly_war_party.summon_in_combat(new_copy, context, summon_index + 1 + i)
-
-            if SECRETS.AVENGE in self.secrets and context.friendly_war_party.live_minions():
-                logger.debug(f'{SECRETS.AVENGE} triggers')
-                self.secrets.remove(SECRETS.AVENGE)
-                random_friend = context.randomizer.select_friendly_minion(context.friendly_war_party.live_minions())
-                random_friend.attack += 3
-                random_friend.health += 2
+        self.discover_queue.pop(0)
 
     def hero_info(self) -> Optional[str]:
         return f'active secrets: {[secret.name for secret in self.secrets]}'
 
 
 class IllidanStormrage(Hero):
-    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.COMBAT_START:
             if context.friendly_war_party.board:
                 for i in {0, len(context.friendly_war_party.board) - 1}:
@@ -750,7 +695,7 @@ class SilasDarkmoon(Hero):
         super().__init__()
         self.tickets_purchased = 0
 
-    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.ADD_TO_STORE:
             event.card.ticket = bool(context.randomizer.select_random_number(0, 1))  # TODO: what should the odds be?
         if event.event is EVENTS.BUY:
@@ -770,7 +715,7 @@ class SirFinleyMrrgglton(Hero):
         super().__init__()
         self.player = None
 
-    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_START and context.owner.tavern.turn_count == 0:
             hero_pool = [hero_type() for hero_type in VALHALLA if (
                         hero_type.pool in context.owner.tavern.available_types or hero_type.pool == MONSTER_TYPES.ALL) and hero_type != type(
@@ -780,15 +725,15 @@ class SirFinleyMrrgglton(Hero):
                 random_hero = context.randomizer.select_hero(hero_pool)
                 hero_choices.append(random_hero)
                 hero_pool.remove(random_hero)
-            self.discover_choices.extend(hero_choices)
+            self.discover_queue.append(hero_choices)
             self.player = context.owner
 
-    def select_discover(self, discover_index: 'DiscoverIndex'):
-        self.player.hero_options = self.discover_choices[:]
+    def select_discover(self, discover_index: 'DiscoverIndex', context: 'BuyPhaseContext'):
+        self.player.hero_options = self.discover_queue[0][:]
         self.player.choose_hero(HeroChoiceIndex(discover_index))
         self.player.hero.handle_event(events.BuyStartEvent(),
                                       BuyPhaseContext(self.player, self.player.tavern.randomizer))
-        self.discover_choices = []
+        self.discover_queue.pop(0)
 
 
 class LordBarov(Hero):
@@ -807,13 +752,13 @@ class LordBarov(Hero):
             pairing = context.randomizer.select_combat_matchup(available_pairings)
         else:
             pairing = context.owner.tavern.current_player_pairings[0]
-        self.discover_choices.extend(list(pairing))
+        self.discover_queue.append(list(pairing))
 
-    def select_discover(self, discover_index: 'DiscoverIndex'):
-        self.winning_pick = self.discover_choices[discover_index]
-        self.discover_choices = []
+    def select_discover(self, discover_index: 'DiscoverIndex', context: 'BuyPhaseContext'):
+        self.winning_pick = self.discover_queue[0].pop(discover_index)
+        self.discover_queue.pop(0)
 
-    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.RESULTS_BROADCAST and self.winning_pick is not None:
             if event.winner == self.winning_pick:
                 num_gold_coins = 3
@@ -843,7 +788,7 @@ class MaievShadowsong(Hero):
         store_minion = context.owner.pop_store_card(store_index)
         self.dormant_minions[store_minion] = 2
 
-    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_START:
             for card in list(self.dormant_minions.keys()):
                 self.dormant_minions[card] -= 1
@@ -867,7 +812,7 @@ class CThun(Hero):
                         store_index: Optional['StoreIndex'] = None):
         self.power_uses += 1
 
-    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_END and context.owner.in_play:
             for _ in range(self.power_uses):
                 random_minion = context.randomizer.select_friendly_minion(context.owner.in_play)
@@ -881,7 +826,7 @@ class CThun(Hero):
 class YShaarj(Hero):
     base_power_cost = 2
 
-    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.COMBAT_START and self.hero_power_used and context.friendly_war_party.room_on_board():  # TODO: order of this vs other start of combat effects?
             same_tier_options = [card for card in context.friendly_war_party.owner.tavern.deck.unique_cards() if
                                  card.tier == context.friendly_war_party.owner.tavern_tier]
@@ -891,13 +836,13 @@ class YShaarj(Hero):
 
 
 class NZoth(Hero):
-    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_START and context.owner.tavern.turn_count == 0:
             context.owner.gain_board_card(FishOfNZoth())
 
 
 class Greybough(Hero):
-    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.SUMMON_COMBAT and event.card in context.friendly_war_party.board:
             event.card.attack += 1
             event.card.health += 2
@@ -945,7 +890,7 @@ class OverlordSaurfang(Hero):
         super().__init__()
         self.bonus_applied = False
 
-    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_START:
             self.bonus_applied = False
         elif event.event is EVENTS.BUY:
@@ -954,7 +899,33 @@ class OverlordSaurfang(Hero):
                 self.bonus_applied = True
 
 
-# TODO: add Tickatus... and darkmoon prizes (ugh)
+class Tickatus(Hero):
+    def __init__(self):
+        super().__init__()
+        self.player = None
+        self.prize_tier = 0
+
+    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.BUY_START and (context.owner.tavern.turn_count + 1) % 4 == 0 and self.prize_tier < 5:
+            self.prize_tier += 1
+            if context.owner.room_in_hand():
+                prize_choies = DARKMOON_PRIZES[self.prize_tier]
+                selected_prizes = []
+                for _ in range(3):
+                    spell_type = context.randomizer.select_spell(prize_choies)
+                    selected_prizes.append(spell_type())
+                    prize_choies.remove(spell_type)
+                self.discover_queue.append(selected_prizes)
+
+    def select_discover(self, discover_index: 'DiscoverIndex', context: 'BuyPhaseContext'):
+        if type(self.discover_queue[0]) == Hero:
+            self.player.hero_options = self.discover_queue[0][:]
+            self.player.choose_hero(HeroChoiceIndex(discover_index))
+            self.discover_queue.pop(0)
+        else:
+            prize = self.discover_queue[0].pop(discover_index)
+            context.owner.gain_spell(prize)
+            self.discover_queue.pop(0)
 
 
 VALHALLA = [member[1] for member in
