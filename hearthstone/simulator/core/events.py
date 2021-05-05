@@ -199,7 +199,7 @@ class BuyPhaseContext(autoslot.Slots):
 
 class CombatPhaseContext(autoslot.Slots):
     def __init__(self, friendly_war_party: 'WarParty', enemy_war_party: 'WarParty', randomizer: 'Randomizer',
-                 combat_event_queue: 'CombatEventQueue', damaged_minions: IndexedSet['MonsterCard']):
+                 combat_event_queue: 'CombatEventQueue', damaged_minions: Set['MonsterCard']):
         self.friendly_war_party = friendly_war_party
         self.enemy_war_party = enemy_war_party
         self.randomizer = randomizer

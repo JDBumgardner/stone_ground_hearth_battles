@@ -1,7 +1,7 @@
 import copy
 import logging
 import typing
-from typing import Optional, List
+from typing import Optional, List, Set
 
 from boltons.setutils import IndexedSet
 
@@ -186,7 +186,7 @@ def player_damage(half_board_1: 'WarParty', half_board_2: 'WarParty', randomizer
 
 def start_attack(attacker: 'MonsterCard', defender: 'MonsterCard', attacking_war_party: 'WarParty',
                  defending_war_party: 'WarParty',
-                 randomizer: 'Randomizer', event_queue: 'CombatEventQueue', damaged_minions: IndexedSet['MonsterCard']):
+                 randomizer: 'Randomizer', event_queue: 'CombatEventQueue', damaged_minions: Set['MonsterCard']):
     logger.debug(f'{attacker} is attacking {defender}')
     combat_phase_context = CombatPhaseContext(attacking_war_party, defending_war_party, randomizer, event_queue,
                                               damaged_minions)
@@ -211,7 +211,7 @@ def start_attack(attacker: 'MonsterCard', defender: 'MonsterCard', attacking_war
 
 
 def resolve_combat_events(randomizer: 'Randomizer', event_queue: 'CombatEventQueue', attacking_war_party: 'WarParty',
-                          defending_war_party: 'WarParty', damaged_minions: IndexedSet['MonsterCard']):
+                          defending_war_party: 'WarParty', damaged_minions: Set['MonsterCard']):
     while attacking_war_party.has_dying_minions() or defending_war_party.has_dying_minions():
 
         mark_combat_deaths(attacking_war_party, defending_war_party, event_queue, damaged_minions)
@@ -230,7 +230,7 @@ def resolve_combat_events(randomizer: 'Randomizer', event_queue: 'CombatEventQue
 
 
 def mark_combat_deaths(attacking_war_party: 'WarParty', defending_war_party: 'WarParty',
-                       event_queue: 'CombatEventQueue', damaged_minions: IndexedSet['MonsterCard']):
+                       event_queue: 'CombatEventQueue', damaged_minions: Set['MonsterCard']):
     marked_dead_minions = set()
     for minion in damaged_minions:
         if minion.is_dying():
