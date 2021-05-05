@@ -68,7 +68,7 @@ class Randomizer:
     def select_event_queue(self, queues: List[deque]) -> deque:
         raise NotImplementedError()
 
-    def select_spell(self, spell: List['Spell']) -> 'Spell':
+    def select_spell(self, spell: List[Type['Spell']]) -> Type['Spell']:
         raise NotImplementedError()
 
 
@@ -135,5 +135,5 @@ class DefaultRandomizer(Randomizer):
     def select_event_queue(self, queues: List[deque]) -> deque:
         return self.rand.choice(queues)
 
-    def select_spell(self, spells: List['Spell']) -> 'Spell':
+    def select_spell(self, spells: List[Type['Spell']]) -> Type['Spell']:
         return self.rand.choice(spells)

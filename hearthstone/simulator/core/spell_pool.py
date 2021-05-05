@@ -1,3 +1,4 @@
+import collections
 import sys
 import typing
 from inspect import getmembers, isclass
@@ -107,6 +108,7 @@ class NewRecruit(Spell):
     def on_play(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                 store_index: Optional['StoreIndex'] = None):
         context.owner.new_recruit = True
+        context.owner.tavern.deck.draw(context.owner, 1)
 
 
 class TheGoodStuff(Spell):
@@ -115,6 +117,8 @@ class TheGoodStuff(Spell):
     def on_play(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                 store_index: Optional['StoreIndex'] = None):
         context.owner.the_good_stuff = True
+        for card in context.owner.store:
+            card.health += 1
 
 
 class EvolvingTavern(Spell):
@@ -122,11 +126,13 @@ class EvolvingTavern(Spell):
 
     def on_play(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                 store_index: Optional['StoreIndex'] = None):
-        new_tiers = [card.tier + 1 for card in context.owner.store]
+        new_tiers = [min(6, card.tier + 1) for card in context.owner.store]
         context.owner.return_cards()
-        context.owner.extend_store(
-            [context.owner.tavern.deck.draw_with_predicate(context.owner, lambda card: card.tier == tier) for tier in
-             new_tiers])
+        for card_tier in new_tiers:
+            higher_tier_minions = [card for card in context.owner.tavern.deck.unique_cards() if card.tier == card_tier]
+            higher_tier_minion = context.randomizer.select_add_to_store(higher_tier_minions)
+            context.owner.tavern.deck.remove_card(higher_tier_minion)
+            context.owner.add_to_store(higher_tier_minion)
 
 
 class GreatDeal(Spell):
@@ -224,8 +230,8 @@ class BuyTheHolyLight(Spell):
     target_location = [CardLocation.BOARD]
     darkmoon_prize_tier = 3
 
-    def valid(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
-              store_index: Optional['StoreIndex'] = None) -> bool:
+    def valid_target(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                     store_index: Optional['StoreIndex'] = None) -> bool:
         return not context.owner.in_play[board_index].divine_shield
 
     def on_play(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
@@ -257,8 +263,8 @@ class RepeatCustomer(Spell):
     target_location = [CardLocation.BOARD]
     darkmoon_prize_tier = 3
 
-    def valid(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
-              store_index: Optional['StoreIndex'] = None) -> bool:
+    def valid_target(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                     store_index: Optional['StoreIndex'] = None) -> bool:
         return not context.owner.in_play[board_index].golden
 
     def on_play(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
@@ -295,7 +301,7 @@ class TrainingSession(Spell):
             random_hero = context.randomizer.select_hero(hero_pool)
             hero_choices.append(random_hero)
             hero_pool.remove(random_hero)
-        context.owner.hero.discover_queue.extend(hero_choices)
+        context.owner.hero.discover_queue.append(hero_choices)
         context.owner.hero.player = context.owner
 
 
@@ -307,7 +313,7 @@ class GainArgentBraggart(Spell):
         # is there a better way to get around circular imports?
         from hearthstone.simulator.core.card_pool import ArgentBraggart
 
-        context.owner.spells.remove(self)
+        context.owner.remove_spell(self)
         context.owner.gain_hand_card(ArgentBraggart())
 
 
@@ -371,14 +377,14 @@ class BigWinner(Spell):
                 prize_choies = DARKMOON_PRIZES[i]
                 selected_prizes = []
                 for _ in range(3):
-                    spell = context.randomizer.select_spell(prize_choies)
-                    selected_prizes.append(spell)
-                    prize_choies.remove(spell)
+                    spell_type = context.randomizer.select_spell(prize_choies)
+                    selected_prizes.append(spell_type())
+                    prize_choies.remove(spell_type)
                 context.owner.hero.discover_queue.append(selected_prizes)
 
 
 ALL_SPELLS = [member[1] for member in
               getmembers(sys.modules[__name__], lambda member: isclass(member) and member.__module__ == __name__)]
 
-
-DARKMOON_PRIZES = {tier: [spell for spell in ALL_SPELLS if spell.darkmoon_prize_tier == tier] for tier in range(1, 5)}
+DARKMOON_PRIZES = collections.OrderedDict(
+    [(tier, [spell for spell in ALL_SPELLS if spell.darkmoon_prize_tier == tier]) for tier in range(1, 5)])

@@ -909,16 +909,16 @@ class Tickatus(Hero):
         if event.event is EVENTS.BUY_START and (context.owner.tavern.turn_count + 1) % 4 == 0 and self.prize_tier < 5:
             self.prize_tier += 1
             if context.owner.room_in_hand():
-                prize_choies = DARKMOON_PRIZES[self.prize_tier]
+                prize_options = DARKMOON_PRIZES[self.prize_tier]
                 selected_prizes = []
                 for _ in range(3):
-                    spell_type = context.randomizer.select_spell(prize_choies)
+                    spell_type = context.randomizer.select_spell(prize_options)
                     selected_prizes.append(spell_type())
-                    prize_choies.remove(spell_type)
+                    prize_options.remove(spell_type)
                 self.discover_queue.append(selected_prizes)
 
     def select_discover(self, discover_index: 'DiscoverIndex', context: 'BuyPhaseContext'):
-        if type(self.discover_queue[0]) == Hero:
+        if issubclass(type(self.discover_queue[0][0]), Hero):
             self.player.hero_options = self.discover_queue[0][:]
             self.player.choose_hero(HeroChoiceIndex(discover_index))
             self.discover_queue.pop(0)

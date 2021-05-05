@@ -19,8 +19,9 @@ class Spell:
 
     def __repr__(self):
         rep = f"{type(self).__name__}"
+        rep += f"({self.cost})"
         if self.tier is not None:
-            rep += f"({self.tier})"
+            rep += f", [tier {self.tier}]"
         return "{" + rep + "}"
 
     def valid(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
@@ -40,6 +41,12 @@ class Spell:
                 if CardLocation.STORE not in self.target_location or not context.owner.valid_store_index(
                         store_index):
                     return False
+        if not self.valid_target(context, board_index, store_index):
+            return False
+        return True
+
+    def valid_target(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                     store_index: Optional['StoreIndex'] = None):
         return True
 
     def on_play(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,

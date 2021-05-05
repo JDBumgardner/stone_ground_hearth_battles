@@ -478,7 +478,7 @@ class Player:
         self._store.remove(card)
 
     def remove_spell(self, spell: 'Spell'):
-        self.spells.remove(spell)
+        self._spells.remove(spell)
 
     def pop_hand_card(self, index: int) -> 'MonsterCard':
         return self._hand.pop(index)

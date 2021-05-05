@@ -68,7 +68,6 @@ class MonsterCard:
     divert_taunt_attack = False
 
     def __init__(self):
-        super().__init__()
         self.health = self.base_health
         self.attack = self.base_attack
         self.divine_shield = self.base_divine_shield
@@ -161,10 +160,10 @@ class MonsterCard:
                 if self.battlecry:
                     for _ in range(context.battlecry_multiplier()):
                         self.battlecry(event.targets, context)
-            elif event.event is EVENTS.BUY_END:
-                if self.gruul_rules:
-                    self.attack += 2
-                    self.health += 2
+        if event.event is EVENTS.BUY_END:
+            if self.gruul_rules:
+                self.attack += 2
+                self.health += 2
         if not self.dead or self == event.card:  # minions will trigger their own death events
             self.handle_event_powers(event, context)
 

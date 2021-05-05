@@ -9,6 +9,7 @@ from hearthstone.simulator.core.hero_graveyard import *
 from hearthstone.simulator.core.hero_pool import *
 from hearthstone.simulator.core.player import StoreIndex, HandIndex, BoardIndex, DiscoverIndex, Player, SpellIndex
 from hearthstone.simulator.core.randomizer import DefaultRandomizer
+from hearthstone.simulator.core.spell_pool import *
 from hearthstone.simulator.core.tavern import Tavern
 from hearthstone.testing.battlegrounds_test_case import BattleGroundsTestCase
 
@@ -3263,7 +3264,6 @@ class CardTests(BattleGroundsTestCase):
         self.assertEqual(type(player_1.hero), SirFinleyMrrgglton)
         player_1.hero_select_discover(DiscoverIndex(0))
         self.assertNotEqual(type(player_1.hero), SirFinleyMrrgglton)
-        print(player_1.hero)
 
     class TestLordBarovRandomizer(DefaultRandomizer):
         def select_draw_card(self, cards: List[MonsterCard], player_name: str, round_number: int) -> MonsterCard:
@@ -3817,6 +3817,383 @@ class CardTests(BattleGroundsTestCase):
             self.assertEqual(len(player_1.hero.discover_queue), 0)
             self.assertEqual(player_1.spells[i].darkmoon_prize_tier, i + 1)
             tavern.combat_step()
+
+    def test_gacha_gift(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong", Tickatus())
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.buying_step()
+        player_1.gain_spell(GachaGift())  # I know, this is cheating
+        player_1.play_spell(SpellIndex(0))
+        self.assertTrue(all(card.tier == 1 for card in player_1.discover_queue[0]))
+
+    def test_might_of_stormwind(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong", Tickatus())
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        player_1.gain_spell(MightOfStormwind())
+        player_1.play_spell(SpellIndex(0))
+        self.assertEqual(player_1.in_play[0].attack, player_1.in_play[0].base_attack + 1)
+        self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health + 1)
+
+    def test_pocket_change(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong", Tickatus())
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.buying_step()
+        player_1.gain_spell(PocketChange())
+        player_1.play_spell(SpellIndex(0))
+        self.assertCardListEquals(player_1.spells, [GoldCoin, GoldCoin])
+
+    def test_rocking_and_rolling(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong", Tickatus())
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.buying_step()
+        player_1.gain_spell(RockingAndRolling())
+        player_1.play_spell(SpellIndex(0))
+        self.assertEqual(player_1.free_refreshes, 3)
+
+    def test_new_recruit(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong", Tickatus())
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.buying_step()
+        player_1.gain_spell(NewRecruit())
+        self.assertEqual(len(player_1.store), 3)
+        player_1.play_spell(SpellIndex(0))
+        self.assertEqual(len(player_1.store), 4)
+        player_1.reroll_store()
+        self.assertEqual(len(player_1.store), 4)
+
+    def test_the_good_stuff(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong", Tickatus())
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.buying_step()
+        player_1.gain_spell(TheGoodStuff())
+        player_1.play_spell(SpellIndex(0))
+        for card in player_1.store:
+            self.assertEqual(card.health, card.base_health + 1)
+        player_1.reroll_store()
+        for card in player_1.store:
+            self.assertEqual(card.health, card.base_health + 1)
+
+    def test_evolving_tavern(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        self.upgrade_to_tier(tavern, 5)
+        tavern.buying_step()
+        player_1.gain_spell(EvolvingTavern())
+        expected_tiers = [card.tier + 1 for card in player_1.store]
+        player_1.play_spell(SpellIndex(0))
+        self.assertListEqual([card.tier for card in player_1.store], expected_tiers)
+
+    def test_great_deal(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong", Tickatus())
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.buying_step()
+        player_1.gain_spell(GreatDeal())
+        player_1.play_spell(SpellIndex(0))
+        tavern.combat_step()
+        tavern.buying_step()
+        self.assertEqual(player_1.tavern_upgrade_cost, 2)
+
+    def test_gruul_rules(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong", Tickatus())
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        player_1.gain_spell(GruulRules())
+        player_1.play_spell(SpellIndex(0), board_index=BoardIndex(0))
+        tavern.combat_step()
+        self.assertEqual(player_1.in_play[0].attack, player_1.in_play[0].base_attack + 2)
+        self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health + 2)
+
+    def test_on_the_house(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        self.upgrade_to_tier(tavern, 4)
+        tavern.buying_step()
+        player_1.gain_spell(OnTheHouse())
+        player_1.play_spell(SpellIndex(0))
+        self.assertTrue(all(card.tier == 4 for card in player_1.discover_queue[0]))
+
+    def test_the_bouncer(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong", Tickatus())
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.randomizer = RepeatedCardForcer([MurlocTidecaller])
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        player_1.gain_spell(TheBouncer())
+        player_1.play_spell(SpellIndex(0), board_index=BoardIndex(0))
+        self.assertEqual(player_1.in_play[0].attack, player_1.in_play[0].base_attack + 5)
+        self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health + 5)
+        self.assertTrue(player_1.in_play[0].taunt)
+
+    def test_time_thief(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        self.upgrade_to_tier(tavern, 5)
+        tavern.randomizer = RepeatedCardForcer([MurlocWarleader, Goldgrubber, VulgarHomunculus, AlleyCat, AlleyCat])
+        tavern.buying_step()
+        for _ in range(3):
+            player_2.purchase(StoreIndex(0))
+            player_2.summon_from_hand(HandIndex(0))
+        tavern.combat_step()
+        tavern.buying_step()
+        player_1.gain_spell(TimeThief())
+        player_1.play_spell(SpellIndex(0))
+        warband_types = [MurlocWarleader, Goldgrubber, VulgarHomunculus]
+        for card in player_1.discover_queue[0]:
+            self.assertIn(type(card), warband_types)
+
+    def test_the_unlimited_coin(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.buying_step()
+        player_1.gain_spell(TheUnlimitedCoin())
+        player_1.play_spell(SpellIndex(0))
+        self.assertEqual(player_1.spells, [])
+        self.assertEqual(player_1.coins, 4)
+        tavern.combat_step()
+        self.assertCardListEquals(player_1.spells, [TheUnlimitedCoin])
+
+    def test_branns_blessing(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.randomizer = RepeatedCardForcer([AlleyCat, MurlocTidehunter])
+        tavern.buying_step()
+        player_1.gain_spell(BrannsBlessing())
+        player_1.play_spell(SpellIndex(0))
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        self.assertCardListEquals(player_1.in_play, [AlleyCat, TabbyCat, TabbyCat])
+        tavern.combat_step()
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(1))
+        player_1.summon_from_hand(HandIndex(0))
+        self.assertCardListEquals(player_1.in_play, [AlleyCat, TabbyCat, TabbyCat, MurlocTidehunter, MurlocScout])
+
+    class TestAllThatGlittersRandomizer(DefaultRandomizer):
+        def select_from_store(self, store: List['MonsterCard']) -> 'MonsterCard':
+            return store[0]
+
+    def test_all_that_glitters(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.randomizer = self.TestAllThatGlittersRandomizer()
+        tavern.buying_step()
+        player_1.gain_spell(AllThatGlitters())
+        player_1.play_spell(SpellIndex(0))
+        self.assertTrue(player_1.store[0].golden)
+        self.assertFalse(player_1.store[1].golden)
+        self.assertFalse(player_1.store[2].golden)
+
+    def test_BANANAS_randomizer(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.randomizer = self.TestKingMuklaRandomizer()
+        tavern.buying_step()
+        player_1.gain_spell(Bananas())
+        player_1.play_spell(SpellIndex(0))
+        self.assertEqual(player_1.hand_size(), 10)
+        for spell in player_1.spells:
+            self.assertEqual(type(spell), Banana)
+
+    def test_buy_the_holy_light(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.randomizer = RepeatedCardForcer([MurlocTidecaller])
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        player_1.gain_spell(BuyTheHolyLight())
+        player_1.play_spell(SpellIndex(0), board_index=BoardIndex(0))
+        self.assertTrue(player_1.in_play[0].divine_shield)
+
+    def test_im_still_just_a_rat_in_a_cage(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.randomizer = RepeatedCardForcer([DragonspawnLieutenant])
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        player_1.gain_spell(ImStillJustARatInACage())
+        player_1.play_spell(SpellIndex(0), board_index=BoardIndex(0))
+        self.assertEqual(player_1.in_play[0].attack, player_1.in_play[0].base_attack * 2)
+
+    def test_repeat_customer(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.randomizer = RepeatedCardForcer([DragonspawnLieutenant])
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        player_1.gain_spell(RepeatCustomer())
+        player_1.play_spell(SpellIndex(0), board_index=BoardIndex(0))
+        self.assertEqual(len(player_1.in_play), 0)
+        self.assertCardListEquals(player_1.hand, [DragonspawnLieutenant])
+        self.assertEqual(player_1.hand[0].attack, player_1.hand[0].base_attack + 2)
+        self.assertEqual(player_1.hand[0].health, player_1.hand[0].base_health + 2)
+
+    def test_top_shelf(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.buying_step()
+        player_1.gain_spell(TopShelf())
+        player_1.play_spell(SpellIndex(0))
+        self.assertTrue(all(card.tier == 6 for card in player_1.discover_queue[0]))
+
+    def test_ice_block_prize(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.buying_step()
+        player_1.gain_spell(IceBlock())
+        player_1.play_spell(SpellIndex(0))
+        self.assertEqual(player_1.hero.secrets[0], SECRETS.ICE_BLOCK)
+        player_1.health = 1
+        player_2.purchase(StoreIndex(0))
+        player_2.summon_from_hand(HandIndex(0))
+        self.assertFalse(player_1.hero.give_immunity)
+        tavern.combat_step()
+        tavern.randomizer = RepeatedCardForcer([VulgarHomunculus])
+        tavern.buying_step()
+        self.assertFalse(player_1.dead)
+        self.assertEqual(player_1.health, 1)
+        self.assertEqual(len(player_1.hero.secrets), 0)
+        self.assertTrue(player_1.hero.give_immunity)
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        self.assertEqual(player_1.health, 1)
+        tavern.combat_step()
+        self.assertFalse(player_1.hero.give_immunity)
+
+    def test_training_session(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong", Tickatus())
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.buying_step()
+        player_1.gain_spell(TrainingSession())
+        player_1.play_spell(SpellIndex(0))
+        self.assertEqual(len(player_1.hero.discover_queue[0]), 3)
+        self.assertTrue(all(issubclass(type(item), Hero) for item in player_1.hero.discover_queue[0]))
+        self.assertEqual(type(player_1.hero), Tickatus)
+        player_1.hero_select_discover(DiscoverIndex(0))
+        self.assertNotEqual(type(player_1.hero), Tickatus)
+
+    def test_gain_argent_braggart(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.buying_step()
+        player_1.gain_spell(GainArgentBraggart())
+        self.assertCardListEquals(player_1.hand, [ArgentBraggart])
+        self.assertCardListEquals(player_1.spells, [])
+
+    def test_fresh_tab(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        self.upgrade_to_tier(tavern, 6)
+        tavern.buying_step()
+        for _ in range(3):
+            player_1.purchase(StoreIndex(0))
+        player_1.gain_spell(FreshTab())
+        self.assertEqual(player_1.coins, 1)
+        player_1.play_spell(SpellIndex(0))
+        self.assertEqual(player_1.coins, 10)
+
+    def test_friends_and_family_discount(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.buying_step()
+        tavern.combat_step()
+        tavern.buying_step()
+        player_1.gain_spell(FriendsAndFamilyDiscount())
+        player_1.play_spell(SpellIndex(0))
+        player_1.purchase(StoreIndex(0))
+        self.assertEqual(player_1.coins, 2)
+
+    def test_give_a_dog_a_bone(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.randomizer = RepeatedCardForcer([MurlocTidecaller])
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        player_1.gain_spell(TheBouncer())
+        player_1.play_spell(SpellIndex(0), board_index=BoardIndex(0))
+        self.assertEqual(player_1.in_play[0].attack, player_1.in_play[0].base_attack + 10)
+        self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health + 10)
+        self.assertTrue(player_1.in_play[0].divine_shield)
+        self.assertTrue(player_1.in_play[0].windfury)
+
+    def test_open_bar(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.buying_step()
+        player_1.gain_spell(OpenBar())
+        player_1.play_spell(SpellIndex(0))
+        tavern.combat_step()
+        tavern.buying_step()
+        for _ in range(5):
+            player_1.reroll_store()
+        self.assertEqual(player_1.coins, 4)
+        player_1.reroll_store()
+        self.assertEqual(player_1.coins, 3)
+
+    def test_raise_the_stakes(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.randomizer = RepeatedCardForcer([DragonspawnLieutenant])
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        player_1.gain_spell(RaiseTheStakes())
+        player_1.play_spell(SpellIndex(0), board_index=BoardIndex(0))
+        self.assertEqual(len(player_1.in_play), 0)
+        self.assertCardListEquals(player_1.hand, [DragonspawnLieutenant])
+        self.assertTrue(player_1.hand[0].golden)
+
+    def test_big_winner(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong", Tickatus())
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.buying_step()
+        player_1.gain_spell(BigWinner())
+        player_1.play_spell(SpellIndex(0))
+        for i in range(3):
+            self.assertEqual(len(player_1.hero.discover_queue), 3 - i)
+            self.assertEqual(len(player_1.hero.discover_queue[0]), 3)
+            self.assertTrue(all(spell.darkmoon_prize_tier == i + 1 for spell in player_1.hero.discover_queue[0]))
+            player_1.hero_select_discover(DiscoverIndex(0))
+            print(player_1.spells)
+            self.assertEqual(player_1.spells[i].darkmoon_prize_tier, i + 1)
 
 
 if __name__ == '__main__':

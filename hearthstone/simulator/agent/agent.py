@@ -1,7 +1,7 @@
 from typing import Any
 
 from hearthstone.simulator.agent.actions import HeroChoiceAction, DiscoverChoiceAction, \
-    RearrangeCardsAction, StandardAction
+    RearrangeCardsAction, StandardAction, HeroDiscoverAction
 from hearthstone.simulator.core.player import HeroChoiceIndex
 from hearthstone.simulator.core.tavern import Player
 
