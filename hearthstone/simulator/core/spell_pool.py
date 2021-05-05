@@ -108,7 +108,7 @@ class NewRecruit(Spell):
     def on_play(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                 store_index: Optional['StoreIndex'] = None):
         context.owner.new_recruit = True
-        context.owner.tavern.deck.draw(context.owner, 1)
+        context.owner.extend_store(context.owner.tavern.deck.draw(context.owner, 1))
 
 
 class TheGoodStuff(Spell):

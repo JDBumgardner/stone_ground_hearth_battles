@@ -4144,7 +4144,7 @@ class CardTests(BattleGroundsTestCase):
         tavern.buying_step()
         player_1.purchase(StoreIndex(0))
         player_1.summon_from_hand(HandIndex(0))
-        player_1.gain_spell(TheBouncer())
+        player_1.gain_spell(GiveADogABone())
         player_1.play_spell(SpellIndex(0), board_index=BoardIndex(0))
         self.assertEqual(player_1.in_play[0].attack, player_1.in_play[0].base_attack + 10)
         self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health + 10)
