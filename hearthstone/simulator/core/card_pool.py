@@ -94,7 +94,7 @@ class AlleyCat(MonsterCard):
 
 
 class TabbyCat(MonsterCard):
-    base_token = True
+    not_in_pool = True
     tier = 1
     monster_type = MONSTER_TYPES.BEAST
     pool = MONSTER_TYPES.BEAST
@@ -199,7 +199,7 @@ class MurlocTidehunter(MonsterCard):
 
 
 class MurlocScout(MonsterCard):
-    base_token = True
+    not_in_pool = True
     tier = 1
     monster_type = MONSTER_TYPES.MURLOC
     pool = MONSTER_TYPES.MURLOC
@@ -286,7 +286,7 @@ class HarvestGolem(MonsterCard):
 
 
 class DamagedGolem(MonsterCard):
-    base_token = True
+    not_in_pool = True
     tier = 1
     monster_type = MONSTER_TYPES.MECH
     pool = MONSTER_TYPES.MECH
@@ -330,7 +330,7 @@ class KindlyGrandmother(MonsterCard):
 
 
 class BigBadWolf(MonsterCard):
-    base_token = True
+    not_in_pool = True
     tier = 1
     monster_type = MONSTER_TYPES.BEAST
     pool = MONSTER_TYPES.BEAST
@@ -402,7 +402,7 @@ class Imprisoner(MonsterCard):
 
 
 class Imp(MonsterCard):
-    base_token = True
+    not_in_pool = True
     tier = 1
     monster_type = MONSTER_TYPES.DEMON
     pool = MONSTER_TYPES.DEMON
@@ -469,7 +469,7 @@ class Scallywag(MonsterCard):
 
 class SkyPirate(MonsterCard):
     tier = 1
-    base_token = True
+    not_in_pool = True
     monster_type = MONSTER_TYPES.PIRATE
     pool = MONSTER_TYPES.PIRATE
     base_attack = 1
@@ -564,7 +564,7 @@ class Rat(MonsterCard):
     pool = MONSTER_TYPES.BEAST
     base_attack = 1
     base_health = 1
-    base_token = True
+    not_in_pool = True
 
 
 class NathrezimOverseer(MonsterCard):
@@ -644,7 +644,7 @@ class MechanoEgg(MonsterCard):
 
 
 class Robosaur(MonsterCard):
-    base_token = True
+    not_in_pool = True
     tier = 1
     monster_type = MONSTER_TYPES.MECH
     pool = MONSTER_TYPES.MECH
@@ -802,7 +802,7 @@ class Spider(MonsterCard):
     tier = 1
     base_attack = 1
     base_health = 1
-    base_token = True
+    not_in_pool = True
     monster_type = MONSTER_TYPES.BEAST
     pool = MONSTER_TYPES.BEAST
 
@@ -952,7 +952,7 @@ class Hyena(MonsterCard):
     base_health = 2
     monster_type = MONSTER_TYPES.BEAST
     pool = MONSTER_TYPES.BEAST
-    base_token = True
+    not_in_pool = True
 
 
 class SecurityRover(MonsterCard):
@@ -979,7 +979,7 @@ class GuardBot(MonsterCard):
     base_health = 3
     monster_type = MONSTER_TYPES.MECH
     pool = MONSTER_TYPES.MECH
-    base_token = True
+    not_in_pool = True
     base_taunt = True
 
 
@@ -1110,7 +1110,7 @@ class Amalgam(MonsterCard):
     monster_type = MONSTER_TYPES.ALL
     base_attack = 1
     base_health = 2
-    base_token = True
+    not_in_pool = True
 
 
 class ReplicatingMenace(MonsterCard):
@@ -1141,7 +1141,7 @@ class Microbot(MonsterCard):
     pool = MONSTER_TYPES.MECH
     base_attack = 1
     base_health = 1
-    base_token = True
+    not_in_pool = True
 
 
 class Junkbot(MonsterCard):
@@ -1200,7 +1200,7 @@ class Demon(MonsterCard):
     base_attack = 1
     base_health = 3
     base_taunt = True
-    base_token = True
+    not_in_pool = True
 
 
 class AnnihilanBattlemaster(MonsterCard):
@@ -1478,7 +1478,7 @@ class IronhideRunt(MonsterCard):
     pool = MONSTER_TYPES.BEAST
     base_attack = 5
     base_health = 5
-    base_token = True
+    not_in_pool = True
 
 
 class NatPagleExtremeAngler(MonsterCard):
@@ -1837,7 +1837,7 @@ class FinkleEinhorn(MonsterCard):
     monster_type = None
     base_attack = 3
     base_health = 3
-    base_token = True
+    not_in_pool = True
 
 
 class SouthseaStrongarm(MonsterCard):
@@ -2021,7 +2021,7 @@ class WaterDroplet(MonsterCard):
     pool = MONSTER_TYPES.ELEMENTAL
     base_attack = 2
     base_health = 2
-    base_token = True
+    not_in_pool = True
 
 
 class LilRag(MonsterCard):
@@ -2186,7 +2186,7 @@ class EmperorCobra(MonsterCard):
     base_attack = 2
     base_health = 3
     base_poisonous = True
-    base_token = True
+    not_in_pool = True
 
 
 class Snake(MonsterCard):
@@ -2195,7 +2195,7 @@ class Snake(MonsterCard):
     pool = MONSTER_TYPES.BEAST
     base_attack = 1
     base_health = 1
-    base_token = True
+    not_in_pool = True
 
 
 class AcolyteOfCThun(MonsterCard):
@@ -2315,7 +2315,7 @@ class FishOfNZoth(MonsterCard):
     monster_type = MONSTER_TYPES.BEAST
     base_attack = 1
     base_health = 1
-    base_token = True
+    not_in_pool = True
     legendary = True
 
     def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
@@ -2349,7 +2349,7 @@ class FieryImp(MonsterCard):
     pool = MONSTER_TYPES.DEMON
     base_attack = 3
     base_health = 2
-    base_token = True
+    not_in_pool = True
 
 
 class SoulDevourer(MonsterCard):
@@ -2392,7 +2392,7 @@ class ArgentBraggart(MonsterCard):
     monster_type = None
     base_attack = 1
     base_health = 1
-    base_token = True  # argent braggart is not in the minion pool
+    not_in_pool = True  # argent braggart is not in the minion pool
 
     def __init__(self):
         super().__init__()
@@ -2419,10 +2419,10 @@ class PrintingPress:
                    include_graveyard: Optional[bool] = False) -> 'CardList':
         cardlist = []
         for card in cls.cards + (REMOVED_CARDS if include_graveyard else []):
-            if not card.base_token and (card.pool in available_types or card.pool == MONSTER_TYPES.ALL):
+            if not card.not_in_pool and (card.pool in available_types or card.pool == MONSTER_TYPES.ALL):
                 cardlist.extend([card() for _ in range(cls.cards_per_tier[card.tier])])
         return CardList(cardlist)
 
     @classmethod
     def all_types(cls):
-        return [card_type for card_type in cls.cards if not card_type.base_token]
+        return [card_type for card_type in cls.cards if not card_type.not_in_pool]

@@ -578,7 +578,7 @@ class TessGreymane(Hero):
                 card_copy = type(card)()
                 card_copy.token = True
                 context.owner.add_to_store(card_copy)
-                if not card.base_token:
+                if not card.not_in_pool:
                     self.refreshed_cards.append(card_copy)
             context.owner.extend_store(context.owner.tavern.deck.draw(context.owner, context.owner.refresh_size()))
         else:

@@ -10,7 +10,7 @@ class Plant(MonsterCard):
     monster_type = None
     base_attack = 1
     base_health = 1
-    base_token = True
+    not_in_pool = True
 
 
 class Adaptation:

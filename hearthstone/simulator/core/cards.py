@@ -60,7 +60,7 @@ class MonsterCard:
     base_reborn = False
     redeem_rate = 1
     tier: int
-    base_token = False
+    not_in_pool = False
     cant_attack = False
     give_immunity = False
     legendary = False
@@ -88,7 +88,7 @@ class MonsterCard:
         self.frozen = False
         self.nomi_buff = 0
         self.ticket = False
-        self.token = self.base_token
+        self.token = self.not_in_pool
         self.link: Optional['MonsterCard'] = None  # links a card during combat to itself in the buy phase board
         self.dealt_lethal_damage_by = None
         self.frenzy_triggered = False
