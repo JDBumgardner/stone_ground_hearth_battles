@@ -711,10 +711,6 @@ class SilasDarkmoon(Hero):
 
 
 class SirFinleyMrrgglton(Hero):
-    def __init__(self):
-        super().__init__()
-        self.player = None
-
     def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_START and context.owner.tavern.turn_count == 0:
             hero_pool = [hero_type() for hero_type in VALHALLA if (
@@ -726,13 +722,11 @@ class SirFinleyMrrgglton(Hero):
                 hero_choices.append(random_hero)
                 hero_pool.remove(random_hero)
             self.discover_queue.append(hero_choices)
-            self.player = context.owner
 
     def select_discover(self, discover_index: 'DiscoverIndex', context: 'BuyPhaseContext'):
-        self.player.hero_options = self.discover_queue[0][:]
-        self.player.choose_hero(HeroChoiceIndex(discover_index))
-        self.player.hero.handle_event(events.BuyStartEvent(),
-                                      BuyPhaseContext(self.player, self.player.tavern.randomizer))
+        context.owner.hero_options = self.discover_queue[0][:]
+        context.owner.choose_hero(HeroChoiceIndex(discover_index))
+        context.owner.hero.handle_event(events.BuyStartEvent(), context)
         self.discover_queue.pop(0)
 
 
@@ -902,7 +896,6 @@ class OverlordSaurfang(Hero):
 class Tickatus(Hero):
     def __init__(self):
         super().__init__()
-        self.player = None
         self.prize_tier = 0
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
@@ -919,8 +912,8 @@ class Tickatus(Hero):
 
     def select_discover(self, discover_index: 'DiscoverIndex', context: 'BuyPhaseContext'):
         if issubclass(type(self.discover_queue[0][0]), Hero):
-            self.player.hero_options = self.discover_queue[0][:]
-            self.player.choose_hero(HeroChoiceIndex(discover_index))
+            new_hero = self.discover_queue[0][discover_index]
+            context.owner.swap_hero(self, new_hero)
             self.discover_queue.pop(0)
         else:
             prize = self.discover_queue[0].pop(discover_index)

@@ -570,3 +570,10 @@ class Player:
         spell = self.pop_spell(index)
         self.coins -= spell.cost
         spell.on_play(BuyPhaseContext(self, self.tavern.randomizer), board_index, store_index)
+
+    def swap_hero(self, old_hero: 'Hero', new_hero: 'Hero'):
+        self.hero = new_hero
+        new_hero.secrets.extend(old_hero.secrets)
+        self.minion_cost = new_hero.minion_cost()
+        self.refresh_store_cost = new_hero.refresh_cost()
+        self._tavern_upgrade_costs = new_hero.tavern_upgrade_costs()

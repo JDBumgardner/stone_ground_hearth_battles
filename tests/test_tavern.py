@@ -4102,6 +4102,39 @@ class CardTests(BattleGroundsTestCase):
         player_1.hero_select_discover(DiscoverIndex(0))
         self.assertNotEqual(type(player_1.hero), Tickatus)
 
+    def test_training_session_choose_millhouse(self):
+        tavern = Tavern(restrict_types=False)
+        tavern.randomizer = self.TestMrrggltonMillhouseRandomizer()
+        player_1 = tavern.add_player_with_hero("Dante_Kong", Tickatus())
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.buying_step()
+        player_1.gain_spell(TrainingSession())
+        player_1.play_spell(SpellIndex(0))
+        player_1.hero_select_discover(DiscoverIndex(0))
+        self.assertEqual(type(player_1.hero), MillhouseManastorm)
+        self.assertEqual(player_1.minion_cost, 2)
+        self.assertEqual(player_1.refresh_store_cost, 2)
+        self.assertEqual(player_1.tavern_upgrade_cost, 5)
+
+    class TestTrainingSessionPatchwerkRandomizer(DefaultRandomizer):
+        def select_hero(self, hero_pool: List['Hero']) -> 'Hero':
+            if PatchWerk in [type(hero) for hero in hero_pool]:
+                return [hero for hero in hero_pool if isinstance(hero, PatchWerk)][0]
+            else:
+                return hero_pool[0]
+
+    def test_training_session_choose_patchwerk(self):
+        tavern = Tavern(restrict_types=False)
+        tavern.randomizer = self.TestTrainingSessionPatchwerkRandomizer()
+        player_1 = tavern.add_player_with_hero("Dante_Kong", Tickatus())
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.buying_step()
+        player_1.gain_spell(TrainingSession())
+        player_1.play_spell(SpellIndex(0))
+        player_1.hero_select_discover(DiscoverIndex(0))
+        self.assertEqual(type(player_1.hero), PatchWerk)
+        self.assertEqual(player_1.health, 40)
+
     def test_gain_argent_braggart(self):
         tavern = Tavern(restrict_types=False)
         player_1 = tavern.add_player_with_hero("Dante_Kong")
