@@ -10,7 +10,7 @@ from hearthstone.simulator.core.events import BuyPhaseContext, CombatPhaseContex
 from hearthstone.simulator.core.hero import Hero
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 from hearthstone.simulator.core.player import BoardIndex, StoreIndex, DiscoverIndex, HeroChoiceIndex
-from hearthstone.simulator.core.secrets import SECRETS
+from hearthstone.simulator.core.secrets import remaining_secrets, BaseSecret
 from hearthstone.simulator.core.spell_pool import TripleRewardCard, GoldCoin, Prize, Banana, BigBanana, RecruitmentMap, \
     DARKMOON_PRIZES
 
@@ -624,9 +624,9 @@ class TheGreatAkazamzarak(Hero):
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
-        available_secrets = SECRETS.remaining_secrets(self)
-        if self.discovered_ice_block and SECRETS.ICE_BLOCK in available_secrets:
-            available_secrets.remove(SECRETS.ICE_BLOCK)
+        available_secrets = remaining_secrets(self)
+        if self.discovered_ice_block and BaseSecret.IceBlock in available_secrets:
+            available_secrets.remove(BaseSecret.IceBlock)
 
         secrets = []
         for _ in range(3):
@@ -638,13 +638,13 @@ class TheGreatAkazamzarak(Hero):
 
     def select_discover(self, discover_index: 'DiscoverIndex', context: 'BuyPhaseContext'):
         secret = self.discover_queue[0].pop(discover_index)
-        if secret == SECRETS.ICE_BLOCK:
+        if secret == BaseSecret.IceBlock:
             self.discovered_ice_block = True
-        self.secrets.append(secret)
+        self.secrets.append(secret())
         self.discover_queue.pop(0)
 
     def hero_info(self) -> Optional[str]:
-        return f'active secrets: {[secret.name for secret in self.secrets]}'
+        return f'active secrets: {self.secrets}'
 
 
 class IllidanStormrage(Hero):

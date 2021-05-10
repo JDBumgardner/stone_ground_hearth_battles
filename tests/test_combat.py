@@ -1129,7 +1129,7 @@ class CombatTests(BattleGroundsTestCase):
         tavern = Tavern()
         adam = tavern.add_player_with_hero("Adam", TheGreatAkazamzarak())
         ethan = tavern.add_player_with_hero("Ethan")
-        adam.hero.secrets.append(SECRETS.ICE_BLOCK)
+        adam.hero.secrets.append(BaseSecret.IceBlock())
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adam.health = 1
@@ -1144,7 +1144,7 @@ class CombatTests(BattleGroundsTestCase):
         tavern = Tavern()
         adam = tavern.add_player_with_hero("Adam", TheGreatAkazamzarak())
         ethan = tavern.add_player_with_hero("Ethan")
-        adam.hero.secrets.append(SECRETS.SPLITTING_IMAGE)
+        adam.hero.secrets.append(BaseSecret.SplittingImage())
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [TwilightEmissary()]
@@ -1158,7 +1158,7 @@ class CombatTests(BattleGroundsTestCase):
         tavern = Tavern()
         adam = tavern.add_player_with_hero("Adam", TheGreatAkazamzarak())
         ethan = tavern.add_player_with_hero("Ethan")
-        adam.hero.secrets.append(SECRETS.SNAKE_TRAP)
+        adam.hero.secrets.append(BaseSecret.SnakeTrap())
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [AlleyCat()]
@@ -1174,7 +1174,7 @@ class CombatTests(BattleGroundsTestCase):
         tavern = Tavern()
         adam = tavern.add_player_with_hero("Adam", TheGreatAkazamzarak())
         ethan = tavern.add_player_with_hero("Ethan")
-        adam.hero.secrets.append(SECRETS.VENOMSTRIKE_TRAP)
+        adam.hero.secrets.append(BaseSecret.VenomstrikeTrap())
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [MurlocScout()]
@@ -1188,7 +1188,7 @@ class CombatTests(BattleGroundsTestCase):
         tavern = Tavern()
         adam = tavern.add_player_with_hero("Adam", TheGreatAkazamzarak())
         ethan = tavern.add_player_with_hero("Ethan")
-        adam.hero.secrets.append(SECRETS.AUTODEFENSE_MATRIX)
+        adam.hero.secrets.append(BaseSecret.AutodefenseMatrix())
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [TabbyCat()]
@@ -1202,7 +1202,7 @@ class CombatTests(BattleGroundsTestCase):
         tavern = Tavern()
         adam = tavern.add_player_with_hero("Adam", TheGreatAkazamzarak())
         ethan = tavern.add_player_with_hero("Ethan")
-        adam.hero.secrets.append(SECRETS.REDEMPTION)
+        adam.hero.secrets.append(BaseSecret.Redemption())
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [TwilightEmissary()]
@@ -1216,7 +1216,7 @@ class CombatTests(BattleGroundsTestCase):
         tavern = Tavern()
         adam = tavern.add_player_with_hero("Adam", TheGreatAkazamzarak())
         ethan = tavern.add_player_with_hero("Ethan")
-        adam.hero.secrets.append(SECRETS.AVENGE)
+        adam.hero.secrets.append(BaseSecret.Avenge())
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [TwilightEmissary(), AlleyCat()]
@@ -1501,7 +1501,7 @@ class CombatTests(BattleGroundsTestCase):
         tavern = Tavern()
         adam = tavern.add_player_with_hero("Adam", TheGreatAkazamzarak())
         ethan = tavern.add_player_with_hero("Ethan")
-        adam.hero.secrets.append(SECRETS.SPLITTING_IMAGE)
+        adam.hero.secrets.append(BaseSecret.SplittingImage())
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         alleycat = AlleyCat()
@@ -1516,7 +1516,7 @@ class CombatTests(BattleGroundsTestCase):
         tavern = Tavern()
         adam = tavern.add_player_with_hero("Adam")
         ethan = tavern.add_player_with_hero("Ethan", TheGreatAkazamzarak())
-        ethan.hero.secrets.append(SECRETS.SPLITTING_IMAGE)
+        ethan.hero.secrets.append(BaseSecret.SplittingImage())
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [AlleyCat() for _ in range(7)]
@@ -1529,7 +1529,7 @@ class CombatTests(BattleGroundsTestCase):
         tavern = Tavern()
         adam = tavern.add_player_with_hero("Adam", TheGreatAkazamzarak())
         ethan = tavern.add_player_with_hero("Ethan")
-        adam.hero.secrets.append(SECRETS.SPLITTING_IMAGE)
+        adam.hero.secrets.append(BaseSecret.SplittingImage())
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [LieutenantGarr(), Khadgar()]
@@ -1542,7 +1542,7 @@ class CombatTests(BattleGroundsTestCase):
         tavern = Tavern()
         adam = tavern.add_player_with_hero("Adam", TheGreatAkazamzarak())
         ethan = tavern.add_player_with_hero("Ethan")
-        adam.hero.secrets.append(SECRETS.AUTODEFENSE_MATRIX)
+        adam.hero.secrets.append(BaseSecret.AutodefenseMatrix())
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [AlleyCat(), AnnoyOModule()]
@@ -1556,7 +1556,7 @@ class CombatTests(BattleGroundsTestCase):
         tavern = Tavern()
         adam = tavern.add_player_with_hero("Adam")
         ethan = tavern.add_player_with_hero("Ethan", TheGreatAkazamzarak())
-        ethan.hero.secrets.append(SECRETS.VENOMSTRIKE_TRAP)
+        ethan.hero.secrets.append(BaseSecret.VenomstrikeTrap())
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [BloodsailCannoneer() for _ in range(7)]
@@ -1569,7 +1569,7 @@ class CombatTests(BattleGroundsTestCase):
         tavern = Tavern()
         adam = tavern.add_player_with_hero("Adam", TheGreatAkazamzarak())
         ethan = tavern.add_player_with_hero("Ethan")
-        adam.hero.secrets.append(SECRETS.VENOMSTRIKE_TRAP)
+        adam.hero.secrets.append(BaseSecret.VenomstrikeTrap())
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [Khadgar()]
@@ -1582,7 +1582,7 @@ class CombatTests(BattleGroundsTestCase):
         tavern = Tavern()
         adam = tavern.add_player_with_hero("Adam")
         ethan = tavern.add_player_with_hero("Ethan", TheGreatAkazamzarak())
-        ethan.hero.secrets.append(SECRETS.SNAKE_TRAP)
+        ethan.hero.secrets.append(BaseSecret.SnakeTrap())
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [AlleyCat() for _ in range(7)]
@@ -1595,7 +1595,7 @@ class CombatTests(BattleGroundsTestCase):
         tavern = Tavern()
         adam = tavern.add_player_with_hero("Adam", TheGreatAkazamzarak())
         ethan = tavern.add_player_with_hero("Ethan")
-        adam.hero.secrets.append(SECRETS.SNAKE_TRAP)
+        adam.hero.secrets.append(BaseSecret.SnakeTrap())
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [Khadgar()]
@@ -1608,7 +1608,7 @@ class CombatTests(BattleGroundsTestCase):
         tavern = Tavern()
         adam = tavern.add_player_with_hero("Adam", TheGreatAkazamzarak())
         ethan = tavern.add_player_with_hero("Ethan")
-        adam.hero.secrets.append(SECRETS.REDEMPTION)
+        adam.hero.secrets.append(BaseSecret.Redemption())
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [AlleyCat(), Khadgar()]

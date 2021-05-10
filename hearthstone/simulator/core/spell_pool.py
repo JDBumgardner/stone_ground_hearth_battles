@@ -6,7 +6,7 @@ from typing import Optional
 
 from hearthstone.simulator.core.cards import CardLocation
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
-from hearthstone.simulator.core.secrets import SECRETS
+from hearthstone.simulator.core.secrets import BaseSecret
 from hearthstone.simulator.core.spell import Spell
 
 if typing.TYPE_CHECKING:
@@ -251,12 +251,12 @@ class ImStillJustARatInACage(Spell):
             target.attack += target.attack
 
 
-class IceBlock(Spell):
+class GainIceBlock(Spell):
     darkmoon_prize_tier = 3
 
     def on_play(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                 store_index: Optional['StoreIndex'] = None):
-        context.owner.hero.secrets.append(SECRETS.ICE_BLOCK)
+        context.owner.hero.secrets.append(BaseSecret.IceBlock())
 
 
 class RepeatCustomer(Spell):
