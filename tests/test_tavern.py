@@ -1,4 +1,3 @@
-import secrets
 import unittest
 
 from hearthstone.simulator.agent.actions import generate_standard_actions, EndPhaseAction
@@ -8,7 +7,7 @@ from hearthstone.simulator.core.card_pool import *
 from hearthstone.simulator.core.cards import MonsterCard
 from hearthstone.simulator.core.hero_graveyard import *
 from hearthstone.simulator.core.hero_pool import *
-from hearthstone.simulator.core.player import StoreIndex, HandIndex, BoardIndex, DiscoverIndex, Player, SpellIndex
+from hearthstone.simulator.core.player import HandIndex, DiscoverIndex, Player, SpellIndex
 from hearthstone.simulator.core.randomizer import DefaultRandomizer
 from hearthstone.simulator.core.secrets import Secret
 from hearthstone.simulator.core.spell_pool import *
@@ -3171,7 +3170,7 @@ class CardTests(BattleGroundsTestCase):
         player_1.hero_power()
         self.assertEqual(len(player_1.hero.discover_queue[0]), 3)
         player_1.hero_select_discover(DiscoverIndex(0))
-        self.assertEqual(len(player_1.hero.secrets), 1)
+        self.assertEqual(len(player_1.secrets), 1)
         self.assertEqual(len(player_1.hero.discover_queue), 0)
 
     class TestAkazamzarakIceBlockRandomizer(DefaultRandomizer):
@@ -3189,7 +3188,7 @@ class CardTests(BattleGroundsTestCase):
         tavern.buying_step()
         player_1.hero_power()
         player_1.hero_select_discover(DiscoverIndex(0))
-        self.assertEqual(type(player_1.hero.secrets[0]), BaseSecret.IceBlock)
+        self.assertEqual(type(player_1.secrets[0]), BaseSecret.IceBlock)
         player_1.health = 1
         player_2.purchase(StoreIndex(0))
         player_2.summon_from_hand(HandIndex(0))
@@ -3199,7 +3198,7 @@ class CardTests(BattleGroundsTestCase):
         tavern.buying_step()
         self.assertFalse(player_1.dead)
         self.assertEqual(player_1.health, 1)
-        self.assertEqual(len(player_1.hero.secrets), 0)
+        self.assertEqual(len(player_1.secrets), 0)
         self.assertTrue(player_1.hero.give_immunity)
         player_1.purchase(StoreIndex(0))
         player_1.summon_from_hand(HandIndex(0))
@@ -3216,14 +3215,14 @@ class CardTests(BattleGroundsTestCase):
         self.assertFalse(player_1.hero.discovered_ice_block)
         player_1.hero_power()
         player_1.hero_select_discover(DiscoverIndex(0))
-        self.assertEqual(type(player_1.hero.secrets[0]), BaseSecret.IceBlock)
+        self.assertEqual(type(player_1.secrets[0]), BaseSecret.IceBlock)
         self.assertTrue(player_1.hero.discovered_ice_block)
         tavern.combat_step()
         tavern.buying_step()
         player_1.hero_power()
         player_1.hero_select_discover(DiscoverIndex(0))
-        self.assertEqual(type(player_1.hero.secrets[0]), BaseSecret.IceBlock)
-        self.assertNotEqual(player_1.hero.secrets[1], BaseSecret.IceBlock)
+        self.assertEqual(type(player_1.secrets[0]), BaseSecret.IceBlock)
+        self.assertNotEqual(player_1.secrets[1], BaseSecret.IceBlock)
 
     class TestAkazamzarakCompetetiveSpiritRandomizer(DefaultRandomizer):
         def select_draw_card(self, cards: List['MonsterCard'], player_name: str, round_number: int) -> 'MonsterCard':
@@ -3247,10 +3246,10 @@ class CardTests(BattleGroundsTestCase):
         tavern.buying_step()
         player_1.hero_power()
         player_1.hero_select_discover(DiscoverIndex(0))
-        self.assertEqual(type(player_1.hero.secrets[0]), BaseSecret.CompetitiveSpirit)
+        self.assertEqual(type(player_1.secrets[0]), BaseSecret.CompetitiveSpirit)
         tavern.combat_step()
         tavern.buying_step()
-        self.assertEqual(len(player_1.hero.secrets), 0)
+        self.assertEqual(len(player_1.secrets), 0)
         for card in player_1.in_play:
             self.assertEqual(card.attack, card.base_attack + 1)
             self.assertEqual(card.health, card.base_health + 1)
@@ -4073,7 +4072,7 @@ class CardTests(BattleGroundsTestCase):
         tavern.buying_step()
         player_1.gain_spell(GainIceBlock())
         player_1.play_spell(SpellIndex(0))
-        self.assertEqual(type(player_1.hero.secrets[0]), BaseSecret.IceBlock)
+        self.assertEqual(type(player_1.secrets[0]), BaseSecret.IceBlock)
         player_1.health = 1
         player_2.purchase(StoreIndex(0))
         player_2.summon_from_hand(HandIndex(0))
@@ -4083,7 +4082,7 @@ class CardTests(BattleGroundsTestCase):
         tavern.buying_step()
         self.assertFalse(player_1.dead)
         self.assertEqual(player_1.health, 1)
-        self.assertEqual(len(player_1.hero.secrets), 0)
+        self.assertEqual(len(player_1.secrets), 0)
         self.assertTrue(player_1.hero.give_immunity)
         player_1.purchase(StoreIndex(0))
         player_1.summon_from_hand(HandIndex(0))

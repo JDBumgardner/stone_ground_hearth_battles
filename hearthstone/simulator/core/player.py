@@ -8,6 +8,7 @@ from hearthstone.simulator.core.cards import MonsterCard
 from hearthstone.simulator.core.events import BuyPhaseContext, CardEvent
 from hearthstone.simulator.core.hero import EmptyHero
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
+from hearthstone.simulator.core.secrets import Secret
 from hearthstone.simulator.core.spell import Spell
 from hearthstone.simulator.core.spell_pool import TripleRewardCard, TheUnlimitedCoin
 
@@ -65,6 +66,7 @@ class Player:
         self.the_unlimited_coins_played = 0
         self.battlecry_multiplier = 1
         self.num_turn_start_free_refreshes = 0
+        self.secrets: List['Secret'] = []
 
     def __repr__(self):
         return f"{self.hero} ({self.name})"
@@ -393,6 +395,9 @@ class Player:
         for card in self.hand.copy():
             if card in self.hand:
                 card.handle_event_in_hand(event, BuyPhaseContext(self, randomizer or self.tavern.randomizer))
+        for secret in self.secrets.copy():
+            if secret in self.secrets:
+                secret.handle_event(event, BuyPhaseContext(self, randomizer or self.tavern.randomizer))
 
     def valid_rearrange_cards(self, permutation: List[int]) -> bool:
         if not self.valid_standard_action():
@@ -571,9 +576,8 @@ class Player:
         self.coins -= spell.cost
         spell.on_play(BuyPhaseContext(self, self.tavern.randomizer), board_index, store_index)
 
-    def swap_hero(self, old_hero: 'Hero', new_hero: 'Hero'):
+    def swap_hero(self, new_hero: 'Hero'):
         self.hero = new_hero
-        new_hero.secrets.extend(old_hero.secrets)
         self.minion_cost = new_hero.minion_cost()
         self.refresh_store_cost = new_hero.refresh_cost()
         self._tavern_upgrade_costs = new_hero.tavern_upgrade_costs()

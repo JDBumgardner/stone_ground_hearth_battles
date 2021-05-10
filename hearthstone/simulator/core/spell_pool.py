@@ -256,7 +256,7 @@ class GainIceBlock(Spell):
 
     def on_play(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                 store_index: Optional['StoreIndex'] = None):
-        context.owner.hero.secrets.append(BaseSecret.IceBlock())
+        context.owner.secrets.append(BaseSecret.IceBlock())
 
 
 class RepeatCustomer(Spell):

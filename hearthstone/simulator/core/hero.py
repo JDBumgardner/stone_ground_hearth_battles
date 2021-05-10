@@ -1,16 +1,12 @@
-import copy
 import typing
 from typing import Union, Tuple, Optional, List, Any
 
-from hearthstone.simulator.core.card_pool import EmperorCobra, Snake
 from hearthstone.simulator.core.cards import CardLocation
-from hearthstone.simulator.core.combat import logger
 from hearthstone.simulator.core.events import BuyPhaseContext, CombatPhaseContext, CardEvent, EVENTS
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
-from hearthstone.simulator.core.secrets import Secret
 
 if typing.TYPE_CHECKING:
-    from hearthstone.simulator.core.player import BoardIndex, StoreIndex, DiscoverIndex
+    from hearthstone.simulator.core.player import BoardIndex, StoreIndex, DiscoverIndex, Player
 
 
 class Hero:
@@ -24,7 +20,6 @@ class Hero:
     def __init__(self):
         self.power_cost = self.base_power_cost
         self.discover_queue: List[List[Any]] = []
-        self.secrets: List['Secret'] = []
         self.give_immunity = False
 
     def __repr__(self):
@@ -51,8 +46,6 @@ class Hero:
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_END:
             self.give_immunity = False
-        for secret in self.secrets:
-            secret.handle_event(event, context)
         self.handle_event_powers(event, context)
 
     def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
@@ -113,8 +106,9 @@ class Hero:
     def valid_select_discover(self, discover_index: 'DiscoverIndex') -> bool:
         return bool(self.discover_queue) and discover_index in range(len(self.discover_queue[0]))
 
-    def hero_info(self) -> Optional[str]:
+    def hero_info(self, player: 'Player') -> Optional[str]:
         return None
+
 
 class EmptyHero(Hero):
     pass

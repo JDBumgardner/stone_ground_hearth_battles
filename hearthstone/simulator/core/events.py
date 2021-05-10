@@ -215,6 +215,10 @@ class CombatPhaseContext(autoslot.Slots):
             card.handle_event(event, self)
         for card in self.enemy_war_party.board.copy():
             card.handle_event(event, self.enemy_context())
+        for secret in self.friendly_war_party.owner.secrets.copy():
+            secret.handle_event(event, self)
+        for secret in self.enemy_war_party.owner.secrets.copy():
+            secret.handle_event(event, self.enemy_context())
 
     def enemy_context(self):
         return CombatPhaseContext(self.enemy_war_party, self.friendly_war_party, self.randomizer, self.event_queue,

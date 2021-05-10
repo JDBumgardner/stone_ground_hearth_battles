@@ -106,8 +106,8 @@ class TextAgent(Agent):
             f'hero power: "h [b/s] [0]" will activate your hero power with ability target index 0 on the board/store (current cost: {player.hero.power_cost})\n')
         await self.connection.send(
             f'hero power: "c 0 [b/s] [0]" plays the 0th indexed spell with ability target index 0 on the board/store\n')
-        if player.hero.hero_info() is not None:
-            await self.connection.send(f'hero info: {player.hero.hero_info()}\n')
+        if player.hero.hero_info(player) is not None:
+            await self.connection.send(f'hero info: {player.hero.hero_info(player)}\n')
         await self.connection.send(
             'end turn: "e f" ends the turn and freezes the shop, "e u" ends the turn and unfreezes the shop, "e" ends the turn with no changes\n')
         await self.connection.send("input action here: ")

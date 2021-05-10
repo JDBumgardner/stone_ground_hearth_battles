@@ -9,7 +9,7 @@ from hearthstone.simulator.core.combat import logger
 from hearthstone.simulator.core.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
 from hearthstone.simulator.core.hero import Hero
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
-from hearthstone.simulator.core.player import BoardIndex, StoreIndex, DiscoverIndex, HeroChoiceIndex
+from hearthstone.simulator.core.player import BoardIndex, StoreIndex, DiscoverIndex, HeroChoiceIndex, Player
 from hearthstone.simulator.core.secrets import remaining_secrets, BaseSecret
 from hearthstone.simulator.core.spell_pool import TripleRewardCard, GoldCoin, Prize, Banana, BigBanana, RecruitmentMap, \
     DARKMOON_PRIZES
@@ -139,7 +139,7 @@ class KaelthasSunstrider(Hero):
                 event.card.health += 2
                 self.buy_counter = 0
 
-    def hero_info(self) -> Optional[str]:
+    def hero_info(self, player: 'Player') -> Optional[str]:
         return f'{3 - self.buy_counter} buys left until hero power bonus'
 
 
@@ -164,6 +164,9 @@ class SkycapnKragg(Hero):
         context.owner.coins += context.owner.tavern.turn_count + 1
         self.can_use_power = False
 
+    def hero_info(self, player: 'Player') -> Optional[str]:
+        return f'worth {player.tavern.turn_count + 1} coins'
+
 
 class TheCurator(Hero):
     def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
@@ -187,7 +190,7 @@ class TheRatKing(Hero):
             event.card.attack += 2
             event.card.health += 2
 
-    def hero_info(self) -> Optional[str]:
+    def hero_info(self, player: 'Player') -> Optional[str]:
         return f'current type bonus: {self.current_type}'
 
 
@@ -238,7 +241,7 @@ class CaptainEudora(Hero):
             context.owner.gain_hand_card(random_minion)
             self.digs_left = 5
 
-    def hero_info(self) -> Optional[str]:
+    def hero_info(self, player: 'Player') -> Optional[str]:
         return f'{self.digs_left} digs left'
 
 
@@ -368,7 +371,7 @@ class ArannaStarseeker(Hero):
                 context.owner.extend_store(
                     context.owner.tavern.deck.draw(context.owner, 7 - context.owner.store_size()))
 
-    def hero_info(self) -> Optional[str]:
+    def hero_info(self, player: 'Player') -> Optional[str]:
         return f'{max(5 - self.total_rerolls, 0)} refreshes left'
 
 
@@ -445,7 +448,7 @@ class Chenvaala(Hero):
                 context.owner.tavern_upgrade_cost -= 3
                 self.play_counter = 0
 
-    def hero_info(self) -> Optional[str]:
+    def hero_info(self, player: 'Player') -> Optional[str]:
         return f'{3 - self.play_counter} elemental plays left until tavern discount'
 
 
@@ -466,7 +469,7 @@ class RagnarosTheFirelord(Hero):
                 context.owner.in_play[i].attack += 3
                 context.owner.in_play[i].health += 3
 
-    def hero_info(self) -> Optional[str]:
+    def hero_info(self, player: 'Player') -> Optional[str]:
         return f'{max(25 - self.minions_killed, 0)} minions left'
 
 
@@ -620,11 +623,11 @@ class TheGreatAkazamzarak(Hero):
 
     def hero_power_valid_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                               store_index: Optional['StoreIndex'] = None):
-        return len(self.secrets) <= 5
+        return len(context.owner.secrets) <= 5
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
-        available_secrets = remaining_secrets(self)
+        available_secrets = remaining_secrets(context.owner)
         if self.discovered_ice_block and BaseSecret.IceBlock in available_secrets:
             available_secrets.remove(BaseSecret.IceBlock)
 
@@ -640,11 +643,11 @@ class TheGreatAkazamzarak(Hero):
         secret = self.discover_queue[0].pop(discover_index)
         if secret == BaseSecret.IceBlock:
             self.discovered_ice_block = True
-        self.secrets.append(secret())
+        context.owner.secrets.append(secret())
         self.discover_queue.pop(0)
 
-    def hero_info(self) -> Optional[str]:
-        return f'active secrets: {self.secrets}'
+    def hero_info(self, player: 'Player') -> Optional[str]:
+        return f'active secrets: {player.secrets}'
 
 
 class IllidanStormrage(Hero):
@@ -686,7 +689,7 @@ class ZephrysTheGreat(Hero):
             context.owner.gain_hand_card(type(pair)())  # TODO: How does this interact with the minion pool?
         self.wishes_left -= 1
 
-    def hero_info(self) -> Optional[str]:
+    def hero_info(self, player: 'Player') -> Optional[str]:
         return f'{self.wishes_left} wishes left'
 
 
@@ -706,7 +709,7 @@ class SilasDarkmoon(Hero):
                     self.tickets_purchased = 0
                     context.owner.gain_spell(Prize(context.owner.tavern_tier))
 
-    def hero_info(self) -> Optional[str]:
+    def hero_info(self, player: 'Player') -> Optional[str]:
         return f'{3 - self.tickets_purchased} ticket buys left until discover reward'
 
 
@@ -791,7 +794,7 @@ class MaievShadowsong(Hero):
                     card.attack += 1
                     del self.dormant_minions[card]
 
-    def hero_info(self) -> Optional[str]:
+    def hero_info(self, player: 'Player') -> Optional[str]:
         return f"dormant minions: {self.dormant_minions}"
 
 
@@ -813,7 +816,7 @@ class CThun(Hero):
                 random_minion.attack += 1
                 random_minion.health += 1
 
-    def hero_info(self) -> Optional[str]:
+    def hero_info(self, player: 'Player') -> Optional[str]:
         return f'hero power repeats {self.power_uses} times'
 
 
@@ -913,12 +916,15 @@ class Tickatus(Hero):
     def select_discover(self, discover_index: 'DiscoverIndex', context: 'BuyPhaseContext'):
         if issubclass(type(self.discover_queue[0][0]), Hero):
             new_hero = self.discover_queue[0][discover_index]
-            context.owner.swap_hero(self, new_hero)
+            context.owner.swap_hero(new_hero)
             self.discover_queue.pop(0)
         else:
             prize = self.discover_queue[0].pop(discover_index)
             context.owner.gain_spell(prize)
             self.discover_queue.pop(0)
+
+    def hero_info(self, player: 'Player') -> Optional[str]:
+        return f'{4 - (player.tavern.turn_count + 1) % 4} turns left'
 
 
 VALHALLA = [member[1] for member in
