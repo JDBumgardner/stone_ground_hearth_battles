@@ -2118,7 +2118,7 @@ class RefreshingAnomaly(MonsterCard):
     mana_cost = 1
 
     def base_battlecry(self, targets: List['MonsterCard'], context: 'BuyPhaseContext'):
-        context.owner.plus_free_refreshes(2 if self.golden else 1)
+        context.owner.set_free_refreshes(2 if self.golden else 1)
 
 
 class MajordomoExecutus(MonsterCard):

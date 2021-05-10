@@ -505,7 +505,7 @@ class MrBigglesworth(Hero):
 class Nozdormu(Hero):
     def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_START:
-            context.owner.plus_free_refreshes(1)
+            context.owner.set_free_refreshes(1)
 
 
 class Sindragosa(Hero):

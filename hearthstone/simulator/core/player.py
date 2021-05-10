@@ -129,7 +129,7 @@ class Player:
     def free_refreshes(self):
         return self._free_refreshes
 
-    def plus_free_refreshes(self, num: int):
+    def set_free_refreshes(self, num: int):
         self._free_refreshes = max(num, self._free_refreshes)
 
     def buying_step(self):
@@ -156,7 +156,7 @@ class Player:
 
     def apply_darkmoon_prize_effects(self):
         self.battlecry_multiplier = 1
-        self.plus_free_refreshes(self.num_turn_start_free_refreshes)
+        self.set_free_refreshes(self.num_turn_start_free_refreshes)
 
     def decrease_tavern_upgrade_cost(self):
         self.tavern_upgrade_cost -= self.tavern_cost_reduction

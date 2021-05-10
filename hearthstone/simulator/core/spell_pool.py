@@ -99,7 +99,7 @@ class RockingAndRolling(Spell):
 
     def on_play(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                 store_index: Optional['StoreIndex'] = None):
-        context.owner.plus_free_refreshes(3)
+        context.owner.set_free_refreshes(3)
 
 
 class NewRecruit(Spell):
