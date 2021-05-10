@@ -1,4 +1,3 @@
-import collections
 import copy
 import enum
 import itertools
@@ -37,9 +36,8 @@ def one_minion_per_type(cards: List['MonsterCard'], randomizer: 'Randomizer',
     return minions
 
 
-BOOL_ATTRIBUTE_LIST = ["divine_shield", "magnetic", "poisonous", "taunt",
-                       "windfury", "cleave", "reborn", "mega_windfury"
-                       ]
+BOOL_ATTRIBUTE_LIST = ["divine_shield", "magnetic", "poisonous", "taunt", "windfury", "cleave", "reborn",
+                       "mega_windfury", "gruul_rules"]
 
 
 class MonsterCard:

@@ -16,6 +16,8 @@ from hearthstone.testing.battlegrounds_test_case import BattleGroundsTestCase
 
 
 class CombatTests(BattleGroundsTestCase):
+    def assertCardListEquals(self, cards, expected, msg=None):
+        self.assertListEqual([type(card) for card in cards], expected, msg=msg)
 
     def test_taunt(self):
         diana = Player.new_player_with_hero(Tavern(), "Diana")
@@ -1309,7 +1311,7 @@ class CombatTests(BattleGroundsTestCase):
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
-        self.assertListEqual([type(card) for card in adam.spells], [GoldCoin])
+        self.assertCardListEquals(adam.spells, [GoldCoin])
 
     def test_arm_of_the_empire(self):
         tavern = Tavern()
