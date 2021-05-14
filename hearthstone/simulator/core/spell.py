@@ -26,8 +26,6 @@ class Spell:
 
     def valid(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
               store_index: Optional['StoreIndex'] = None) -> bool:
-        if context.owner.coins < self.cost:
-            return False
         if self.target_location is None and (board_index is not None or store_index is not None):
             return False
         if self.target_location is not None:

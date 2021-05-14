@@ -4,7 +4,7 @@ from typing import Optional, List, Callable, Type, Tuple
 
 from frozenlist.frozen_list import FrozenList
 from hearthstone.simulator.core import events
-from hearthstone.simulator.core.cards import MonsterCard
+from hearthstone.simulator.core.cards import MonsterCard, CardLocation
 from hearthstone.simulator.core.events import BuyPhaseContext, CardEvent
 from hearthstone.simulator.core.hero import EmptyHero
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
@@ -565,9 +565,30 @@ class Player:
         if not self.valid_spell_index(index):
             return False
         spell = self.spells[index]
+        if self.coins < spell.cost:
+            return False
         if not spell.valid(BuyPhaseContext(self, self.tavern.randomizer), board_index, store_index):
             return False
         return True
+
+    def spell_can_be_played(self, index: 'SpellIndex'):
+        if not self.valid_spell_index(index):
+            return False
+        spell = self.spells[index]
+        if self.coins < spell.cost:
+            return False
+        if CardLocation.store in spell.target_location:
+            for index, card in enumerate(self.store):
+                if spell.valid_target(BuyPhaseContext(self, self.tavern.randomizer), store_index=StoreIndex(index)):
+                    return True
+        if CardLocation.board in spell.target_location:
+            for index, card in enumerate(self.in_play):
+                if spell.valid_target(BuyPhaseContext(self, self.tavern.randomizer), board_index=BoardIndex(index)):
+                    return True
+        if spell.target_location is None:
+            return True
+        return False
+
 
     def play_spell(self, index: 'SpellIndex', board_index: Optional['BoardIndex'] = None,
                    store_index: Optional['StoreIndex'] = None):
