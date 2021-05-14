@@ -6,16 +6,17 @@ import torch
 
 from hearthstone.simulator.agent.actions import StandardAction, Action
 from hearthstone.simulator.core.cards import MonsterCard, CardLocation
-from hearthstone.simulator.core.player import Player, BoardIndex, HandIndex
+from hearthstone.simulator.core.player import Player, BoardIndex, HandIndex, SpellIndex
 
 
 class State(NamedTuple):
     player_tensor: torch.Tensor
     cards_tensor: torch.Tensor
+    spells_tensor: torch.Tensor
 
     def to(self, device: torch.device):
         if device:
-            return State(self.player_tensor.to(device), self.cards_tensor.to(device))
+            return State(*[tensor.to(device) for tensor in self])
         else:
             return self
 
@@ -174,6 +175,11 @@ class EncodedActionSet(NamedTuple):
     # Note that for the target index, the 0th index is no-target, and the remainder are the board indices.
     battlecry_target_tensor: torch.Tensor  # Boolean tensor
 
+    spell_action_tensor: torch.Tensor  # Dimensions are (batch index, spell index)
+    no_target_spell_action_tensor: torch.Tensor  # Dimensions are (batch index, spell index)
+    store_target_spell_action_tensor: torch.Tensor  # Dimensions are (batch index, spell index, store index)
+    board_target_spell_action_tensor: torch.Tensor  # Dimensions are (batch index, spell index, board index)
+
     rearrange_phase: torch.Tensor  # Boolean
     cards_to_rearrange: torch.Tensor  # Start and length index as integers
 
@@ -185,10 +191,7 @@ class EncodedActionSet(NamedTuple):
     def to(self, device: torch.device):
         if device:
             return EncodedActionSet(
-                self.player_action_tensor.to(device), self.card_action_tensor.to(device),
-                self.battlecry_target_tensor.to(device),
-                self.rearrange_phase.to(device),
-                self.cards_to_rearrange.to(device),
+                *[tensor.to(device) for tensor in self[:-3]],
                 self.store_start,
                 self.hand_start,
                 self.board_start,
@@ -217,11 +220,26 @@ class SummonComponent(ActionComponent):
         return f"Summon({self.index}, ?)"
 
 
+class SpellComponent(ActionComponent):
+    def __init__(self, index: SpellIndex):
+        self.index = index
+
+    def valid(self, player: 'Player'):
+        return player.spell_can_be_played(self.index)
+
+    def __repr__(self):
+        return f"PlaySpell({self.index}, ?)"
+
+
 class ActionSet(NamedTuple):
     player_action_set: List[ActionComponent]
     card_action_set: List[List[ActionComponent]]
     # First dimension is card played, second dimension is card targeted (with 0 index meaning no card).
     battlecry_action_set: List[List[ActionComponent]]
+    spell_action_set: List[ActionComponent]
+    no_target_spell_action_set: List[ActionComponent]
+    spell_store_action_set: List[List[ActionComponent]]
+    spell_board_action_set: List[List[ActionComponent]]
 
 
 class InvalidAction(StandardAction):
