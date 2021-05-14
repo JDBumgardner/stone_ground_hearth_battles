@@ -59,6 +59,7 @@ class TransformerEncoderPostNormLayer(nn.Module):
         src = src + src2
         return src
 
+
 class TransformerWithContextEncoder(nn.Module):
     # TODO "redundant" arg should be implemented as a different state encoding instead
     def __init__(self, encoding: Encoder, width: int, num_layers: int, activation: str, redundant=False):
@@ -66,20 +67,28 @@ class TransformerWithContextEncoder(nn.Module):
         self.redundant = redundant
         self.width = width
         # TODO Orthogonal initialization?
-        self.fc_player = nn.Linear(encoding.player_encoding().size()[0], self.width - 1)
+        self.fc_player = nn.Linear(encoding.player_encoding().size()[0], self.width - 3)
         card_encoding_size = encoding.cards_encoding().size()[1]
         if redundant:
             card_encoding_size += encoding.player_encoding().size()[0]
-        self.fc_cards = nn.Linear(card_encoding_size, self.width - 1)
+        self.fc_cards = nn.Linear(card_encoding_size, self.width - 3)
+        spell_encoding_size = encoding.spells_encoding().size()[1]
+        if redundant:
+            spell_encoding_size += encoding.player_encoding().size()[0]
+        self.fc_spells = nn.Linear(spell_encoding_size, self.width - 3)
         self.encoder_layer = TransformerEncoderPostNormLayer(d_model=width, dim_feedforward=width * 4, nhead=4,
                                                              dropout=0.0, activation=activation)
         self.transformer_encoder = nn.TransformerEncoder(self.encoder_layer, num_layers=num_layers,
                                                          norm=LayerNorm(width))
         self._reset_parameters()
 
-    def forward(self, state: State) -> Tuple[torch.Tensor, torch.Tensor]:
+    @staticmethod
+    def pad_with_one_hot(rep: torch.Tensor) -> torch.Tensor:
+        return torch.cat((F.one_hot(torch.tensor(0), 3).unsqueeze(0).unsqueeze(0).expand(*rep.shape[-1], -1), rep), dim=2)
+
+    def forward(self, state: State) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         if not isinstance(state, State):
-            state = State(state[0], state[1])
+            state = State(state[0], state[1], state[2])
         player_rep = self.fc_player(state.player_tensor).unsqueeze(1)
         card_rep = state.cards_tensor
         if self.redundant:
@@ -88,13 +97,21 @@ class TransformerWithContextEncoder(nn.Module):
                 (card_rep, state.player_tensor.unsqueeze(1).expand(-1, state.cards_tensor.size()[1], -1)), dim=2)
         card_rep = self.fc_cards(card_rep)
 
-        # We add an indicator dimension to distinguish the player representation from the card representation.
-        player_rep = F.pad(player_rep, [1, 0], value=1.0)
-        card_rep = F.pad(card_rep, [1, 0], value=0.0)
+        spell_rep = state.spells_tensor
+        if self.redundant:
+            # Concatenate the player representation to each spell representation.
+            spell_rep = torch.cat(
+                (spell_rep, state.player_tensor.unsqueeze(1).expand(-1, state.spells_tensor.size()[1], -1)), dim=2)
+        spell_rep = self.fc_spells(spell_rep)
 
-        full_rep = torch.cat((player_rep, card_rep), dim=1).permute(1, 0, 2)
+        # We add an indicator dimension to distinguish the player representation from the card representation.
+        player_rep = self.pad_with_one_hot(player_rep)
+        card_rep = self.pad_with_one_hot(card_rep)
+        spell_rep = self.pad_with_one_hot(spell_rep)
+
+        full_rep = torch.cat((player_rep, card_rep, spell_rep), dim=1).permute(1, 0, 2)
         full_rep: torch.Tensor = self.transformer_encoder(full_rep).permute(1, 0, 2)
-        return full_rep[:, 0], full_rep[:, 1:]
+        return full_rep[:, 0], full_rep[:, 1:-spell_rep.shape], full_rep[:, -spell_rep.shape:]
 
     def _reset_parameters(self):
         for p in self.parameters():

@@ -266,6 +266,9 @@ class Encoder:
     def cards_encoding(self) -> Feature:
         raise NotImplemented()
 
+    def spells_encoding(self) -> Feature:
+        raise NotImplemented()
+
     def action_encoding_size(self) -> int:
         raise NotImplemented()
 
