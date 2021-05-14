@@ -175,9 +175,9 @@ def _all_actions() -> ActionSet:
          InvalidAction(), DiscoverChoiceAction(index), InvalidAction()] for index in
         discover_indices()]
 
-    battlecry_action_set = [
-        [SummonAction(hand_index, [])] + [SummonAction(hand_index, [board_index]) for board_index in board_indices()]
-        for hand_index in hand_indices()]
+    battlecry_no_target_action_set = [SummonAction(hand_index, []) for hand_index in hand_indices()]
+    battlecry_action_set = [[SummonAction(hand_index, [board_index]) for board_index in board_indices()]
+                            for hand_index in hand_indices()]
 
     spell_action_set = [SpellComponent(index) for index in spell_indices()]
     no_target_spell_action_set = [PlaySpellAction(index) for index in spell_indices()]
@@ -190,7 +190,7 @@ def _all_actions() -> ActionSet:
 
     return ActionSet(player_action_set,
                      store_action_set + hand_action_set + board_action_set + discover_action_set,
-                     battlecry_action_set, spell_action_set, no_target_spell_action_set,
+                     battlecry_no_target_action_set, battlecry_action_set, spell_action_set, no_target_spell_action_set,
                      store_target_spell_action_set, board_target_spell_action_set)
 
 
@@ -216,7 +216,7 @@ def _all_actions_dict():
 ALL_ACTIONS_DICT: Dict[str, int] = _all_actions_dict()
 
 
-INVERTED_ACTIONS = {index: action for action, index in ALL_ACTIONS_DICT}
+INVERTED_ACTIONS = {index: action for action, index in ALL_ACTIONS_DICT.items()}
 
 
 class DefaultEncoder(Encoder):
@@ -235,6 +235,8 @@ class DefaultEncoder(Encoder):
             for j, action in enumerate(card_actions):
                 cards_action_array[i, j] = action.valid(player)
         cards_action_tensor = torch.from_numpy(cards_action_array)
+        no_target_battlecry_tensor = torch.tensor(
+            [action.valid(player) for action in actions.battlecry_no_target_action_set])
         battlecry_target_array = np.zeros((len(actions.battlecry_action_set), len(actions.battlecry_action_set[0])), dtype=bool)
         for i, card_actions in enumerate(actions.battlecry_action_set):
             for j, action in enumerate(card_actions):
@@ -257,8 +259,8 @@ class DefaultEncoder(Encoder):
         cards_to_rearrange = torch.tensor(
             len(player.in_play), dtype=torch.long)
 
-        return EncodedActionSet(player_action_tensor, cards_action_tensor, battlecry_target_tensor,
-                                spell_action_tensor, no_target_spell_action_tensor,
+        return EncodedActionSet(player_action_tensor, cards_action_tensor, no_target_battlecry_tensor,
+                                battlecry_target_tensor, spell_action_tensor, no_target_spell_action_tensor,
                                 store_target_spells_action_tensor, board_target_spells_action_tensor,
                                 torch.tensor(rearrange_phase),
                                 cards_to_rearrange, 0, MAX_ENCODED_STORE, MAX_ENCODED_STORE + MAX_ENCODED_HAND)

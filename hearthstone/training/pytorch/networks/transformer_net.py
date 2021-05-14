@@ -8,11 +8,12 @@ from torch.nn import LayerNorm
 from torch.nn.init import xavier_uniform_
 
 from hearthstone.simulator.agent.actions import Action, RearrangeCardsAction, StandardAction, DiscoverChoiceAction, \
-    SummonAction
-from hearthstone.simulator.core.player import HandIndex, BoardIndex
+    SummonAction, PlaySpellAction
+from hearthstone.simulator.core.player import HandIndex, BoardIndex, StoreIndex, SpellIndex
 from hearthstone.training.pytorch.encoding import default_encoder
 from hearthstone.training.pytorch.encoding.default_encoder import EncodedActionSet
-from hearthstone.training.pytorch.encoding.state_encoding import State, Encoder, InvalidAction, SummonComponent
+from hearthstone.training.pytorch.encoding.state_encoding import State, Encoder, InvalidAction, SummonComponent, \
+    SpellComponent
 from hearthstone.training.pytorch.networks.running_norm import ObservationNormalizer
 from hearthstone.training.pytorch.replay import ActorCriticGameStepDebugInfo
 from plackett_luce.plackett_luce import PlackettLuce
@@ -127,6 +128,7 @@ class HearthstoneTransformerNet(nn.Module):
         self.encoding = encoding
         self.player_hidden_size = hidden_size
         self.card_hidden_size = hidden_size
+        self.spell_hidden_size = hidden_size
         if hidden_layers == 0:
             # If there are no hidden layers, just connect directly to output layers.
             self.player_hidden_size = encoding.player_encoding().size()[0]
@@ -145,16 +147,17 @@ class HearthstoneTransformerNet(nn.Module):
                                                                hidden_layers, activation_function, redundant=redundant)
 
         # Output layers
-        self.fc_player_policy = nn.Linear(self.player_hidden_size,
-                                          len(default_encoder.ALL_ACTIONS.player_action_set))
-        self.fc_card_policy = nn.Linear(self.card_hidden_size,
-                                        len(default_encoder.ALL_ACTIONS.card_action_set[1]))
+        self.fc_player_policy = nn.Linear(self.player_hidden_size, len(default_encoder.ALL_ACTIONS.player_action_set))
+        self.fc_card_policy = nn.Linear(self.card_hidden_size, len(default_encoder.ALL_ACTIONS.card_action_set[1]))
+        self.fc_spell_policy = nn.Linear(self.spell_hidden_size, 1)
         self.fc_card_position = nn.Linear(self.card_hidden_size, 1, bias=False)
 
         nn.init.constant_(self.fc_player_policy.weight, 0)
         nn.init.constant_(self.fc_player_policy.bias, 0)
         nn.init.constant_(self.fc_card_policy.weight, 0)
         nn.init.constant_(self.fc_card_policy.bias, 0)
+        nn.init.constant_(self.fc_spell_policy.weight, 0)
+        nn.init.constant_(self.fc_spell_policy.bias, 0)
         nn.init.constant_(self.fc_card_position.weight, 0)
 
         # Additional network for battlecry target selection
@@ -173,25 +176,27 @@ class HearthstoneTransformerNet(nn.Module):
 
     def forward(self, state: State, valid_actions: EncodedActionSet, chosen_actions: Optional[List[Action]]):
         if not isinstance(state, State):
-            state = State(state[0], state[1])
+            state = State(state[0], state[1], state[2])
         if not isinstance(valid_actions, EncodedActionSet):
             valid_actions = EncodedActionSet(*valid_actions)
 
         if self.normalize_observations:
             state = self.observation_normalizer(state)
 
-        policy_encoded_player, policy_encoded_cards = self.policy_encoder(state)
-        value_encoded_player, value_encoded_cards = self.value_encoder(state)
+        policy_encoded_player, policy_encoded_cards, policy_encoded_spells = self.policy_encoder(state)
+        value_encoded_player, value_encoded_cards, value_encoded_spells = self.value_encoder(state)
 
         player_policy = self.fc_player_policy(policy_encoded_player)
         card_policy = self.fc_card_policy(policy_encoded_cards)
+        spell_policy = self.fc_spell_policy(policy_encoded_spells)
 
         # Disable invalid actions with a "masked" softmax
         player_policy = player_policy.masked_fill(valid_actions.player_action_tensor.logical_not(), -1e30)
         card_policy = card_policy.masked_fill(valid_actions.card_action_tensor.logical_not(), -1e30)
+        spell_policy = spell_policy.masked_fill(valid_actions.spell_action_tensor.logical_not(), -1e30)
 
         # Flatten the policy
-        policy = torch.cat((player_policy.flatten(1), card_policy.flatten(1)), dim=1)
+        policy = torch.cat((player_policy.flatten(1), card_policy.flatten(1), spell_policy.flatten(1)), dim=1)
 
         # The policy network outputs an array of the log probability of each action component.
         policy = F.log_softmax(policy, dim=1)
@@ -212,43 +217,70 @@ class HearthstoneTransformerNet(nn.Module):
         component_log_probs = component_distribution.log_prob(component_samples)
 
         # Here we compute the target selection scores for battlecry/magnetic targets
-        target_encoded_player = torch.torch.cat(
+        target_encoded_player = torch.cat(
             (policy_encoded_player,
              torch.zeros((policy_encoded_player.shape[0], 4), device=policy_encoded_player.device)), dim=1)
 
         sampled_action_mask = torch.zeros_like(policy, dtype=torch.bool).scatter(1, component_samples.unsqueeze(-1), True)
-        active_cards = torch.max(torch.reshape(sampled_action_mask[:, player_policy.shape[1]:], card_policy.shape),
-                                 dim=2).values
+        active_cards = torch.max(torch.reshape(sampled_action_mask[:, player_policy.shape[1]:-spell_policy.shape[1]],
+                                               card_policy.shape), dim=2).values
+        active_spells = sampled_action_mask[:, -spell_policy.shape[1]:]
 
         hand_size = valid_actions.battlecry_target_tensor.shape[1]
-        board_size = valid_actions.battlecry_target_tensor.shape[2] -1
+        board_size = valid_actions.battlecry_target_tensor.shape[2] - 1
+        store_size = valid_actions.store_target_spell_action_tensor.shape[2]
         summoned_hand_cards = active_cards[:, valid_actions.hand_start:valid_actions.hand_start + hand_size]
         # TODO: Note that this is only true because Summon is currently the only hand-card action.
-        is_summon_action = torch.max(summoned_hand_cards, dim=1).values
+        is_targeted_action = torch.max(torch.cat((summoned_hand_cards, active_spells), dim=1), dim=1).values
 
         target_encoded_cards = torch.cat(
             (policy_encoded_cards, active_cards.unsqueeze(-1).expand(active_cards.shape + (4,))), dim=2)
-        target_full_rep = torch.cat((target_encoded_player.unsqueeze(1), target_encoded_cards), dim=1).permute(1, 0, 2)
+        target_encoded_spells = torch.cat(
+            (policy_encoded_spells, active_spells.unsqueeze(-1).expand(active_spells.shape + (4,))), dim=2)
+        target_full_rep = torch.cat((target_encoded_player.unsqueeze(1), target_encoded_cards, target_encoded_spells),
+                                    dim=1).permute(1, 0, 2)
         target_full_rep: torch.Tensor = self.target_selection_transformer(target_full_rep).permute(1, 0, 2)
 
-        valid_board_targets = (valid_actions.battlecry_target_tensor * summoned_hand_cards.unsqueeze(-1)).sum(dim=1)
+        valid_board_battlecry_no_targets = (valid_actions.no_target_battlecry_tensor * summoned_hand_cards.unsqueeze(-1)).sum(
+            dim=1)
+        valid_board_battlecry_targets = (valid_actions.battlecry_target_tensor * summoned_hand_cards.unsqueeze(-1)).sum(dim=1)
+        valid_spell_no_targets = (valid_actions.no_target_spell_action_tensor * active_spells.unsqueeze(-1)).sum(dim=1)
+        valid_store_spell_targets = (valid_actions.store_target_spell_action_tensor * active_spells.unsqueeze(-1)).sum(
+            dim=1)
+        valid_board_spell_targets = (valid_actions.board_target_spell_action_tensor * active_spells.unsqueeze(-1)).sum(dim=1)
+
+        all_valid_no_targets = torch.logical_or(valid_board_battlecry_no_targets, valid_spell_no_targets)
+        all_valid_board_targets = torch.logical_or(valid_board_battlecry_targets, valid_board_spell_targets)
+
+        all_valid_targets = torch.cat((all_valid_no_targets.unsqueeze(-1), valid_store_spell_targets, all_valid_board_targets), dim=1)
 
         target_no_target_rep = target_full_rep[:, 0:1]
+        target_store_rep = target_full_rep[:, 1 + valid_actions.store_start: 1 + valid_actions.store_start + store_size]
         target_board_rep = target_full_rep[:, 1 + valid_actions.board_start: 1 + valid_actions.board_start + board_size]
 
-        target_policy = self.target_selection_fc(torch.cat((target_no_target_rep, target_board_rep), dim=1)).squeeze(-1)
-        target_policy = target_policy.masked_fill(valid_board_targets.logical_not(), -1e30)
+        target_policy = self.target_selection_fc(torch.cat((target_no_target_rep, target_store_rep, target_board_rep),
+                                                           dim=1)).squeeze(-1)
+        target_policy = target_policy.masked_fill(all_valid_targets.logical_not(), -1e30)
         target_policy = F.log_softmax(target_policy, dim=1)
         target_distribution = Categorical(target_policy.exp())
 
+        def get_action_target_index(action):
+            if isinstance(action, SummonAction) and action.targets:
+                return action.targets[0] + 1 + store_size
+            elif isinstance(action, PlaySpellAction):
+                if action.board_target:
+                    return action.board_target + 1 + store_size
+                if action.store_target:
+                    return action.store_target + 1
+            else:
+                return 0
+
         if chosen_actions:
-            battlecry_target_samples = torch.tensor(
-                [action.targets[0] + 1 if isinstance(action, (SummonAction)) and action.targets else 0
-                 for action in chosen_actions], dtype=torch.int, device=policy.device)
+            target_samples = torch.tensor(
+                [get_action_target_index(action)for action in chosen_actions], dtype=torch.int, device=policy.device)
         else:
-            battlecry_target_samples = target_distribution.sample()
-        battlecry_target_log_probs = target_distribution.log_prob(battlecry_target_samples).masked_fill(
-            is_summon_action.logical_not(), 0.0)
+            target_samples = target_distribution.sample()
+        target_log_probs = target_distribution.log_prob(target_samples).masked_fill(is_targeted_action.logical_not(), 0.0)
 
         # We compute a score saying how to order the cards on the board, and use the Plackett Luce distribution to
         # sample permutations.
@@ -273,7 +305,7 @@ class HearthstoneTransformerNet(nn.Module):
 
         # Convert to numpy first for faster random access
         component_samples_numpy = component_samples.detach().cpu().numpy()
-        battlecry_target_samples_numpy = battlecry_target_samples.detach().cpu().numpy()
+        target_samples_numpy = target_samples.detach().cpu().numpy()
         for i in range(valid_actions.player_action_tensor.shape[0]):
             if chosen_actions:
                 output_actions[i] = chosen_actions[i]
@@ -284,13 +316,22 @@ class HearthstoneTransformerNet(nn.Module):
                 else:
                     output_actions[i] = self.encoding.get_indexed_action_component(component_samples_numpy[i])
                     if isinstance(output_actions[i], SummonComponent):
-                        battlecry_targets = [] if battlecry_target_samples_numpy[i] == 0 else [
-                            BoardIndex(battlecry_target_samples_numpy[i] - 1)]
+                        battlecry_targets = [] if target_samples_numpy[i] == 0 else [
+                            BoardIndex(target_samples_numpy[i] - 1 - store_size)]
                         output_actions[i] = SummonAction(HandIndex(output_actions[i].index), battlecry_targets)
+                    if isinstance(output_actions[i], SpellComponent):
+                        store_index = None
+                        board_index = None
+                        if target_samples_numpy[i] >= 1 + store_size:
+                            board_index = BoardIndex(target_samples_numpy[i] - 1 - store_size)
+                        elif target_samples_numpy[i] >= 1:
+                            store_index = StoreIndex(target_samples_numpy[i])
+                        output_actions[i] = PlaySpellAction(SpellIndex(output_actions[i].index),
+                                                            board_target=board_index, store_target=store_index)
 
         action_log_probs = torch.where(valid_actions.rearrange_phase,
                                        permutation_log_probs,
-                                       component_log_probs + battlecry_target_log_probs)
+                                       component_log_probs + target_log_probs)
         debug_info = ActorCriticGameStepDebugInfo(
             component_policy=policy,
             permutation_logits=permutation_distribution.logits

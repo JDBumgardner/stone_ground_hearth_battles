@@ -171,8 +171,8 @@ class EncodedActionSet(NamedTuple):
     player_action_tensor: torch.Tensor
     # Boolean tensor. Dimensions are (batch index, card index, action index)
     card_action_tensor: torch.Tensor
-    # Boolean tensor. Dimensions are (batch index, hand index, target index)
-    # Note that for the target index, the 0th index is no-target, and the remainder are the board indices.
+    no_target_battlecry_tensor: torch.Tensor  # Dimensions are (batch index, hand index)
+    # Boolean tensor. Dimensions are (batch index, hand index, board index)
     battlecry_target_tensor: torch.Tensor  # Boolean tensor
 
     spell_action_tensor: torch.Tensor  # Dimensions are (batch index, spell index)
@@ -235,6 +235,7 @@ class ActionSet(NamedTuple):
     player_action_set: List[ActionComponent]
     card_action_set: List[List[ActionComponent]]
     # First dimension is card played, second dimension is card targeted (with 0 index meaning no card).
+    battlecry_no_target_action_set: List[ActionComponent]
     battlecry_action_set: List[List[ActionComponent]]
     spell_action_set: List[ActionComponent]
     no_target_spell_action_set: List[ActionComponent]
