@@ -974,6 +974,64 @@ class OverlordSaurfang(Hero):
                 self.bonus_applied = True
 
 
+class Xyrella(Hero):
+    base_power_cost = 2
+    power_target_location = [CardLocation.STORE]
+
+    def hero_power_valid_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                              store_index: Optional['StoreIndex'] = None):
+        return bool(context.owner.store) and context.owner.room_in_hand()
+
+    def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                        store_index: Optional['StoreIndex'] = None):
+        target = context.owner.pop_store_card(store_index)
+        target.attack = 2
+        target.health = 2
+        context.owner.gain_hand_card(target)
+
+
+class Voljin(Hero):
+    base_power_cost = 0
+    power_target_location = [CardLocation.BOARD, CardLocation.STORE]
+    multiple_power_uses_per_turn = True
+
+    def __init__(self):
+        super().__init__()
+        self.first_target = None
+        self.second_target = None
+
+    def hero_power_valid_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                              store_index: Optional['StoreIndex'] = None):
+        if self.first_target is not None and self.second_target is not None:
+            return False
+        if board_index is not None:
+            target = context.owner.in_play[board_index]
+        if store_index is not None:
+            target = context.owner.store[store_index]
+        if target == self.first_target:
+            return False
+        return True
+
+    def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                        store_index: Optional['StoreIndex'] = None):
+        if board_index is not None:
+            target = context.owner.in_play[board_index]
+        if store_index is not None:
+            target = context.owner.store[store_index]
+
+        if self.first_target is None:
+            self.first_target = target
+        elif self.second_target is None:
+            self.second_target = target
+            self.first_target.attack, self.second_target.attack = self.second_target.attack, self.first_target.attack
+            self.first_target.health, self.second_target.health = self.second_target.health, self.first_target.health
+
+    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.BUY_START:
+            self.first_target = None
+            self.second_target = None
+
+
 # TODO: add Tickatus... and darkmoon prizes (ugh)
 
 

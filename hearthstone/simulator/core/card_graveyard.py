@@ -33,6 +33,20 @@ class ElistraTheImmortal(MonsterCard):
     legendary = True
 
 
+class BarrensBlacksmith(MonsterCard):
+    tier = 3
+    monster_type = None
+    base_attack = 3
+    base_health = 5
+
+    def frenzy(self, context: CombatPhaseContext):
+        bonus = 4 if self.golden else 2
+        for card in context.friendly_war_party.board:
+            if card != self:
+                card.attack += bonus
+                card.health += bonus
+
+
 REMOVED_CARDS = [member[1] for member in getmembers(sys.modules[__name__],
                                                        lambda member: isclass(member) and issubclass(member,
                                                                                                      MonsterCard) and member.__module__ == __name__)]

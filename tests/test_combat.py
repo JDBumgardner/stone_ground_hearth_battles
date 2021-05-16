@@ -1771,6 +1771,18 @@ class CombatTests(BattleGroundsTestCase):
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
 
+    def test_bristleback_knight(self):
+        tavern = Tavern()
+        adam = tavern.add_player_with_hero("Adam")
+        ethan = tavern.add_player_with_hero("Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [BristlebackKnight(), VulgarHomunculus()]
+        ethans_war_party.board = [RabidSaurolisk(), VulgarHomunculus(), NadinaTheRed(), NadinaTheRed(), NadinaTheRed()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+
 
 if __name__ == '__main__':
     unittest.main()

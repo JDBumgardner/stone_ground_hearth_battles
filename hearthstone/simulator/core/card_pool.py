@@ -2372,18 +2372,16 @@ class SoulDevourer(MonsterCard):
         return card.check_type(MONSTER_TYPES.DEMON)
 
 
-class BarrensBlacksmith(MonsterCard):
-    tier = 3
-    monster_type = None
-    base_attack = 3
-    base_health = 5
+class BristlebackKnight(MonsterCard):
+    tier = 5
+    monster_type = MONSTER_TYPES.QUILBOAR
+    base_attack = 4
+    base_health = 8
+    base_divine_shield = True
+    base_windfury = True
 
     def frenzy(self, context: CombatPhaseContext):
-        bonus = 4 if self.golden else 2
-        for card in context.friendly_war_party.board:
-            if card != self:
-                card.attack += bonus
-                card.health += bonus
+        self.divine_shield = True
 
 
 # TODO: add Faceless Taverngoer - add option to target store minions
