@@ -1,12 +1,14 @@
 import logging
 import os
+import platform
 from typing import List
 
 import torch
 from torch import multiprocessing
 from torch.distributed import rpc
 # Note that the simulators may do the inference instead, if running in non-batched mode.
-from torch.distributed.rpc import RRef
+if platform.system() != 'Windows':
+    from torch.distributed.rpc import RRef
 
 from hearthstone.ladder.ladder import Contestant
 from hearthstone.training.pytorch.agents.pytorch_bot import PytorchBot
