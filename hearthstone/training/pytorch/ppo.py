@@ -432,7 +432,7 @@ class PPOTensorboard:
         self.policy_loss_rearrange_welford = WelfordAggregator(torch.Size())
         self.value_loss_sum = 0
         self.entropy_loss_sum = 0
-        self.entropy_loss_main_dist_approx_welford = WelfordAggregator(torch.Size())
+        self.entropy_loss_standard_action_approx_welford = WelfordAggregator(torch.Size())
         self.entropy_loss_main_dist_exact_welford = WelfordAggregator(torch.Size())
         self.entropy_loss_main_dist_min_welford = WelfordAggregator(torch.Size())
         self.entropy_loss_rearrange_approx_welford = WelfordAggregator(torch.Size())
@@ -479,7 +479,7 @@ class PPOTensorboard:
             transition_batch.valid_actions.rearrange_phase))
         self.value_loss_sum += value_loss * new_count
         self.entropy_loss_sum += entropy_loss * new_count
-        self.entropy_loss_main_dist_approx_welford.update(entropy_weight * action_log_probs.masked_select(
+        self.entropy_loss_standard_action_approx_welford.update(entropy_weight * action_log_probs.masked_select(
             transition_batch.valid_actions.rearrange_phase.logical_not()))
         self.entropy_loss_main_dist_exact_welford.update(
             entropy_weight * (debug.component_policy.exp() * debug.component_policy).sum(
@@ -531,10 +531,12 @@ class PPOTensorboard:
         tensorboard.add_scalar("loss/value", self.value_loss_sum / self.count, step)
         tensorboard.add_scalar("loss/entropy", self.entropy_loss_sum / self.count, step)
         tensorboard.add_scalars("loss/entropy/main_dist",
-                                {"approx": self.entropy_loss_main_dist_approx_welford.mean(),
-                                 "exact": self.entropy_loss_main_dist_exact_welford.mean(),
+                                {"exact": self.entropy_loss_main_dist_exact_welford.mean(),
                                  "min": self.entropy_loss_main_dist_min_welford.mean(),
                                  }, step)
+        tensorboard.add_scalar("loss/entropy/standard_action_approx",
+                               self.entropy_loss_standard_action_approx_welford.mean(),
+                                step)
         tensorboard.add_scalars("loss/entropy/rearrange",
                                 {"approx": self.entropy_loss_rearrange_approx_welford.mean(),
                                  "min": self.entropy_loss_rearrange_min_welford.mean(),
@@ -657,7 +659,7 @@ class PPOTensorboard:
 def main():
     parallelismMethod = 'distributed'
     if platform.system() == 'Windows':
-        parallelismMethod = None
+        parallelismMethod = 'batch'
     ppo_learner = PPOLearner(PPOHyperparameters({
         "resume": False,
         'resume.from': '2021-02-05T17:56:25.030000',
@@ -671,9 +673,9 @@ def main():
         'opponents.max_pool_size': 7,
         'adam.lr': 1e-4,
         'adam.weight_decay': 5e-5,
-        'batch.min_replay_buffer_size': 40000,
-        'batch.minibatch_size': 16384,
-        'batch.max_in_memory': 1024,
+        'batch.min_replay_buffer_size': 10000,
+        'batch.minibatch_size': 1024,
+        'batch.max_in_memory': 512,
         'cuda': True,
         'entropy_weight': 0.001,
         'gae_gamma': 0.999,
@@ -691,7 +693,7 @@ def main():
         'nn.encoding.normalize': False,
         'nn.encoding.normalize.gamma': 0.999999,
         'normalize_advantage': True,
-        'parallelism.num_workers': 6,
+        'parallelism.num_workers': 128,
         'parallelism.method': parallelismMethod,
         'parallelism.shared_tensor_pool': False,
         'parallelism.distributed.games_per_worker': 128,
