@@ -22,7 +22,7 @@ def one_minion_per_type(cards: List['MonsterCard'], randomizer: 'Randomizer',
                         excluded_card: Optional['MonsterCard'] = None) -> List['MonsterCard']:
     minions = []
     restricted_cards = [card for card in cards]
-    if excluded_card is not None:
+    if excluded_card in restricted_cards:
         restricted_cards.remove(excluded_card)
     filler_minions = [card for card in restricted_cards if card.monster_type == MONSTER_TYPES.ALL]
     for minion_type in MONSTER_TYPES.single_types():
