@@ -6,7 +6,7 @@ import torch
 
 from hearthstone.simulator.agent.actions import StandardAction
 from hearthstone.simulator.core.player import Player
-from hearthstone.training.pytorch.encoding.state_encoding import State, EncodedActionSet, Feature, Encoder, \
+from hearthstone.training.common.state_encoding import State, EncodedActionSet, Feature, Encoder, \
     ActionComponent
 
 # A global singleton queue, since multiprocessing can't handle passing the queue through as a function argument.

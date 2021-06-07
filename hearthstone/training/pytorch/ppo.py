@@ -19,7 +19,7 @@ from hearthstone.training.pytorch.gae import GAEAnnotator
 from hearthstone.training.pytorch.encoding.default_encoder import  \
     DEFAULT_PLAYER_ENCODING, DEFAULT_CARDS_ENCODING, EncodedActionSet, \
     DefaultEncoder
-from hearthstone.training.pytorch.encoding.state_encoding import State
+from hearthstone.training.common.state_encoding import State
 from hearthstone.training.pytorch.networks import save_load
 from hearthstone.training.pytorch.networks.save_load import create_net, load_from_saved
 from hearthstone.training.pytorch.normalization import ObservationNormalizer, PPONormalizer

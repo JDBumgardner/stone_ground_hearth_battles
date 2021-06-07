@@ -13,7 +13,7 @@ from hearthstone.simulator.core.hero import EmptyHero
 from hearthstone.simulator.core.hero_pool import VALHALLA
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 from hearthstone.simulator.core.player import Player, StoreIndex, HandIndex, BoardIndex, DiscoverIndex
-from hearthstone.training.pytorch.encoding.state_encoding import State, \
+from hearthstone.training.common.state_encoding import State, \
     LocatedCard, Feature, ScalarFeature, OnehotFeature, CombinedFeature, ListOfFeatures, SortedByValueFeature, \
     EncodedActionSet, Encoder, InvalidAction, ActionSet, SummonComponent, ActionComponent
 

@@ -12,7 +12,7 @@ from hearthstone.simulator.agent.actions import Action, RearrangeCardsAction, St
 from hearthstone.simulator.core.player import HandIndex, BoardIndex
 from hearthstone.training.pytorch.encoding import default_encoder
 from hearthstone.training.pytorch.encoding.default_encoder import EncodedActionSet
-from hearthstone.training.pytorch.encoding.state_encoding import State, Encoder, InvalidAction, SummonComponent
+from hearthstone.training.common.state_encoding import State, Encoder, InvalidAction, SummonComponent
 from hearthstone.training.pytorch.networks.running_norm import ObservationNormalizer
 from hearthstone.training.pytorch.replay import ActorCriticGameStepDebugInfo
 from plackett_luce.plackett_luce import PlackettLuce

@@ -14,7 +14,7 @@ from hearthstone.simulator.replay.observer import Observer, Annotation
 from hearthstone.simulator.replay.replay import Replay, ReplayStep
 from hearthstone.training.pytorch.encoding import default_encoder
 from hearthstone.training.pytorch.encoding.default_encoder import EncodedActionSet, DefaultEncoder
-from hearthstone.training.pytorch.encoding.state_encoding import SummonComponent
+from hearthstone.training.common.state_encoding import SummonComponent
 from hearthstone.training.pytorch.surveillance import GlobalStepContext
 
 

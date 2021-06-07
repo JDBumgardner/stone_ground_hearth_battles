@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 
-from hearthstone.training.pytorch.encoding.state_encoding import Encoder, State
+from hearthstone.training.common.state_encoding import Encoder, State
 
 
 class WelfordAggregator:
