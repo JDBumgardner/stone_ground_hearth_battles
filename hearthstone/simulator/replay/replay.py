@@ -1,11 +1,13 @@
 from typing import List, Any, Dict, Optional
 
-from hearthstone.simulator.agent import EndPhaseAction, Action, HeroChoiceAction
+import autoslot
+
+from hearthstone.simulator.agent.actions import EndPhaseAction, Action, HeroChoiceAction, RearrangeCardsAction
 from hearthstone.simulator.core.randomizer import DefaultRandomizer
 from hearthstone.simulator.core.tavern import Tavern
 
 
-class ReplayStep:
+class ReplayStep(autoslot.Slots):
     def __init__(self, player: str, action: 'Action', agent_annotation: Any = None,
                  observer_annotations: Optional[Dict[str, Any]] = None):
         self.player = player
@@ -35,9 +37,7 @@ class Replay:
         self.observer_annotations[observer] = annotation
 
     def run_replay(self) -> 'Tavern':
-        randomizer = DefaultRandomizer(self.seed)
-        tavern = Tavern()
-        tavern.randomizer = randomizer
+        tavern = Tavern(randomizer=DefaultRandomizer(self.seed))
         for player in sorted(self.players):  # Sorting is important for replays to be exact with RNG.
             tavern.add_player(player)
 
@@ -50,14 +50,20 @@ class Replay:
 
         tavern.buying_step()
         end_phase_actions = set()
-        for replay_step in self.steps[len(self.players):]:
-            if replay_step.action is EndPhaseAction:
+        i = len(self.players)
+        while i < len(self.steps):
+            replay_step = self.steps[i]
+            if type(replay_step.action) is EndPhaseAction:
                 assert replay_step.player not in end_phase_actions
                 end_phase_actions.add(replay_step.player)
             replay_step.action.apply(tavern.players[replay_step.player])
-            if len(end_phase_actions) == len(self.players):
+            if len(end_phase_actions) + len(tavern.losers) == len(self.players):
+                while i + 1 < len(self.steps) and type(self.steps[i + 1].action) is RearrangeCardsAction:
+                    self.steps[i + 1].action.apply(tavern.players[replay_step.player])
+                    i += 1
                 tavern.combat_step()
                 end_phase_actions = set()
-                tavern.buying_step()
+                if not tavern.game_over():
+                    tavern.buying_step()
+            i += 1
         return tavern
-

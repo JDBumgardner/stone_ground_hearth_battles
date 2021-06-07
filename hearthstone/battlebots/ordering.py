@@ -14,8 +14,8 @@ def rate_position(card: 'MonsterCard') -> float:
         return 3.0
     if type(card) is InfestedWolf or type(card) is SavannahHighmane or type(card) is SecurityRover:
         return 4.5
-    if type(card) is DragonspawnLieutenant or type(card) is RighteousProtector or type(card) is Imprisoner or type(
-            card) is ImpGangBoss or type(card) is TwilightEmissary:
+    if type(card) is DragonspawnLieutenant or type(card) is Imprisoner or type(card) is ImpGangBoss or type(
+            card) is TwilightEmissary:
         return 5.0
     if type(card) is ScavengingHyena or type(card) is RatPack:
         return 6.0

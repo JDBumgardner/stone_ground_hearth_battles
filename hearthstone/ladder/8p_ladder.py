@@ -1,5 +1,4 @@
-from hearthstone.ladder.ladder import all_contestants, run_tournament, load_ratings, save_ratings, \
-    saved_learningbot_1v1_contestants
+from hearthstone.ladder.ladder import all_contestants, run_tournament, load_ratings, save_ratings
 
 
 def main():

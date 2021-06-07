@@ -7,12 +7,12 @@ import torch
 from torch import optim, nn
 from torch.utils.tensorboard import SummaryWriter
 
-from hearthstone.simulator.host import RoundRobinHost
 from hearthstone.ladder.ladder import Contestant, update_ratings, print_standings, save_ratings
-from hearthstone.training.pytorch.networks.feedforward_net import HearthstoneFFNet
-from hearthstone.training.pytorch.encoding.default_encoder import get_indexed_action, \
-    DEFAULT_PLAYER_ENCODING, DEFAULT_CARDS_ENCODING, DefaultEncoder
+from hearthstone.simulator.host import RoundRobinHost
+from hearthstone.training.pytorch.encoding.default_encoder import get_indexed_action_component, \
+    DefaultEncoder
 from hearthstone.training.pytorch.encoding.state_encoding import Transition
+from hearthstone.training.pytorch.networks.feedforward_net import HearthstoneFFNet
 from hearthstone.training.pytorch.policy_gradient import easier_contestants, tensorize_batch
 from hearthstone.training.pytorch.replay_buffer import ReplayBuffer
 from hearthstone.training.pytorch.surveillance import SurveiledPytorchBot, ReplayBufferSaver
@@ -20,7 +20,9 @@ from hearthstone.training.pytorch.surveillance import SurveiledPytorchBot, Repla
 # TODO STOP THIS HACK
 global_step = 0
 
-def learn(tensorboard: SummaryWriter, optimizer: optim.Adam, learning_net: nn.Module, replay_buffer: ReplayBuffer, batch_size, policy_weight):
+
+def learn(tensorboard: SummaryWriter, optimizer: optim.Adam, learning_net: nn.Module, replay_buffer: ReplayBuffer,
+          batch_size, policy_weight):
     global global_step
     if len(replay_buffer) < batch_size:
         return
@@ -40,12 +42,15 @@ def learn(tensorboard: SummaryWriter, optimizer: optim.Adam, learning_net: nn.Mo
     tensorboard.add_histogram("policy/train", torch.exp(policy), global_step)
     masked_reward = transition_batch.reward.masked_select(transition_batch.is_terminal)
     if masked_reward.size()[0]:
-        tensorboard.add_histogram("reward/train", transition_batch.reward.masked_select(transition_batch.is_terminal), global_step)
+        tensorboard.add_histogram("reward/train", transition_batch.reward.masked_select(transition_batch.is_terminal),
+                                  global_step)
     tensorboard.add_histogram("value/train", value, global_step)
     tensorboard.add_histogram("next_value/train", next_value, global_step)
     tensorboard.add_histogram("advantage/train", advantage, global_step)
-    tensorboard.add_text("action/train", str(get_indexed_action(int(transition_batch.action[0]))), global_step)
-    tensorboard.add_scalar("avg_reward/train", transition_batch.reward.masked_select(transition_batch.is_terminal).float().mean(), global_step)
+    tensorboard.add_text("action/train", str(get_indexed_action_component(int(transition_batch.action[0]))), global_step)
+    tensorboard.add_scalar("avg_reward/train",
+                           transition_batch.reward.masked_select(transition_batch.is_terminal).float().mean(),
+                           global_step)
     tensorboard.add_scalar("avg_value/train", value.mean(), global_step)
     tensorboard.add_scalar("avg_advantage/train", advantage.mean(), global_step)
     policy_loss = -(policy.gather(1, transition_batch.action.unsqueeze(-1)) * advantage.detach()).mean()
@@ -71,11 +76,12 @@ def main():
     learning_net = HearthstoneFFNet(DefaultEncoder())
     optimizer = optim.Adam(learning_net.parameters(), lr=0.0001)
     replay_buffer = ReplayBuffer(100000)
-    learning_bot_contestant = Contestant("LearningBot", lambda:  SurveiledPytorchBot(learning_net, [ReplayBufferSaver(replay_buffer)]))
+    learning_bot_contestant = Contestant("LearningBot",
+                                         lambda: SurveiledPytorchBot(learning_net, [ReplayBufferSaver(replay_buffer)]))
     contestants = other_contestants + [learning_bot_contestant]
     standings_path = "../../../data/learning/pytorch/a2c/standings.json"
-    #load_ratings(contestants, standings_path)
-    #add_net_to_tensorboard(tensorboard, learning_net)
+    # load_ratings(contestants, standings_path)
+    # add_net_to_tensorboard(tensorboard, learning_net)
 
     for _ in range(10000):
         round_contestants = [learning_bot_contestant] + random.sample(other_contestants, k=7)

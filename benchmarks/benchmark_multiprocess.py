@@ -1,15 +1,14 @@
 import time
 
 import torch
-from torch import nn
 import torch.nn.functional as F
+from torch import nn
 
 from hearthstone.battlebots.no_action_bot import NoActionBot
 from hearthstone.simulator.host.round_robin_host import RoundRobinHost
-from hearthstone.training.pytorch.encoding.default_encoder import DEFAULT_PLAYER_ENCODING, DEFAULT_CARDS_ENCODING, \
-    DefaultEncoder
+from hearthstone.training.pytorch.agents.pytorch_bot import PytorchBot
+from hearthstone.training.pytorch.encoding.default_encoder import DefaultEncoder
 from hearthstone.training.pytorch.networks.transformer_net import HearthstoneTransformerNet
-from hearthstone.training.pytorch.pytorch_bot import PytorchBot
 
 
 class MyNet(nn.Module):

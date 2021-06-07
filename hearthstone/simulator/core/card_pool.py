@@ -1,10 +1,13 @@
-import logging
+import sys
 import types
-from typing import Union, List
+from inspect import getmembers, isclass
+from typing import Union, List, Type, Optional
 
 from hearthstone.simulator.core import combat
 from hearthstone.simulator.core.adaptations import valid_adaptations
-from hearthstone.simulator.core.cards import MonsterCard, PrintingPress, one_minion_per_type
+from hearthstone.simulator.core.card_graveyard import REMOVED_CARDS
+from hearthstone.simulator.core.cards import MonsterCard, one_minion_per_type, CardList
+from hearthstone.simulator.core.combat import logger
 from hearthstone.simulator.core.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 
@@ -20,23 +23,10 @@ class MamaBear(MonsterCard):
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         if (event.event is EVENTS.SUMMON_BUY or (
                 event.event is EVENTS.SUMMON_COMBAT and event.card in context.friendly_war_party.board)) and event.card.check_type(
-                MONSTER_TYPES.BEAST) and event.card != self:
+            MONSTER_TYPES.BEAST) and event.card != self:
             bonus = 8 if self.golden else 4
             event.card.attack += bonus
             event.card.health += bonus
-
-
-class ShifterZerus(MonsterCard):
-    tier = 3
-    monster_type = None
-    base_attack = 1
-    base_health = 1
-    legendary = True
-    mana_cost = 1
-
-    def handle_event_in_hand(self, event: CardEvent, context: BuyPhaseContext):
-        if event.event is EVENTS.BUY_START:
-            self.zerus_shift(context)
 
 
 class SneedsOldShredder(MonsterCard):
@@ -45,6 +35,7 @@ class SneedsOldShredder(MonsterCard):
     pool = MONSTER_TYPES.MECH
     base_attack = 5
     base_health = 7
+    legendary = True
     mana_cost = 8
 
     def base_deathrattle(self, context: CombatPhaseContext):
@@ -52,10 +43,11 @@ class SneedsOldShredder(MonsterCard):
         summon_index = context.friendly_war_party.get_index(self)
         i = 0
         for _ in range(count):
+            legendary_minions = [card_type for card_type in PrintingPress.all_types() if
+                                 card_type.legendary and card_type != type(self)]
+            random_minion_type = context.randomizer.select_summon_minion(legendary_minions)
             for _ in range(context.summon_minion_multiplier()):
-                legendary_minions = [card_type for card_type in PrintingPress.all_types() if card_type.legendary]
-                random_minion = context.randomizer.select_summon_minion(legendary_minions)()
-                context.friendly_war_party.summon_in_combat(random_minion, context, summon_index + i + 1)
+                context.friendly_war_party.summon_in_combat(random_minion_type(), context, summon_index + i + 1)
                 i += 1
 
 
@@ -83,16 +75,6 @@ class DragonspawnLieutenant(MonsterCard):
     mana_cost = 2
 
 
-class RighteousProtector(MonsterCard):
-    tier = 1
-    monster_type = None
-    base_attack = 1
-    base_health = 1
-    base_taunt = True
-    base_divine_shield = True
-    mana_cost = 1
-
-
 class AlleyCat(MonsterCard):
     tier = 1
     monster_type = MONSTER_TYPES.BEAST
@@ -107,10 +89,11 @@ class AlleyCat(MonsterCard):
             if self.golden:
                 tabby_cat.golden_transformation([])
             context.owner.summon_from_void(tabby_cat)
+        context.owner.check_golden(TabbyCat)
 
 
 class TabbyCat(MonsterCard):
-    token = True
+    base_token = True
     tier = 1
     monster_type = MONSTER_TYPES.BEAST
     pool = MONSTER_TYPES.BEAST
@@ -211,10 +194,11 @@ class MurlocTidehunter(MonsterCard):
             if self.golden:
                 murloc_scout.golden_transformation([])
             context.owner.summon_from_void(murloc_scout)
+        context.owner.check_golden(MurlocScout)
 
 
 class MurlocScout(MonsterCard):
-    token = True
+    base_token = True
     tier = 1
     monster_type = MONSTER_TYPES.MURLOC
     pool = MONSTER_TYPES.MURLOC
@@ -263,18 +247,24 @@ class RedWhelp(MonsterCard):
     base_health = 2
     mana_cost = 1
 
+    def __init__(self):
+        super().__init__()
+        self.damage = 0  # damage is calculated before start-of-combat events trigger
+
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
+        if event.event is EVENTS.COMBAT_PREPHASE:
+            self.damage = len(
+                [card for card in context.friendly_war_party.board if card.check_type(MONSTER_TYPES.DRAGON)])
         if event.event is EVENTS.COMBAT_START:
-            num_friendly_dragons = len([card for card in context.friendly_war_party.board if
-                                        not card.dead and card.check_type(MONSTER_TYPES.DRAGON)])
-            targets = [card for card in context.enemy_war_party.board if not card.is_dying()]
-            if not targets:
-                return
             num_damage_instances = 2 if self.golden else 1
             for _ in range(num_damage_instances):
+                targets = [card for card in context.enemy_war_party.board if card.is_targetable()]
+                if not targets:
+                    return
                 target = context.randomizer.select_enemy_minion(targets)
-                target.take_damage(num_friendly_dragons, context.enemy_context(), self)
-                target.resolve_death(context.enemy_context(), self)  # TODO: Order of death resolution?
+                target.take_damage(self.damage, context.enemy_context(), self)
+            combat.resolve_combat_events(context.randomizer, context.event_queue, context.friendly_war_party,
+                                         context.enemy_war_party, context.damaged_minions)
 
 
 class HarvestGolem(MonsterCard):
@@ -295,7 +285,7 @@ class HarvestGolem(MonsterCard):
 
 
 class DamagedGolem(MonsterCard):
-    token = True
+    base_token = True
     tier = 1
     monster_type = MONSTER_TYPES.MECH
     pool = MONSTER_TYPES.MECH
@@ -314,12 +304,11 @@ class KaboomBot(MonsterCard):
     def base_deathrattle(self, context: CombatPhaseContext):
         num_damage_instances = 2 if self.golden else 1
         for _ in range(num_damage_instances):
-            targets = [card for card in context.enemy_war_party.board if not card.is_dying()]
+            targets = [card for card in context.enemy_war_party.board if card.is_targetable()]
             if not targets:
                 break
             target = context.randomizer.select_enemy_minion(targets)
             target.take_damage(4, context.enemy_context(), self)
-            target.resolve_death(context.enemy_context(), self)  # TODO: Order of death resolution?
 
 
 class KindlyGrandmother(MonsterCard):
@@ -340,7 +329,7 @@ class KindlyGrandmother(MonsterCard):
 
 
 class BigBadWolf(MonsterCard):
-    token = True
+    base_token = True
     tier = 1
     monster_type = MONSTER_TYPES.BEAST
     pool = MONSTER_TYPES.BEAST
@@ -367,15 +356,14 @@ class RabidSaurolisk(MonsterCard):
     tier = 2
     monster_type = MONSTER_TYPES.BEAST
     pool = MONSTER_TYPES.BEAST
-    base_attack = 4
+    base_attack = 3
     base_health = 2
     mana_cost = 3
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
-        bonus = 2 if self.golden else 1
         if event.event is EVENTS.SUMMON_BUY and event.card.deathrattles:
-            self.attack += bonus
-            self.health += bonus
+            self.attack += 2 if self.golden else 1
+            self.health += 4 if self.golden else 2
 
 
 class GlyphGuardian(MonsterCard):
@@ -413,7 +401,7 @@ class Imprisoner(MonsterCard):
 
 
 class Imp(MonsterCard):
-    token = True
+    base_token = True
     tier = 1
     monster_type = MONSTER_TYPES.DEMON
     pool = MONSTER_TYPES.DEMON
@@ -431,7 +419,7 @@ class MurlocWarleader(MonsterCard):
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         bonus = 4 if self.golden else 2
-        if event.event is EVENTS.COMBAT_START or (event.event is EVENTS.SUMMON_COMBAT and event.card == self):
+        if event.event is EVENTS.COMBAT_PREPHASE or (event.event is EVENTS.SUMMON_COMBAT and event.card == self):
             murlocs = [card for card in context.friendly_war_party.board if
                        card != self and card.check_type(MONSTER_TYPES.MURLOC)]
             for murloc in murlocs:
@@ -451,15 +439,14 @@ class StewardOfTime(MonsterCard):
     monster_type = MONSTER_TYPES.DRAGON
     pool = MONSTER_TYPES.DRAGON
     base_attack = 3
-    base_health = 4
+    base_health = 3
     mana_cost = 4
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
-        bonus = 2 if self.golden else 1
         if event.event is EVENTS.SELL and event.card == self:
             for card in context.owner.store:
-                card.attack += bonus
-                card.health += bonus
+                card.attack += 4 if self.golden else 2
+                card.health += 2 if self.golden else 1
 
 
 class Scallywag(MonsterCard):
@@ -481,7 +468,7 @@ class Scallywag(MonsterCard):
 
 class SkyPirate(MonsterCard):
     tier = 1
-    token = True
+    base_token = True
     monster_type = MONSTER_TYPES.PIRATE
     pool = MONSTER_TYPES.PIRATE
     base_attack = 1
@@ -494,8 +481,9 @@ class SkyPirate(MonsterCard):
             defender = defending_war_party.get_attack_target(context.randomizer, self)
             if not defender:
                 return
-            logging.debug(f'{attacking_war_party.owner.name} is attacking {defending_war_party.owner.name}')
-            combat.start_attack(self, defender, attacking_war_party, defending_war_party, context.randomizer)
+            logger.debug(f'{attacking_war_party.owner.name} is attacking {defending_war_party.owner.name}')
+            combat.start_attack(self, defender, attacking_war_party, defending_war_party, context.randomizer,
+                                context.event_queue, context.damaged_minions)
 
 
 class DeckSwabbie(MonsterCard):
@@ -525,14 +513,12 @@ class UnstableGhoul(MonsterCard):
         count = 2 if self.golden else 1
         for _ in range(count):
             for minion in all_minions:
-                if minion.is_dying():
+                if not minion.is_targetable():
                     continue
                 if minion in context.friendly_war_party.board:
                     minion.take_damage(1, context, self)
-                    minion.resolve_death(context, self)  # TODO: Order of death resolution?
                 elif minion in context.enemy_war_party.board:
                     minion.take_damage(1, context.enemy_context(), self)
-                    minion.resolve_death(context.enemy_context(), self)
 
 
 class RockpoolHunter(MonsterCard):
@@ -577,7 +563,7 @@ class Rat(MonsterCard):
     pool = MONSTER_TYPES.BEAST
     base_attack = 1
     base_health = 1
-    token = True
+    base_token = True
 
 
 class NathrezimOverseer(MonsterCard):
@@ -612,7 +598,7 @@ class OldMurkeye(MonsterCard):
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         bonus = 2 if self.golden else 1
-        if event.event is EVENTS.COMBAT_START:
+        if event.event is EVENTS.COMBAT_PREPHASE:
             self.attack += bonus * sum(
                 1 for murloc in context.friendly_war_party.board + context.enemy_war_party.board if
                 murloc.check_type(MONSTER_TYPES.MURLOC) and event.card != self)
@@ -657,7 +643,7 @@ class MechanoEgg(MonsterCard):
 
 
 class Robosaur(MonsterCard):
-    token = True
+    base_token = True
     tier = 1
     monster_type = MONSTER_TYPES.MECH
     pool = MONSTER_TYPES.MECH
@@ -723,19 +709,6 @@ class ColdlightSeer(MonsterCard):
         for card in context.owner.in_play:
             if card.check_type(MONSTER_TYPES.MURLOC) and card != self:
                 card.health += bonus
-
-
-class CrowdFavorite(MonsterCard):
-    tier = 3
-    base_attack = 4
-    base_health = 4
-    mana_cost = 4
-
-    def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
-        bonus = 2 if self.golden else 1
-        if event.event is EVENTS.SUMMON_BUY and event.card.battlecry:
-            self.attack += bonus
-            self.health += bonus
 
 
 class DeflectOBot(MonsterCard):
@@ -828,7 +801,7 @@ class Spider(MonsterCard):
     tier = 1
     base_attack = 1
     base_health = 1
-    token = True
+    base_token = True
     monster_type = MONSTER_TYPES.BEAST
     pool = MONSTER_TYPES.BEAST
 
@@ -837,7 +810,7 @@ class MonstrousMacaw(MonsterCard):
     tier = 3
     monster_type = MONSTER_TYPES.BEAST
     pool = MONSTER_TYPES.BEAST
-    base_attack = 4
+    base_attack = 5
     base_health = 3
     mana_cost = 3
 
@@ -875,7 +848,7 @@ class ScrewjankClunker(MonsterCard):
 
 class PackLeader(MonsterCard):
     tier = 2
-    base_attack = 2
+    base_attack = 3
     base_health = 3
     monster_type = None
     pool = MONSTER_TYPES.BEAST
@@ -887,26 +860,6 @@ class PackLeader(MonsterCard):
         if friendly_summon and event.card.check_type(MONSTER_TYPES.BEAST) and event.card != self:
             bonus = 4 if self.golden else 2
             event.card.attack += bonus
-
-
-class PilotedShredder(MonsterCard):
-    tier = 3
-    base_attack = 4
-    base_health = 3
-    monster_type = MONSTER_TYPES.MECH
-    pool = MONSTER_TYPES.MECH
-    mana_cost = 4
-
-    def base_deathrattle(self, context: CombatPhaseContext):
-        count = 2 if self.golden else 1
-        summon_index = context.friendly_war_party.get_index(self)
-        i = 0
-        for _ in range(count):
-            for _ in range(context.summon_minion_multiplier()):
-                two_cost_minions = [card_type for card_type in PrintingPress.all_types() if card_type.mana_cost == 2]
-                random_minion = context.randomizer.select_summon_minion(two_cost_minions)()
-                context.friendly_war_party.summon_in_combat(random_minion, context, summon_index + i + 1)
-                i += 1
 
 
 class SaltyLooter(MonsterCard):
@@ -937,11 +890,10 @@ class SoulJuggler(MonsterCard):
                 MONSTER_TYPES.DEMON) and event.card in context.friendly_war_party.board:
             count = 2 if self.golden else 1
             for _ in range(count):
-                targets = [card for card in context.enemy_war_party.board if not card.is_dying()]
+                targets = [card for card in context.enemy_war_party.board if card.is_targetable()]
                 if targets:
                     target = context.randomizer.select_enemy_minion(targets)
                     target.take_damage(3, context.enemy_context(), self)
-                    target.resolve_death(context.enemy_context(), self)  # TODO: Order of death resolution?
 
 
 class TwilightEmissary(MonsterCard):
@@ -964,7 +916,7 @@ class TwilightEmissary(MonsterCard):
         return card.check_type(MONSTER_TYPES.DRAGON)
 
 
-class Khadgar(MonsterCard):
+class Khadgar(MonsterCard):  # TODO: fix khadgar implementation
     tier = 3
     base_attack = 2
     base_health = 2
@@ -999,7 +951,7 @@ class Hyena(MonsterCard):
     base_health = 2
     monster_type = MONSTER_TYPES.BEAST
     pool = MONSTER_TYPES.BEAST
-    token = True
+    base_token = True
 
 
 class SecurityRover(MonsterCard):
@@ -1026,7 +978,7 @@ class GuardBot(MonsterCard):
     base_health = 3
     monster_type = MONSTER_TYPES.MECH
     pool = MONSTER_TYPES.MECH
-    token = True
+    base_token = True
     base_taunt = True
 
 
@@ -1092,7 +1044,7 @@ class SouthseaCaptain(MonsterCard):
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         bonus = 2 if self.golden else 1
-        if event.event is EVENTS.COMBAT_START or (event.event is EVENTS.SUMMON_COMBAT and event.card == self):
+        if event.event is EVENTS.COMBAT_PREPHASE or (event.event is EVENTS.SUMMON_COMBAT and event.card == self):
             pirates = [card for card in context.friendly_war_party.board if
                        card != self and card.check_type(MONSTER_TYPES.PIRATE)]
             for pirate in pirates:
@@ -1157,9 +1109,7 @@ class Amalgam(MonsterCard):
     monster_type = MONSTER_TYPES.ALL
     base_attack = 1
     base_health = 2
-    token = True
-
-    # TODO: this can't be sold on the first round
+    base_token = True
 
 
 class ReplicatingMenace(MonsterCard):
@@ -1179,6 +1129,7 @@ class ReplicatingMenace(MonsterCard):
                 if self.golden:
                     microbot.golden_transformation([])
                 context.friendly_war_party.summon_in_combat(microbot, context, summon_index + i + 1)
+
         self.base_deathrattle = types.MethodType(base_deathrattle, self)
         super().__init__()
 
@@ -1189,11 +1140,11 @@ class Microbot(MonsterCard):
     pool = MONSTER_TYPES.MECH
     base_attack = 1
     base_health = 1
-    token = True
+    base_token = True
 
 
 class Junkbot(MonsterCard):
-    tier = 5
+    tier = 4
     monster_type = MONSTER_TYPES.MECH
     pool = MONSTER_TYPES.MECH
     base_attack = 1
@@ -1248,7 +1199,7 @@ class Demon(MonsterCard):
     base_attack = 1
     base_health = 3
     base_taunt = True
-    token = True
+    base_token = True
 
 
 class AnnihilanBattlemaster(MonsterCard):
@@ -1290,15 +1241,15 @@ class KingBagurgle(MonsterCard):
     mana_cost = 6
 
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
+        bonus = 4 if self.golden else 2
         for card in context.owner.in_play:
             if card.check_type(MONSTER_TYPES.MURLOC) and card != self:
-                bonus = 4 if self.golden else 2
                 card.attack += bonus
                 card.health += bonus
 
     def base_deathrattle(self, context: CombatPhaseContext):
+        bonus = 4 if self.golden else 2
         for card in context.friendly_war_party.board:
-            bonus = 4 if self.golden else 2
             if card.check_type(MONSTER_TYPES.MURLOC) and card != self:
                 card.attack += bonus
                 card.health += bonus
@@ -1335,10 +1286,10 @@ class Ghastcoiler(MonsterCard):
         summon_index = context.friendly_war_party.get_index(self)
         i = 0
         for _ in range(count):
+            deathrattlers = [card_type for card_type in PrintingPress.all_types() if
+                             card_type.base_deathrattle and card_type != type(self)]
+            random_minion_type = context.randomizer.select_summon_minion(deathrattlers)
             for _ in range(context.summon_minion_multiplier()):
-                deathrattlers = [card_type for card_type in PrintingPress.all_types() if
-                                 card_type.base_deathrattle and card_type != type(self)]
-                random_minion_type = context.randomizer.select_summon_minion(deathrattlers)
                 context.friendly_war_party.summon_in_combat(random_minion_type(), context, summon_index + i + 1)
                 i += 1
 
@@ -1370,9 +1321,9 @@ class GoldrinnTheGreatWolf(MonsterCard):
     mana_cost = 8
 
     def base_deathrattle(self, context: CombatPhaseContext):
+        bonus = 10 if self.golden else 5
         for card in context.friendly_war_party.board:
             if card.check_type(MONSTER_TYPES.BEAST):
-                bonus = 10 if self.golden else 5
                 card.attack += bonus
                 card.health += bonus
 
@@ -1391,10 +1342,10 @@ class ImpMama(MonsterCard):
             summon_index = context.friendly_war_party.get_index(self)
             i = 0
             for _ in range(count):
+                demons = [card_type for card_type in PrintingPress.all_types() if
+                          card_type.check_type(MONSTER_TYPES.DEMON) and card_type != type(self)]
+                random_minion_type = context.randomizer.select_summon_minion(demons)
                 for _ in range(context.summon_minion_multiplier()):
-                    demons = [card_type for card_type in PrintingPress.all_types() if
-                              card_type.check_type(MONSTER_TYPES.DEMON) and card_type != type(self)]
-                    random_minion_type = context.randomizer.select_summon_minion(demons)
                     random_minion = random_minion_type()
                     random_minion.taunt = True
                     context.friendly_war_party.summon_in_combat(random_minion, context, summon_index + i + 1)
@@ -1447,9 +1398,10 @@ class TheTideRazor(MonsterCard):
         summon_index = context.friendly_war_party.get_index(self)
         i = 0
         for _ in range(count):
+            pirates = [card_type for card_type in PrintingPress.all_types() if
+                       card_type.check_type(MONSTER_TYPES.PIRATE)]
+            random_minion_type = context.randomizer.select_summon_minion(pirates)
             for _ in range(context.summon_minion_multiplier()):
-                pirates = [card_type for card_type in PrintingPress.all_types() if card_type.check_type(MONSTER_TYPES.PIRATE)]
-                random_minion_type = context.randomizer.select_summon_minion(pirates)
                 context.friendly_war_party.summon_in_combat(random_minion_type(), context, summon_index + i + 1)
                 i += 1
 
@@ -1486,7 +1438,7 @@ class HeraldOfFlame(MonsterCard):
     tier = 4
     monster_type = MONSTER_TYPES.DRAGON
     pool = MONSTER_TYPES.DRAGON
-    base_attack = 5
+    base_attack = 6
     base_health = 6
     mana_cost = 5
 
@@ -1494,13 +1446,12 @@ class HeraldOfFlame(MonsterCard):
         damage = 6 if self.golden else 3
         leftmost_index = 0
         while True:
-            if not context.enemy_war_party.board[leftmost_index].is_dying():
+            if context.enemy_war_party.board[leftmost_index].is_targetable():
                 break
             leftmost_index += 1
             if leftmost_index >= len(context.enemy_war_party.board):
                 return
         context.enemy_war_party.board[leftmost_index].take_damage(damage, context.enemy_context(), self)
-        context.enemy_war_party.board[leftmost_index].resolve_death(context.enemy_context(), self)
 
 
 class IronhideDirehorn(MonsterCard):
@@ -1526,7 +1477,7 @@ class IronhideRunt(MonsterCard):
     pool = MONSTER_TYPES.BEAST
     base_attack = 5
     base_health = 5
-    token = True
+    base_token = True
 
 
 class NatPagleExtremeAngler(MonsterCard):
@@ -1539,28 +1490,14 @@ class NatPagleExtremeAngler(MonsterCard):
     mana_cost = 7
 
     def handle_event_powers(self, event: CardEvent, context: Union['BuyPhaseContext', 'CombatPhaseContext']):
-        if event.event is EVENTS.AFTER_ATTACK_DAMAGE and self == event.card and event.foe.is_dying():
+        if event.event is EVENTS.AFTER_ATTACK_DAMAGE and self == event.card and not event.foe.is_targetable():
             for _ in range(2 if self.golden else 1):
                 if context.friendly_war_party.owner.room_in_hand():
-                    available_cards = [card for card in context.friendly_war_party.owner.tavern.deck.unique_cards() if card.tier <= context.friendly_war_party.owner.tavern_tier]
+                    available_cards = [card for card in context.friendly_war_party.owner.tavern.deck.unique_cards() if
+                                       card.tier <= context.friendly_war_party.owner.tavern_tier]
                     random_minion = context.randomizer.select_gain_card(available_cards)
                     context.friendly_war_party.owner.tavern.deck.remove_card(random_minion)
                     context.friendly_war_party.owner.gain_hand_card(random_minion)
-
-
-class FloatingWatcher(MonsterCard):
-    tier = 4
-    monster_type = MONSTER_TYPES.DEMON
-    pool = MONSTER_TYPES.DEMON
-    base_attack = 4
-    base_health = 4
-    mana_cost = 5
-
-    def handle_event_powers(self, event: CardEvent, context: Union['BuyPhaseContext', 'CombatPhaseContext']):
-        if event.event is EVENTS.PLAYER_DAMAGED:
-            bonus = 4 if self.golden else 2
-            self.attack += bonus
-            self.health += bonus
 
 
 class MalGanis(MonsterCard):
@@ -1575,7 +1512,7 @@ class MalGanis(MonsterCard):
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         bonus = 4 if self.golden else 2
-        if event.event is EVENTS.COMBAT_START or (event.event is EVENTS.SUMMON_COMBAT and event.card == self):
+        if event.event is EVENTS.COMBAT_PREPHASE or (event.event is EVENTS.SUMMON_COMBAT and event.card == self):
             demons = [card for card in context.friendly_war_party.board if
                       card != self and card.check_type(MONSTER_TYPES.DEMON)]
             for demon in demons:
@@ -1642,26 +1579,27 @@ class YoHoOgre(MonsterCard):
     monster_type = MONSTER_TYPES.PIRATE
     pool = MONSTER_TYPES.PIRATE
     base_attack = 2
-    base_health = 5
+    base_health = 6
     base_taunt = True
     mana_cost = 6
 
     def handle_event_powers(self, event: CardEvent, context: Union['BuyPhaseContext', 'CombatPhaseContext']):
-        if event.event is EVENTS.AFTER_ATTACK_DEATHRATTLES and event.card == self and not self.is_dying():
+        if event.event is EVENTS.AFTER_ATTACK_DEATHRATTLES and event.card == self and self.is_targetable():
             attacking_war_party = context.friendly_war_party
             defending_war_party = context.enemy_war_party
             defender = defending_war_party.get_attack_target(context.randomizer, self)
             if not defender:
                 return
-            logging.debug(f'{self} triggers after surviving an attack')
-            combat.start_attack(self, defender, attacking_war_party, defending_war_party, context.randomizer)
+            logger.debug(f'{self} triggers after surviving an attack')
+            combat.start_attack(self, defender, attacking_war_party, defending_war_party, context.randomizer,
+                                context.event_queue, context.damaged_minions)
 
 
 class WaxriderTogwaggle(MonsterCard):
     tier = 2
     monster_type = None
     base_attack = 1
-    base_health = 2
+    base_health = 3
     legendary = True
     pool = MONSTER_TYPES.DRAGON
     mana_cost = 3
@@ -1761,16 +1699,16 @@ class MicroMummy(MonsterCard):
 class KangorsApprentice(MonsterCard):
     tier = 6
     monster_type = None
-    base_attack = 3
-    base_health = 6
+    base_attack = 4
+    base_health = 8
     pool = MONSTER_TYPES.MECH
     mana_cost = 9
 
-    def base_deathrattle(self, context: CombatPhaseContext): #TODO does this get tokens?
+    def base_deathrattle(self, context: CombatPhaseContext):
         count = 4 if self.golden else 2
         summon_index = context.friendly_war_party.get_index(self)
         dead_mechs = [dead_minion for dead_minion in context.friendly_war_party.dead_minions if
-                          dead_minion.check_type(MONSTER_TYPES.MECH)]
+                      dead_minion.check_type(MONSTER_TYPES.MECH)]
         for index, mech in enumerate(dead_mechs[:count]):
             summon_minion = mech.unbuffed_copy()
             context.friendly_war_party.summon_in_combat(summon_minion, context, summon_index + index + 1)
@@ -1804,7 +1742,8 @@ class SeabreakerGoliath(MonsterCard):
 
     def overkill(self, context: CombatPhaseContext):
         bonus = 4 if self.golden else 2
-        pirates = [card for card in context.friendly_war_party.board if card.check_type(MONSTER_TYPES.PIRATE) and card != self]
+        pirates = [card for card in context.friendly_war_party.board if
+                   card.check_type(MONSTER_TYPES.PIRATE) and card != self]
         for pirate in pirates:
             pirate.attack += bonus
             pirate.health += bonus
@@ -1829,7 +1768,8 @@ class Amalgadon(MonsterCard):
     mana_cost = 8
 
     def base_battlecry(self, targets: List['MonsterCard'], context: 'BuyPhaseContext'):
-        count = len(one_minion_per_type(context.owner.in_play, context.randomizer, excluded_card=self)) * (2 if self.golden else 1)
+        count = len(one_minion_per_type(context.owner.in_play, context.randomizer, excluded_card=self)) * (
+            2 if self.golden else 1)
         for _ in range(count):
             available_adaptations = valid_adaptations(self)
             adaptation = context.randomizer.select_adaptation(available_adaptations)
@@ -1859,7 +1799,7 @@ class Siegebreaker(MonsterCard):
 
     def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         bonus = 2 if self.golden else 1
-        if event.event is EVENTS.COMBAT_START or (event.event is EVENTS.SUMMON_COMBAT and event.card == self):
+        if event.event is EVENTS.COMBAT_PREPHASE or (event.event is EVENTS.SUMMON_COMBAT and event.card == self):
             demons = [card for card in context.friendly_war_party.board if
                       card != self and card.check_type(MONSTER_TYPES.DEMON)]
             for demon in demons:
@@ -1891,26 +1831,12 @@ class CobaltScalebane(MonsterCard):
                 card.attack += bonus
 
 
-class TheBeast(MonsterCard):
-    tier = 3
-    monster_type = MONSTER_TYPES.BEAST
-    pool = MONSTER_TYPES.BEAST
-    base_attack = 9
-    base_health = 7
-    legendary = True
-    mana_cost = 6
-
-    def base_deathrattle(self, context: 'CombatPhaseContext'):
-        for _ in range(context.summon_minion_multiplier()):
-            context.enemy_war_party.summon_in_combat(FinkleEinhorn(), context.enemy_context())
-
-
 class FinkleEinhorn(MonsterCard):
     tier = 1
     monster_type = None
     base_attack = 3
     base_health = 3
-    token = True
+    base_token = True
 
 
 class SouthseaStrongarm(MonsterCard):
@@ -1953,11 +1879,13 @@ class PrimalfinLookout(MonsterCard):
     mana_cost = 3
 
     def base_battlecry(self, targets: List['MonsterCard'], context: 'BuyPhaseContext'):
-        murloc_in_play = [card for card in context.owner.in_play if card.check_type(MONSTER_TYPES.MURLOC)]
+        murloc_in_play = [card for card in context.owner.in_play if
+                          card.check_type(MONSTER_TYPES.MURLOC) and card != self]
         if murloc_in_play:
             num_discovers = 2 if self.golden else 1
             for _ in range(num_discovers):
-                context.owner.draw_discover(lambda card: card.check_type(MONSTER_TYPES.MURLOC) and card.tier <= context.owner.tavern_tier and type(card) != type(self))
+                context.owner.draw_discover(lambda card: card.check_type(
+                    MONSTER_TYPES.MURLOC) and card.tier <= context.owner.tavern_tier and type(card) != type(self))
 
 
 class Murozond(MonsterCard):
@@ -1987,7 +1915,8 @@ class PartyElemental(MonsterCard):
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         if event.event is EVENTS.SUMMON_BUY and event.card.check_type(MONSTER_TYPES.ELEMENTAL) and event.card != self:
-            other_elementals = [card for card in context.owner.in_play if card.check_type(MONSTER_TYPES.ELEMENTAL) and card != self]
+            other_elementals = [card for card in context.owner.in_play if
+                                card.check_type(MONSTER_TYPES.ELEMENTAL) and card != self]
             num_buffs = 2 if self.golden else 1
             if other_elementals:
                 for _ in range(num_buffs):
@@ -2001,7 +1930,7 @@ class MoltenRock(MonsterCard):
     monster_type = MONSTER_TYPES.ELEMENTAL
     pool = MONSTER_TYPES.ELEMENTAL
     base_attack = 2
-    base_health = 3
+    base_health = 4
     base_taunt = True
     mana_cost = 3
 
@@ -2055,9 +1984,10 @@ class LieutenantGarr(MonsterCard):
     tier = 6
     monster_type = MONSTER_TYPES.ELEMENTAL
     pool = MONSTER_TYPES.ELEMENTAL
-    base_attack = 5
+    base_attack = 8
     base_health = 1
     base_taunt = True
+    legendary = True
     mana_cost = 8
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
@@ -2089,15 +2019,15 @@ class WaterDroplet(MonsterCard):
     pool = MONSTER_TYPES.ELEMENTAL
     base_attack = 2
     base_health = 2
-    token = True
+    base_token = True
 
 
 class LilRag(MonsterCard):
     tier = 6
     monster_type = MONSTER_TYPES.ELEMENTAL
     pool = MONSTER_TYPES.ELEMENTAL
-    base_attack = 4
-    base_health = 4
+    base_attack = 6
+    base_health = 6
     legendary = True
     mana_cost = 6
 
@@ -2144,21 +2074,21 @@ class GentleDjinni(MonsterCard):
         summon_index = context.friendly_war_party.get_index(self)
         i = 0
         for _ in range(count):
-            for _ in range(context.summon_minion_multiplier()):
-                if context.friendly_war_party.room_on_board():
-                    elementals = [card_type for card_type in PrintingPress.all_types() if
-                                  card_type.check_type(MONSTER_TYPES.ELEMENTAL) and card_type != type(
-                                      self) and card_type.tier <= context.friendly_war_party.owner.tavern_tier]
-                    random_elemental_type = context.randomizer.select_summon_minion(elementals)
+            if context.friendly_war_party.room_on_board():
+                elementals = [card_type for card_type in PrintingPress.all_types() if
+                              card_type.check_type(MONSTER_TYPES.ELEMENTAL) and card_type != type(
+                                  self) and card_type.tier <= context.friendly_war_party.owner.tavern_tier]
+                random_elemental_type = context.randomizer.select_summon_minion(elementals)
+                for _ in range(context.summon_minion_multiplier()):
                     context.friendly_war_party.summon_in_combat(random_elemental_type(), context, summon_index + i + 1)
                     i += 1
-                    if context.friendly_war_party.owner.room_in_hand():
-                        same_elemental_in_tavern = [card for card in
-                                                    context.friendly_war_party.owner.tavern.deck.unique_cards() if
-                                                    type(card) == random_elemental_type]
-                        if same_elemental_in_tavern:
-                            context.friendly_war_party.owner.tavern.deck.remove_card(same_elemental_in_tavern[0])
-                        context.friendly_war_party.owner.gain_hand_card(random_elemental_type())
+                if context.friendly_war_party.owner.room_in_hand():
+                    same_elemental_in_tavern = [card for card in
+                                                context.friendly_war_party.owner.tavern.deck.unique_cards() if
+                                                type(card) == random_elemental_type]
+                    if same_elemental_in_tavern:
+                        context.friendly_war_party.owner.tavern.deck.remove_card(same_elemental_in_tavern[0])
+                    context.friendly_war_party.owner.gain_hand_card(random_elemental_type())
 
 
 class NomiKitchenNightmare(MonsterCard):
@@ -2173,6 +2103,8 @@ class NomiKitchenNightmare(MonsterCard):
     def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.SUMMON_BUY and event.card.check_type(MONSTER_TYPES.ELEMENTAL):
             context.owner.nomi_bonus += 2 if self.golden else 1
+            for card in context.owner.store:
+                card.apply_nomi_buff(context.owner)
 
 
 class RefreshingAnomaly(MonsterCard):
@@ -2193,6 +2125,7 @@ class MajordomoExecutus(MonsterCard):
     base_attack = 6
     base_health = 3
     pool = MONSTER_TYPES.ELEMENTAL
+    legendary = True
     mana_cost = 6
 
     def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
@@ -2209,19 +2142,19 @@ class WildfireElemental(MonsterCard):
     tier = 4
     monster_type = MONSTER_TYPES.ELEMENTAL
     base_attack = 7
-    base_health = 3
+    base_health = 4
     pool = MONSTER_TYPES.ELEMENTAL
     mana_cost = 6
 
     def handle_event_powers(self, event: CardEvent, context: Union['BuyPhaseContext', 'CombatPhaseContext']):
-        if event.event is EVENTS.AFTER_ATTACK_DAMAGE and self == event.card and event.foe.is_dying():
+        if event.event is EVENTS.AFTER_ATTACK_DAMAGE and self == event.card and not event.foe.is_targetable():
             excess_damage = max(event.foe.health * -1, 0)
             adjacent_enemies = context.enemy_war_party.adjacent_minions(event.foe)
             if adjacent_enemies:
-                adjacent_targets = adjacent_enemies if self.golden else [context.randomizer.select_enemy_minion(adjacent_enemies)]
+                adjacent_targets = adjacent_enemies if self.golden else [
+                    context.randomizer.select_enemy_minion(adjacent_enemies)]
                 for card in adjacent_targets:
-                    card.take_damage(excess_damage, context, foe=self)
-                    card.resolve_death(context, foe=self)
+                    card.take_damage(excess_damage, context.enemy_context(), self)
 
 
 class StasisElemental(MonsterCard):
@@ -2234,13 +2167,13 @@ class StasisElemental(MonsterCard):
 
     def base_battlecry(self, targets: List['MonsterCard'], context: 'BuyPhaseContext'):
         for _ in range(2 if self.golden else 1):
-            if len(context.owner.store) < 7:
+            if context.owner.store_size() < context.owner.maximum_store_size:
                 available_elementals = [card for card in context.owner.tavern.deck.unique_cards() if card.check_type(
                     MONSTER_TYPES.ELEMENTAL) and card.tier <= context.owner.tavern_tier and type(card) != type(self)]
                 if available_elementals:
                     random_elemental = context.randomizer.select_add_to_store(available_elementals)
                     context.owner.tavern.deck.remove_card(random_elemental)
-                    context.owner.store.append(random_elemental)
+                    context.owner.add_to_store(random_elemental)
                     random_elemental.frozen = True
 
 
@@ -2251,7 +2184,7 @@ class EmperorCobra(MonsterCard):
     base_attack = 2
     base_health = 3
     base_poisonous = True
-    token = True
+    base_token = True
 
 
 class Snake(MonsterCard):
@@ -2260,4 +2193,218 @@ class Snake(MonsterCard):
     pool = MONSTER_TYPES.BEAST
     base_attack = 1
     base_health = 1
-    token = True
+    base_token = True
+
+
+class AcolyteOfCThun(MonsterCard):
+    tier = 1
+    monster_type = None
+    base_attack = 2
+    base_health = 2
+    base_taunt = True
+    base_reborn = True
+
+
+class TormentedRitualist(MonsterCard):
+    tier = 2
+    monster_type = None
+    base_attack = 2
+    base_health = 3
+    base_taunt = True
+
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.IS_ATTACKED and event.card == self:
+            bonus = 2 if self.golden else 1
+            for minion in context.friendly_war_party.adjacent_minions(self):
+                minion.attack += bonus
+                minion.health += bonus
+
+
+class WardenOfOld(MonsterCard):
+    tier = 3
+    monster_type = None
+    base_attack = 3
+    base_health = 3
+
+    def base_deathrattle(self, context: 'CombatPhaseContext'):
+        for _ in range(2 if self.golden else 1):
+            if context.friendly_war_party.owner.room_in_hand():
+                context.friendly_war_party.owner.gold_coins += 1
+
+
+class ArmOfTheEmpire(MonsterCard):
+    tier = 3
+    monster_type = None
+    base_attack = 4
+    base_health = 5
+
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.IS_ATTACKED and event.card in context.friendly_war_party.board and event.card.taunt:
+            bonus = 4 if self.golden else 2
+            event.card.attack += bonus
+            if event.card.link is not None:
+                event.card.link.attack += bonus
+
+
+class Bigfernal(MonsterCard):
+    tier = 4
+    monster_type = MONSTER_TYPES.DEMON
+    base_attack = 4
+    base_health = 4
+    pool = MONSTER_TYPES.DEMON
+
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if (event.event is EVENTS.SUMMON_BUY or (
+                event.event is EVENTS.SUMMON_COMBAT and event.card in context.friendly_war_party.board)) and event.card.check_type(
+                MONSTER_TYPES.DEMON) and not event.card == self:
+            bonus = 2 if self.golden else 1
+            self.attack += bonus
+            self.health += bonus
+            if self.link is not None:
+                self.link.attack += bonus
+                self.link.health += bonus
+
+
+class QirajiHarbinger(MonsterCard):
+    tier = 4
+    monster_type = None
+    base_attack = 5
+    base_health = 5
+
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.DIES and event.card in context.friendly_war_party.board and event.card.taunt:
+            bonus = 4 if self.golden else 2
+            for minion in context.friendly_war_party.adjacent_minions(event.card):
+                minion.attack += bonus
+                minion.health += bonus
+
+
+class ChampionOfYShaarj(MonsterCard):
+    tier = 4
+    monster_type = None
+    base_attack = 4
+    base_health = 4
+
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.IS_ATTACKED and event.card in context.friendly_war_party.board and event.card.taunt:
+            bonus = 2 if self.golden else 1
+            self.attack += bonus
+            self.health += bonus
+            if self.link is not None:
+                self.link.attack += bonus
+                self.link.health += bonus
+
+
+class MythraxTheUnraveler(MonsterCard):
+    tier = 5
+    monster_type = None
+    base_attack = 4
+    base_health = 4
+    legendary = True
+
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.BUY_END:
+            for _ in range(len(one_minion_per_type(context.owner.in_play, context.randomizer))):
+                self.attack += 2 if self.golden else 1
+                self.health += 4 if self.golden else 2
+
+
+class FishOfNZoth(MonsterCard):
+    tier = 1
+    monster_type = MONSTER_TYPES.BEAST
+    base_attack = 1
+    base_health = 1
+    base_token = True
+    legendary = True
+
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.DIES and not event.card == self and event.card.deathrattles and event.card in context.friendly_war_party.board:
+            for deathrattle in event.card.deathrattles:
+                for _ in range(2 if self.golden else 1):
+                    self.deathrattles.append(
+                        deathrattle)  # TODO: this should gain golden deathrattles if dead card is golden
+
+
+class RingWatcher(MonsterCard):
+    tier = 4
+    monster_type = MONSTER_TYPES.DEMON
+    pool = MONSTER_TYPES.DEMON
+    base_attack = 6
+    base_health = 4
+    base_taunt = True
+
+    def base_deathrattle(self, context: 'CombatPhaseContext'):
+        summon_index = context.friendly_war_party.get_index(self)
+        for i in range(2 * context.summon_minion_multiplier()):
+            imp = FieryImp()
+            if self.golden:
+                imp.golden_transformation([])
+            context.friendly_war_party.summon_in_combat(imp, context, summon_index + i + 1)
+
+
+class FieryImp(MonsterCard):
+    tier = 1
+    monster_type = MONSTER_TYPES.DEMON
+    pool = MONSTER_TYPES.DEMON
+    base_attack = 3
+    base_health = 2
+    base_token = True
+
+
+class SoulDevourer(MonsterCard):
+    tier = 3
+    monster_type = MONSTER_TYPES.DEMON
+    pool = MONSTER_TYPES.DEMON
+    base_attack = 3
+    base_health = 3
+    num_battlecry_targets = [1]
+
+    def base_battlecry(self, targets: List['MonsterCard'], context: 'BuyPhaseContext'):
+        multiplier = 2 if self.golden else 1
+        if targets and targets[0] in context.owner.in_play:
+            context.owner.remove_board_card(targets[0])
+            context.owner.tavern.deck.return_cards(targets[0].dissolve())
+            self.attack += targets[0].attack * multiplier
+            self.health += targets[0].health * multiplier
+            context.owner.coins += 6 if self.golden else 3
+
+    def valid_battlecry_target(self, card: 'MonsterCard') -> bool:
+        return card.check_type(MONSTER_TYPES.DEMON)
+
+
+class BarrensBlacksmith(MonsterCard):
+    tier = 3
+    monster_type = None
+    base_attack = 3
+    base_health = 5
+
+    def frenzy(self, context: CombatPhaseContext):
+        bonus = 4 if self.golden else 2
+        for card in context.friendly_war_party.board:
+            if card != self:
+                card.attack += bonus
+                card.health += bonus
+
+
+# TODO: add Faceless Taverngoer - add option to target store minions
+
+
+class PrintingPress:
+    cards: List[Type['MonsterCard']] = [member[1] for member in getmembers(sys.modules[__name__],
+                                                                           lambda member: isclass(
+                                                                               member) and issubclass(member,
+                                                                                                      MonsterCard) and member.__module__ == __name__)]
+    cards_per_tier = {1: 16, 2: 15, 3: 13, 4: 11, 5: 9, 6: 7}
+
+    @classmethod
+    def make_cards(cls, available_types: List['MONSTER_TYPES'],
+                   include_graveyard: Optional[bool] = False) -> 'CardList':
+        cardlist = []
+        for card in cls.cards + (REMOVED_CARDS if include_graveyard else []):
+            if not card.base_token and (card.pool in available_types or card.pool == MONSTER_TYPES.ALL):
+                cardlist.extend([card() for _ in range(cls.cards_per_tier[card.tier])])
+        return CardList(cardlist)
+
+    @classmethod
+    def all_types(cls):
+        return [card_type for card_type in cls.cards if not card_type.base_token]

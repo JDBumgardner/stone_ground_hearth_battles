@@ -1,16 +1,15 @@
 import random
 import typing
-from typing import List
 
-from hearthstone.simulator.agent import Agent, StandardAction, generate_valid_actions, BuyAction, EndPhaseAction, \
-    SummonAction, DiscoverChoiceAction, RearrangeCardsAction
+from hearthstone.simulator.agent.actions import StandardAction, generate_standard_actions, BuyAction, EndPhaseAction, \
+    SummonAction, DiscoverChoiceAction, RearrangeCardsAction, HeroDiscoverAction, FreezeDecision
+from hearthstone.simulator.agent.agent import Agent
 
 if typing.TYPE_CHECKING:
-
     from hearthstone.simulator.core.player import Player
 
 
-class CheapoBot(Agent): 
+class CheapoBot(Agent):
     authors = ["Brian Kelly"]
 
     def __init__(self, seed: int):
@@ -22,7 +21,7 @@ class CheapoBot(Agent):
         return RearrangeCardsAction(permutation)
 
     async def buy_phase_action(self, player: 'Player') -> StandardAction:
-        all_actions = list(generate_valid_actions(player))
+        all_actions = list(generate_standard_actions(player))
 
         summon_actions = [action for action in all_actions if type(action) is SummonAction]
         if summon_actions:
@@ -33,9 +32,12 @@ class CheapoBot(Agent):
         if buy_actions:
             return buy_actions[0]
 
-        return EndPhaseAction(False)
+        return EndPhaseAction(FreezeDecision.NO_FREEZE)
 
     async def discover_choice_action(self, player: 'Player') -> DiscoverChoiceAction:
         discover_cards = player.discover_queue[0]
         discover_cards = sorted(discover_cards, key=lambda card: card.tier)
         return DiscoverChoiceAction(player.discover_queue[0].index(discover_cards[0]))
+
+    async def hero_discover_action(self, player: 'Player') -> 'HeroDiscoverAction':
+        return HeroDiscoverAction(self.local_random.choice(range(len(player.hero.discover_choices))))

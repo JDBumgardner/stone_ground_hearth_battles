@@ -20,7 +20,7 @@ def objective(trial: optuna.Trial):
     hparams["num_workers"] = trial.suggest_int("num_workers", 1, hparams["batch_size"], log=True)
 
     if hparams["optimizer"] == "adam":
-        hparams["adam_lr"] = trial.suggest_float("adam_lr", 1e-6, 1e-3, log=True)
+        hparams["adam.lr"] = trial.suggest_float("adam.lr", 1e-6, 1e-3, log=True)
     elif hparams["optimizer"] == "sgd":
         hparams["sgd_lr"] = trial.suggest_float("sgd_lr", 1e-6, 1e-3, log=True)
         hparams["sgd_momentum"] = trial.suggest_float("sgd_momentum", 0.0, 1.0)
@@ -42,9 +42,9 @@ def main():
     """
     study = optuna.create_study(
         storage="postgres://localhost/optuna", study_name="ppo_study",
-                                direction="maximize",
-                                load_if_exists=True,
-                                pruner=optuna.pruners.NopPruner())
+        direction="maximize",
+        load_if_exists=True,
+        pruner=optuna.pruners.NopPruner())
     try:
         try:
             with joblib.parallel_backend("multiprocessing"):

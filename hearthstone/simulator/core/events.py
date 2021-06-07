@@ -1,9 +1,11 @@
-import typing
 import enum
+import typing
+from typing import Optional, List, Set
 
-from typing import Optional, List
+import autoslot
 
 if typing.TYPE_CHECKING:
+    from hearthstone.simulator.core.combat_event_queue import CombatEventQueue
     from hearthstone.simulator.core.player import Player
     from hearthstone.simulator.core.randomizer import Randomizer
     from hearthstone.simulator.core.tavern import WarParty
@@ -30,9 +32,14 @@ class EVENTS(enum.Enum):
     TAVERN_UPGRADE = 17
     REFRESHED_STORE = 18
     PLAYER_DEAD = 19
+    RESULTS_BROADCAST = 20
+    ADD_TO_STORE = 21
+    COMBAT_PREPHASE = 22
+    IS_ATTACKED = 23
+    DEATHRATTLE_TRIGGERED = 24
 
 
-class CardEvent:
+class CardEvent(autoslot.Slots):
     def __init__(self, eventid: EVENTS):
         self.event = eventid
         self.card = None
@@ -52,10 +59,15 @@ class SummonCombatEvent(CardEvent):
 
 
 class DiesEvent(CardEvent):
-    def __init__(self, card: 'MonsterCard', foe: Optional['MonsterCard']):
+    def __init__(self, card: 'MonsterCard', foe: Optional['MonsterCard'] = None):
         super().__init__(EVENTS.DIES)
         self.card = card
         self.foe = foe
+
+
+class CombatPrePhaseEvent(CardEvent):
+    def __init__(self):
+        super().__init__(EVENTS.COMBAT_PREPHASE)
 
 
 class CombatStartEvent(CardEvent):
@@ -69,10 +81,15 @@ class BuyStartEvent(CardEvent):
 
 
 class OnAttackEvent(CardEvent):
-    def __init__(self, card: 'MonsterCard', foe: 'MonsterCard'):
+    def __init__(self, card: 'MonsterCard'):
         super().__init__(EVENTS.ON_ATTACK)
         self.card = card
-        self.foe = foe
+
+
+class IsAttackedEvent(CardEvent):
+    def __init__(self, card: 'MonsterCard'):
+        super().__init__(EVENTS.IS_ATTACKED)
+        self.card = card
 
 
 class AfterAttackDamageEvent(CardEvent):
@@ -148,7 +165,22 @@ class PlayerDeadEvent(CardEvent):
         self.player = player
 
 
-class BuyPhaseContext:
+class ResultsBroadcastEvent(CardEvent):
+    def __init__(self, winner: Optional['Player'] = None, loser: Optional['Player'] = None,
+                 tie: Optional[bool] = False):
+        super().__init__(EVENTS.RESULTS_BROADCAST)
+        self.winner = winner
+        self.loser = loser
+        self.tie = tie
+
+
+class AddToStoreEvent(CardEvent):
+    def __init__(self, card: 'MonsterCard'):
+        super().__init__(EVENTS.ADD_TO_STORE)
+        self.card = card
+
+
+class BuyPhaseContext(autoslot.Slots):
     def __init__(self, owner: 'Player', randomizer: 'Randomizer'):
         self.owner = owner
         self.randomizer = randomizer
@@ -160,33 +192,37 @@ class BuyPhaseContext:
         return summon_multiplier
 
     def battlecry_multiplier(self) -> int:
-        return max([card.battlecry_multiplier() for card in self.owner.in_play] + [self.owner.hero.battlecry_multiplier()])
+        return max(
+            [card.battlecry_multiplier() for card in self.owner.in_play] + [self.owner.hero.battlecry_multiplier()])
 
 
-class CombatPhaseContext:
-    def __init__(self, friendly_war_party: 'WarParty', enemy_war_party: 'WarParty', randomizer: 'Randomizer'):
+class CombatPhaseContext(autoslot.Slots):
+    def __init__(self, friendly_war_party: 'WarParty', enemy_war_party: 'WarParty', randomizer: 'Randomizer',
+                 combat_event_queue: 'CombatEventQueue', damaged_minions: Set['MonsterCard']):
         self.friendly_war_party = friendly_war_party
         self.enemy_war_party = enemy_war_party
         self.randomizer = randomizer
+        self.event_queue = combat_event_queue
+        self.damaged_minions = damaged_minions
 
     def broadcast_combat_event(self, event: 'CardEvent'):
         #  boards are copied to prevent reindexing lists while iterating over them
         self.friendly_war_party.owner.hero.handle_event(event, self)
+        self.enemy_war_party.owner.hero.handle_event(event, self.enemy_context())
         for card in self.friendly_war_party.board.copy():
             # it's ok for the card to be dead
             card.handle_event(event, self)
-        self.enemy_war_party.owner.hero.handle_event(event, self.enemy_context())
         for card in self.enemy_war_party.board.copy():
             card.handle_event(event, self.enemy_context())
 
     def enemy_context(self):
-        return CombatPhaseContext(self.enemy_war_party, self.friendly_war_party, self.randomizer)
+        return CombatPhaseContext(self.enemy_war_party, self.friendly_war_party, self.randomizer, self.event_queue,
+                                  self.damaged_minions)
 
     def summon_minion_multiplier(self) -> int:
         summon_multiplier = 1
-        for card in self.friendly_war_party.board:
-            if not card.dead:
-                summon_multiplier *= card.summon_minion_multiplier()
+        for card in self.friendly_war_party.live_minions():
+            summon_multiplier *= card.summon_minion_multiplier()
         return summon_multiplier
 
     def deathrattle_multiplier(self) -> int:

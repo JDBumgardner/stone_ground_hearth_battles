@@ -1,13 +1,17 @@
 import asyncio
 
+import logging
+
+from hearthstone.asyncio import asyncio_utils
 from hearthstone.battlebots.early_game_bot import EarlyGameBot
 from hearthstone.battlebots.priority_functions import PriorityFunctions
 from hearthstone.simulator.agent import EndPhaseAction
 from hearthstone.simulator.host.async_host import AsyncHost
 
+logger = logging.getLogger(__name__)
 
 class CyborgArena(AsyncHost):
-    async def _async_play_round(self):
+    async def async_play_round(self):
         self.tavern.buying_step()
 
         async def perform_player_actions(agent, player):
@@ -23,6 +27,17 @@ class CyborgArena(AsyncHost):
                         discovered_card = await agent.discover_choice_action(player)
 
                     player.select_discover(discovered_card)
+                elif player.hero.discover_choices:
+                    try:
+                        discovered_choice = await agent.hero_discover_action(player)
+                    except ConnectionError:
+                        print("replace with a bot")
+                        # replace the agent and player
+                        agent = PriorityFunctions.battlerattler_priority_bot(3, EarlyGameBot)
+                        self.agents[player.name] = agent
+                        discovered_choice = await agent.hero_discover_action(player)
+
+                    player.hero_select_discover(discovered_choice)
                 else:
                     try:
                         action = await agent.buy_phase_action(player)
@@ -52,12 +67,12 @@ class CyborgArena(AsyncHost):
             if player.dead:
                 continue
             perform_player_action_tasks.append(
-                asyncio.create_task(perform_player_actions(self.agents[player_name], player)))
+                asyncio_utils.create_task(perform_player_actions(self.agents[player_name], player), logger=logger))
         await asyncio.gather(*perform_player_action_tasks)
 
         self.tavern.combat_step()
         if self.tavern.game_over():
             game_over_tasks = []
             for position, (name, player) in enumerate(reversed(self.tavern.losers)):
-                game_over_tasks.append(asyncio.create_task(self.agents[name].game_over(player, position)))
+                game_over_tasks.append(asyncio_utils.create_task(self.agents[name].game_over(player, position), logger=logger))
             await asyncio.gather(*game_over_tasks)

@@ -10,7 +10,7 @@ class Plant(MonsterCard):
     monster_type = None
     base_attack = 1
     base_health = 1
-    token = True
+    base_token = True
 
 
 class Adaptation:
@@ -23,7 +23,6 @@ class Adaptation:
 
 
 class AdaptBuffs:
-
     class CracklingShield(Adaptation):
         def apply(self, card: 'MonsterCard'):
             card.divine_shield = True
@@ -47,6 +46,7 @@ class AdaptBuffs:
                 for i in range(2 * context.summon_minion_multiplier()):
                     plant = Plant()
                     context.friendly_war_party.summon_in_combat(plant, context, summon_index + i + 1)
+
             card.deathrattles.append(deathrattle)
 
         @classmethod
@@ -101,6 +101,3 @@ def valid_adaptations(card: 'MonsterCard') -> List['Type']:
 
 def all_adaptations() -> List['Type']:
     return [adaptation for adaptation in AdaptBuffs.__dict__.values() if isclass(adaptation)]
-
-
-

@@ -2,15 +2,17 @@ import random
 import typing
 from typing import List, Callable
 
-from hearthstone.simulator.agent import Agent, StandardAction, generate_valid_actions, BuyAction, EndPhaseAction, \
+from hearthstone.simulator.agent.actions import StandardAction, generate_standard_actions, BuyAction, EndPhaseAction, \
     SummonAction, \
-    SellAction, TavernUpgradeAction, RerollAction, DiscoverChoiceAction, RearrangeCardsAction
+    SellAction, TavernUpgradeAction, RerollAction, DiscoverChoiceAction, RearrangeCardsAction, HeroDiscoverAction, \
+    FreezeDecision
+from hearthstone.simulator.agent.agent import Agent
 from hearthstone.simulator.core.card_pool import MurlocTidehunter, AlleyCat
-
 from hearthstone.simulator.core.player import Player, StoreIndex, BoardIndex
 
 if typing.TYPE_CHECKING:
     from hearthstone.simulator.core.cards import MonsterCard
+
 
 class EarlyGameBot(Agent):
     def __init__(self, authors: List[str], priority: Callable[['Player', 'MonsterCard'], float], seed: int):
@@ -26,7 +28,7 @@ class EarlyGameBot(Agent):
         return RearrangeCardsAction(permutation)
 
     async def buy_phase_action(self, player: 'Player') -> StandardAction:
-        all_actions = list(generate_valid_actions(player))
+        all_actions = list(generate_standard_actions(player))
 
         if player.tavern.turn_count == 0:
             token_store_index = [StoreIndex(player.store.index(card)) for card in player.store if
@@ -40,7 +42,7 @@ class EarlyGameBot(Agent):
             if player.tavern_tier == 2:
                 token_board_index = [BoardIndex(player.in_play.index(card)) for card in player.in_play if card.token]
                 if token_board_index and player.coins == 5:
-                    player.sell_minion(token_board_index[0])
+                    return SellAction(token_board_index[0])
 
         if player.tavern.turn_count != 3:
             upgrade_action = TavernUpgradeAction()
@@ -55,19 +57,22 @@ class EarlyGameBot(Agent):
             if player.room_on_board():
                 return [
                     action for action in all_actions
-                    if type(action) is SummonAction and self.priority(player, player.hand[action.index]) == top_hand_priority
+                    if type(action) is SummonAction and self.priority(player,
+                                                                      player.hand[action.index]) == top_hand_priority
                 ][0]
             else:
                 if top_hand_priority > bottom_board_priority:
                     return [
                         action for action in all_actions
-                        if type(action) is SellAction and self.priority(player, player.in_play[action.index]) == bottom_board_priority
+                        if type(action) is SellAction and self.priority(player, player.in_play[
+                            action.index]) == bottom_board_priority
                     ][0]
 
         if top_store_priority:
             if player.room_on_board() or bottom_board_priority < top_store_priority:
                 buy_action = BuyAction(
-                    [StoreIndex(index) for index, card in enumerate(player.store) if self.priority(player, card) == top_store_priority][0]
+                    [StoreIndex(index) for index, card in enumerate(player.store) if
+                     self.priority(player, card) == top_store_priority][0]
                 )
                 if buy_action.valid(player):
                     return buy_action
@@ -76,9 +81,12 @@ class EarlyGameBot(Agent):
         if reroll_action.valid(player):
             return reroll_action
 
-        return EndPhaseAction(False)
+        return EndPhaseAction(FreezeDecision.NO_FREEZE)
 
     async def discover_choice_action(self, player: 'Player') -> DiscoverChoiceAction:
         discover_cards = player.discover_queue[0]
         discover_cards = sorted(discover_cards, key=lambda card: self.priority(player, card), reverse=True)
         return DiscoverChoiceAction(player.discover_queue[0].index(discover_cards[0]))
+
+    async def hero_discover_action(self, player: 'Player') -> 'HeroDiscoverAction':
+        return HeroDiscoverAction(self.local_random.choice(range(len(player.hero.discover_choices))))

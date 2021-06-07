@@ -1,7 +1,7 @@
-import gym
-
-from gym import spaces
 import math
+
+import gym
+from gym import spaces
 
 # TODO: Derive (some of) these constants from game data
 MAX_HEALTH = 50

@@ -1,8 +1,10 @@
 import random
 import typing
+from collections import deque
 from typing import List, Tuple, Type, Optional
 
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
+from hearthstone.simulator.core.secrets import SECRETS
 
 if typing.TYPE_CHECKING:
     from hearthstone.simulator.core.cards import MonsterCard
@@ -53,7 +55,16 @@ class Randomizer:
     def select_adaptation(self, adaptations: List['Type']) -> 'Type':
         raise NotImplementedError()
 
-    def select_random_bool(self) -> bool:
+    def select_random_number(self, lo: int, hi: int) -> int:
+        raise NotImplementedError()
+
+    def select_secret(self, secrets: List['SECRETS']) -> 'SECRETS':
+        raise NotImplementedError()
+
+    def select_combat_matchup(self, pairings: List[Tuple['Player', 'Player']]) -> Tuple['Player', 'Player']:
+        raise NotImplementedError()
+
+    def select_event_queue(self, queues: List[deque]) -> deque:
         raise NotImplementedError()
 
 
@@ -68,7 +79,7 @@ class DefaultRandomizer(Randomizer):
         return self.rand.choice(cards)
 
     def select_player_pairings(self, players: List['Player']) -> List[Tuple['Player', 'Player']]:
-        random.shuffle(players)
+        self.rand.shuffle(players)
         number_of_battles = len(players) // 2
         return list(zip(players[:number_of_battles], players[number_of_battles:]))
 
@@ -108,5 +119,14 @@ class DefaultRandomizer(Randomizer):
     def select_adaptation(self, adaptations: List['Type']) -> 'Type':
         return self.rand.choice(adaptations)
 
-    def select_random_bool(self) -> bool:
-        return self.rand.choice([True, False])
+    def select_random_number(self, lo: int, hi: int) -> int:
+        return self.rand.randint(lo, hi)
+
+    def select_secret(self, secrets: List['SECRETS']) -> 'SECRETS':
+        return self.rand.choice(secrets)
+
+    def select_combat_matchup(self, pairings: List[Tuple['Player', 'Player']]) -> Tuple['Player', 'Player']:
+        return self.rand.choice(pairings)
+
+    def select_event_queue(self, queues: List[deque]) -> deque:
+        return self.rand.choice(queues)

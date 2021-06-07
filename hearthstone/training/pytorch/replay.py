@@ -3,6 +3,7 @@ from typing import Optional, NamedTuple
 
 import torch
 
+from hearthstone.simulator.agent.actions import Action
 from hearthstone.training.pytorch.encoding.default_encoder import EncodedActionSet
 from hearthstone.training.pytorch.encoding.state_encoding import State
 
@@ -17,11 +18,20 @@ class ActorCriticGameStepInfo:
     """
     state: State
     valid_actions: EncodedActionSet
-    action: int  # Index of the action
-    policy: torch.Tensor
+    action: Action
+    action_log_prob: float
     value: float
     gae_info: Optional['GAEReplayInfo']
+    debug: Optional['ActorCriticGamestepDebugInfo']
 
+
+@dataclass
+class ActorCriticGameStepDebugInfo:
+    """
+    Additional data recorded for debugging purposes, but not necessary for training.
+    """
+    component_policy: torch.Tensor
+    permutation_logits: torch.Tensor
 
 
 class GAEReplayInfo(NamedTuple):

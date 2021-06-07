@@ -19,10 +19,10 @@ class LineReader:
                 more_data = yield
             else:
                 # b'\n' found in buf so return the line and move up buf
-                line = buf[:newline_idx+1]
+                line = buf[:newline_idx + 1]
                 # Update the buffer in place, to take advantage of bytearray's
                 # optimized delete-from-beginning feature.
-                del buf[:newline_idx+1]
+                del buf[:newline_idx + 1]
                 # next time, start the search from the beginning
                 find_start = 0
                 more_data = yield line

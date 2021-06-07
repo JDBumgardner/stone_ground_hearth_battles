@@ -1,5 +1,3 @@
-
-
 class Observation:
     """
     A class that stores all the information a player observes at a given time step.

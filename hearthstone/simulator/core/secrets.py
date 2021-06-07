@@ -1,6 +1,8 @@
 import enum
+import typing
 
-from hearthstone.simulator.core.player import Player
+if typing.TYPE_CHECKING:
+    from hearthstone.simulator.core.hero import Hero
 
 
 class SECRETS(enum.Enum):
@@ -11,7 +13,8 @@ class SECRETS(enum.Enum):
     REDEMPTION = 5
     AVENGE = 6
     SNAKE_TRAP = 7
+    COMPETETIVE_SPIRIT = 8
 
     @classmethod
-    def remaining_secrets(cls, player: 'Player'):
-        return [secret for secret in cls if secret not in player.hero.secrets]
+    def remaining_secrets(cls, hero: 'Hero'):
+        return [secret for secret in cls if secret not in hero.secrets]

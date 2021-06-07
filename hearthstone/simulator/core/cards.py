@@ -1,11 +1,14 @@
+import collections
+import copy
 import enum
 import itertools
 import typing
 from collections import defaultdict
-from typing import Set, List, Optional, Callable, Type, Union, Iterator
+from typing import List, Optional, Callable, Type, Union, Iterator
+
+from boltons.setutils import IndexedSet
 
 from hearthstone.simulator.core import events
-from hearthstone.simulator.core.card_factory import make_metaclass
 from hearthstone.simulator.core.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 from hearthstone.simulator.core.randomizer import Randomizer
@@ -15,10 +18,11 @@ if typing.TYPE_CHECKING:
     from hearthstone.simulator.core.player import Player
 
 
-def one_minion_per_type(cards: List['MonsterCard'], randomizer: 'Randomizer', excluded_card: Optional['MonsterCard'] = None) -> List['MonsterCard']:
+def one_minion_per_type(cards: List['MonsterCard'], randomizer: 'Randomizer',
+                        excluded_card: Optional['MonsterCard'] = None) -> List['MonsterCard']:
     minions = []
     restricted_cards = [card for card in cards]
-    if excluded_card is not None:
+    if excluded_card in restricted_cards:
         restricted_cards.remove(excluded_card)
     filler_minions = [card for card in restricted_cards if card.monster_type == MONSTER_TYPES.ALL]
     for minion_type in MONSTER_TYPES.single_types():
@@ -33,33 +37,14 @@ def one_minion_per_type(cards: List['MonsterCard'], randomizer: 'Randomizer', ex
     return minions
 
 
-class PrintingPress:
-    cards: Set[Type['MonsterCard']] = set()
-    cards_per_tier = {1: 16, 2: 15, 3: 13, 4: 11, 5: 9, 6: 7}
-
-    @classmethod
-    def make_cards(cls, available_types: List['MONSTER_TYPES']) -> 'CardList':
-        cardlist = []
-        for card in cls.cards:
-            if not card.token and (card.pool in available_types or card.pool == MONSTER_TYPES.ALL):
-                cardlist.extend([card() for _ in range(cls.cards_per_tier[card.tier])])
-        return CardList(cardlist)
-
-    @classmethod
-    def add_card(cls, card_class):
-        cls.cards.add(card_class)
-
-    @classmethod
-    def all_types(cls):
-        return [card_type for card_type in cls.cards if not card_type.token]
+BOOL_ATTRIBUTE_LIST = ["divine_shield", "magnetic", "poisonous", "taunt",
+                       "windfury", "cleave", "reborn", "mega_windfury"
+                       ]
 
 
-CardType = make_metaclass(PrintingPress.add_card, ("MonsterCard",))
-
-
-class MonsterCard(metaclass=CardType):
+class MonsterCard:
     coin_cost = 3
-    mana_cost: Optional[int] = None  # TODO: what about tokens?
+    mana_cost: Optional[int] = None
     base_health: int
     base_attack: int
     monster_type = None
@@ -75,13 +60,12 @@ class MonsterCard(metaclass=CardType):
     base_reborn = False
     redeem_rate = 1
     tier: int
-    token = False  # TODO: should this be an instance attribute so it can be manipulated by Rafaam/Bigglesworth?
-    tracked = False
+    base_token = False
     cant_attack = False
-    shifting = False
     give_immunity = False
     legendary = False
     pool: 'MONSTER_TYPES' = MONSTER_TYPES.ALL
+    divert_taunt_attack = False
 
     def __init__(self):
         super().__init__()
@@ -101,30 +85,28 @@ class MonsterCard(metaclass=CardType):
         self.dead = False
         self.golden = False
         self.battlecry: Optional[Callable[[List[MonsterCard], CombatPhaseContext], None]] = self.base_battlecry
-        self.bool_attribute_list = [
-            "divine_shield", "magnetic", "poisonous", "taunt",
-            "windfury", "cleave", "reborn", "mega_windfury"
-        ]
         self.attached_cards = []
         self.frozen = False
         self.nomi_buff = 0
         self.ticket = False
+        self.token = self.base_token
+        self.link: Optional['MonsterCard'] = None  # links a card during combat to itself in the buy phase board
+        self.dealt_lethal_damage_by = None
+        self.frenzy_triggered = False
 
     def __repr__(self):
-        rep = f"{type(self).__name__} {self.attack}/{self.health} (t{self.tier})" #  TODO: add a proper enum to the monster typing
+        rep = f"{type(self).__name__} {self.attack}/{self.health} (t{self.tier})"  # TODO: add a proper enum to the monster typing
         if self.dead:
             rep += ", [dead]"
         if self.battlecry:
             rep += ", [battlecry]"
-        for attribute in self.bool_attribute_list:
+        for attribute in BOOL_ATTRIBUTE_LIST:
             if getattr(self, attribute):
                 rep += f", [{attribute}]"
         if self.deathrattles:
             rep += ", [%s]" % ",".join([f"deathrattle-{i}" for i in range(len(self.deathrattles))])
         if self.golden:
             rep += ", [golden]"
-        if self.shifting:
-            rep += ", [shifting]"
         if self.frozen:
             rep += ", [frozen]"
         if self.ticket:
@@ -132,7 +114,8 @@ class MonsterCard(metaclass=CardType):
 
         return "{" + rep + "}"
 
-    def take_damage(self, damage: int, combat_phase_context: CombatPhaseContext, foe: Optional['MonsterCard'] = None, defending: Optional[bool] = True):
+    def take_damage(self, damage: int, combat_phase_context: CombatPhaseContext, foe: Optional['MonsterCard'] = None,
+                    defending: Optional[bool] = True):
         if self.divine_shield and not damage <= 0:
             self.divine_shield = False
             combat_phase_context.broadcast_combat_event(events.DivineShieldLostEvent(self, foe=foe))
@@ -142,14 +125,19 @@ class MonsterCard(metaclass=CardType):
                 self.health = 0
             if defending and foe is not None and self.health < 0:
                 foe.overkill(combat_phase_context.enemy_context())
+            combat_phase_context.damaged_minions.add(self)
             combat_phase_context.broadcast_combat_event(events.CardDamagedEvent(self, foe=foe))
+            if self.is_dying():
+                self.dealt_lethal_damage_by = foe
+            elif self.health >= 0 and not self.dead and not self.frenzy_triggered:
+                self.frenzy(combat_phase_context)
+                self.frenzy_triggered = True
 
     def resolve_death(self, context: CombatPhaseContext, foe: Optional['MonsterCard'] = None):
-        if self.health <= 0 and not self.dead:
+        if self.is_dying():
             self.dead = True
             context.friendly_war_party.dead_minions.append(self)
-            card_death_event = events.DiesEvent(self, foe=foe)
-            context.broadcast_combat_event(card_death_event)
+            context.event_queue.load_minion(EVENTS.DIES, context.friendly_war_party, self, foe)
 
     def trigger_reborn(self, context: CombatPhaseContext):
         index = context.friendly_war_party.get_index(self)
@@ -162,9 +150,8 @@ class MonsterCard(metaclass=CardType):
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if self == event.card:
             if event.event is EVENTS.DIES:
-                for _ in range(context.deathrattle_multiplier()):
-                    for deathrattle in self.deathrattles:
-                        deathrattle(self, context)
+                if self.deathrattles:
+                    context.event_queue.load_minion(EVENTS.DEATHRATTLE_TRIGGERED, context.friendly_war_party, self)
                 if self.reborn:
                     self.trigger_reborn(context)
             elif event.event is EVENTS.SUMMON_BUY:
@@ -173,15 +160,11 @@ class MonsterCard(metaclass=CardType):
                 if self.battlecry:
                     for _ in range(context.battlecry_multiplier()):
                         self.battlecry(event.targets, context)
-                if event.card.tracked:
-                    context.owner.counted_cards[type(event.card)] += 1
-                self.shifting = False
         if not self.dead or self == event.card:  # minions will trigger their own death events
             self.handle_event_powers(event, context)
 
     def handle_event_in_hand(self, event: CardEvent, context: BuyPhaseContext):
-        if event.event is EVENTS.BUY_START and self.shifting:
-            self.zerus_shift(context)
+        return
 
     def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         return
@@ -201,7 +184,7 @@ class MonsterCard(metaclass=CardType):
                 self.deathrattles.extend(card.deathrattles[1:])
             else:
                 self.deathrattles.extend(card.deathrattles)
-            for attr in card.bool_attribute_list:
+            for attr in BOOL_ATTRIBUTE_LIST:
                 if getattr(card, attr):
                     if attr == "windfury" and card.base_windfury:
                         setattr(self, "mega_windfury", True)
@@ -215,13 +198,16 @@ class MonsterCard(metaclass=CardType):
             targets[0].health += self.health
             if self.deathrattles:
                 targets[0].deathrattles.extend(self.deathrattles)
-            for attr in self.bool_attribute_list:
+            for attr in BOOL_ATTRIBUTE_LIST:
                 if getattr(self, attr) and attr != 'magnetic':
                     setattr(targets[0], attr, True)
             targets[0].attached_cards.append(self)
             context.owner.remove_board_card(self)
 
     def overkill(self, context: CombatPhaseContext):
+        return
+
+    def frenzy(self, context: CombatPhaseContext):
         return
 
     def dissolve(self) -> List['MonsterCard']:
@@ -232,7 +218,7 @@ class MonsterCard(metaclass=CardType):
         if self.token:
             return attached_cards
         else:
-            dissolving_cards = [type(self)()]*golden_modifier
+            dissolving_cards = [type(self)() for _ in range(golden_modifier)]
             dissolving_cards.extend(attached_cards)
             return dissolving_cards
 
@@ -245,22 +231,15 @@ class MonsterCard(metaclass=CardType):
     def battlecry_multiplier(self) -> int:
         return 1
 
-    def zerus_shift(self, context: 'BuyPhaseContext'):
-        random_minion = context.randomizer.select_random_minion(PrintingPress.all_types(), context.owner.tavern.turn_count)()
-        if self.golden:
-            random_minion.golden_transformation([])
-        random_minion.attack += self.attack - self.base_attack * (2 if self.golden else 1)
-        random_minion.health += self.health - self.base_health * (2 if self.golden else 1)
-        random_minion.shifting = True
-        context.owner.remove_hand_card(self)
-        context.owner.gain_hand_card(random_minion)
-
     @classmethod
     def check_type(cls, desired_type: 'MONSTER_TYPES') -> bool:
         return cls.monster_type in (desired_type, MONSTER_TYPES.ALL)
 
+    def is_targetable(self) -> bool:
+        return not self.dead and self.health > 0
+
     def is_dying(self) -> bool:
-        return self.dead or self.health <= 0
+        return not self.dead and self.health <= 0
 
     def adapt(self, adaptation: 'Adaptation'):
         assert adaptation.valid(self)
@@ -273,7 +252,7 @@ class MonsterCard(metaclass=CardType):
         return copy
 
     def valid_attack_targets(self, live_enemies: List['MonsterCard']) -> List['MonsterCard']:
-        if self.attack <= 0:
+        if self.attack <= 0 or not live_enemies:
             return []
         taunt_monsters = [card for card in live_enemies if card.taunt]
         if taunt_monsters:
@@ -281,16 +260,41 @@ class MonsterCard(metaclass=CardType):
         else:
             return live_enemies
 
+    def num_attacks(self):
+        if self.mega_windfury:
+            return 4
+        elif self.windfury:
+            return 2
+        else:
+            return 1
+
+    def apply_nomi_buff(self, player: 'Player'):
+        if self.check_type(MONSTER_TYPES.ELEMENTAL):
+            self.attack += (player.nomi_bonus - self.nomi_buff)
+            self.health += (player.nomi_bonus - self.nomi_buff)
+            self.nomi_buff = player.nomi_bonus
+
+    def copy(self) -> 'MonsterCard':
+        """
+        For when gaining a "copy" of a card.
+        :return:
+        """
+        clone = copy.copy(self)
+        clone.deathrattles = clone.deathrattles.copy()
+        clone.attached_cards = [card.copy() for card in clone.attached_cards]
+        return clone
+
 
 class CardList:
     def __init__(self, cards: List[MonsterCard]):
-        self.cards_by_tier = defaultdict(lambda: set())
+        # We use an IndexedSet instead of a set here for deterministic iteration order.
+        self.cards_by_tier = defaultdict(lambda: IndexedSet())
         for card in cards:
             self.cards_by_tier[card.tier].add(card)
 
     def draw(self, player: 'Player', num: int) -> List['MonsterCard']:
         valid_cards = []
-        for tier in range(player.tavern_tier+1):
+        for tier in range(player.tavern_tier + 1):
             valid_cards.extend(self.cards_by_tier[tier])
 
         selected_cards = []
@@ -346,3 +350,4 @@ class CardLocation(enum.Enum):
     STORE = 1
     HAND = 2
     BOARD = 3
+    DISCOVER = 4

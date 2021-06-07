@@ -2,17 +2,18 @@ import random
 import typing
 from typing import List, Callable
 
-from hearthstone.simulator.agent import Agent, StandardAction, generate_valid_actions, BuyAction, EndPhaseAction, \
+from hearthstone.simulator.agent import Agent, StandardAction, generate_standard_actions, BuyAction, EndPhaseAction, \
     SummonAction, \
-    TavernUpgradeAction, RerollAction, SellAction, DiscoverChoiceAction, RearrangeCardsAction
+    TavernUpgradeAction, RerollAction, SellAction, DiscoverChoiceAction, RearrangeCardsAction, HeroDiscoverAction, \
+    FreezeDecision
 
 if typing.TYPE_CHECKING:
-    , MonsterCard
     from hearthstone.simulator.core.player import Player, StoreIndex
 
 
 class PriorityStorageBot(Agent):
-    def __init__(self, authors: List[str], priority: Callable[['Player', 'MonsterCard'], float], storage_priority: Callable[['Player', 'MonsterCard'], float], seed: int):
+    def __init__(self, authors: List[str], priority: Callable[['Player', 'MonsterCard'], float],
+                 storage_priority: Callable[['Player', 'MonsterCard'], float], seed: int):
         if not authors:
             authors = ["Jacob Bumgardner", "Jeremy Salwen", "Diana Valverde"]
         self.authors = authors
@@ -27,7 +28,7 @@ class PriorityStorageBot(Agent):
 
     async def buy_phase_action(self, player: 'Player') -> StandardAction:
 
-        all_actions = list(generate_valid_actions(player))
+        all_actions = list(generate_standard_actions(player))
 
         if player.tavern_tier < 2:
             upgrade_action = TavernUpgradeAction()
@@ -40,26 +41,31 @@ class PriorityStorageBot(Agent):
 
         if top_hand_priority:
             if player.room_on_board():
-                return [action for action in all_actions if type(action) is SummonAction and self.priority(player, action.card) == top_hand_priority][0]
+                return [action for action in all_actions if
+                        type(action) is SummonAction and self.priority(player, action.card) == top_hand_priority][0]
             else:
                 if top_hand_priority > bottom_board_priority and player.coins >= 2:
-                    return [action for action in all_actions if type(action) is SellAction and self.priority(player, player.in_play[action.index]) == bottom_board_priority][0]
+                    return [action for action in all_actions if type(action) is SellAction and self.priority(player,
+                                                                                                             player.in_play[
+                                                                                                                 action.index]) == bottom_board_priority][
+                        0]
 
         if top_store_priority:
             if player.room_in_hand():
-                buy_action = BuyAction([StoreIndex(i) for i, card in enumerate(player.store) if self.priority(player, card) == top_store_priority][0])
+                buy_action = BuyAction([StoreIndex(i) for i, card in enumerate(player.store) if
+                                        self.priority(player, card) == top_store_priority][0])
                 if buy_action.valid(player):
                     return buy_action
             elif bottom_board_priority < top_store_priority and player.coins >= 2:
                 pass
-
 
         bottom_hand_storage_priority = min([self.storage_priority(player, card) for card in player.hand], default=None)
         top_store_storage_priority = max([self.storage_priority(player, card) for card in player.store], default=None)
 
         if top_store_storage_priority:
             if player.room_in_hand():
-                buy_action = BuyAction([StoreIndex(i) for i, card in enumerate(player.store) if self.storage_priority(player, card) == top_store_storage_priority][0])
+                buy_action = BuyAction([StoreIndex(i) for i, card in enumerate(player.store) if
+                                        self.storage_priority(player, card) == top_store_storage_priority][0])
                 if buy_action.valid(player):
                     return buy_action
 
@@ -67,12 +73,15 @@ class PriorityStorageBot(Agent):
         if reroll_action.valid(player):
             return reroll_action
 
-        return EndPhaseAction(False)
+        return EndPhaseAction(FreezeDecision.NO_FREEZE)
 
     async def discover_choice_action(self, player: 'Player') -> DiscoverChoiceAction:
         discover_cards = player.discover_queue[0]
         discover_cards = sorted(discover_cards, key=lambda card: self.priority(player, card), reverse=True)
         return DiscoverChoiceAction(player.discover_queue[0].index(discover_cards[0]))
+
+    async def hero_discover_action(self, player: 'Player') -> 'HeroDiscoverAction':
+        return HeroDiscoverAction(self.local_random.choice(range(len(player.hero.discover_choices))))
 
 
 def priority_st_ad_tr_bot(seed: int):
