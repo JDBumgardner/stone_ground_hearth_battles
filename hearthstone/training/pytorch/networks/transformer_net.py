@@ -84,8 +84,9 @@ class TransformerWithContextEncoder(nn.Module):
         self._reset_parameters()
 
     @staticmethod
-    def pad_with_one_hot(rep: torch.Tensor) -> torch.Tensor:
-        return torch.cat((F.one_hot(torch.tensor(0), 3).unsqueeze(0).unsqueeze(0).expand(*rep.shape[-1], -1), rep), dim=2)
+    def pad_with_one_hot(rep: torch.Tensor, padding_dimension: int, padding_value: int) -> torch.Tensor:
+        return torch.cat((F.one_hot(torch.tensor(padding_value), padding_dimension).unsqueeze(0).unsqueeze(0).expand(
+            *rep.shape[:-1], -1).to(rep.device), rep), dim=2)
 
     def forward(self, state: State) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         if not isinstance(state, State):
@@ -106,13 +107,13 @@ class TransformerWithContextEncoder(nn.Module):
         spell_rep = self.fc_spells(spell_rep)
 
         # We add an indicator dimension to distinguish the player representation from the card representation.
-        player_rep = self.pad_with_one_hot(player_rep)
-        card_rep = self.pad_with_one_hot(card_rep)
-        spell_rep = self.pad_with_one_hot(spell_rep)
+        player_rep = self.pad_with_one_hot(player_rep, 3, 0)
+        card_rep = self.pad_with_one_hot(card_rep, 3, 1)
+        spell_rep = self.pad_with_one_hot(spell_rep, 3, 2)
 
         full_rep = torch.cat((player_rep, card_rep, spell_rep), dim=1).permute(1, 0, 2)
         full_rep: torch.Tensor = self.transformer_encoder(full_rep).permute(1, 0, 2)
-        return full_rep[:, 0], full_rep[:, 1:-spell_rep.shape], full_rep[:, -spell_rep.shape:]
+        return full_rep[:, 0], full_rep[:, 1:-spell_rep.shape[1]], full_rep[:, -spell_rep.shape[1]:]
 
     def _reset_parameters(self):
         for p in self.parameters():
@@ -222,12 +223,13 @@ class HearthstoneTransformerNet(nn.Module):
              torch.zeros((policy_encoded_player.shape[0], 4), device=policy_encoded_player.device)), dim=1)
 
         sampled_action_mask = torch.zeros_like(policy, dtype=torch.bool).scatter(1, component_samples.unsqueeze(-1), True)
-        active_cards = torch.max(torch.reshape(sampled_action_mask[:, player_policy.shape[1]:-spell_policy.shape[1]],
+        active_cards = torch.max(torch.reshape(sampled_action_mask[:, player_policy.shape[1]:-(spell_policy.shape[1]*spell_policy.shape[2])],
                                                card_policy.shape), dim=2).values
-        active_spells = sampled_action_mask[:, -spell_policy.shape[1]:]
+        active_spells = torch.max(torch.reshape(sampled_action_mask[:, -(spell_policy.shape[1]*spell_policy.shape[2]):],
+                                               spell_policy.shape), dim = 2).values
 
         hand_size = valid_actions.battlecry_target_tensor.shape[1]
-        board_size = valid_actions.battlecry_target_tensor.shape[2] - 1
+        board_size = valid_actions.battlecry_target_tensor.shape[2]
         store_size = valid_actions.store_target_spell_action_tensor.shape[2]
         summoned_hand_cards = active_cards[:, valid_actions.hand_start:valid_actions.hand_start + hand_size]
         # TODO: Note that this is only true because Summon is currently the only hand-card action.
@@ -241,10 +243,10 @@ class HearthstoneTransformerNet(nn.Module):
                                     dim=1).permute(1, 0, 2)
         target_full_rep: torch.Tensor = self.target_selection_transformer(target_full_rep).permute(1, 0, 2)
 
-        valid_board_battlecry_no_targets = (valid_actions.no_target_battlecry_tensor * summoned_hand_cards.unsqueeze(-1)).sum(
+        valid_board_battlecry_no_targets = (valid_actions.no_target_battlecry_tensor * summoned_hand_cards).sum(
             dim=1)
         valid_board_battlecry_targets = (valid_actions.battlecry_target_tensor * summoned_hand_cards.unsqueeze(-1)).sum(dim=1)
-        valid_spell_no_targets = (valid_actions.no_target_spell_action_tensor * active_spells.unsqueeze(-1)).sum(dim=1)
+        valid_spell_no_targets = (valid_actions.no_target_spell_action_tensor * active_spells).sum(dim=1)
         valid_store_spell_targets = (valid_actions.store_target_spell_action_tensor * active_spells.unsqueeze(-1)).sum(
             dim=1)
         valid_board_spell_targets = (valid_actions.board_target_spell_action_tensor * active_spells.unsqueeze(-1)).sum(dim=1)

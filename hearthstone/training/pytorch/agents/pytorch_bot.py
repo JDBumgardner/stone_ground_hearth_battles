@@ -38,17 +38,8 @@ class PytorchBot(AnnotatingAgent):
             valid_actions_mask: EncodedActionSet = self.encoder.encode_valid_actions(player, rearrange_cards).to(
                 self.device)
             actions, action_log_probs, value, debug = await self.async_net(
-                State(encoded_state.player_tensor.unsqueeze(0),
-                      encoded_state.cards_tensor.unsqueeze(0)),
-                EncodedActionSet(
-                    valid_actions_mask.player_action_tensor.unsqueeze(0),
-                    valid_actions_mask.card_action_tensor.unsqueeze(0),
-                    valid_actions_mask.battlecry_target_tensor.unsqueeze(0),
-                    valid_actions_mask.rearrange_phase.unsqueeze(0),
-                    valid_actions_mask.cards_to_rearrange.unsqueeze(0),
-                    valid_actions_mask.store_start,
-                    valid_actions_mask.hand_start,
-                    valid_actions_mask.board_start),
+                encoded_state.unsqueeze(),
+                valid_actions_mask.unsqueeze(),
                 None)
             assert (len(actions) == 1)
             action = actions[0]

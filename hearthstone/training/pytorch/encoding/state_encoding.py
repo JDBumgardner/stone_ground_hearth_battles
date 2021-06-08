@@ -14,6 +14,9 @@ class State(NamedTuple):
     cards_tensor: torch.Tensor
     spells_tensor: torch.Tensor
 
+    def unsqueeze(self):
+        return State(*[tensor.unsqueeze(0) for tensor in self])
+
     def to(self, device: torch.device):
         if device:
             return State(*[tensor.to(device) for tensor in self])
@@ -187,6 +190,14 @@ class EncodedActionSet(NamedTuple):
     store_start: int
     hand_start: int
     board_start: int
+
+    def unsqueeze(self):
+        return EncodedActionSet(
+            *[tensor.unsqueeze(0) for tensor in self[:-3]],
+            self.store_start,
+            self.hand_start,
+            self.board_start,
+        )
 
     def to(self, device: torch.device):
         if device:
