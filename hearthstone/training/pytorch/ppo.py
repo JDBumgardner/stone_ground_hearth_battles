@@ -14,8 +14,7 @@ from torch.utils.tensorboard import SummaryWriter
 from hearthstone.ladder.ladder import Contestant, load_ratings, ContestantAgentGenerator
 from hearthstone.simulator.agent.actions import RearrangeCardsAction, BuyAction, EndPhaseAction, SellAction, \
     SummonAction, \
-    RerollAction, DiscoverChoiceAction, TavernUpgradeAction, TripleRewardsAction, HeroPowerAction, FreezeDecision, \
-    BananaAction, RedeemGoldCoinAction
+    RerollAction, DiscoverChoiceAction, TavernUpgradeAction, HeroPowerAction, FreezeDecision, PlaySpellAction
 from hearthstone.simulator.core.hero import EmptyHero
 from hearthstone.simulator.core.tavern import Tavern
 from hearthstone.training.pytorch.agents.pytorch_bot import PytorchBot
@@ -579,16 +578,12 @@ class PPOTensorboard:
                                sum(type(action) is RerollAction for action in self.actions), step)
         tensorboard.add_scalar("actions/upgrade",
                                sum(type(action) is TavernUpgradeAction for action in self.actions), step)
-        tensorboard.add_scalar("actions/triple_rewards",
-                               sum(type(action) is TripleRewardsAction for action in self.actions), step)
+        tensorboard.add_scalar("actions/spell_rewards",
+                               sum(type(action) is PlaySpellAction for action in self.actions), step)
         tensorboard.add_scalar("actions/discover",
                                sum(type(action) is DiscoverChoiceAction for action in self.actions), step)
         tensorboard.add_scalar("actions/hero_power",
                                sum(type(action) is HeroPowerAction for action in self.actions), step)
-        tensorboard.add_scalar("actions/banana",
-                               sum(type(action) is BananaAction for action in self.actions), step)
-        tensorboard.add_scalar("actions/redeem_gold_coin",
-                               sum(type(action) is RedeemGoldCoinAction for action in self.actions), step)
 
         tensorboard.add_scalar("critic_explanation/correlation", (
                 self.value_welford.variance() + self.return_welford.variance() - self.value_error_welford.variance()) / (
