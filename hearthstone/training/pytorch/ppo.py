@@ -2,6 +2,7 @@ import logging
 import os
 import random
 import time
+import platform
 from datetime import datetime
 from math import sqrt
 from typing import List, Dict, Union, NewType
@@ -33,7 +34,8 @@ from hearthstone.training.pytorch.policy_gradient import tensorize_batch, easy_c
 from hearthstone.training.pytorch.replay import ActorCriticGameStepInfo, ActorCriticGameStepDebugInfo
 from hearthstone.training.pytorch.replay_buffer import EpochBuffer
 from hearthstone.training.pytorch.surveillance import GlobalStepContext
-from hearthstone.training.pytorch.worker.distributed.worker_pool import DistributedWorkerPool
+if platform.system() != 'Windows':
+    from hearthstone.training.pytorch.worker.distributed.worker_pool import DistributedWorkerPool
 from hearthstone.training.pytorch.worker.postprocessing import ExperiencePostProcessor
 from hearthstone.training.pytorch.worker.single_machine.worker import Worker
 from hearthstone.training.pytorch.worker.single_machine.worker_pool import WorkerPool
@@ -327,15 +329,16 @@ class PPOLearner(GlobalStepContext):
         gae_annotator = GAEAnnotator(learning_bot_name, self.hparams['gae_gamma'], self.hparams['gae_lambda'])
         if self.hparams['parallelism.method']:
             if self.hparams['parallelism.method'] == "distributed":
-                worker_pool = DistributedWorkerPool(num_workers=self.hparams['parallelism.num_workers'],
-                                                    games_per_worker=self.hparams[
-                                                        'parallelism.distributed.games_per_worker'],
-                                                    use_batched_inference=True,
-                                                    max_batch_size=self.hparams['batch.max_in_memory'],
-                                                    replay_sink=ExperiencePostProcessor(replay_buffer, gae_annotator,
-                                                                                        tensorboard, self),
-                                                    device=self.get_device()
-                                                    )
+                if platform.system() != 'Windows':
+                    worker_pool = DistributedWorkerPool(num_workers=self.hparams['parallelism.num_workers'],
+                                                        games_per_worker=self.hparams[
+                                                            'parallelism.distributed.games_per_worker'],
+                                                        use_batched_inference=True,
+                                                        max_batch_size=self.hparams['batch.max_in_memory'],
+                                                        replay_sink=ExperiencePostProcessor(replay_buffer, gae_annotator,
+                                                                                            tensorboard, self),
+                                                        device=self.get_device()
+                                                        )
             else:
                 worker_pool = WorkerPool(self.hparams['parallelism.num_workers'],
                                          replay_buffer,
@@ -647,12 +650,15 @@ class PPOTensorboard:
 
 
 def main():
+    parallelismMethod = 'distributed'
+    if platform.system() == 'Windows':
+        parallelismMethod = None
     ppo_learner = PPOLearner(PPOHyperparameters({
         "resume": False,
         'resume.from': '2021-02-05T17:56:25.030000',
         'export.enabled': True,
         'export.period_epochs': 200,
-        'export.path': datetime.now().isoformat(),
+        'export.path': datetime.now().isoformat().replace(':', ''),
         'opponents.initial': 'easiest',
         'opponents.self_play.enabled': True,
         'opponents.self_play.only_champions': True,
@@ -681,7 +687,7 @@ def main():
         'nn.encoding.normalize.gamma': 0.999999,
         'normalize_advantage': True,
         'parallelism.num_workers': 6,
-        'parallelism.method': 'distributed',
+        'parallelism.method': parallelismMethod,
         'parallelism.shared_tensor_pool': False,
         'parallelism.distributed.games_per_worker': 128,
         'optimizer': 'adam',
