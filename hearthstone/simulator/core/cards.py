@@ -45,7 +45,7 @@ class MonsterCard:
     mana_cost: Optional[int] = None
     base_health: int
     base_attack: int
-    monster_type = None
+    monster_type: MONSTER_TYPES
     base_divine_shield = False
     base_magnetic = False
     base_poisonous = False
@@ -75,7 +75,7 @@ class MonsterCard:
         self.windfury = self.base_windfury
         self.mega_windfury = False
         self.cleave = self.base_cleave
-        self.deathrattles: List[Callable[[CombatPhaseContext], None]] = []
+        self.deathrattles: List[Callable[[MonsterCard, CombatPhaseContext], None]] = []
         if self.base_deathrattle is not None:
             self.deathrattles.append(self.base_deathrattle.__func__)
         self.reborn = self.base_reborn
@@ -290,7 +290,7 @@ class MonsterCard:
 class CardList:
     def __init__(self, cards: List[MonsterCard]):
         # We use an IndexedSet instead of a set here for deterministic iteration order.
-        self.cards_by_tier = defaultdict(lambda: IndexedSet())
+        self.cards_by_tier: typing.DefaultDict[int, IndexedSet] = defaultdict(lambda: IndexedSet())
         for card in cards:
             self.cards_by_tier[card.tier].add(card)
 

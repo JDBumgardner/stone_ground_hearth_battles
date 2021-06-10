@@ -577,11 +577,11 @@ class Player:
         spell = self.spells[index]
         if self.coins < spell.cost:
             return False
-        if CardLocation.store in spell.target_location:
+        if CardLocation.STORE in spell.target_location:
             for index, card in enumerate(self.store):
                 if spell.valid_target(BuyPhaseContext(self, self.tavern.randomizer), store_index=StoreIndex(index)):
                     return True
-        if CardLocation.board in spell.target_location:
+        if CardLocation.BOARD in spell.target_location:
             for index, card in enumerate(self.in_play):
                 if spell.valid_target(BuyPhaseContext(self, self.tavern.randomizer), board_index=BoardIndex(index)):
                     return True

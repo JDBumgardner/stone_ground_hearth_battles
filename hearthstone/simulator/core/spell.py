@@ -10,7 +10,7 @@ if typing.TYPE_CHECKING:
 
 class Spell:
     base_cost: int = 0
-    target_location: Optional[List['CardLocation']] = None
+    target_location: List['CardLocation'] = []
     darkmoon_prize_tier: int = 0
 
     def __init__(self, tier: Optional[int] = None):
@@ -26,9 +26,9 @@ class Spell:
 
     def valid(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
               store_index: Optional['StoreIndex'] = None) -> bool:
-        if self.target_location is None and (board_index is not None or store_index is not None):
+        if self.target_location == [] and (board_index is not None or store_index is not None):
             return False
-        if self.target_location is not None:
+        if self.target_location != []:
             if board_index is None and store_index is None:
                 return False
             if board_index is not None:

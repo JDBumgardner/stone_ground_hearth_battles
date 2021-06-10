@@ -197,27 +197,20 @@ def _all_actions() -> ActionSet:
 ALL_ACTIONS = _all_actions()
 
 
-def _all_actions_dict():
-    result = {}
-    index = 0
+def _all_actions_list():
+    result = []
     for player_action in ALL_ACTIONS.player_action_set:
-        result[str(player_action)] = index
-        index += 1
+        result.append(player_action)
     for card_actions in ALL_ACTIONS.card_action_set:
         for card_action in card_actions:
-            result[str(card_action)] = index
-            index += 1
+            result.append(card_action)
     for card_action in ALL_ACTIONS.spell_action_set:
-        result[str(card_action)] = index
-        index += 1
+        result.append(card_action)
     return result
 
+INVERTED_ACTIONS_LIST = _all_actions_list()
 
-ALL_ACTIONS_DICT: Dict[str, int] = _all_actions_dict()
-
-
-INVERTED_ACTIONS = {index: action for action, index in ALL_ACTIONS_DICT.items()}
-
+ALL_ACTIONS_DICT: Dict[str, int] = {str(action): index for index, action in enumerate(INVERTED_ACTIONS_LIST)}
 
 class DefaultEncoder(Encoder):
     def encode_state(self, player: Player) -> State:
@@ -288,4 +281,4 @@ class DefaultEncoder(Encoder):
         return ALL_ACTIONS_DICT[str(action)]
 
     def get_indexed_action_component(self, index: int) -> ActionComponent:
-        return INVERTED_ACTIONS[index]
+        return INVERTED_ACTIONS_LIST[index]

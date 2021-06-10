@@ -615,6 +615,7 @@ class CrystalWeaver(MonsterCard):
     tier = 3
     base_attack = 5
     base_health = 4
+    monster_type = MONSTER_TYPES.NEUTRAL
     pool = MONSTER_TYPES.DEMON
     mana_cost = 4
 
@@ -674,6 +675,7 @@ class SpawnOfNzoth(MonsterCard):
     base_attack = 2
     base_health = 2
     mana_cost = 3
+    monster_type = MONSTER_TYPES.NEUTRAL
 
     def base_deathrattle(self, context: CombatPhaseContext):
         bonus = 2 if self.golden else 1
@@ -751,6 +753,8 @@ class Houndmaster(MonsterCard):
     base_health = 3
     num_battlecry_targets = [1]
     mana_cost = 4
+    monster_type = MONSTER_TYPES.NEUTRAL
+    pool = MONSTER_TYPES.BEAST
 
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
         bonus = 4 if self.golden else 2
@@ -1066,7 +1070,7 @@ class SouthseaCaptain(MonsterCard):
 
 class BolvarFireblood(MonsterCard):
     tier = 4
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 1
     base_health = 7
     base_divine_shield = True
@@ -1162,7 +1166,7 @@ class Junkbot(MonsterCard):
 
 class StrongshellScavenger(MonsterCard):
     tier = 5
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 2
     base_health = 3
     mana_cost = 4
@@ -1373,7 +1377,7 @@ class KalecgosArcaneAspect(MonsterCard):
 
 class NadinaTheRed(MonsterCard):
     tier = 6
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 7
     base_health = 4
     legendary = True
@@ -1388,7 +1392,7 @@ class NadinaTheRed(MonsterCard):
 
 class TheTideRazor(MonsterCard):
     tier = 6
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 6
     base_health = 4
     pool = MONSTER_TYPES.PIRATE
@@ -1534,7 +1538,7 @@ class MalGanis(MonsterCard):
 
 class BaronRivendare(MonsterCard):
     tier = 5
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 1
     base_health = 7
     legendary = True
@@ -1546,7 +1550,7 @@ class BaronRivendare(MonsterCard):
 
 class BrannBronzebeard(MonsterCard):
     tier = 5
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 2
     base_health = 4
     legendary = True
@@ -1598,7 +1602,7 @@ class YoHoOgre(MonsterCard):
 
 class WaxriderTogwaggle(MonsterCard):
     tier = 2
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 1
     base_health = 3
     legendary = True
@@ -1630,7 +1634,7 @@ class HangryDragon(MonsterCard):
 
 class LightfangEnforcer(MonsterCard):
     tier = 5
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 2
     base_health = 2
     mana_cost = 6
@@ -1645,7 +1649,7 @@ class LightfangEnforcer(MonsterCard):
 
 class MenagerieMug(MonsterCard):
     tier = 2
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 2
     base_health = 2
     mana_cost = 3
@@ -1663,7 +1667,7 @@ class MenagerieMug(MonsterCard):
 
 class MenagerieJug(MonsterCard):
     tier = 4
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 3
     base_health = 3
     mana_cost = 5
@@ -1699,7 +1703,7 @@ class MicroMummy(MonsterCard):
 
 class KangorsApprentice(MonsterCard):
     tier = 6
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 4
     base_health = 8
     pool = MONSTER_TYPES.MECH
@@ -1717,7 +1721,7 @@ class KangorsApprentice(MonsterCard):
 
 class ZappSlywick(MonsterCard):
     tier = 6
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 7
     base_health = 10
     base_windfury = True
@@ -1834,7 +1838,7 @@ class CobaltScalebane(MonsterCard):
 
 class FinkleEinhorn(MonsterCard):
     tier = 1
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 3
     base_health = 3
     not_in_pool = True
@@ -1975,7 +1979,7 @@ class CracklingCyclone(MonsterCard):
 
 class DeadlySpore(MonsterCard):
     tier = 5
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 1
     base_health = 1
     base_poisonous = True
@@ -2095,7 +2099,7 @@ class GentleDjinni(MonsterCard):
 
 class NomiKitchenNightmare(MonsterCard):
     tier = 5
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 4
     base_health = 4
     legendary = True
@@ -2123,7 +2127,7 @@ class RefreshingAnomaly(MonsterCard):
 
 class MajordomoExecutus(MonsterCard):
     tier = 4
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 6
     base_health = 3
     pool = MONSTER_TYPES.ELEMENTAL
@@ -2200,7 +2204,7 @@ class Snake(MonsterCard):
 
 class AcolyteOfCThun(MonsterCard):
     tier = 1
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 2
     base_health = 2
     base_taunt = True
@@ -2209,7 +2213,7 @@ class AcolyteOfCThun(MonsterCard):
 
 class TormentedRitualist(MonsterCard):
     tier = 2
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 2
     base_health = 3
     base_taunt = True
@@ -2235,7 +2239,7 @@ class WardenOfOld(MonsterCard):
 
 class ArmOfTheEmpire(MonsterCard):
     tier = 3
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 4
     base_health = 5
 
@@ -2268,7 +2272,7 @@ class Bigfernal(MonsterCard):
 
 class QirajiHarbinger(MonsterCard):
     tier = 4
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 5
     base_health = 5
 
@@ -2282,7 +2286,7 @@ class QirajiHarbinger(MonsterCard):
 
 class ChampionOfYShaarj(MonsterCard):
     tier = 4
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 4
     base_health = 4
 
@@ -2298,7 +2302,7 @@ class ChampionOfYShaarj(MonsterCard):
 
 class MythraxTheUnraveler(MonsterCard):
     tier = 5
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 4
     base_health = 4
     legendary = True
@@ -2375,7 +2379,7 @@ class SoulDevourer(MonsterCard):
 
 class BarrensBlacksmith(MonsterCard):
     tier = 3
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 3
     base_health = 5
 
@@ -2389,7 +2393,7 @@ class BarrensBlacksmith(MonsterCard):
 
 class ArgentBraggart(MonsterCard):
     tier = 6
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 1
     base_health = 1
     not_in_pool = True  # argent braggart is not in the minion pool

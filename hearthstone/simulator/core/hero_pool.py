@@ -763,6 +763,8 @@ class LordBarov(Hero):
                 num_gold_coins = 1
             elif event.loser == self.winning_pick:
                 num_gold_coins = 0
+            else:
+                assert False, "how did we get here?"
 
             for _ in range(num_gold_coins):
                 context.owner.gain_spell(GoldCoin())

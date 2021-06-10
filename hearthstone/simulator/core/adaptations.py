@@ -3,11 +3,12 @@ from typing import Type, List
 
 from hearthstone.simulator.core.cards import MonsterCard
 from hearthstone.simulator.core.events import CombatPhaseContext
+from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 
 
 class Plant(MonsterCard):
     tier = 1
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 1
     base_health = 1
     not_in_pool = True

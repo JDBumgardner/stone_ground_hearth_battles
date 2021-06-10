@@ -32,6 +32,7 @@ class BaseSecret:
     class SplittingImage(Secret):
         def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
             if event.event is EVENTS.IS_ATTACKED and event.card in context.friendly_war_party.board and context.friendly_war_party.room_on_board():
+                assert event.card is not None
                 logger.debug(f'{self} triggers')
                 context.friendly_war_party.owner.secrets.remove(self)
                 summon_index = context.friendly_war_party.get_index(event.card)
@@ -40,10 +41,12 @@ class BaseSecret:
 
     class AutodefenseMatrix(Secret):
         def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
-            if event.event is EVENTS.IS_ATTACKED and event.card in context.friendly_war_party.board and not event.card.divine_shield:
-                logger.debug(f'{self} triggers')
-                context.friendly_war_party.owner.secrets.remove(self)
-                event.card.divine_shield = True
+            if event.event is EVENTS.IS_ATTACKED:
+                assert event.card is not None
+                if event.card in context.friendly_war_party.board and not event.card.divine_shield:
+                    logger.debug(f'{self} triggers')
+                    context.friendly_war_party.owner.secrets.remove(self)
+                    event.card.divine_shield = True
 
     class VenomstrikeTrap(Secret):
         def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
@@ -59,6 +62,7 @@ class BaseSecret:
 
     class Redemption(Secret):
         def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+            assert event.card is not None
             if event.event is EVENTS.DIES and event.card in context.friendly_war_party.board:
                 logger.debug(f'{self} triggers')
                 context.friendly_war_party.owner.secrets.remove(self)

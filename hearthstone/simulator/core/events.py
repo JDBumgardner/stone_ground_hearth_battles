@@ -43,7 +43,7 @@ class EVENTS(enum.Enum):
 class CardEvent(autoslot.Slots):
     def __init__(self, eventid: EVENTS):
         self.event = eventid
-        self.card = None
+        self.card: Optional[MonsterCard] = None
 
 
 class SummonBuyEvent(CardEvent):
@@ -123,14 +123,14 @@ class BuyEndEvent(CardEvent):
 
 
 class CardDamagedEvent(CardEvent):
-    def __init__(self, card: 'MonsterCard', foe: 'MonsterCard'):
+    def __init__(self, card: 'MonsterCard', foe: 'Optional[MonsterCard]'):
         super().__init__(EVENTS.CARD_DAMAGED)
         self.card = card
         self.foe = foe
 
 
 class DivineShieldLostEvent(CardEvent):
-    def __init__(self, card: 'MonsterCard', foe: 'MonsterCard'):
+    def __init__(self, card: 'MonsterCard', foe: 'Optional[MonsterCard]'):
         super().__init__(EVENTS.DIVINE_SHIELD_LOST)
         self.card = card
         self.foe = foe

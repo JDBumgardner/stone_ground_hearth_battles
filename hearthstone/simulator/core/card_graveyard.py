@@ -24,7 +24,7 @@ class FloatingWatcher(MonsterCard):
 
 class ElistraTheImmortal(MonsterCard):
     tier = 6
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 4
     base_health = 4
     base_divine_shield = True

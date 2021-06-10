@@ -1,4 +1,6 @@
+import os
 import random
+import sys
 import typing
 from collections import deque
 from typing import List, Tuple, Type, Optional
@@ -75,7 +77,7 @@ class Randomizer:
 class DefaultRandomizer(Randomizer):
     def __init__(self, seed: Optional[int] = None):
         if seed is None:
-            seed = random.random()
+            seed = random.getrandbits(32)
         self.seed = seed
         self.rand = random.Random(seed)
 
