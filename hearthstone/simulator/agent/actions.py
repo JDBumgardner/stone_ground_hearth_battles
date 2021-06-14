@@ -239,7 +239,7 @@ def generate_standard_actions(player: 'Player') -> Generator[StandardAction, Non
         return
     yield EndPhaseAction(FreezeDecision.NO_FREEZE)
     yield EndPhaseAction(FreezeDecision.FREEZE)
-    yield EndPhaseAction(FreezeDecision.UNFREEZE)
+    yield from yield_if_base_valid(player, EndPhaseAction(FreezeDecision.UNFREEZE))
 
     yield from yield_if_base_valid(player, TavernUpgradeAction())
     yield from yield_if_base_valid(player, RerollAction())
@@ -253,7 +253,7 @@ def generate_standard_actions(player: 'Player') -> Generator[StandardAction, Non
         yield from yield_if_base_valid(player, HeroPowerAction(store_target=StoreIndex(index)))
 
     for index in range(len(player.spells)):
-        yield PlaySpellAction(SpellIndex(index))
+        yield from yield_if_base_valid(player, PlaySpellAction(SpellIndex(index)))
         for board_index in range(len(player.in_play)):
             yield from yield_if_base_valid(player,
                                            PlaySpellAction(SpellIndex(index), board_target=BoardIndex(board_index)))

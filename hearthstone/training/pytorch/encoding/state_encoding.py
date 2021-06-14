@@ -178,7 +178,7 @@ class EncodedActionSet(NamedTuple):
     # Boolean tensor. Dimensions are (batch index, hand index, board index)
     battlecry_target_tensor: torch.Tensor  # Boolean tensor
 
-    spell_action_tensor: torch.Tensor  # Dimensions are (batch index, spell index)
+    spell_action_tensor: torch.Tensor  # Dimensions are (batch index, spell index, placeholder for future index)
     no_target_spell_action_tensor: torch.Tensor  # Dimensions are (batch index, spell index)
     store_target_spell_action_tensor: torch.Tensor  # Dimensions are (batch index, spell index, store index)
     board_target_spell_action_tensor: torch.Tensor  # Dimensions are (batch index, spell index, board index)

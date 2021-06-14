@@ -62,8 +62,8 @@ class BaseSecret:
 
     class Redemption(Secret):
         def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
-            assert event.card is not None
             if event.event is EVENTS.DIES and event.card in context.friendly_war_party.board:
+                assert event.card is not None
                 logger.debug(f'{self} triggers')
                 context.friendly_war_party.owner.secrets.remove(self)
                 summon_index = context.friendly_war_party.get_index(event.card)

@@ -327,7 +327,7 @@ class HearthstoneTransformerNet(nn.Module):
                         if target_samples_numpy[i] >= 1 + store_size:
                             board_index = BoardIndex(target_samples_numpy[i] - 1 - store_size)
                         elif target_samples_numpy[i] >= 1:
-                            store_index = StoreIndex(target_samples_numpy[i])
+                            store_index = StoreIndex(target_samples_numpy[i] - 1)
                         output_actions[i] = PlaySpellAction(SpellIndex(output_actions[i].index),
                                                             board_target=board_index, store_target=store_index)
 

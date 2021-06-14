@@ -183,7 +183,7 @@ class TimeThief(Spell):
     def on_play(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                 store_index: Optional['StoreIndex'] = None):
         last_opp_warband_types = [type(card) for card in context.owner.last_opponent_warband]
-        if context.owner.room_in_hand():
+        if last_opp_warband_types != [] and context.owner.room_in_hand():
             context.owner.draw_discover(lambda card: type(card) in last_opp_warband_types)
 
 

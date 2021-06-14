@@ -235,7 +235,7 @@ class DefaultEncoder(Encoder):
             for j, action in enumerate(card_actions):
                 battlecry_target_array[i, j] = action.valid(player)
         battlecry_target_tensor = torch.from_numpy(battlecry_target_array)
-        spell_action_tensor = torch.tensor([action.valid(player) for action in actions.spell_action_set])
+        spell_action_tensor = torch.tensor([action.valid(player) for action in actions.spell_action_set]).unsqueeze(-1)
         no_target_spell_action_tensor = torch.tensor([action.valid(player) for action in actions.no_target_spell_action_set])
         store_target_spells_action_array = np.ndarray((len(actions.spell_store_action_set), len(actions.spell_store_action_set[0])), dtype=bool)
         for i, spell_actions in enumerate(actions.spell_store_action_set):

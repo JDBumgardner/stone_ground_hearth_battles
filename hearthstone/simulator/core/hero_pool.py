@@ -733,42 +733,42 @@ class SirFinleyMrrgglton(Hero):
         self.discover_queue.pop(0)
 
 
-class LordBarov(Hero):
-    base_power_cost = 1
-
-    def __init__(self):
-        super().__init__()
-        self.winning_pick = None
-
-    def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
-                        store_index: Optional['StoreIndex'] = None):
-        if len(context.owner.tavern.current_player_pairings) > 1:
-            available_pairings = [(player1, player2) for player1, player2 in
-                                  context.owner.tavern.current_player_pairings if
-                                  player1 != context.owner and player2 != context.owner]
-            pairing = context.randomizer.select_combat_matchup(available_pairings)
-        else:
-            pairing = context.owner.tavern.current_player_pairings[0]
-        self.discover_queue.append(list(pairing))
-
-    def select_discover(self, discover_index: 'DiscoverIndex', context: 'BuyPhaseContext'):
-        self.winning_pick = self.discover_queue[0].pop(discover_index)
-        self.discover_queue.pop(0)
-
-    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
-        if event.event is EVENTS.RESULTS_BROADCAST and self.winning_pick is not None:
-            if event.winner == self.winning_pick:
-                num_gold_coins = 3
-            elif event.tie:
-                num_gold_coins = 1
-            elif event.loser == self.winning_pick:
-                num_gold_coins = 0
-            else:
-                assert False, "how did we get here?"
-
-            for _ in range(num_gold_coins):
-                context.owner.gain_spell(GoldCoin())
-            self.winning_pick = None
+# class LordBarov(Hero):
+#     base_power_cost = 1
+#
+#     def __init__(self):
+#         super().__init__()
+#         self.winning_pick = None
+#
+#     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+#                         store_index: Optional['StoreIndex'] = None):
+#         if len(context.owner.tavern.current_player_pairings) > 1:
+#             available_pairings = [(player1, player2) for player1, player2 in
+#                                   context.owner.tavern.current_player_pairings if
+#                                   player1 != context.owner and player2 != context.owner]
+#             pairing = context.randomizer.select_combat_matchup(available_pairings)
+#         else:
+#             pairing = context.owner.tavern.current_player_pairings[0]
+#         self.discover_queue.append(list(pairing))
+#
+#     def select_discover(self, discover_index: 'DiscoverIndex', context: 'BuyPhaseContext'):
+#         self.winning_pick = self.discover_queue[0].pop(discover_index)
+#         self.discover_queue.pop(0)
+#
+#     def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+#         if event.event is EVENTS.RESULTS_BROADCAST and self.winning_pick is not None:
+#             if event.winner == self.winning_pick:
+#                 num_gold_coins = 3
+#             elif event.tie:
+#                 num_gold_coins = 1
+#             elif event.loser == self.winning_pick:
+#                 num_gold_coins = 0
+#             else:
+#                 assert False, "how did we get here?"
+#
+#             for _ in range(num_gold_coins):
+#                 context.owner.gain_spell(GoldCoin())
+#             self.winning_pick = None
 
 
 class MaievShadowsong(Hero):
@@ -905,7 +905,8 @@ class Tickatus(Hero):
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_START and (context.owner.tavern.turn_count + 1) % 4 == 0 and self.prize_tier < 5:
-            self.prize_tier += 1
+            self.prize_tier = min(self.prize_tier + 1, 4)
+
             if context.owner.room_in_hand():
                 prize_options = DARKMOON_PRIZES[self.prize_tier][:]
                 selected_prizes = []

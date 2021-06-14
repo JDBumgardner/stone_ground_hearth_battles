@@ -26,19 +26,18 @@ class Spell:
 
     def valid(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
               store_index: Optional['StoreIndex'] = None) -> bool:
-        if self.target_location == [] and (board_index is not None or store_index is not None):
+        if self.target_location == []:
+            return (board_index is None) and (store_index is None)
+        if board_index is None and store_index is None:
             return False
-        if self.target_location != []:
-            if board_index is None and store_index is None:
+        if board_index is not None:
+            if CardLocation.BOARD not in self.target_location or not context.owner.valid_board_index(
+                    board_index):
                 return False
-            if board_index is not None:
-                if CardLocation.BOARD not in self.target_location or not context.owner.valid_board_index(
-                        board_index):
-                    return False
-            if store_index is not None:
-                if CardLocation.STORE not in self.target_location or not context.owner.valid_store_index(
-                        store_index):
-                    return False
+        if store_index is not None:
+            if CardLocation.STORE not in self.target_location or not context.owner.valid_store_index(
+                    store_index):
+                return False
         if not self.valid_target(context, board_index, store_index):
             return False
         return True
