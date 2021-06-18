@@ -5,7 +5,7 @@ import torch
 
 from hearthstone.simulator.agent.actions import Action
 from hearthstone.training.pytorch.encoding.default_encoder import EncodedActionSet
-from hearthstone.training.pytorch.encoding.state_encoding import State
+from hearthstone.training.common.state_encoding import State
 
 
 @dataclass

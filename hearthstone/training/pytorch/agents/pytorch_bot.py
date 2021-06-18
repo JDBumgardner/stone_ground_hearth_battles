@@ -11,7 +11,7 @@ from hearthstone.simulator.agent.actions import StandardAction, DiscoverChoiceAc
 from hearthstone.simulator.agent.agent import AnnotatingAgent
 from hearthstone.training.pytorch.encoding.default_encoder import \
     EncodedActionSet
-from hearthstone.training.pytorch.encoding.state_encoding import State, Encoder
+from hearthstone.training.common.state_encoding import State, Encoder
 from hearthstone.training.pytorch.replay import ActorCriticGameStepInfo
 
 logger = logging.getLogger(__name__)

@@ -1910,6 +1910,19 @@ class CardTests(BattleGroundsTestCase):
         self.assertTrue(player_1.in_play[3].divine_shield)
         self.assertEqual(len(player_1.in_play[3].deathrattles), 1)
 
+    def test_only_amalgadon(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        self.upgrade_to_tier(tavern, 6)
+        tavern.randomizer = RepeatedCardForcer([Amalgadon, AlleyCat, AlleyCat])
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        tavern.randomizer = self.TestAmalgadonRandomizer()
+        player_1.summon_from_hand(HandIndex(0))
+        self.assertCardListEquals(player_1.in_play, [Amalgadon])
+        self.assertFalse(player_1.in_play[0].divine_shield)
+
     def test_arch_villain_rafaam(self):
         tavern = Tavern(restrict_types=False)
         player_1 = tavern.add_player_with_hero("Dante_Kong", ArchVillianRafaam())

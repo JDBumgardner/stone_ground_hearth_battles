@@ -3,7 +3,7 @@ from typing import Tuple, List, Optional
 import torch
 
 from hearthstone.simulator.agent.actions import Action
-from hearthstone.training.pytorch.encoding.state_encoding import EncodedActionSet, State
+from hearthstone.training.common.state_encoding import EncodedActionSet, State
 from hearthstone.training.pytorch.policy_gradient import StateBatch
 from hearthstone.training.pytorch.replay import ActorCriticGameStepDebugInfo
 

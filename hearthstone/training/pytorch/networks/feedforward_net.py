@@ -3,7 +3,7 @@ import torch.nn.functional as F
 from torch import nn
 
 from hearthstone.training.pytorch.encoding.default_encoder import EncodedActionSet
-from hearthstone.training.pytorch.encoding.state_encoding import State, Encoder
+from hearthstone.training.common.state_encoding import State, Encoder
 
 
 class HearthstoneFFNet(nn.Module):

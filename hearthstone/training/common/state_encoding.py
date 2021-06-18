@@ -23,26 +23,6 @@ class State(NamedTuple):
         else:
             return self
 
-
-class Transition(NamedTuple):
-    state: State
-    valid_actions: torch.Tensor  # Boolean
-    action: int  # Index of the action
-    action_prob: float
-    value: float
-    gae_return: float
-    retn: float
-    reward: float
-    is_terminal: bool
-
-
-def frozen_player(player: Player) -> Player:
-    player = copy.copy(player)
-    player.tavern = None
-    player = copy.deepcopy(player)
-    return player
-
-
 class LocatedCard:
     def __init__(self, card: MonsterCard, location: CardLocation):
         self.card = card

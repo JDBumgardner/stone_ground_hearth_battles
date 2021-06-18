@@ -11,7 +11,7 @@ from hearthstone.ladder.ladder import Contestant, update_ratings, print_standing
 from hearthstone.simulator.host import RoundRobinHost
 from hearthstone.training.pytorch.encoding.default_encoder import get_indexed_action_component, \
     DefaultEncoder
-from hearthstone.training.pytorch.encoding.state_encoding import Transition
+from hearthstone.training.common.state_encoding import Transition
 from hearthstone.training.pytorch.networks.feedforward_net import HearthstoneFFNet
 from hearthstone.training.pytorch.policy_gradient import easier_contestants, tensorize_batch
 from hearthstone.training.pytorch.replay_buffer import ReplayBuffer
