@@ -3279,115 +3279,115 @@ class CardTests(BattleGroundsTestCase):
         player_1.hero_select_discover(DiscoverIndex(0))
         self.assertNotEqual(type(player_1.hero), SirFinleyMrrgglton)
 
-    class TestLordBarovRandomizer(DefaultRandomizer):
-        def select_draw_card(self, cards: List[MonsterCard], player_name: str, round_number: int) -> MonsterCard:
-            if player_name == "Dante_Kong":
-                return force_card(cards, RockpoolHunter)
-            if player_name == "lucy":
-                return force_card(cards, DeckSwabbie)
-            return force_card(cards, AlleyCat)
-
-        def select_player_pairings(self, players: List['Player']) -> List[Tuple['Player', 'Player']]:
-            return [(players[0], players[1])]
-
-    def test_lord_barov(self):
-        tavern = Tavern(restrict_types=False)
-        player_1 = tavern.add_player_with_hero("Dante_Kong", LordBarov())
-        player_2 = tavern.add_player_with_hero("lucy")
-        tavern.randomizer = self.TestLordBarovRandomizer()
-        tavern.buying_step()
-        tavern.combat_step()
-        tavern.buying_step()
-        player_1.purchase(StoreIndex(0))
-        player_1.summon_from_hand(HandIndex(0))
-        player_2.purchase(StoreIndex(1))
-        player_2.summon_from_hand(HandIndex(0))
-        self.assertCardListEquals(player_1.in_play, [RockpoolHunter])
-        self.assertCardListEquals(player_2.in_play, [DeckSwabbie])
-        player_1.hero_power()
-        self.assertEqual(len(player_1.hero.discover_queue[0]), 2)
-        self.assertEqual(tavern.current_player_pairings, [(player_1, player_2)])
-        player_1.hero_select_discover(DiscoverIndex(0))
-        self.assertEqual(player_1.hero.winning_pick, player_1)
-        tavern.combat_step()
-        self.assertCardListEquals(player_1.spells, [GoldCoin, GoldCoin, GoldCoin])
-        self.assertIsNone(player_1.hero.winning_pick)
-
-    def test_lord_barov_loser(self):
-        tavern = Tavern(restrict_types=False)
-        player_1 = tavern.add_player_with_hero("Dante_Kong", LordBarov())
-        player_2 = tavern.add_player_with_hero("lucy")
-        tavern.randomizer = self.TestLordBarovRandomizer()
-        tavern.buying_step()
-        tavern.combat_step()
-        tavern.buying_step()
-        player_1.purchase(StoreIndex(0))
-        player_1.summon_from_hand(HandIndex(0))
-        player_2.purchase(StoreIndex(1))
-        player_2.summon_from_hand(HandIndex(0))
-        self.assertCardListEquals(player_1.in_play, [RockpoolHunter])
-        self.assertCardListEquals(player_2.in_play, [DeckSwabbie])
-        player_1.hero_power()
-        self.assertEqual(len(player_1.hero.discover_queue[0]), 2)
-        self.assertEqual(tavern.current_player_pairings, [(player_1, player_2)])
-        player_1.hero_select_discover(DiscoverIndex(1))
-        self.assertEqual(player_1.hero.winning_pick, player_2)
-        tavern.combat_step()
-        self.assertEqual(len(player_1.spells), 0)
-        self.assertIsNone(player_1.hero.winning_pick)
-
-    def test_lord_barov_4_players(self):
-        tavern = Tavern(restrict_types=False)
-        player_1 = tavern.add_player_with_hero("Dante_Kong")
-        player_2 = tavern.add_player_with_hero("lucy")
-        player_3 = tavern.add_player_with_hero("player3", LordBarov())
-        player_4 = tavern.add_player_with_hero("player4")
-        tavern.randomizer = self.TestLordBarovRandomizer()
-        tavern.buying_step()
-        player_1.purchase(StoreIndex(0))
-        player_1.summon_from_hand(HandIndex(0))
-        player_2.purchase(StoreIndex(1))
-        player_2.summon_from_hand(HandIndex(0))
-        self.assertCardListEquals(player_1.in_play, [RockpoolHunter])
-        self.assertCardListEquals(player_2.in_play, [DeckSwabbie])
-        player_3.hero_power()
-        self.assertEqual(len(player_3.hero.discover_queue[0]), 2)
-        self.assertEqual(tavern.current_player_pairings, [(player_1, player_2)])
-        player_3.hero_select_discover(DiscoverIndex(0))
-        self.assertEqual(player_3.hero.winning_pick, player_1)
-        tavern.combat_step()
-        self.assertCardListEquals(player_3.spells, [GoldCoin, GoldCoin, GoldCoin])
-        self.assertIsNone(player_3.hero.winning_pick)
-
-    class TestLordBarovTieRandomizer(DefaultRandomizer):
-        def select_draw_card(self, cards: List[MonsterCard], player_name: str, round_number: int) -> MonsterCard:
-            return force_card(cards, DeckSwabbie)
-
-        def select_player_pairings(self, players: List['Player']) -> List[Tuple['Player', 'Player']]:
-            return [(players[0], players[1])]
-
-    def test_lord_barov_tie(self):
-        tavern = Tavern(restrict_types=False)
-        player_1 = tavern.add_player_with_hero("Dante_Kong", LordBarov())
-        player_2 = tavern.add_player_with_hero("lucy")
-        tavern.randomizer = self.TestLordBarovTieRandomizer()
-        tavern.buying_step()
-        tavern.combat_step()
-        tavern.buying_step()
-        player_1.purchase(StoreIndex(0))
-        player_1.summon_from_hand(HandIndex(0))
-        player_2.purchase(StoreIndex(1))
-        player_2.summon_from_hand(HandIndex(0))
-        self.assertCardListEquals(player_1.in_play, [DeckSwabbie])
-        self.assertCardListEquals(player_2.in_play, [DeckSwabbie])
-        player_1.hero_power()
-        self.assertEqual(len(player_1.hero.discover_queue[0]), 2)
-        self.assertEqual(tavern.current_player_pairings, [(player_1, player_2)])
-        player_1.hero_select_discover(DiscoverIndex(0))
-        self.assertEqual(player_1.hero.winning_pick, player_1)
-        tavern.combat_step()
-        self.assertCardListEquals(player_1.spells, [GoldCoin])
-        self.assertIsNone(player_1.hero.winning_pick)
+    # class TestLordBarovRandomizer(DefaultRandomizer):
+    #     def select_draw_card(self, cards: List[MonsterCard], player_name: str, round_number: int) -> MonsterCard:
+    #         if player_name == "Dante_Kong":
+    #             return force_card(cards, RockpoolHunter)
+    #         if player_name == "lucy":
+    #             return force_card(cards, DeckSwabbie)
+    #         return force_card(cards, AlleyCat)
+    #
+    #     def select_player_pairings(self, players: List['Player']) -> List[Tuple['Player', 'Player']]:
+    #         return [(players[0], players[1])]
+    #
+    # def test_lord_barov(self):
+    #     tavern = Tavern(restrict_types=False)
+    #     player_1 = tavern.add_player_with_hero("Dante_Kong", LordBarov())
+    #     player_2 = tavern.add_player_with_hero("lucy")
+    #     tavern.randomizer = self.TestLordBarovRandomizer()
+    #     tavern.buying_step()
+    #     tavern.combat_step()
+    #     tavern.buying_step()
+    #     player_1.purchase(StoreIndex(0))
+    #     player_1.summon_from_hand(HandIndex(0))
+    #     player_2.purchase(StoreIndex(1))
+    #     player_2.summon_from_hand(HandIndex(0))
+    #     self.assertCardListEquals(player_1.in_play, [RockpoolHunter])
+    #     self.assertCardListEquals(player_2.in_play, [DeckSwabbie])
+    #     player_1.hero_power()
+    #     self.assertEqual(len(player_1.hero.discover_queue[0]), 2)
+    #     self.assertEqual(tavern.current_player_pairings, [(player_1, player_2)])
+    #     player_1.hero_select_discover(DiscoverIndex(0))
+    #     self.assertEqual(player_1.hero.winning_pick, player_1)
+    #     tavern.combat_step()
+    #     self.assertCardListEquals(player_1.spells, [GoldCoin, GoldCoin, GoldCoin])
+    #     self.assertIsNone(player_1.hero.winning_pick)
+    #
+    # def test_lord_barov_loser(self):
+    #     tavern = Tavern(restrict_types=False)
+    #     player_1 = tavern.add_player_with_hero("Dante_Kong", LordBarov())
+    #     player_2 = tavern.add_player_with_hero("lucy")
+    #     tavern.randomizer = self.TestLordBarovRandomizer()
+    #     tavern.buying_step()
+    #     tavern.combat_step()
+    #     tavern.buying_step()
+    #     player_1.purchase(StoreIndex(0))
+    #     player_1.summon_from_hand(HandIndex(0))
+    #     player_2.purchase(StoreIndex(1))
+    #     player_2.summon_from_hand(HandIndex(0))
+    #     self.assertCardListEquals(player_1.in_play, [RockpoolHunter])
+    #     self.assertCardListEquals(player_2.in_play, [DeckSwabbie])
+    #     player_1.hero_power()
+    #     self.assertEqual(len(player_1.hero.discover_queue[0]), 2)
+    #     self.assertEqual(tavern.current_player_pairings, [(player_1, player_2)])
+    #     player_1.hero_select_discover(DiscoverIndex(1))
+    #     self.assertEqual(player_1.hero.winning_pick, player_2)
+    #     tavern.combat_step()
+    #     self.assertEqual(len(player_1.spells), 0)
+    #     self.assertIsNone(player_1.hero.winning_pick)
+    #
+    # def test_lord_barov_4_players(self):
+    #     tavern = Tavern(restrict_types=False)
+    #     player_1 = tavern.add_player_with_hero("Dante_Kong")
+    #     player_2 = tavern.add_player_with_hero("lucy")
+    #     player_3 = tavern.add_player_with_hero("player3", LordBarov())
+    #     player_4 = tavern.add_player_with_hero("player4")
+    #     tavern.randomizer = self.TestLordBarovRandomizer()
+    #     tavern.buying_step()
+    #     player_1.purchase(StoreIndex(0))
+    #     player_1.summon_from_hand(HandIndex(0))
+    #     player_2.purchase(StoreIndex(1))
+    #     player_2.summon_from_hand(HandIndex(0))
+    #     self.assertCardListEquals(player_1.in_play, [RockpoolHunter])
+    #     self.assertCardListEquals(player_2.in_play, [DeckSwabbie])
+    #     player_3.hero_power()
+    #     self.assertEqual(len(player_3.hero.discover_queue[0]), 2)
+    #     self.assertEqual(tavern.current_player_pairings, [(player_1, player_2)])
+    #     player_3.hero_select_discover(DiscoverIndex(0))
+    #     self.assertEqual(player_3.hero.winning_pick, player_1)
+    #     tavern.combat_step()
+    #     self.assertCardListEquals(player_3.spells, [GoldCoin, GoldCoin, GoldCoin])
+    #     self.assertIsNone(player_3.hero.winning_pick)
+    #
+    # class TestLordBarovTieRandomizer(DefaultRandomizer):
+    #     def select_draw_card(self, cards: List[MonsterCard], player_name: str, round_number: int) -> MonsterCard:
+    #         return force_card(cards, DeckSwabbie)
+    #
+    #     def select_player_pairings(self, players: List['Player']) -> List[Tuple['Player', 'Player']]:
+    #         return [(players[0], players[1])]
+    #
+    # def test_lord_barov_tie(self):
+    #     tavern = Tavern(restrict_types=False)
+    #     player_1 = tavern.add_player_with_hero("Dante_Kong", LordBarov())
+    #     player_2 = tavern.add_player_with_hero("lucy")
+    #     tavern.randomizer = self.TestLordBarovTieRandomizer()
+    #     tavern.buying_step()
+    #     tavern.combat_step()
+    #     tavern.buying_step()
+    #     player_1.purchase(StoreIndex(0))
+    #     player_1.summon_from_hand(HandIndex(0))
+    #     player_2.purchase(StoreIndex(1))
+    #     player_2.summon_from_hand(HandIndex(0))
+    #     self.assertCardListEquals(player_1.in_play, [DeckSwabbie])
+    #     self.assertCardListEquals(player_2.in_play, [DeckSwabbie])
+    #     player_1.hero_power()
+    #     self.assertEqual(len(player_1.hero.discover_queue[0]), 2)
+    #     self.assertEqual(tavern.current_player_pairings, [(player_1, player_2)])
+    #     player_1.hero_select_discover(DiscoverIndex(0))
+    #     self.assertEqual(player_1.hero.winning_pick, player_1)
+    #     tavern.combat_step()
+    #     self.assertCardListEquals(player_1.spells, [GoldCoin])
+    #     self.assertIsNone(player_1.hero.winning_pick)
 
     class TestMrrggltonRatKingRandomizer(DefaultRandomizer):
         def select_hero(self, hero_pool: List['Hero']) -> 'Hero':

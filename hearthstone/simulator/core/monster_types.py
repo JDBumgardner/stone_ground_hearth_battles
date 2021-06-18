@@ -14,4 +14,4 @@ class MONSTER_TYPES(enum.Enum):
 
     @classmethod
     def single_types(cls):
-        return [monster_type for monster_type in cls if monster_type != cls.ALL]
+        return [monster_type for monster_type in cls if not monster_type in (cls.ALL, cls.NEUTRAL)]
