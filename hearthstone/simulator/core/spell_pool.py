@@ -374,12 +374,12 @@ class BigWinner(Spell):
                 store_index: Optional['StoreIndex'] = None):
         for i in range(1, 4):
             if context.owner.room_in_hand():
-                prize_choies = DARKMOON_PRIZES[i]
+                prize_choices = DARKMOON_PRIZES[i][:]
                 selected_prizes = []
                 for _ in range(3):
-                    spell_type = context.randomizer.select_spell(prize_choies)
+                    spell_type = context.randomizer.select_spell(prize_choices)
                     selected_prizes.append(spell_type())
-                    prize_choies.remove(spell_type)
+                    prize_choices.remove(spell_type)
                 context.owner.hero.discover_queue.append(selected_prizes)
 
 

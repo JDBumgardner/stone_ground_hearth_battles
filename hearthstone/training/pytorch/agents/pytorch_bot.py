@@ -34,6 +34,7 @@ class PytorchBot(AnnotatingAgent):
 
     async def act(self, player: 'Player', rearrange_cards: bool) -> (Action, ActorCriticGameStepInfo):
         with torch.no_grad():
+            discover_queue_empty = player.discover_queue == []
             encoded_state: State = self.encoder.encode_state(player).to(self.device)
             valid_actions_mask: EncodedActionSet = self.encoder.encode_valid_actions(player, rearrange_cards).to(
                 self.device)

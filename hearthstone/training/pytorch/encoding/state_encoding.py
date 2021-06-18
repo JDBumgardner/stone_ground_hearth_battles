@@ -236,7 +236,7 @@ class SpellComponent(ActionComponent):
         self.index = index
 
     def valid(self, player: 'Player'):
-        return player.spell_can_be_played(self.index)
+        return player.valid_standard_action() and player.spell_can_be_played(self.index)
 
     def __repr__(self):
         return f"PlaySpell({self.index}, ?)"
