@@ -16,6 +16,7 @@ from hearthstone.simulator.agent.actions import Action
 from hearthstone.simulator.core.hero import EmptyHero
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 from hearthstone.simulator.core.tavern import Tavern
+from hearthstone.training.common.state_encoding import State
 from hearthstone.training.pytorch.encoding.default_encoder import \
     EncodedActionSet
 from hearthstone.training.pytorch.replay import ActorCriticGameStepInfo
@@ -68,14 +69,8 @@ def easy_contestants():
         Contestant("PriorityHealthAttackBot", lambda: PriorityFunctions.attack_health_priority_bot(10, PriorityBot))]
     return all_bots
 
-
-class StateBatch(NamedTuple):
-    player_tensor: torch.Tensor
-    cards_tensor: torch.Tensor
-
-
 class TransitionBatch(NamedTuple):
-    state: StateBatch
+    state: State
     valid_actions: EncodedActionSet
     action: List[Action]
     action_log_prob: torch.Tensor
@@ -91,12 +86,24 @@ class TransitionBatch(NamedTuple):
 def tensorize_batch(transitions: List[ActorCriticGameStepInfo], device: torch.device) -> TransitionBatch:
     player_tensor = torch.stack([transition.state.player_tensor for transition in transitions]).detach()
     cards_tensor = torch.stack([transition.state.cards_tensor for transition in transitions]).detach()
+    spells_tensor = torch.stack([transition.state.spells_tensor for transition in transitions]).detach()
+
     valid_player_actions_tensor = torch.stack(
         [transition.valid_actions.player_action_tensor for transition in transitions]).detach()
     valid_card_actions_tensor = torch.stack(
         [transition.valid_actions.card_action_tensor for transition in transitions]).detach()
+    valid_no_target_battlecry_tensor = torch.stack(
+        [transition.valid_actions.no_target_battlecry_tensor for transition in transitions], dim=0).detach()
     valid_battlecry_target_tensor = torch.stack(
         [transition.valid_actions.battlecry_target_tensor for transition in transitions]).detach()
+    valid_spell_action_tensor = torch.stack(
+        [transition.valid_actions.spell_action_tensor for transition in transitions], dim=0).detach()
+    valid_no_target_spell_action_tensor = torch.stack(
+        [transition.valid_actions.no_target_spell_action_tensor for transition in transitions], dim=0).detach()
+    valid_store_target_spell_action_tensor = torch.stack(
+        [transition.valid_actions.store_target_spell_action_tensor for transition in transitions], dim=0).detach()
+    valid_board_target_spell_action_tensor = torch.stack(
+        [transition.valid_actions.board_target_spell_action_tensor for transition in transitions], dim=0).detach()
     rearrange_phase = torch.stack([transition.valid_actions.rearrange_phase for transition in transitions]).detach()
     cards_to_rearrange = torch.stack(
         [transition.valid_actions.cards_to_rearrange for transition in transitions]).detach()
@@ -110,16 +117,22 @@ def tensorize_batch(transitions: List[ActorCriticGameStepInfo], device: torch.de
     debug_component_policy_tensor = torch.cat([transition.debug.component_policy for transition in transitions],
                                               dim=0).detach()
 
-    return TransitionBatch(StateBatch(player_tensor.to(device), cards_tensor.to(device)),
-                           EncodedActionSet(valid_player_actions_tensor.to(device),
-                                            valid_card_actions_tensor.to(device),
-                                            valid_battlecry_target_tensor.to(device),
-                                            rearrange_phase.to(device),
-                                            cards_to_rearrange.to(device),
-                                            transitions[0].valid_actions.store_start,
-                                            transitions[0].valid_actions.hand_start,
-                                            transitions[0].valid_actions.board_start,
-                                            ),
+    return TransitionBatch(State(player_tensor.to(device), cards_tensor.to(device), spells_tensor.to(device)),
+                           EncodedActionSet(
+                               player_action_tensor=valid_player_actions_tensor,
+                               card_action_tensor=valid_card_actions_tensor,
+                               no_target_battlecry_tensor=valid_no_target_battlecry_tensor,
+                               battlecry_target_tensor=valid_battlecry_target_tensor,
+                               spell_action_tensor=valid_spell_action_tensor,
+                               no_target_spell_action_tensor=valid_no_target_spell_action_tensor,
+                               store_target_spell_action_tensor=valid_store_target_spell_action_tensor,
+                               board_target_spell_action_tensor=valid_board_target_spell_action_tensor,
+                               rearrange_phase=rearrange_phase.to(device),
+                               cards_to_rearrange=cards_to_rearrange.to(device),
+                               store_start=transitions[0].valid_actions.store_start,
+                               hand_start=transitions[0].valid_actions.hand_start,
+                               board_start=transitions[0].valid_actions.board_start,
+                           ).to(device),
                            action_list,
                            action_log_prob_tensor.to(device),
                            value_tensor.to(device),

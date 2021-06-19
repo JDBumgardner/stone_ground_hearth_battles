@@ -268,13 +268,12 @@ class HearthstoneTransformerNet(nn.Module):
         def get_action_target_index(action):
             if isinstance(action, SummonAction) and action.targets:
                 return action.targets[0] + 1 + store_size
-            elif isinstance(action, PlaySpellAction):
+            if isinstance(action, PlaySpellAction):
                 if action.board_target:
                     return action.board_target + 1 + store_size
                 if action.store_target:
                     return action.store_target + 1
-            else:
-                return 0
+            return 0
 
         if chosen_actions:
             target_samples = torch.tensor(
