@@ -15,8 +15,7 @@ from torch.utils.tensorboard import SummaryWriter
 from hearthstone.ladder.ladder import Contestant, load_ratings, ContestantAgentGenerator
 from hearthstone.simulator.agent.actions import RearrangeCardsAction, BuyAction, EndPhaseAction, SellAction, \
     SummonAction, \
-    RerollAction, DiscoverChoiceAction, TavernUpgradeAction, TripleRewardsAction, HeroPowerAction, FreezeDecision, \
-    BananaAction, RedeemGoldCoinAction
+    RerollAction, DiscoverChoiceAction, TavernUpgradeAction, HeroPowerAction, FreezeDecision, PlaySpellAction
 from hearthstone.simulator.core.hero import EmptyHero
 from hearthstone.simulator.core.tavern import Tavern
 from hearthstone.training.pytorch.agents.pytorch_bot import PytorchBot
@@ -25,7 +24,7 @@ from hearthstone.training.pytorch.encoding.default_encoder import \
     EncodedActionSet, \
     DefaultEncoder
 from hearthstone.training.pytorch.encoding.shared_tensor_pool_encoder import SharedTensorPoolEncoder
-from hearthstone.training.pytorch.encoding.state_encoding import State
+from hearthstone.training.common.state_encoding import State
 from hearthstone.training.pytorch.gae import GAEAnnotator
 from hearthstone.training.pytorch.networks import save_load
 from hearthstone.training.pytorch.networks.running_norm import WelfordAggregator
@@ -62,7 +61,6 @@ class PPOLearner(GlobalStepContext):
         self.hparams = hparams
         self.time_limit_secs = time_limit_secs
         self.early_stopper = early_stopper
-
         # Total number of gradient descent steps we've taken. (for reporting to tensorboard)
         self.global_step = 0
         # Number of games we have plotted
@@ -330,7 +328,6 @@ class PPOLearner(GlobalStepContext):
         gae_annotator = GAEAnnotator(learning_bot_name, self.hparams['gae_gamma'], self.hparams['gae_lambda'])
         if self.hparams['parallelism.method']:
             if self.hparams['parallelism.method'] == "distributed":
-                if platform.system() != 'Windows':
                     worker_pool = DistributedWorkerPool(num_workers=self.hparams['parallelism.num_workers'],
                                                         games_per_worker=self.hparams[
                                                             'parallelism.distributed.games_per_worker'],
@@ -582,16 +579,12 @@ class PPOTensorboard:
                                sum(type(action) is RerollAction for action in self.actions), step)
         tensorboard.add_scalar("actions/upgrade",
                                sum(type(action) is TavernUpgradeAction for action in self.actions), step)
-        tensorboard.add_scalar("actions/triple_rewards",
-                               sum(type(action) is TripleRewardsAction for action in self.actions), step)
+        tensorboard.add_scalar("actions/spell_rewards",
+                               sum(type(action) is PlaySpellAction for action in self.actions), step)
         tensorboard.add_scalar("actions/discover",
                                sum(type(action) is DiscoverChoiceAction for action in self.actions), step)
         tensorboard.add_scalar("actions/hero_power",
                                sum(type(action) is HeroPowerAction for action in self.actions), step)
-        tensorboard.add_scalar("actions/banana",
-                               sum(type(action) is BananaAction for action in self.actions), step)
-        tensorboard.add_scalar("actions/redeem_gold_coin",
-                               sum(type(action) is RedeemGoldCoinAction for action in self.actions), step)
 
         tensorboard.add_scalar("critic_explanation/correlation", (
                 self.value_welford.variance() + self.return_welford.variance() - self.value_error_welford.variance()) / (

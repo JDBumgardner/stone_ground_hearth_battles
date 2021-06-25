@@ -84,5 +84,3 @@ class FrozenList:
 
     def __radd__(self, other):
         return other + self._private_list_dont_modify
-
-    __hash__ = None

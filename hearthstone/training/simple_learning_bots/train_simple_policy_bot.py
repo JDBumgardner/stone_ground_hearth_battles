@@ -7,10 +7,6 @@ from hearthstone.battlebots.random_bot import RandomBot
 from hearthstone.battlebots.simple_policy_bot import SimplePolicyBot
 from hearthstone.battlebots.supremacy_bot import SupremacyBot
 from hearthstone.ladder.ladder import Contestant, update_ratings, print_standings, save_ratings
-from hearthstone.simulator.core.monster_types import
-from hearthstone.simulator.host import RoundRobinHost
-
-MONSTER_TYPES.DRAGON, MONSTER_TYPES.MECH, MONSTER_TYPES.BEAST, MONSTER_TYPES.MURLOC, MONSTER_TYPES.DEMON, MONSTER_TYPES.PIRATE
 
 learning_rate = .1
 

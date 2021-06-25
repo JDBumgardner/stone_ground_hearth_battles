@@ -40,7 +40,7 @@ class AsyncHost(Host):
                 if player.discover_queue:
                     discover_card_action, agent_annotation = await agent.annotated_discover_choice_action(player)
                     self._apply_and_record(player_name, discover_card_action, agent_annotation)
-                elif player.hero.discover_choices:
+                elif player.hero.discover_queue:
                     hero_discover_action, agent_annotation = await agent.annotated_hero_discover_action(player)
                     self._apply_and_record(player_name, hero_discover_action, agent_annotation)
                 elif i > 40:

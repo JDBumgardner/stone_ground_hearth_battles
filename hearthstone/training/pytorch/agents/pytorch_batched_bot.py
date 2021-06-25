@@ -9,8 +9,7 @@ from torch import nn
 from hearthstone.simulator.agent.actions import StandardAction, RearrangeCardsAction, DiscoverChoiceAction, \
     HeroDiscoverAction, Action
 from hearthstone.simulator.agent.agent import AnnotatingAgent
-from hearthstone.training.pytorch.encoding.state_encoding import EncodedActionSet, State, Encoder
-from hearthstone.training.pytorch.policy_gradient import StateBatch
+from hearthstone.training.common.state_encoding import EncodedActionSet, State, Encoder
 from hearthstone.training.pytorch.replay import ActorCriticGameStepDebugInfo, ActorCriticGameStepInfo
 
 
@@ -65,7 +64,7 @@ class BatchedInferencePytorchBot(AnnotatingAgent):
         return action, ac_game_step_info
 
     async def annotated_hero_discover_action(self, player: 'Player') -> ('HeroDiscoverAction', ActorCriticGameStepInfo):
-        return HeroDiscoverAction(random.choice(range(len(player.hero.discover_choices)))), None
+        return HeroDiscoverAction(random.choice(range(len(player.hero.discover_queue)))), None
 
     async def game_over(self, player: 'Player', ranking: int) -> Dict[str, Any]:
         return {'ranking': ranking}
@@ -112,30 +111,47 @@ class BatchedInferenceQueue:
             net_name, future, args = self.communication_queue.popleft()
             self.queued_tasks_by_net[net_name].append((future, args))
 
-    def _tensorize_batch(self, batch: List[Tuple[State, EncodedActionSet]]) -> (StateBatch, EncodedActionSet):
+    def _tensorize_batch(self, batch: List[Tuple[State, EncodedActionSet]]) -> (State, EncodedActionSet):
         device = self.device
         player_tensor = torch.stack([b[0].player_tensor for b in batch], dim=0).detach()
         cards_tensor = torch.stack([b[0].cards_tensor for b in batch], dim=0).detach()
+        spells_tensor = torch.stack([b[0].spells_tensor for b in batch], dim=0).detach()
         valid_player_actions_tensor = torch.stack(
             [b[1].player_action_tensor for b in batch], dim=0).detach()
         valid_card_actions_tensor = torch.stack(
             [b[1].card_action_tensor for b in batch], dim=0).detach()
+        valid_no_target_battlecry_tensor = torch.stack(
+            [b[1].no_target_battlecry_tensor for b in batch], dim=0).detach()
         valid_battlecry_target_tensor = torch.stack([b[1].battlecry_target_tensor for b in batch], dim=0).detach()
+        valid_spell_action_tensor = torch.stack(
+            [b[1].spell_action_tensor for b in batch], dim=0).detach()
+        valid_no_target_spell_action_tensor = torch.stack(
+            [b[1].no_target_spell_action_tensor for b in batch], dim=0).detach()
+        valid_store_target_spell_action_tensor = torch.stack(
+            [b[1].store_target_spell_action_tensor for b in batch], dim=0).detach()
+        valid_board_target_spell_action_tensor = torch.stack(
+            [b[1].board_target_spell_action_tensor for b in batch], dim=0).detach()
         rearrange_phase = torch.stack([b[1].rearrange_phase for b in batch], dim=0).detach()
         cards_to_rearrange = torch.stack(
             [b[1].cards_to_rearrange for b in batch], dim=0).detach()
-        return (StateBatch(player_tensor=player_tensor.to(device),
-                           cards_tensor=cards_tensor.to(device)),
+        return (State(player_tensor=player_tensor.to(device),
+                      cards_tensor=cards_tensor.to(device),
+                      spells_tensor=spells_tensor.to(device)),
                 EncodedActionSet(
-                    player_action_tensor=valid_player_actions_tensor.to(device),
-                    card_action_tensor=valid_card_actions_tensor.to(device),
-                    battlecry_target_tensor=valid_battlecry_target_tensor.to(device),
+                    player_action_tensor=valid_player_actions_tensor,
+                    card_action_tensor=valid_card_actions_tensor,
+                    no_target_battlecry_tensor=valid_no_target_battlecry_tensor,
+                    battlecry_target_tensor=valid_battlecry_target_tensor,
+                    spell_action_tensor=valid_spell_action_tensor,
+                    no_target_spell_action_tensor=valid_no_target_spell_action_tensor,
+                    store_target_spell_action_tensor=valid_store_target_spell_action_tensor,
+                    board_target_spell_action_tensor=valid_board_target_spell_action_tensor,
                     rearrange_phase=rearrange_phase.to(device),
                     cards_to_rearrange=cards_to_rearrange.to(device),
                     store_start=batch[0][1].store_start,
                     hand_start=batch[0][1].hand_start,
                     board_start=batch[0][1].board_start,
-                ))
+                ).to(device))
 
     def _worker_thread(self):
         while True:

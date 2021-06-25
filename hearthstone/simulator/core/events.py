@@ -3,6 +3,7 @@ import typing
 from typing import Optional, List, Set
 
 import autoslot
+from boltons.setutils import IndexedSet
 
 if typing.TYPE_CHECKING:
     from hearthstone.simulator.core.combat_event_queue import CombatEventQueue
@@ -42,7 +43,7 @@ class EVENTS(enum.Enum):
 class CardEvent(autoslot.Slots):
     def __init__(self, eventid: EVENTS):
         self.event = eventid
-        self.card = None
+        self.card: Optional[MonsterCard] = None
 
 
 class SummonBuyEvent(CardEvent):
@@ -122,14 +123,14 @@ class BuyEndEvent(CardEvent):
 
 
 class CardDamagedEvent(CardEvent):
-    def __init__(self, card: 'MonsterCard', foe: 'MonsterCard'):
+    def __init__(self, card: 'MonsterCard', foe: 'Optional[MonsterCard]'):
         super().__init__(EVENTS.CARD_DAMAGED)
         self.card = card
         self.foe = foe
 
 
 class DivineShieldLostEvent(CardEvent):
-    def __init__(self, card: 'MonsterCard', foe: 'MonsterCard'):
+    def __init__(self, card: 'MonsterCard', foe: 'Optional[MonsterCard]'):
         super().__init__(EVENTS.DIVINE_SHIELD_LOST)
         self.card = card
         self.foe = foe
@@ -192,8 +193,8 @@ class BuyPhaseContext(autoslot.Slots):
         return summon_multiplier
 
     def battlecry_multiplier(self) -> int:
-        return max(
-            [card.battlecry_multiplier() for card in self.owner.in_play] + [self.owner.hero.battlecry_multiplier()])
+        return max(*[card.battlecry_multiplier() for card in self.owner.in_play],
+                   self.owner.hero.battlecry_multiplier(), self.owner.battlecry_multiplier)
 
 
 class CombatPhaseContext(autoslot.Slots):
@@ -214,6 +215,10 @@ class CombatPhaseContext(autoslot.Slots):
             card.handle_event(event, self)
         for card in self.enemy_war_party.board.copy():
             card.handle_event(event, self.enemy_context())
+        for secret in self.friendly_war_party.owner.secrets.copy():
+            secret.handle_event(event, self)
+        for secret in self.enemy_war_party.owner.secrets.copy():
+            secret.handle_event(event, self.enemy_context())
 
     def enemy_context(self):
         return CombatPhaseContext(self.enemy_war_party, self.friendly_war_party, self.randomizer, self.event_queue,

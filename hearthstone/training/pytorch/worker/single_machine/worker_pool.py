@@ -14,7 +14,7 @@ from hearthstone.training.pytorch import tensorboard_altair
 from hearthstone.training.pytorch.agents.pytorch_batched_bot import BatchedInferenceQueue, BatchedInferencePytorchBot
 from hearthstone.training.pytorch.agents.pytorch_bot import PytorchBot
 from hearthstone.training.pytorch.encoding import shared_tensor_pool_encoder
-from hearthstone.training.pytorch.encoding.state_encoding import Encoder
+from hearthstone.training.common.state_encoding import Encoder
 from hearthstone.training.pytorch.gae import GAEAnnotator
 from hearthstone.training.pytorch.replay_buffer import EpochBuffer
 from hearthstone.training.pytorch.surveillance import GlobalStepContext

@@ -11,7 +11,7 @@ from hearthstone.simulator.agent.actions import StandardAction, DiscoverChoiceAc
 from hearthstone.simulator.agent.agent import AnnotatingAgent
 from hearthstone.training.pytorch.encoding.default_encoder import \
     EncodedActionSet
-from hearthstone.training.pytorch.encoding.state_encoding import State, Encoder
+from hearthstone.training.common.state_encoding import State, Encoder
 from hearthstone.training.pytorch.replay import ActorCriticGameStepInfo
 
 logger = logging.getLogger(__name__)
@@ -34,21 +34,13 @@ class PytorchBot(AnnotatingAgent):
 
     async def act(self, player: 'Player', rearrange_cards: bool) -> (Action, ActorCriticGameStepInfo):
         with torch.no_grad():
+            discover_queue_empty = player.discover_queue == []
             encoded_state: State = self.encoder.encode_state(player).to(self.device)
             valid_actions_mask: EncodedActionSet = self.encoder.encode_valid_actions(player, rearrange_cards).to(
                 self.device)
             actions, action_log_probs, value, debug = await self.async_net(
-                State(encoded_state.player_tensor.unsqueeze(0),
-                      encoded_state.cards_tensor.unsqueeze(0)),
-                EncodedActionSet(
-                    valid_actions_mask.player_action_tensor.unsqueeze(0),
-                    valid_actions_mask.card_action_tensor.unsqueeze(0),
-                    valid_actions_mask.battlecry_target_tensor.unsqueeze(0),
-                    valid_actions_mask.rearrange_phase.unsqueeze(0),
-                    valid_actions_mask.cards_to_rearrange.unsqueeze(0),
-                    valid_actions_mask.store_start,
-                    valid_actions_mask.hand_start,
-                    valid_actions_mask.board_start),
+                encoded_state.unsqueeze(),
+                valid_actions_mask.unsqueeze(),
                 None)
             assert (len(actions) == 1)
             action = actions[0]
@@ -83,7 +75,7 @@ class PytorchBot(AnnotatingAgent):
         return action, ac_game_step_info
 
     async def annotated_hero_discover_action(self, player: 'Player') -> ('HeroDiscoverAction', ActorCriticGameStepInfo):
-        return HeroDiscoverAction(random.choice(range(len(player.hero.discover_choices)))), None
+        return HeroDiscoverAction(random.choice(range(len(player.hero.discover_queue)))), None
 
     async def game_over(self, player: 'Player', ranking: int) -> Dict[str, Any]:
         return {'ranking': ranking}

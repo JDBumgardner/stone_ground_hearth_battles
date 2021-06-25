@@ -10,6 +10,7 @@ from hearthstone.simulator.core.cards import MonsterCard, one_minion_per_type, C
 from hearthstone.simulator.core.combat import logger
 from hearthstone.simulator.core.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
+from hearthstone.simulator.core.spell_pool import GoldCoin
 
 
 class MamaBear(MonsterCard):
@@ -93,7 +94,7 @@ class AlleyCat(MonsterCard):
 
 
 class TabbyCat(MonsterCard):
-    base_token = True
+    not_in_pool = True
     tier = 1
     monster_type = MONSTER_TYPES.BEAST
     pool = MONSTER_TYPES.BEAST
@@ -198,7 +199,7 @@ class MurlocTidehunter(MonsterCard):
 
 
 class MurlocScout(MonsterCard):
-    base_token = True
+    not_in_pool = True
     tier = 1
     monster_type = MONSTER_TYPES.MURLOC
     pool = MONSTER_TYPES.MURLOC
@@ -285,7 +286,7 @@ class HarvestGolem(MonsterCard):
 
 
 class DamagedGolem(MonsterCard):
-    base_token = True
+    not_in_pool = True
     tier = 1
     monster_type = MONSTER_TYPES.MECH
     pool = MONSTER_TYPES.MECH
@@ -329,7 +330,7 @@ class KindlyGrandmother(MonsterCard):
 
 
 class BigBadWolf(MonsterCard):
-    base_token = True
+    not_in_pool = True
     tier = 1
     monster_type = MONSTER_TYPES.BEAST
     pool = MONSTER_TYPES.BEAST
@@ -401,7 +402,7 @@ class Imprisoner(MonsterCard):
 
 
 class Imp(MonsterCard):
-    base_token = True
+    not_in_pool = True
     tier = 1
     monster_type = MONSTER_TYPES.DEMON
     pool = MONSTER_TYPES.DEMON
@@ -468,7 +469,7 @@ class Scallywag(MonsterCard):
 
 class SkyPirate(MonsterCard):
     tier = 1
-    base_token = True
+    not_in_pool = True
     monster_type = MONSTER_TYPES.PIRATE
     pool = MONSTER_TYPES.PIRATE
     base_attack = 1
@@ -563,7 +564,7 @@ class Rat(MonsterCard):
     pool = MONSTER_TYPES.BEAST
     base_attack = 1
     base_health = 1
-    base_token = True
+    not_in_pool = True
 
 
 class NathrezimOverseer(MonsterCard):
@@ -614,6 +615,7 @@ class CrystalWeaver(MonsterCard):
     tier = 3
     base_attack = 5
     base_health = 4
+    monster_type = MONSTER_TYPES.NEUTRAL
     pool = MONSTER_TYPES.DEMON
     mana_cost = 4
 
@@ -643,7 +645,7 @@ class MechanoEgg(MonsterCard):
 
 
 class Robosaur(MonsterCard):
-    base_token = True
+    not_in_pool = True
     tier = 1
     monster_type = MONSTER_TYPES.MECH
     pool = MONSTER_TYPES.MECH
@@ -673,6 +675,7 @@ class SpawnOfNzoth(MonsterCard):
     base_attack = 2
     base_health = 2
     mana_cost = 3
+    monster_type = MONSTER_TYPES.NEUTRAL
 
     def base_deathrattle(self, context: CombatPhaseContext):
         bonus = 2 if self.golden else 1
@@ -750,6 +753,8 @@ class Houndmaster(MonsterCard):
     base_health = 3
     num_battlecry_targets = [1]
     mana_cost = 4
+    monster_type = MONSTER_TYPES.NEUTRAL
+    pool = MONSTER_TYPES.BEAST
 
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
         bonus = 4 if self.golden else 2
@@ -801,7 +806,7 @@ class Spider(MonsterCard):
     tier = 1
     base_attack = 1
     base_health = 1
-    base_token = True
+    not_in_pool = True
     monster_type = MONSTER_TYPES.BEAST
     pool = MONSTER_TYPES.BEAST
 
@@ -951,7 +956,7 @@ class Hyena(MonsterCard):
     base_health = 2
     monster_type = MONSTER_TYPES.BEAST
     pool = MONSTER_TYPES.BEAST
-    base_token = True
+    not_in_pool = True
 
 
 class SecurityRover(MonsterCard):
@@ -978,7 +983,7 @@ class GuardBot(MonsterCard):
     base_health = 3
     monster_type = MONSTER_TYPES.MECH
     pool = MONSTER_TYPES.MECH
-    base_token = True
+    not_in_pool = True
     base_taunt = True
 
 
@@ -1065,7 +1070,7 @@ class SouthseaCaptain(MonsterCard):
 
 class BolvarFireblood(MonsterCard):
     tier = 4
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 1
     base_health = 7
     base_divine_shield = True
@@ -1109,7 +1114,7 @@ class Amalgam(MonsterCard):
     monster_type = MONSTER_TYPES.ALL
     base_attack = 1
     base_health = 2
-    base_token = True
+    not_in_pool = True
 
 
 class ReplicatingMenace(MonsterCard):
@@ -1140,7 +1145,7 @@ class Microbot(MonsterCard):
     pool = MONSTER_TYPES.MECH
     base_attack = 1
     base_health = 1
-    base_token = True
+    not_in_pool = True
 
 
 class Junkbot(MonsterCard):
@@ -1161,7 +1166,7 @@ class Junkbot(MonsterCard):
 
 class StrongshellScavenger(MonsterCard):
     tier = 5
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 2
     base_health = 3
     mana_cost = 4
@@ -1199,7 +1204,7 @@ class Demon(MonsterCard):
     base_attack = 1
     base_health = 3
     base_taunt = True
-    base_token = True
+    not_in_pool = True
 
 
 class AnnihilanBattlemaster(MonsterCard):
@@ -1372,7 +1377,7 @@ class KalecgosArcaneAspect(MonsterCard):
 
 class NadinaTheRed(MonsterCard):
     tier = 6
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 7
     base_health = 4
     legendary = True
@@ -1387,7 +1392,7 @@ class NadinaTheRed(MonsterCard):
 
 class TheTideRazor(MonsterCard):
     tier = 6
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 6
     base_health = 4
     pool = MONSTER_TYPES.PIRATE
@@ -1477,7 +1482,7 @@ class IronhideRunt(MonsterCard):
     pool = MONSTER_TYPES.BEAST
     base_attack = 5
     base_health = 5
-    base_token = True
+    not_in_pool = True
 
 
 class NatPagleExtremeAngler(MonsterCard):
@@ -1533,7 +1538,7 @@ class MalGanis(MonsterCard):
 
 class BaronRivendare(MonsterCard):
     tier = 5
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 1
     base_health = 7
     legendary = True
@@ -1545,7 +1550,7 @@ class BaronRivendare(MonsterCard):
 
 class BrannBronzebeard(MonsterCard):
     tier = 5
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 2
     base_health = 4
     legendary = True
@@ -1597,7 +1602,7 @@ class YoHoOgre(MonsterCard):
 
 class WaxriderTogwaggle(MonsterCard):
     tier = 2
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 1
     base_health = 3
     legendary = True
@@ -1629,7 +1634,7 @@ class HangryDragon(MonsterCard):
 
 class LightfangEnforcer(MonsterCard):
     tier = 5
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 2
     base_health = 2
     mana_cost = 6
@@ -1644,7 +1649,7 @@ class LightfangEnforcer(MonsterCard):
 
 class MenagerieMug(MonsterCard):
     tier = 2
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 2
     base_health = 2
     mana_cost = 3
@@ -1662,7 +1667,7 @@ class MenagerieMug(MonsterCard):
 
 class MenagerieJug(MonsterCard):
     tier = 4
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 3
     base_health = 3
     mana_cost = 5
@@ -1698,7 +1703,7 @@ class MicroMummy(MonsterCard):
 
 class KangorsApprentice(MonsterCard):
     tier = 6
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 4
     base_health = 8
     pool = MONSTER_TYPES.MECH
@@ -1716,7 +1721,7 @@ class KangorsApprentice(MonsterCard):
 
 class ZappSlywick(MonsterCard):
     tier = 6
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 7
     base_health = 10
     base_windfury = True
@@ -1833,10 +1838,10 @@ class CobaltScalebane(MonsterCard):
 
 class FinkleEinhorn(MonsterCard):
     tier = 1
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 3
     base_health = 3
-    base_token = True
+    not_in_pool = True
 
 
 class SouthseaStrongarm(MonsterCard):
@@ -1884,8 +1889,9 @@ class PrimalfinLookout(MonsterCard):
         if murloc_in_play:
             num_discovers = 2 if self.golden else 1
             for _ in range(num_discovers):
-                context.owner.draw_discover(lambda card: card.check_type(
-                    MONSTER_TYPES.MURLOC) and card.tier <= context.owner.tavern_tier and type(card) != type(self))
+                if context.owner.room_in_hand():
+                    context.owner.draw_discover(lambda card: card.check_type(
+                        MONSTER_TYPES.MURLOC) and card.tier <= context.owner.tavern_tier and type(card) != type(self))
 
 
 class Murozond(MonsterCard):
@@ -1973,7 +1979,7 @@ class CracklingCyclone(MonsterCard):
 
 class DeadlySpore(MonsterCard):
     tier = 5
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 1
     base_health = 1
     base_poisonous = True
@@ -2019,7 +2025,7 @@ class WaterDroplet(MonsterCard):
     pool = MONSTER_TYPES.ELEMENTAL
     base_attack = 2
     base_health = 2
-    base_token = True
+    not_in_pool = True
 
 
 class LilRag(MonsterCard):
@@ -2093,7 +2099,7 @@ class GentleDjinni(MonsterCard):
 
 class NomiKitchenNightmare(MonsterCard):
     tier = 5
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 4
     base_health = 4
     legendary = True
@@ -2116,12 +2122,12 @@ class RefreshingAnomaly(MonsterCard):
     mana_cost = 1
 
     def base_battlecry(self, targets: List['MonsterCard'], context: 'BuyPhaseContext'):
-        context.owner.free_refreshes = max((2 if self.golden else 1), context.owner.free_refreshes)
+        context.owner.set_free_refreshes(2 if self.golden else 1)
 
 
 class MajordomoExecutus(MonsterCard):
     tier = 4
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 6
     base_health = 3
     pool = MONSTER_TYPES.ELEMENTAL
@@ -2184,7 +2190,7 @@ class EmperorCobra(MonsterCard):
     base_attack = 2
     base_health = 3
     base_poisonous = True
-    base_token = True
+    not_in_pool = True
 
 
 class Snake(MonsterCard):
@@ -2193,12 +2199,12 @@ class Snake(MonsterCard):
     pool = MONSTER_TYPES.BEAST
     base_attack = 1
     base_health = 1
-    base_token = True
+    not_in_pool = True
 
 
 class AcolyteOfCThun(MonsterCard):
     tier = 1
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 2
     base_health = 2
     base_taunt = True
@@ -2207,7 +2213,7 @@ class AcolyteOfCThun(MonsterCard):
 
 class TormentedRitualist(MonsterCard):
     tier = 2
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 2
     base_health = 3
     base_taunt = True
@@ -2228,13 +2234,12 @@ class WardenOfOld(MonsterCard):
 
     def base_deathrattle(self, context: 'CombatPhaseContext'):
         for _ in range(2 if self.golden else 1):
-            if context.friendly_war_party.owner.room_in_hand():
-                context.friendly_war_party.owner.gold_coins += 1
+            context.friendly_war_party.owner.gain_spell(GoldCoin())
 
 
 class ArmOfTheEmpire(MonsterCard):
     tier = 3
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 4
     base_health = 5
 
@@ -2267,7 +2272,7 @@ class Bigfernal(MonsterCard):
 
 class QirajiHarbinger(MonsterCard):
     tier = 4
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 5
     base_health = 5
 
@@ -2281,7 +2286,7 @@ class QirajiHarbinger(MonsterCard):
 
 class ChampionOfYShaarj(MonsterCard):
     tier = 4
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 4
     base_health = 4
 
@@ -2297,7 +2302,7 @@ class ChampionOfYShaarj(MonsterCard):
 
 class MythraxTheUnraveler(MonsterCard):
     tier = 5
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 4
     base_health = 4
     legendary = True
@@ -2314,7 +2319,7 @@ class FishOfNZoth(MonsterCard):
     monster_type = MONSTER_TYPES.BEAST
     base_attack = 1
     base_health = 1
-    base_token = True
+    not_in_pool = True
     legendary = True
 
     def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
@@ -2348,7 +2353,7 @@ class FieryImp(MonsterCard):
     pool = MONSTER_TYPES.DEMON
     base_attack = 3
     base_health = 2
-    base_token = True
+    not_in_pool = True
 
 
 class SoulDevourer(MonsterCard):
@@ -2384,6 +2389,23 @@ class BristlebackKnight(MonsterCard):
         self.divine_shield = True
 
 
+class ArgentBraggart(MonsterCard):
+    tier = 6
+    monster_type = MONSTER_TYPES.NEUTRAL
+    base_attack = 1
+    base_health = 1
+    not_in_pool = True  # argent braggart is not in the minion pool
+
+    def __init__(self):
+        super().__init__()
+        self.token = False
+
+    def base_battlecry(self, targets: List['MonsterCard'], context: 'BuyPhaseContext'):
+        multiplier = 2 if self.golden else 1
+        self.attack = max(card.attack for card in context.owner.in_play) * multiplier
+        self.health = max(card.health for card in context.owner.in_play) * multiplier
+
+
 # TODO: add Faceless Taverngoer - add option to target store minions
 
 
@@ -2399,10 +2421,10 @@ class PrintingPress:
                    include_graveyard: Optional[bool] = False) -> 'CardList':
         cardlist = []
         for card in cls.cards + (REMOVED_CARDS if include_graveyard else []):
-            if not card.base_token and (card.pool in available_types or card.pool == MONSTER_TYPES.ALL):
+            if not card.not_in_pool and (card.pool in available_types or card.pool == MONSTER_TYPES.ALL):
                 cardlist.extend([card() for _ in range(cls.cards_per_tier[card.tier])])
         return CardList(cardlist)
 
     @classmethod
     def all_types(cls):
-        return [card_type for card_type in cls.cards if not card_type.base_token]
+        return [card_type for card_type in cls.cards if not card_type.not_in_pool]

@@ -16,6 +16,8 @@ from hearthstone.testing.battlegrounds_test_case import BattleGroundsTestCase
 
 
 class CombatTests(BattleGroundsTestCase):
+    def assertCardListEquals(self, cards, expected, msg=None):
+        self.assertListEqual([type(card) for card in cards], expected, msg=msg)
 
     def test_taunt(self):
         diana = Player.new_player_with_hero(Tavern(), "Diana")
@@ -1127,14 +1129,14 @@ class CombatTests(BattleGroundsTestCase):
         tavern = Tavern()
         adam = tavern.add_player_with_hero("Adam", TheGreatAkazamzarak())
         ethan = tavern.add_player_with_hero("Ethan")
-        adam.hero.secrets.append(SECRETS.ICE_BLOCK)
+        adam.secrets.append(BaseSecret.IceBlock())
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adam.health = 1
         ethans_war_party.board = [Amalgadon()]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 1)
-        self.assertEqual(len(adam.hero.secrets), 0)
+        self.assertEqual(len(adam.secrets), 0)
         self.assertTrue(adam.hero.give_immunity)
         self.assertFalse(adam.dead)
 
@@ -1142,7 +1144,7 @@ class CombatTests(BattleGroundsTestCase):
         tavern = Tavern()
         adam = tavern.add_player_with_hero("Adam", TheGreatAkazamzarak())
         ethan = tavern.add_player_with_hero("Ethan")
-        adam.hero.secrets.append(SECRETS.SPLITTING_IMAGE)
+        adam.secrets.append(BaseSecret.SplittingImage())
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [TwilightEmissary()]
@@ -1150,13 +1152,13 @@ class CombatTests(BattleGroundsTestCase):
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
-        self.assertEqual(len(adam.hero.secrets), 0)
+        self.assertEqual(len(adam.secrets), 0)
 
     def test_snake_trap(self):
         tavern = Tavern()
         adam = tavern.add_player_with_hero("Adam", TheGreatAkazamzarak())
         ethan = tavern.add_player_with_hero("Ethan")
-        adam.hero.secrets.append(SECRETS.SNAKE_TRAP)
+        adam.secrets.append(BaseSecret.SnakeTrap())
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [AlleyCat()]
@@ -1166,13 +1168,13 @@ class CombatTests(BattleGroundsTestCase):
         print(ethans_war_party.board)
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
-        self.assertEqual(len(adam.hero.secrets), 0)
+        self.assertEqual(len(adam.secrets), 0)
 
     def test_venomstrike_trap(self):
         tavern = Tavern()
         adam = tavern.add_player_with_hero("Adam", TheGreatAkazamzarak())
         ethan = tavern.add_player_with_hero("Ethan")
-        adam.hero.secrets.append(SECRETS.VENOMSTRIKE_TRAP)
+        adam.secrets.append(BaseSecret.VenomstrikeTrap())
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [MurlocScout()]
@@ -1180,13 +1182,13 @@ class CombatTests(BattleGroundsTestCase):
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
-        self.assertEqual(len(adam.hero.secrets), 0)
+        self.assertEqual(len(adam.secrets), 0)
 
     def test_autodefense_matrix(self):
         tavern = Tavern()
         adam = tavern.add_player_with_hero("Adam", TheGreatAkazamzarak())
         ethan = tavern.add_player_with_hero("Ethan")
-        adam.hero.secrets.append(SECRETS.AUTODEFENSE_MATRIX)
+        adam.secrets.append(BaseSecret.AutodefenseMatrix())
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [TabbyCat()]
@@ -1194,13 +1196,13 @@ class CombatTests(BattleGroundsTestCase):
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
-        self.assertEqual(len(adam.hero.secrets), 0)
+        self.assertEqual(len(adam.secrets), 0)
 
     def test_redemption(self):
         tavern = Tavern()
         adam = tavern.add_player_with_hero("Adam", TheGreatAkazamzarak())
         ethan = tavern.add_player_with_hero("Ethan")
-        adam.hero.secrets.append(SECRETS.REDEMPTION)
+        adam.secrets.append(BaseSecret.Redemption())
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [TwilightEmissary()]
@@ -1208,13 +1210,13 @@ class CombatTests(BattleGroundsTestCase):
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
-        self.assertEqual(len(adam.hero.secrets), 0)
+        self.assertEqual(len(adam.secrets), 0)
 
     def test_avenge(self):
         tavern = Tavern()
         adam = tavern.add_player_with_hero("Adam", TheGreatAkazamzarak())
         ethan = tavern.add_player_with_hero("Ethan")
-        adam.hero.secrets.append(SECRETS.AVENGE)
+        adam.secrets.append(BaseSecret.Avenge())
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [TwilightEmissary(), AlleyCat()]
@@ -1222,7 +1224,7 @@ class CombatTests(BattleGroundsTestCase):
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
-        self.assertEqual(len(adam.hero.secrets), 0)
+        self.assertEqual(len(adam.secrets), 0)
 
     def test_illidan_stormrage_triggers_before_red_whelp(self):
         tavern = Tavern()
@@ -1309,7 +1311,7 @@ class CombatTests(BattleGroundsTestCase):
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
-        self.assertEqual(adam.gold_coins, 1)
+        self.assertCardListEquals(adam.spells, [GoldCoin])
 
     def test_arm_of_the_empire(self):
         tavern = Tavern()
@@ -1499,7 +1501,7 @@ class CombatTests(BattleGroundsTestCase):
         tavern = Tavern()
         adam = tavern.add_player_with_hero("Adam", TheGreatAkazamzarak())
         ethan = tavern.add_player_with_hero("Ethan")
-        adam.hero.secrets.append(SECRETS.SPLITTING_IMAGE)
+        adam.secrets.append(BaseSecret.SplittingImage())
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         alleycat = AlleyCat()
@@ -1514,7 +1516,7 @@ class CombatTests(BattleGroundsTestCase):
         tavern = Tavern()
         adam = tavern.add_player_with_hero("Adam")
         ethan = tavern.add_player_with_hero("Ethan", TheGreatAkazamzarak())
-        ethan.hero.secrets.append(SECRETS.SPLITTING_IMAGE)
+        ethan.secrets.append(BaseSecret.SplittingImage())
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [AlleyCat() for _ in range(7)]
@@ -1527,7 +1529,7 @@ class CombatTests(BattleGroundsTestCase):
         tavern = Tavern()
         adam = tavern.add_player_with_hero("Adam", TheGreatAkazamzarak())
         ethan = tavern.add_player_with_hero("Ethan")
-        adam.hero.secrets.append(SECRETS.SPLITTING_IMAGE)
+        adam.secrets.append(BaseSecret.SplittingImage())
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [LieutenantGarr(), Khadgar()]
@@ -1540,7 +1542,7 @@ class CombatTests(BattleGroundsTestCase):
         tavern = Tavern()
         adam = tavern.add_player_with_hero("Adam", TheGreatAkazamzarak())
         ethan = tavern.add_player_with_hero("Ethan")
-        adam.hero.secrets.append(SECRETS.AUTODEFENSE_MATRIX)
+        adam.secrets.append(BaseSecret.AutodefenseMatrix())
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [AlleyCat(), AnnoyOModule()]
@@ -1548,13 +1550,13 @@ class CombatTests(BattleGroundsTestCase):
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
-        self.assertEqual(len(adam.hero.secrets), 0)
+        self.assertEqual(len(adam.secrets), 0)
 
     def test_venomstrike_trap_waits(self):
         tavern = Tavern()
         adam = tavern.add_player_with_hero("Adam")
         ethan = tavern.add_player_with_hero("Ethan", TheGreatAkazamzarak())
-        ethan.hero.secrets.append(SECRETS.VENOMSTRIKE_TRAP)
+        ethan.secrets.append(BaseSecret.VenomstrikeTrap())
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [BloodsailCannoneer() for _ in range(7)]
@@ -1567,7 +1569,7 @@ class CombatTests(BattleGroundsTestCase):
         tavern = Tavern()
         adam = tavern.add_player_with_hero("Adam", TheGreatAkazamzarak())
         ethan = tavern.add_player_with_hero("Ethan")
-        adam.hero.secrets.append(SECRETS.VENOMSTRIKE_TRAP)
+        adam.secrets.append(BaseSecret.VenomstrikeTrap())
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [Khadgar()]
@@ -1580,7 +1582,7 @@ class CombatTests(BattleGroundsTestCase):
         tavern = Tavern()
         adam = tavern.add_player_with_hero("Adam")
         ethan = tavern.add_player_with_hero("Ethan", TheGreatAkazamzarak())
-        ethan.hero.secrets.append(SECRETS.SNAKE_TRAP)
+        ethan.secrets.append(BaseSecret.SnakeTrap())
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [AlleyCat() for _ in range(7)]
@@ -1593,7 +1595,7 @@ class CombatTests(BattleGroundsTestCase):
         tavern = Tavern()
         adam = tavern.add_player_with_hero("Adam", TheGreatAkazamzarak())
         ethan = tavern.add_player_with_hero("Ethan")
-        adam.hero.secrets.append(SECRETS.SNAKE_TRAP)
+        adam.secrets.append(BaseSecret.SnakeTrap())
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [Khadgar()]
@@ -1606,7 +1608,7 @@ class CombatTests(BattleGroundsTestCase):
         tavern = Tavern()
         adam = tavern.add_player_with_hero("Adam", TheGreatAkazamzarak())
         ethan = tavern.add_player_with_hero("Ethan")
-        adam.hero.secrets.append(SECRETS.REDEMPTION)
+        adam.secrets.append(BaseSecret.Redemption())
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
         adams_war_party.board = [AlleyCat(), Khadgar()]

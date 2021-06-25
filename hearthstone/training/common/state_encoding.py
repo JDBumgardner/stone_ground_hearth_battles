@@ -6,38 +6,22 @@ import torch
 
 from hearthstone.simulator.agent.actions import StandardAction, Action
 from hearthstone.simulator.core.cards import MonsterCard, CardLocation
-from hearthstone.simulator.core.player import Player, BoardIndex, HandIndex
+from hearthstone.simulator.core.player import Player, BoardIndex, HandIndex, SpellIndex
 
 
 class State(NamedTuple):
     player_tensor: torch.Tensor
     cards_tensor: torch.Tensor
+    spells_tensor: torch.Tensor
+
+    def unsqueeze(self):
+        return State(*[tensor.unsqueeze(0) for tensor in self])
 
     def to(self, device: torch.device):
         if device:
-            return State(self.player_tensor.to(device), self.cards_tensor.to(device))
+            return State(*[tensor.to(device) for tensor in self])
         else:
             return self
-
-
-class Transition(NamedTuple):
-    state: State
-    valid_actions: torch.Tensor  # Boolean
-    action: int  # Index of the action
-    action_prob: float
-    value: float
-    gae_return: float
-    retn: float
-    reward: float
-    is_terminal: bool
-
-
-def frozen_player(player: Player) -> Player:
-    player = copy.copy(player)
-    player.tavern = None
-    player = copy.deepcopy(player)
-    return player
-
 
 class LocatedCard:
     def __init__(self, card: MonsterCard, location: CardLocation):
@@ -170,9 +154,14 @@ class EncodedActionSet(NamedTuple):
     player_action_tensor: torch.Tensor
     # Boolean tensor. Dimensions are (batch index, card index, action index)
     card_action_tensor: torch.Tensor
-    # Boolean tensor. Dimensions are (batch index, hand index, target index)
-    # Note that for the target index, the 0th index is no-target, and the remainder are the board indices.
+    no_target_battlecry_tensor: torch.Tensor  # Dimensions are (batch index, hand index)
+    # Boolean tensor. Dimensions are (batch index, hand index, board index)
     battlecry_target_tensor: torch.Tensor  # Boolean tensor
+
+    spell_action_tensor: torch.Tensor  # Dimensions are (batch index, spell index, placeholder for future index)
+    no_target_spell_action_tensor: torch.Tensor  # Dimensions are (batch index, spell index)
+    store_target_spell_action_tensor: torch.Tensor  # Dimensions are (batch index, spell index, store index)
+    board_target_spell_action_tensor: torch.Tensor  # Dimensions are (batch index, spell index, board index)
 
     rearrange_phase: torch.Tensor  # Boolean
     cards_to_rearrange: torch.Tensor  # Start and length index as integers
@@ -182,13 +171,18 @@ class EncodedActionSet(NamedTuple):
     hand_start: int
     board_start: int
 
+    def unsqueeze(self):
+        return EncodedActionSet(
+            *[tensor.unsqueeze(0) for tensor in self[:-3]],
+            self.store_start,
+            self.hand_start,
+            self.board_start,
+        )
+
     def to(self, device: torch.device):
         if device:
             return EncodedActionSet(
-                self.player_action_tensor.to(device), self.card_action_tensor.to(device),
-                self.battlecry_target_tensor.to(device),
-                self.rearrange_phase.to(device),
-                self.cards_to_rearrange.to(device),
+                *[tensor.to(device) for tensor in self[:-3]],
                 self.store_start,
                 self.hand_start,
                 self.board_start,
@@ -217,11 +211,27 @@ class SummonComponent(ActionComponent):
         return f"Summon({self.index}, ?)"
 
 
+class SpellComponent(ActionComponent):
+    def __init__(self, index: SpellIndex):
+        self.index = index
+
+    def valid(self, player: 'Player'):
+        return player.valid_standard_action() and player.spell_can_be_played(self.index)
+
+    def __repr__(self):
+        return f"PlaySpell({self.index}, ?)"
+
+
 class ActionSet(NamedTuple):
     player_action_set: List[ActionComponent]
     card_action_set: List[List[ActionComponent]]
     # First dimension is card played, second dimension is card targeted (with 0 index meaning no card).
+    battlecry_no_target_action_set: List[ActionComponent]
     battlecry_action_set: List[List[ActionComponent]]
+    spell_action_set: List[ActionComponent]
+    no_target_spell_action_set: List[ActionComponent]
+    spell_store_action_set: List[List[ActionComponent]]
+    spell_board_action_set: List[List[ActionComponent]]
 
 
 class InvalidAction(StandardAction):
@@ -246,6 +256,9 @@ class Encoder:
         raise NotImplemented()
 
     def cards_encoding(self) -> Feature:
+        raise NotImplemented()
+
+    def spells_encoding(self) -> Feature:
         raise NotImplemented()
 
     def action_encoding_size(self) -> int:

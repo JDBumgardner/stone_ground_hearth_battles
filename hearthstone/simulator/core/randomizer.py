@@ -1,15 +1,18 @@
+import os
 import random
+import sys
 import typing
 from collections import deque
 from typing import List, Tuple, Type, Optional
 
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
-from hearthstone.simulator.core.secrets import SECRETS
 
 if typing.TYPE_CHECKING:
     from hearthstone.simulator.core.cards import MonsterCard
     from hearthstone.simulator.core.hero import Hero
     from hearthstone.simulator.core.player import Player
+    from hearthstone.simulator.core.secrets import Secret
+    from hearthstone.simulator.core.spell import Spell
 
 
 class Randomizer:
@@ -58,7 +61,7 @@ class Randomizer:
     def select_random_number(self, lo: int, hi: int) -> int:
         raise NotImplementedError()
 
-    def select_secret(self, secrets: List['SECRETS']) -> 'SECRETS':
+    def select_secret(self, secrets: List[Type['Secret']]) -> Type['Secret']:
         raise NotImplementedError()
 
     def select_combat_matchup(self, pairings: List[Tuple['Player', 'Player']]) -> Tuple['Player', 'Player']:
@@ -67,11 +70,14 @@ class Randomizer:
     def select_event_queue(self, queues: List[deque]) -> deque:
         raise NotImplementedError()
 
+    def select_spell(self, spell: List[Type['Spell']]) -> Type['Spell']:
+        raise NotImplementedError()
+
 
 class DefaultRandomizer(Randomizer):
     def __init__(self, seed: Optional[int] = None):
         if seed is None:
-            seed = random.random()
+            seed = random.getrandbits(32)
         self.seed = seed
         self.rand = random.Random(seed)
 
@@ -122,7 +128,7 @@ class DefaultRandomizer(Randomizer):
     def select_random_number(self, lo: int, hi: int) -> int:
         return self.rand.randint(lo, hi)
 
-    def select_secret(self, secrets: List['SECRETS']) -> 'SECRETS':
+    def select_secret(self, secrets: List[Type['Secret']]) -> Type['Secret']:
         return self.rand.choice(secrets)
 
     def select_combat_matchup(self, pairings: List[Tuple['Player', 'Player']]) -> Tuple['Player', 'Player']:
@@ -130,3 +136,6 @@ class DefaultRandomizer(Randomizer):
 
     def select_event_queue(self, queues: List[deque]) -> deque:
         return self.rand.choice(queues)
+
+    def select_spell(self, spells: List[Type['Spell']]) -> Type['Spell']:
+        return self.rand.choice(spells)

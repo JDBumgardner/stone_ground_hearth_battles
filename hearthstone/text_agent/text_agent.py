@@ -1,12 +1,13 @@
-from typing import Optional, List
+from typing import Optional, List, Union
 
 from hearthstone.simulator.agent.actions import HeroChoiceAction, RearrangeCardsAction, StandardAction, BuyAction, \
     SummonAction, SellAction, EndPhaseAction, FreezeDecision, RerollAction, TavernUpgradeAction, HeroPowerAction, \
-    TripleRewardsAction, RedeemGoldCoinAction, BananaAction, DiscoverChoiceAction, HeroDiscoverAction
+    DiscoverChoiceAction, HeroDiscoverAction, PlaySpellAction
 from hearthstone.simulator.agent.agent import Agent
 from hearthstone.simulator.core.cards import CardLocation, MonsterCard
 from hearthstone.simulator.core.hero import Hero
 from hearthstone.simulator.core.player import HandIndex, BoardIndex, StoreIndex, Player, DiscoverIndex, HeroChoiceIndex
+from hearthstone.simulator.core.spell import Spell
 
 
 class TextAgentProtocol:
@@ -90,14 +91,9 @@ class TextAgent(Agent):
         await self.print_player_card_list("store", player.store)
         await self.print_player_card_list("board", player.in_play)
         await self.print_player_card_list("hand", player.hand)
-        await self.connection.send(f"Your current triple rewards are {player.triple_rewards}\n")
+        await self.print_player_card_list("spells", player.spells)
         await self.connection.send(
             f"you have {player.coins} coins and {player.health} health and your tavern is level {player.tavern_tier}\n")
-        if player.gold_coins >= 1:
-            await self.connection.send(f"you have {player.gold_coins} gold coins\n")
-        if player.bananas >= 1:
-            await self.connection.send(
-                f"you have {player.bananas - player.big_bananas} bananas and {player.big_bananas} big bananas\n")
         await self.connection.send("available actions are: \n")
         await self.connection.send('purchase: "p 0" purchases the 0th indexed monster from the store\n')
         await self.connection.send(
@@ -107,15 +103,11 @@ class TextAgent(Agent):
         await self.connection.send(
             f'upgrade tavern: "u" will upgrade the tavern (current upgrade cost: {player.tavern_upgrade_cost if player.tavern_tier < 6 else 0})\n')
         await self.connection.send(
-            f'hero power: "h [b] [0]" will activate your hero power with ability target index 0 on the board (current cost: {player.hero.power_cost})\n')
-        if player.hero.hero_info() is not None:
-            await self.connection.send(f'hero info: {player.hero.hero_info()}\n')
-        await self.connection.send('triple rewards: "t" will use your highest tavern tier triple rewards\n')
-        if player.gold_coins >= 1:
-            await self.connection.send('coin tokens: "c" will use a coin token\n')
-        if player.bananas >= 1:
-            await self.connection.send(
-                'bananas: "b b 0" will use a banana on the 0 index board minion, "b s 0" will use a banana on the 0 index store minion\n')
+            f'hero power: "h [b/s] [0]" will activate your hero power with ability target index 0 on the board/store (current cost: {player.hero.power_cost})\n')
+        await self.connection.send(
+            f'hero power: "c 0 [b/s] [0]" plays the 0th indexed spell with ability target index 0 on the board/store\n')
+        if player.hero.hero_info(player) is not None:
+            await self.connection.send(f'hero info: {player.hero.hero_info(player)}\n')
         await self.connection.send(
             'end turn: "e f" ends the turn and freezes the shop, "e u" ends the turn and unfreezes the shop, "e" ends the turn with no changes\n')
         await self.connection.send("input action here: ")
@@ -193,22 +185,29 @@ class TextAgent(Agent):
                     if not player.valid_store_index(StoreIndex(index)):
                         return None
                     return HeroPowerAction(store_target=StoreIndex(index))
-        elif split_list[0] == "t":
-            return TripleRewardsAction()
         elif split_list[0] == "c":
-            return RedeemGoldCoinAction()
-        elif split_list[0] == "b":
-            if len(split_list) != 3:
+            if not 2 <= len(split_list) < 5:
                 return None
-            index = int(split_list[2])
-            if split_list[1] == "b":
-                if not player.valid_board_index(BoardIndex(index)):
+            try:
+                index = int(split_list[1])
+            except (ValueError, IndexError):
+                return None
+            try:
+                location = split_list[2]
+            except IndexError:
+                return PlaySpellAction(HandIndex(index))
+            try:
+                target_index = int(split_list[3])
+            except (ValueError, IndexError):
+                return None
+            if location == "b":
+                if not player.valid_board_index(BoardIndex(target_index)):
                     return None
-                return BananaAction(board_target=BoardIndex(index))
-            elif split_list[1] == "s":
-                if not player.valid_store_index(StoreIndex(index)):
+                return PlaySpellAction(HandIndex(index), board_target=BoardIndex(target_index))
+            elif location == "s":
+                if not player.valid_store_index(StoreIndex(target_index)):
                     return None
-                return BananaAction(store_target=StoreIndex(index))
+                return PlaySpellAction(HandIndex(index), store_target=StoreIndex(target_index))
         else:
             return None
 
@@ -236,7 +235,7 @@ class TextAgent(Agent):
 
     async def hero_discover_action(self, player: 'Player') -> 'HeroDiscoverAction':
         await self.connection.send(f"player {player.name}, you must choose a discover option.\n")
-        await self.print_player_card_list("discovery choices", player.hero.discover_choices)
+        await self.print_player_card_list("discovery choices", player.hero.discover_queue[0])
         await self.connection.send("input index to discover here: ")
         user_input = await self.connection.receive_line()
         while True:
@@ -251,12 +250,12 @@ class TextAgent(Agent):
         if not user_input.isnumeric():
             return None
         choice_index = int(user_input)
-        if choice_index in range(len(player.hero.discover_choices)):
+        if choice_index in range(len(player.hero.discover_queue[0])):
             return HeroDiscoverAction(DiscoverIndex(choice_index))
         else:
             return None
 
-    async def print_player_card_list(self, card_location: str, card_list: List['MonsterCard']):
+    async def print_player_card_list(self, card_location: str, card_list: List[Union['MonsterCard', 'Spell']]):
         await self.connection.send(f"your current {card_location}: \n")
         for index, card in enumerate(card_list):
             await self.connection.send(f"{index}  {card}\n")

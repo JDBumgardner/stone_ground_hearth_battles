@@ -4,21 +4,23 @@ from typing import List, Optional, Dict, Union
 import numpy as np
 import torch
 
-from hearthstone.simulator.agent.actions import TripleRewardsAction, TavernUpgradeAction, RerollAction, \
-    EndPhaseAction, BuyAction, SellAction, DiscoverChoiceAction, HeroPowerAction, \
-    FreezeDecision, BananaAction, RedeemGoldCoinAction, HeroDiscoverAction, SummonAction, Action
+from hearthstone.simulator.agent.actions import TavernUpgradeAction, RerollAction, EndPhaseAction, BuyAction, \
+    SellAction, DiscoverChoiceAction, HeroPowerAction, FreezeDecision, HeroDiscoverAction, SummonAction, Action, \
+    PlaySpellAction
 from hearthstone.simulator.core.card_pool import PrintingPress
 from hearthstone.simulator.core.cards import CardLocation
 from hearthstone.simulator.core.hero import EmptyHero
 from hearthstone.simulator.core.hero_pool import VALHALLA
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
-from hearthstone.simulator.core.player import Player, StoreIndex, HandIndex, BoardIndex, DiscoverIndex
-from hearthstone.training.pytorch.encoding.state_encoding import State, \
-    LocatedCard, Feature, ScalarFeature, OnehotFeature, CombinedFeature, ListOfFeatures, SortedByValueFeature, \
-    EncodedActionSet, Encoder, InvalidAction, ActionSet, SummonComponent, ActionComponent
+from hearthstone.simulator.core.player import Player, StoreIndex, HandIndex, BoardIndex, DiscoverIndex, SpellIndex
+from hearthstone.simulator.core.spell_pool import ALL_SPELLS
+from hearthstone.training.common.state_encoding import State, LocatedCard, Feature, ScalarFeature, \
+    OnehotFeature, CombinedFeature, ListOfFeatures, SortedByValueFeature, EncodedActionSet, Encoder, InvalidAction, \
+    ActionSet, SummonComponent, ActionComponent, SpellComponent
 
 MAX_ENCODED_STORE = 7
 MAX_ENCODED_HAND = 10
+MAX_ENCODED_SPELLS = 10
 MAX_ENCODED_BOARD = 7
 MAX_ENCODED_DISCOVER = 3
 
@@ -34,6 +36,8 @@ CARD_TYPE_TO_INT = {card_type: ind for ind, card_type in enumerate(PrintingPress
 INT_TO_CARD_TYPE = {ind: card_type for ind, card_type in enumerate(PrintingPress.cards)}
 HERO_TYPE_TO_INT = {hero_type: ind for ind, hero_type in enumerate([EmptyHero] + VALHALLA)}
 INT_TO_HERO_TYPE = {ind: hero_type for ind, hero_type in enumerate([EmptyHero] + VALHALLA)}
+SPELL_TYPE_TO_INT = {spell_type: ind for ind, spell_type in enumerate(ALL_SPELLS)}
+INT_TO_SPELL_TYPE = {ind: spell_type for ind, spell_type in enumerate(ALL_SPELLS)}
 
 
 def default_card_encoding() -> Feature:
@@ -60,6 +64,18 @@ def default_card_encoding() -> Feature:
     ])
 
 
+def default_spell_encoding() -> Feature:
+    """
+    Default encoder for type `Spell`.
+    """
+    return CombinedFeature([
+        ScalarFeature(lambda spell: 1.0),  # Present
+        ScalarFeature(lambda spell: float(spell.cost)),
+        ScalarFeature(lambda spell: float(spell.tier or 0)),
+        OnehotFeature(lambda spell: SPELL_TYPE_TO_INT[type(spell)], len(ALL_SPELLS) + 1),
+    ])
+
+
 def default_player_encoding() -> Feature:
     """
     Default encoder for the player level features (non-card features).
@@ -74,13 +90,22 @@ def default_player_encoding() -> Feature:
         ScalarFeature(lambda player: float(len(player.in_play))),
         ScalarFeature(lambda player: float(len(player.hand))),
         ScalarFeature(lambda player: float(len(player.store))),
+        ScalarFeature(lambda player: float(len(player.spells))),
         OnehotFeature(lambda player: HERO_TYPE_TO_INT[type(player.hero)], len(VALHALLA) + 1),
         ScalarFeature(lambda player: float(player.tavern.get_paired_opponent(player).health)),
         ScalarFeature(lambda player: float(player.tavern.get_paired_opponent(player).tavern_tier)),
         SortedByValueFeature(lambda player: [p.tavern_tier for name, p in player.tavern.players.items()], 8),
-        SortedByValueFeature(lambda player: [p
-                             .health for name, p in player.tavern.players.items()], 8),
+        SortedByValueFeature(lambda player: [p.health for name, p in player.tavern.players.items()], 8),
     ])
+
+
+def default_spells_encoding() -> Feature:
+    """
+    Default encoder for the spell-level features.
+
+    Encodes a `Player`.
+    """
+    return ListOfFeatures(lambda player: player.spells, default_spell_encoding(), MAX_ENCODED_SPELLS)
 
 
 def default_cards_encoding() -> Feature:
@@ -108,6 +133,7 @@ def default_cards_encoding() -> Feature:
 
 DEFAULT_PLAYER_ENCODING = default_player_encoding()
 DEFAULT_CARDS_ENCODING = default_cards_encoding()
+DEFAULT_SPELLS_ENCODING = default_spells_encoding()
 
 
 def store_indices() -> List[StoreIndex]:
@@ -116,6 +142,10 @@ def store_indices() -> List[StoreIndex]:
 
 def hand_indices() -> List[HandIndex]:
     return [HandIndex(i) for i in range(MAX_ENCODED_HAND)]
+
+
+def spell_indices() -> List[SpellIndex]:
+    return [SpellIndex(i) for i in range(MAX_ENCODED_SPELLS)]
 
 
 def board_indices() -> List[BoardIndex]:
@@ -127,57 +157,67 @@ def discover_indices() -> List[DiscoverIndex]:
 
 
 def _all_actions() -> ActionSet:
-    player_action_set = [TripleRewardsAction(), TavernUpgradeAction(), RerollAction(), HeroPowerAction(),
-                         HeroDiscoverAction(DiscoverIndex(0)), RedeemGoldCoinAction(), EndPhaseAction(FreezeDecision.NO_FREEZE),
+    player_action_set = [TavernUpgradeAction(), RerollAction(), HeroPowerAction(),
+                         HeroDiscoverAction(DiscoverIndex(0)), EndPhaseAction(FreezeDecision.NO_FREEZE),
                          EndPhaseAction(FreezeDecision.FREEZE),
                          EndPhaseAction(FreezeDecision.UNFREEZE)]
     store_action_set = [
-        [BuyAction(index), InvalidAction(), InvalidAction(), HeroPowerAction(store_target=index),
-         BananaAction(store_target=index)]
+        [BuyAction(index), InvalidAction(), InvalidAction(), InvalidAction(), HeroPowerAction(store_target=index)]
         for index in store_indices()]
     hand_action_set = [
         [InvalidAction(), SummonComponent(index), InvalidAction(), InvalidAction(),
          InvalidAction()] for index in hand_indices()]
     board_action_set = [
-        [InvalidAction(), InvalidAction(), SellAction(index), HeroPowerAction(board_target=index),
-         BananaAction(board_target=index)] for index in board_indices()]
+        [InvalidAction(), InvalidAction(), InvalidAction(), SellAction(index), HeroPowerAction(board_target=index)]
+        for index in board_indices()]
     discover_action_set = [
         [InvalidAction(), InvalidAction(),
          InvalidAction(), DiscoverChoiceAction(index), InvalidAction()] for index in
         discover_indices()]
 
-    battlecry_action_set = [
-        [SummonAction(hand_index, [])] + [SummonAction(hand_index, [board_index]) for board_index in board_indices()]
-        for hand_index in hand_indices()
-    ]
-    return ActionSet(player_action_set, store_action_set + hand_action_set + board_action_set + discover_action_set,
-                     battlecry_action_set)
+    battlecry_no_target_action_set = [SummonAction(hand_index, []) for hand_index in hand_indices()]
+    battlecry_action_set = [[SummonAction(hand_index, [board_index]) for board_index in board_indices()]
+                            for hand_index in hand_indices()]
+
+    spell_action_set = [SpellComponent(index) for index in spell_indices()]
+    no_target_spell_action_set = [PlaySpellAction(index) for index in spell_indices()]
+    store_target_spell_action_set = [
+        [PlaySpellAction(index, store_target=store_index) for store_index in store_indices()] for index in
+        spell_indices()]
+    board_target_spell_action_set = [
+        [PlaySpellAction(index, board_target=board_index) for board_index in board_indices()] for index in
+        spell_indices()]
+
+    return ActionSet(player_action_set,
+                     store_action_set + hand_action_set + board_action_set + discover_action_set,
+                     battlecry_no_target_action_set, battlecry_action_set, spell_action_set, no_target_spell_action_set,
+                     store_target_spell_action_set, board_target_spell_action_set)
 
 
 ALL_ACTIONS = _all_actions()
 
 
-def _all_actions_dict():
-    result = {}
-    index = 0
+def _all_actions_list():
+    result = []
     for player_action in ALL_ACTIONS.player_action_set:
-        result[str(player_action)] = index
-        index += 1
+        result.append(player_action)
     for card_actions in ALL_ACTIONS.card_action_set:
         for card_action in card_actions:
-            result[str(card_action)] = index
-            index += 1
+            result.append(card_action)
+    for card_action in ALL_ACTIONS.spell_action_set:
+        result.append(card_action)
     return result
 
+INVERTED_ACTIONS_LIST = _all_actions_list()
 
-ALL_ACTIONS_DICT: Dict[str, int] = _all_actions_dict()
-
+ALL_ACTIONS_DICT: Dict[str, int] = {str(action): index for index, action in enumerate(INVERTED_ACTIONS_LIST)}
 
 class DefaultEncoder(Encoder):
     def encode_state(self, player: Player) -> State:
         player_tensor = torch.from_numpy(DEFAULT_PLAYER_ENCODING.encode(player))
         cards_tensor = torch.from_numpy(DEFAULT_CARDS_ENCODING.encode(player))
-        return State(player_tensor, cards_tensor)
+        spells_tensor = torch.from_numpy(DEFAULT_SPELLS_ENCODING.encode(player))
+        return State(player_tensor, cards_tensor, spells_tensor)
 
     def encode_valid_actions(self, player: Player, rearrange_phase: bool = False) -> EncodedActionSet:
         actions = ALL_ACTIONS
@@ -188,16 +228,34 @@ class DefaultEncoder(Encoder):
             for j, action in enumerate(card_actions):
                 cards_action_array[i, j] = action.valid(player)
         cards_action_tensor = torch.from_numpy(cards_action_array)
+        no_target_battlecry_tensor = torch.tensor(
+            [action.valid(player) for action in actions.battlecry_no_target_action_set])
         battlecry_target_array = np.zeros((len(actions.battlecry_action_set), len(actions.battlecry_action_set[0])), dtype=bool)
         for i, card_actions in enumerate(actions.battlecry_action_set):
             for j, action in enumerate(card_actions):
                 battlecry_target_array[i, j] = action.valid(player)
         battlecry_target_tensor = torch.from_numpy(battlecry_target_array)
+        spell_action_tensor = torch.tensor([action.valid(player) for action in actions.spell_action_set]).unsqueeze(-1)
+        no_target_spell_action_tensor = torch.tensor([action.valid(player) for action in actions.no_target_spell_action_set])
+        store_target_spells_action_array = np.ndarray((len(actions.spell_store_action_set), len(actions.spell_store_action_set[0])), dtype=bool)
+        for i, spell_actions in enumerate(actions.spell_store_action_set):
+            for j, action in enumerate(spell_actions):
+                store_target_spells_action_array[i, j] = action.valid(player)
+        store_target_spells_action_tensor = torch.from_numpy(store_target_spells_action_array)
+        board_target_spells_action_array = np.ndarray(
+            (len(actions.spell_board_action_set), len(actions.spell_board_action_set[0])), dtype=bool)
+        for i, spell_actions in enumerate(actions.spell_board_action_set):
+            for j, action in enumerate(spell_actions):
+                board_target_spells_action_array[i, j] = action.valid(player)
+        board_target_spells_action_tensor = torch.from_numpy(board_target_spells_action_array)
 
         cards_to_rearrange = torch.tensor(
             len(player.in_play), dtype=torch.long)
 
-        return EncodedActionSet(player_action_tensor, cards_action_tensor, battlecry_target_tensor, torch.tensor(rearrange_phase),
+        return EncodedActionSet(player_action_tensor, cards_action_tensor, no_target_battlecry_tensor,
+                                battlecry_target_tensor, spell_action_tensor, no_target_spell_action_tensor,
+                                store_target_spells_action_tensor, board_target_spells_action_tensor,
+                                torch.tensor(rearrange_phase),
                                 cards_to_rearrange, 0, MAX_ENCODED_STORE, MAX_ENCODED_STORE + MAX_ENCODED_HAND)
 
     def player_encoding(self) -> Feature:
@@ -206,21 +264,21 @@ class DefaultEncoder(Encoder):
     def cards_encoding(self) -> Feature:
         return DEFAULT_CARDS_ENCODING
 
+    def spells_encoding(self) -> Feature:
+        return DEFAULT_SPELLS_ENCODING
+
     def action_encoding_size(self) -> int:
         player_action_size = len(ALL_ACTIONS.player_action_set)
         card_action_size = len(ALL_ACTIONS.card_action_set) * len(ALL_ACTIONS.card_action_set[0])
-        return player_action_size + card_action_size
+        spells_action_size = len(ALL_ACTIONS.spell_action_set)
+        return player_action_size + card_action_size + spells_action_size
 
     def get_action_component_index(self, action: Union[ActionComponent, Action]) -> int:
         if isinstance(action, SummonAction):
             action = SummonComponent(action.index)
+        if isinstance(action, PlaySpellAction):
+            action = SpellComponent(action.index)
         return ALL_ACTIONS_DICT[str(action)]
 
     def get_indexed_action_component(self, index: int) -> ActionComponent:
-        if index < len(ALL_ACTIONS.player_action_set):
-            return ALL_ACTIONS.player_action_set[index]
-        else:
-            card_action_index = index - len(ALL_ACTIONS.player_action_set)
-            card_index = card_action_index // len(ALL_ACTIONS.card_action_set[0])
-            within_card_index = card_action_index % len(ALL_ACTIONS.card_action_set[0])
-            return ALL_ACTIONS.card_action_set[card_index][within_card_index]
+        return INVERTED_ACTIONS_LIST[index]

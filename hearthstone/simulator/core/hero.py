@@ -1,12 +1,12 @@
 import typing
-from typing import Union, Tuple, Optional, List
+from typing import Union, Tuple, Optional, List, Any
 
 from hearthstone.simulator.core.cards import CardLocation
-from hearthstone.simulator.core.events import BuyPhaseContext, CombatPhaseContext, CardEvent
+from hearthstone.simulator.core.events import BuyPhaseContext, CombatPhaseContext, CardEvent, EVENTS
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 
 if typing.TYPE_CHECKING:
-    from hearthstone.simulator.core.player import BoardIndex, StoreIndex, DiscoverIndex
+    from hearthstone.simulator.core.player import BoardIndex, StoreIndex, DiscoverIndex, Player
 
 
 class Hero:
@@ -16,11 +16,11 @@ class Hero:
     power_target_location: Optional[List['CardLocation']] = None
     multiple_power_uses_per_turn = False
     pool: 'MONSTER_TYPES' = MONSTER_TYPES.ALL
-    give_immunity = False
 
     def __init__(self):
         self.power_cost = self.base_power_cost
-        self.discover_choices = []  # needs to be an instance attribute as the contents may be modified
+        self.discover_queue: List[List[Any]] = []
+        self.give_immunity = False
 
     def __repr__(self):
         return str(type(self).__name__)
@@ -44,6 +44,11 @@ class Hero:
         return 0
 
     def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.BUY_END:
+            self.give_immunity = False
+        self.handle_event_powers(event, context)
+
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         pass
 
     def hero_power(self, context: BuyPhaseContext, board_index: Optional['BoardIndex'] = None,
@@ -95,13 +100,13 @@ class Hero:
     def battlecry_multiplier(self) -> int:
         return 1
 
-    def select_discover(self, discover_index: 'DiscoverIndex'):
+    def select_discover(self, discover_index: 'DiscoverIndex', context: 'BuyPhaseContext'):
         pass
 
     def valid_select_discover(self, discover_index: 'DiscoverIndex') -> bool:
-        return bool(self.discover_choices) and discover_index in range(len(self.discover_choices))
+        return bool(self.discover_queue) and discover_index in range(len(self.discover_queue[0]))
 
-    def hero_info(self) -> Optional[str]:
+    def hero_info(self, player: 'Player') -> Optional[str]:
         return None
 
 

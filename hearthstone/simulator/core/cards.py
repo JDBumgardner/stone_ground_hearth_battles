@@ -1,4 +1,3 @@
-import collections
 import copy
 import enum
 import itertools
@@ -22,7 +21,7 @@ def one_minion_per_type(cards: List['MonsterCard'], randomizer: 'Randomizer',
                         excluded_card: Optional['MonsterCard'] = None) -> List['MonsterCard']:
     minions = []
     restricted_cards = [card for card in cards]
-    if excluded_card is not None:
+    if excluded_card in restricted_cards:
         restricted_cards.remove(excluded_card)
     filler_minions = [card for card in restricted_cards if card.monster_type == MONSTER_TYPES.ALL]
     for minion_type in MONSTER_TYPES.single_types():
@@ -37,9 +36,8 @@ def one_minion_per_type(cards: List['MonsterCard'], randomizer: 'Randomizer',
     return minions
 
 
-BOOL_ATTRIBUTE_LIST = ["divine_shield", "magnetic", "poisonous", "taunt",
-                       "windfury", "cleave", "reborn", "mega_windfury"
-                       ]
+BOOL_ATTRIBUTE_LIST = ["divine_shield", "magnetic", "poisonous", "taunt", "windfury", "cleave", "reborn",
+                       "mega_windfury", "gruul_rules"]
 
 
 class MonsterCard:
@@ -47,7 +45,7 @@ class MonsterCard:
     mana_cost: Optional[int] = None
     base_health: int
     base_attack: int
-    monster_type = None
+    monster_type: MONSTER_TYPES
     base_divine_shield = False
     base_magnetic = False
     base_poisonous = False
@@ -60,7 +58,7 @@ class MonsterCard:
     base_reborn = False
     redeem_rate = 1
     tier: int
-    base_token = False
+    not_in_pool = False
     cant_attack = False
     give_immunity = False
     legendary = False
@@ -68,7 +66,6 @@ class MonsterCard:
     divert_taunt_attack = False
 
     def __init__(self):
-        super().__init__()
         self.health = self.base_health
         self.attack = self.base_attack
         self.divine_shield = self.base_divine_shield
@@ -78,7 +75,7 @@ class MonsterCard:
         self.windfury = self.base_windfury
         self.mega_windfury = False
         self.cleave = self.base_cleave
-        self.deathrattles: List[Callable[[CombatPhaseContext], None]] = []
+        self.deathrattles: List[Callable[[MonsterCard, CombatPhaseContext], None]] = []
         if self.base_deathrattle is not None:
             self.deathrattles.append(self.base_deathrattle.__func__)
         self.reborn = self.base_reborn
@@ -89,10 +86,11 @@ class MonsterCard:
         self.frozen = False
         self.nomi_buff = 0
         self.ticket = False
-        self.token = self.base_token
+        self.token = self.not_in_pool
         self.link: Optional['MonsterCard'] = None  # links a card during combat to itself in the buy phase board
         self.dealt_lethal_damage_by = None
         self.frenzy_triggered = False
+        self.gruul_rules = False
 
     def __repr__(self):
         rep = f"{type(self).__name__} {self.attack}/{self.health} (t{self.tier})"  # TODO: add a proper enum to the monster typing
@@ -160,6 +158,10 @@ class MonsterCard:
                 if self.battlecry:
                     for _ in range(context.battlecry_multiplier()):
                         self.battlecry(event.targets, context)
+        if event.event is EVENTS.BUY_END:
+            if self.gruul_rules:
+                self.attack += 2
+                self.health += 2
         if not self.dead or self == event.card:  # minions will trigger their own death events
             self.handle_event_powers(event, context)
 
@@ -288,7 +290,7 @@ class MonsterCard:
 class CardList:
     def __init__(self, cards: List[MonsterCard]):
         # We use an IndexedSet instead of a set here for deterministic iteration order.
-        self.cards_by_tier = defaultdict(lambda: IndexedSet())
+        self.cards_by_tier: typing.DefaultDict[int, IndexedSet] = defaultdict(lambda: IndexedSet())
         for card in cards:
             self.cards_by_tier[card.tier].add(card)
 

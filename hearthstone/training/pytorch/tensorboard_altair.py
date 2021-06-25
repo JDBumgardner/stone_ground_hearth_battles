@@ -14,7 +14,7 @@ from hearthstone.simulator.replay.observer import Observer, Annotation
 from hearthstone.simulator.replay.replay import Replay, ReplayStep
 from hearthstone.training.pytorch.encoding import default_encoder
 from hearthstone.training.pytorch.encoding.default_encoder import EncodedActionSet, DefaultEncoder
-from hearthstone.training.pytorch.encoding.state_encoding import SummonComponent
+from hearthstone.training.common.state_encoding import SummonComponent
 from hearthstone.training.pytorch.surveillance import GlobalStepContext
 
 
@@ -130,7 +130,7 @@ def calc_action_probs(policy: torch.Tensor, valid_actions: EncodedActionSet, sto
     with torch.no_grad():
         encoder = DefaultEncoder()
         flat_valid_actions = torch.cat(
-            (valid_actions.player_action_tensor.flatten(0), valid_actions.card_action_tensor.flatten(0)), dim=0)
+            (valid_actions.player_action_tensor.flatten(0), valid_actions.card_action_tensor.flatten(0), valid_actions.spell_action_tensor.flatten(0)), dim=0)
         policy = policy.to("cpu").masked_fill(flat_valid_actions.to("cpu").logical_not(), -1e30).squeeze().exp()
         basic_action_probs = [float(policy[encoder.get_action_component_index(action)]) for action in
                               default_encoder.ALL_ACTIONS.player_action_set]

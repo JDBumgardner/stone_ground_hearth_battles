@@ -22,10 +22,12 @@ class RandomBot(Agent):
 
     async def buy_phase_action(self, player: 'Player') -> StandardAction:
         all_actions = list(generate_standard_actions(player))
+        for action in all_actions:
+            assert action.valid(player)
         return self.local_random.choice(all_actions)
 
     async def discover_choice_action(self, player: 'Player') -> DiscoverChoiceAction:
         return DiscoverChoiceAction(self.local_random.choice(range(len(player.discover_queue[0]))))
 
     async def hero_discover_action(self, player: 'Player') -> 'HeroDiscoverAction':
-        return HeroDiscoverAction(self.local_random.choice(range(len(player.hero.discover_choices))))
+        return HeroDiscoverAction(self.local_random.choice(range(len(player.hero.discover_queue[0]))))

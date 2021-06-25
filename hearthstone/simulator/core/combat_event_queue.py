@@ -16,7 +16,7 @@ class CombatEventQueue(autoslot.Slots):
     def __init__(self, war_party_1: 'WarParty', war_party_2: 'WarParty',
                  randomizer: Optional['Randomizer'] = None):
         self.randomizer = randomizer or DefaultRandomizer()
-        self.queues = {
+        self.queues: typing.Dict[EVENTS, typing.Dict[WarParty, typing.Deque]] = {
             EVENTS.DEATHRATTLE_TRIGGERED: {war_party_1: deque(), war_party_2: deque()},
             EVENTS.DIES: {war_party_1: deque(), war_party_2: deque()}
         }

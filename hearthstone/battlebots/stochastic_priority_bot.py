@@ -4,10 +4,10 @@ import typing
 from collections import defaultdict
 from typing import List
 
-from hearthstone.simulator.agent import Agent, generate_standard_actions, TavernUpgradeAction, RerollAction, \
-    EndPhaseAction, \
-    SellAction, StandardAction, BuyAction, SummonAction, DiscoverChoiceAction, RearrangeCardsAction, HeroDiscoverAction, \
-    FreezeDecision
+from hearthstone.simulator.agent.actions import RearrangeCardsAction, StandardAction, generate_standard_actions, \
+    TavernUpgradeAction, SummonAction, SellAction, BuyAction, RerollAction, EndPhaseAction, FreezeDecision, \
+    DiscoverChoiceAction, HeroDiscoverAction
+from hearthstone.simulator.agent.agent import Agent
 
 if typing.TYPE_CHECKING:
     from hearthstone.simulator.core.player import Player, StoreIndex
@@ -108,4 +108,4 @@ class LearnedPriorityBot(Agent):
         return DiscoverChoiceAction(player.discover_queue[0].index(discover_cards[0]))
 
     async def hero_discover_action(self, player: 'Player') -> 'HeroDiscoverAction':
-        return HeroDiscoverAction(self.local_random.choice(range(len(player.hero.discover_choices))))
+        return HeroDiscoverAction(self.local_random.choice(range(len(player.hero.discover_queue[0]))))
