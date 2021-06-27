@@ -10,7 +10,7 @@ from hearthstone.simulator.core.cards import MonsterCard, one_minion_per_type, C
 from hearthstone.simulator.core.combat import logger
 from hearthstone.simulator.core.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
-from hearthstone.simulator.core.spell_pool import GoldCoin
+from hearthstone.simulator.core.spell_pool import GoldCoin, BloodGem
 
 
 class MamaBear(MonsterCard):
@@ -2377,18 +2377,6 @@ class SoulDevourer(MonsterCard):
         return card.check_type(MONSTER_TYPES.DEMON)
 
 
-class BristlebackKnight(MonsterCard):
-    tier = 5
-    monster_type = MONSTER_TYPES.QUILBOAR
-    base_attack = 4
-    base_health = 8
-    base_divine_shield = True
-    base_windfury = True
-
-    def frenzy(self, context: CombatPhaseContext):
-        self.divine_shield = True
-
-
 class ArgentBraggart(MonsterCard):
     tier = 6
     monster_type = MONSTER_TYPES.NEUTRAL
@@ -2406,6 +2394,218 @@ class ArgentBraggart(MonsterCard):
         self.health = max(card.health for card in context.owner.in_play) * multiplier
 
 
+class BristlebackKnight(MonsterCard):
+    tier = 5
+    monster_type = MONSTER_TYPES.QUILBOAR
+    pool = MONSTER_TYPES.QUILBOAR
+    base_attack = 4
+    base_health = 8
+    base_divine_shield = True
+    base_windfury = True
+
+    def frenzy(self, context: CombatPhaseContext):
+        self.divine_shield = True
+
+
+class RazorfenGeomancer(MonsterCard):
+    tier = 1
+    monster_type = MONSTER_TYPES.QUILBOAR
+    pool = MONSTER_TYPES.QUILBOAR
+    base_attack = 3
+    base_health = 1
+
+    def base_battlecry(self, targets: List['MonsterCard'], context: 'BuyPhaseContext'):
+        for _ in range(2 if self.golden else 1):
+            context.owner.gain_spell(BloodGem())
+
+
+class SunBaconRelaxer(MonsterCard):
+    tier = 1
+    monster_type = MONSTER_TYPES.QUILBOAR
+    pool = MONSTER_TYPES.QUILBOAR
+    base_attack = 1
+    base_health = 2
+    mana_cost = 4
+
+    def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
+        if event.event is EVENTS.SELL and event.card == self:
+            for _ in range(4 if self.golden else 2):
+                context.owner.gain_spell(BloodGem())
+
+
+class ProphetOfTheBoar(MonsterCard):
+    tier = 2
+    base_attack = 2
+    base_health = 3
+    pool = MONSTER_TYPES.QUILBOAR
+
+    def __init__(self):
+        super().__init__()
+        self.power_activated = False
+
+    def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
+        if event.event is EVENTS.BUY_START:
+            self.power_activated = False
+        elif event.event is EVENTS.SUMMON_BUY and event.card.check_type(MONSTER_TYPES.QUILBOAR) and not self.power_activated:
+            self.power_activated = True
+            for _ in range(2 if self.golden else 1):
+                context.owner.gain_spell(BloodGem())
+
+
+class Roadboar(MonsterCard):
+    tier = 2
+    base_attack = 1
+    base_health = 4
+    monster_type = MONSTER_TYPES.QUILBOAR
+    pool = MONSTER_TYPES.QUILBOAR
+
+    def frenzy(self, context: CombatPhaseContext):
+        for _ in range(2 if self.golden else 1):
+            context.friendly_war_party.owner.gain_spell(BloodGem())
+
+
+class ToughTusk(MonsterCard):
+    tier = 2
+    base_attack = 4
+    base_health = 3
+    monster_type = MONSTER_TYPES.QUILBOAR
+    pool = MONSTER_TYPES.QUILBOAR
+
+    def __init__(self):
+        super().__init__()
+        self.gain_divine_shield = False
+
+    def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
+        if event.event is EVENTS.BUY_START:
+            self.gain_divine_shield = False
+        elif event.event is EVENTS.PLAY_BLOOD_GEM and event.card == self:
+            self.gain_divine_shield = True
+            if self.golden:
+                self.divine_shield = True
+        elif event.event is EVENTS.COMBAT_PREPHASE and self.gain_divine_shield:  # TODO: order of this and other combat prephase triggers?
+            self.divine_shield = True
+
+
+class Bannerboar(MonsterCard):
+    tier = 3
+    base_attack = 1
+    base_health = 4
+    monster_type = MONSTER_TYPES.QUILBOAR
+    pool = MONSTER_TYPES.QUILBOAR
+
+    def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
+        if event.event is EVENTS.BUY_END:
+            adjacent_quilboars = self.adjacent_minions(context, lambda card: card.check_type(MONSTER_TYPES.QUILBOAR))
+            for card in adjacent_quilboars:
+                for _ in range(2 if self.golden else 1):
+                    context.owner.play_blood_gem(card)
+
+
+class BristlebackBrute(MonsterCard):
+    tier = 3
+    base_attack = 3
+    base_health = 3
+    monster_type = MONSTER_TYPES.QUILBOAR
+    pool = MONSTER_TYPES.QUILBOAR
+
+    def __init__(self):
+        super().__init__()
+        self.blood_gem_played_on_this = False
+
+    def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
+        if event.event is EVENTS.BUY_START:
+            self.blood_gem_played_on_this = False
+        elif event.event is EVENTS.PLAY_BLOOD_GEM and event.card == self and not self.blood_gem_played_on_this:
+            bonus = 4 if self.golden else 2
+            self.attack += bonus
+            self.health += bonus
+            self.blood_gem_played_on_this = True
+
+
+class Thorncaller(MonsterCard):
+    tier = 3
+    monster_type = MONSTER_TYPES.QUILBOAR
+    pool = MONSTER_TYPES.QUILBOAR
+    base_attack = 4
+    base_health = 3
+
+    def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
+        for _ in range(2 if self.golden else 1):
+            context.owner.gain_spell(BloodGem())
+
+    def base_deathrattle(self, context: CombatPhaseContext):
+        for _ in range(2 if self.golden else 1):
+            context.friendly_war_party.owner.gain_spell(BloodGem())
+
+
+class Bonker(MonsterCard):
+    tier = 4
+    monster_type = MONSTER_TYPES.QUILBOAR
+    pool = MONSTER_TYPES.QUILBOAR
+    base_attack = 3
+    base_health = 7
+    base_windfury = True
+
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.AFTER_ATTACK_DAMAGE and event.card == self:
+            self.divine_shield = True
+
+
+class DynamicDuo(MonsterCard):
+    tier = 4
+    monster_type = MONSTER_TYPES.QUILBOAR
+    pool = MONSTER_TYPES.QUILBOAR
+    base_attack = 3
+    base_health = 4
+    base_taunt = True
+
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.PLAY_BLOOD_GEM and event.card.check_type(MONSTER_TYPES.QUILBOAR) and event.card != self:
+            bonus = 2 if self.golden else 1
+            self.attack += bonus
+            self.health += bonus
+
+
+class Groundshaker(MonsterCard):
+    tier = 4
+    base_attack = 2
+    base_health = 6
+    monster_type = MONSTER_TYPES.QUILBOAR
+    pool = MONSTER_TYPES.QUILBOAR
+
+    def __init__(self):
+        super().__init__()
+        self.attack_bonus = 0
+
+    def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
+        if event.event is EVENTS.BUY_START:
+            self.attack_bonus = 0
+        elif event.event is EVENTS.PLAY_BLOOD_GEM and event.card == self:
+            self.attack_bonus = 4 if self.golden else 2
+        elif event.event is EVENTS.COMBAT_PREPHASE:  # TODO: order of this and other combat prephase triggers?
+            for card in context.friendly_war_party.board:
+                if card != self:
+                    card.attack += self.attack_bonus
+
+
+class HexruinMarauder(MonsterCard):
+    tier = 4
+    base_attack = 3
+    base_health = 5
+    monster_type = MONSTER_TYPES.DEMON
+    pool = MONSTER_TYPES.DEMON
+
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.BUY_END and len(context.owner.in_play) <= 6:
+            bonus = 6 if self.golden else 3
+            self.attack += bonus
+            self.health += bonus
+
+
+
+
+
+# TODO: Necrolyte
 # TODO: add Faceless Taverngoer - add option to target store minions
 
 

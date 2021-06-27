@@ -38,6 +38,7 @@ class EVENTS(enum.Enum):
     COMBAT_PREPHASE = 22
     IS_ATTACKED = 23
     DEATHRATTLE_TRIGGERED = 24
+    PLAY_BLOOD_GEM = 25
 
 
 class CardEvent(autoslot.Slots):
@@ -178,6 +179,12 @@ class ResultsBroadcastEvent(CardEvent):
 class AddToStoreEvent(CardEvent):
     def __init__(self, card: 'MonsterCard'):
         super().__init__(EVENTS.ADD_TO_STORE)
+        self.card = card
+
+
+class PlayBloodGemEvent(CardEvent):
+    def __init__(self, card: 'MonsterCard'):
+        super().__init__(EVENTS.PLAY_BLOOD_GEM)
         self.card = card
 
 

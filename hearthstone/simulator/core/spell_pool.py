@@ -4,6 +4,7 @@ import typing
 from inspect import getmembers, isclass
 from typing import Optional
 
+from hearthstone.simulator.core import events
 from hearthstone.simulator.core.cards import CardLocation
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 from hearthstone.simulator.core.secrets import BaseSecret
@@ -391,6 +392,7 @@ class BloodGem(Spell):
         target = context.owner.in_play[board_index]
         target.attack += 1
         target.health += 1
+        context.owner.broadcast_buy_phase_event(events.PlayBloodGemEvent(target))
 
 
 ALL_SPELLS = [member[1] for member in
