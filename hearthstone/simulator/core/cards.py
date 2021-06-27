@@ -36,6 +36,16 @@ def one_minion_per_type(cards: List['MonsterCard'], randomizer: 'Randomizer',
     return minions
 
 
+def one_minion_per_tier(cards: List['MonsterCard'], randomizer: 'Randomizer') -> List['MonsterCard']:
+    minions = []
+    for tavern_tier in range(1, 7):
+        minions_by_tier = [card for card in cards if card.tier == tavern_tier]
+        if minions_by_tier:
+            card = randomizer.select_friendly_minion(minions_by_tier)
+            minions.append(card)
+    return minions
+
+
 BOOL_ATTRIBUTE_LIST = ["divine_shield", "magnetic", "poisonous", "taunt", "windfury", "cleave", "reborn",
                        "mega_windfury", "gruul_rules", "frenzy"]
 

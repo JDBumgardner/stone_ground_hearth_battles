@@ -4,7 +4,7 @@ from typing import Union, Tuple, Optional
 
 from hearthstone.simulator.core import combat, events
 from hearthstone.simulator.core.card_pool import Amalgam, FishOfNZoth
-from hearthstone.simulator.core.cards import CardLocation, one_minion_per_type
+from hearthstone.simulator.core.cards import CardLocation, one_minion_per_type, one_minion_per_tier
 from hearthstone.simulator.core.combat import logger
 from hearthstone.simulator.core.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
 from hearthstone.simulator.core.hero import Hero
@@ -12,7 +12,7 @@ from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 from hearthstone.simulator.core.player import BoardIndex, StoreIndex, DiscoverIndex, HeroChoiceIndex, Player
 from hearthstone.simulator.core.secrets import remaining_secrets, BaseSecret
 from hearthstone.simulator.core.spell_pool import TripleRewardCard, GoldCoin, Prize, Banana, BigBanana, RecruitmentMap, \
-    DARKMOON_PRIZES
+    DARKMOON_PRIZES, BloodGem
 
 
 class Pyramad(Hero):
@@ -882,6 +882,39 @@ class CaptainHooktusk(Hero):
         context.owner.discover_queue.append(discovered_cards)
 
 
+# TODO: add Tickatus... and darkmoon prizes (ugh)
+class Tickatus(Hero):
+    def __init__(self):
+        super().__init__()
+        self.prize_tier = 0
+
+    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.BUY_START and (context.owner.tavern.turn_count + 1) % 4 == 0 and self.prize_tier < 5:
+            self.prize_tier = min(self.prize_tier + 1, 4)
+
+            if context.owner.room_in_hand():
+                prize_options = DARKMOON_PRIZES[self.prize_tier][:]
+                selected_prizes = []
+                for _ in range(3):
+                    spell_type = context.randomizer.select_spell(prize_options)
+                    selected_prizes.append(spell_type())
+                    prize_options.remove(spell_type)
+                self.discover_queue.append(selected_prizes)
+
+    def select_discover(self, discover_index: 'DiscoverIndex', context: 'BuyPhaseContext'):
+        if issubclass(type(self.discover_queue[0][0]), Hero):
+            new_hero = self.discover_queue[0][discover_index]
+            context.owner.swap_hero(new_hero)
+            self.discover_queue.pop(0)
+        else:
+            prize = self.discover_queue[0].pop(discover_index)
+            context.owner.gain_spell(prize)
+            self.discover_queue.pop(0)
+
+    def hero_info(self, player: 'Player') -> Optional[str]:
+        return f'{4 - (player.tavern.turn_count + 1) % 4} turns left'
+
+
 class OverlordSaurfang(Hero):
     base_power_cost = 1
 
@@ -956,37 +989,36 @@ class Voljin(Hero):
             self.second_target = None
 
 
-# TODO: add Tickatus... and darkmoon prizes (ugh)
-class Tickatus(Hero):
-    def __init__(self):
-        super().__init__()
-        self.prize_tier = 0
+class DeathSpeakerBlackthorn(Hero):
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.TAVERN_UPGRADE:
+            for _ in range(2):
+                context.owner.gain_spell(BloodGem())
 
-    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
-        if event.event is EVENTS.BUY_START and (context.owner.tavern.turn_count + 1) % 4 == 0 and self.prize_tier < 5:
-            self.prize_tier = min(self.prize_tier + 1, 4)
 
-            if context.owner.room_in_hand():
-                prize_options = DARKMOON_PRIZES[self.prize_tier][:]
-                selected_prizes = []
-                for _ in range(3):
-                    spell_type = context.randomizer.select_spell(prize_options)
-                    selected_prizes.append(spell_type())
-                    prize_options.remove(spell_type)
-                self.discover_queue.append(selected_prizes)
+class GuffRunetotem(Hero):
+    base_power_cost = 1
 
-    def select_discover(self, discover_index: 'DiscoverIndex', context: 'BuyPhaseContext'):
-        if issubclass(type(self.discover_queue[0][0]), Hero):
-            new_hero = self.discover_queue[0][discover_index]
-            context.owner.swap_hero(new_hero)
-            self.discover_queue.pop(0)
-        else:
-            prize = self.discover_queue[0].pop(discover_index)
-            context.owner.gain_spell(prize)
-            self.discover_queue.pop(0)
+    def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                        store_index: Optional['StoreIndex'] = None):
+        for card in one_minion_per_tier(context.owner.in_play, context.randomizer):
+            card.attack += 2
+            card.health += 1
 
-    def hero_info(self, player: 'Player') -> Optional[str]:
-        return f'{4 - (player.tavern.turn_count + 1) % 4} turns left'
+
+class MutanusTheDevourer(Hero):
+    base_power_cost = 0
+    power_target_location = [CardLocation.BOARD]
+
+    def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                        store_index: Optional['StoreIndex'] = None):
+        minion_to_remove = context.owner.pop_board_card(board_index)
+        context.owner.tavern.deck.return_cards(minion_to_remove.dissolve())
+        if context.owner.in_play:
+            minion_to_buff = context.randomizer.select_friendly_minion(context.owner.in_play)
+            minion_to_buff.attack += minion_to_remove.attack
+            minion_to_buff.health += minion_to_remove.health
+        context.owner.coins += 1
 
 
 VALHALLA = [member[1] for member in

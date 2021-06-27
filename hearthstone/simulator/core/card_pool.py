@@ -2621,7 +2621,7 @@ class Charlga(MonsterCard):
                 if card != self:
                     for _ in range(2 if self.golden else 1):
                         context.owner.play_blood_gem(card)
-                        
+
 
 # TODO: Necrolyte, Captain Flat Tusk
 # TODO: add Faceless Taverngoer - add option to target store minions
