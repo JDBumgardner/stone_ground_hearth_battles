@@ -896,7 +896,9 @@ class CombatTests(BattleGroundsTestCase):
         ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
-        adams_war_party.board = [SecurityRover(), KangorsApprentice()]
+        kangors_apprentice = KangorsApprentice()
+        kangors_apprentice.attack += 1
+        adams_war_party.board = [SecurityRover(), kangors_apprentice]
         ethans_war_party.board = [Maexxna()]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)

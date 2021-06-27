@@ -1702,10 +1702,10 @@ class MicroMummy(MonsterCard):
 
 
 class KangorsApprentice(MonsterCard):
-    tier = 6
+    tier = 5
     monster_type = MONSTER_TYPES.NEUTRAL
-    base_attack = 4
-    base_health = 8
+    base_attack = 3
+    base_health = 6
     pool = MONSTER_TYPES.MECH
     mana_cost = 9
 
@@ -1791,32 +1791,6 @@ class AnnoyOModule(MonsterCard):
     base_taunt = True
     base_magnetic = True
     mana_cost = 4
-
-
-class Siegebreaker(MonsterCard):
-    tier = 4
-    monster_type = MONSTER_TYPES.DEMON
-    pool = MONSTER_TYPES.DEMON
-    base_attack = 5
-    base_health = 8
-    base_taunt = True
-    mana_cost = 7
-
-    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
-        bonus = 2 if self.golden else 1
-        if event.event is EVENTS.COMBAT_PREPHASE or (event.event is EVENTS.SUMMON_COMBAT and event.card == self):
-            demons = [card for card in context.friendly_war_party.board if
-                      card != self and card.check_type(MONSTER_TYPES.DEMON)]
-            for demon in demons:
-                demon.attack += bonus
-        elif event.event is EVENTS.SUMMON_COMBAT and event.card in context.friendly_war_party.board \
-                and event.card != self and event.card.check_type(MONSTER_TYPES.DEMON):
-            event.card.attack += bonus
-        elif event.event is EVENTS.DIES and event.card == self:
-            demons = [card for card in context.friendly_war_party.board if
-                      card != self and card.check_type(MONSTER_TYPES.DEMON)]
-            for demon in demons:
-                demon.attack -= bonus
 
 
 class CobaltScalebane(MonsterCard):
@@ -2602,10 +2576,54 @@ class HexruinMarauder(MonsterCard):
             self.health += bonus
 
 
+class AgamagganTheGreatBoar(MonsterCard):
+    tier = 5
+    monster_type = MONSTER_TYPES.BEAST
+    pool = MONSTER_TYPES.QUILBOAR
+    base_attack = 6
+    base_health = 6
+    legendary = True
+
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.PLAY_BLOOD_GEM:
+            bonus = 2 if self.golden else 1
+            event.card += bonus
+            event.card += bonus
 
 
+class AggemThorncurse(MonsterCard):
+    tier = 5
+    monster_type = MONSTER_TYPES.QUILBOAR
+    pool = MONSTER_TYPES.QUILBOAR
+    base_attack = 3
+    base_health = 6
+    legendary = True
 
-# TODO: Necrolyte
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.PLAY_BLOOD_GEM and event.card == self:
+            bonus = 2 if self.golden else 1
+            for card in one_minion_per_type(context.owner.in_play, context.randomizer):
+                card.attack += bonus
+                card.health += bonus
+
+
+class Charlga(MonsterCard):
+    tier = 6
+    base_attack = 4
+    base_health = 4
+    monster_type = MONSTER_TYPES.QUILBOAR
+    pool = MONSTER_TYPES.QUILBOAR
+    legendary = True
+
+    def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
+        if event.event is EVENTS.BUY_END:
+            for card in context.owner.in_play:
+                if card != self:
+                    for _ in range(2 if self.golden else 1):
+                        context.owner.play_blood_gem(card)
+                        
+
+# TODO: Necrolyte, Captain Flat Tusk
 # TODO: add Faceless Taverngoer - add option to target store minions
 
 
