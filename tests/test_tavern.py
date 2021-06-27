@@ -4310,6 +4310,19 @@ class CardTests(BattleGroundsTestCase):
             print(player_1.spells)
             self.assertEqual(player_1.spells[i].darkmoon_prize_tier, i + 1)
 
+    def test_blood_gem(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.randomizer = RepeatedCardForcer([DragonspawnLieutenant])
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        player_1.gain_spell(BloodGem())
+        player_1.play_spell(SpellIndex(0), board_index=BoardIndex(0))
+        self.assertEqual(player_1.in_play[0].attack, player_1.in_play[0].base_attack + 1)
+        self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health + 1)
+
 
 if __name__ == '__main__':
     unittest.main()

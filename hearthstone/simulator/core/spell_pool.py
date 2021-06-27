@@ -383,6 +383,16 @@ class BigWinner(Spell):
                 context.owner.hero.discover_queue.append(selected_prizes)
 
 
+class BloodGem(Spell):
+    target_location = [CardLocation.BOARD]
+
+    def on_play(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                store_index: Optional['StoreIndex'] = None):
+        target = context.owner.in_play[board_index]
+        target.attack += 1
+        target.health += 1
+
+
 ALL_SPELLS = [member[1] for member in
               getmembers(sys.modules[__name__], lambda member: isclass(member) and member.__module__ == __name__)]
 

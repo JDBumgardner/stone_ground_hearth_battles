@@ -589,7 +589,6 @@ class Player:
             return True
         return False
 
-
     def play_spell(self, index: 'SpellIndex', board_index: Optional['BoardIndex'] = None,
                    store_index: Optional['StoreIndex'] = None):
         assert self.valid_play_spell(index, board_index, store_index)
