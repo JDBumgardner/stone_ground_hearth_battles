@@ -2522,7 +2522,8 @@ class Bonker(MonsterCard):
 
     def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.AFTER_ATTACK_DAMAGE and event.card == self:
-            self.divine_shield = True
+            # N.B. golden doesn't gain 2 blood gems
+            context.friendly_war_party.owner.gain_spell(BloodGem())
 
 
 class DynamicDuo(MonsterCard):
@@ -2587,8 +2588,8 @@ class AgamagganTheGreatBoar(MonsterCard):
     def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.PLAY_BLOOD_GEM:
             bonus = 2 if self.golden else 1
-            event.card += bonus
-            event.card += bonus
+            event.card.attack += bonus
+            event.card.health += bonus
 
 
 class AggemThorncurse(MonsterCard):

@@ -47,7 +47,7 @@ def one_minion_per_tier(cards: List['MonsterCard'], randomizer: 'Randomizer') ->
 
 
 BOOL_ATTRIBUTE_LIST = ["divine_shield", "magnetic", "poisonous", "taunt", "windfury", "cleave", "reborn",
-                       "mega_windfury", "gruul_rules", "frenzy"]
+                       "mega_windfury", "gruul_rules"]
 
 
 class MonsterCard:

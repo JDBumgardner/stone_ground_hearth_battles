@@ -1787,6 +1787,45 @@ class CombatTests(BattleGroundsTestCase):
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
 
+    def test_road_boar(self):
+        tavern = Tavern()
+        adam = tavern.add_player_with_hero("Adam")
+        ethan = tavern.add_player_with_hero("Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [Roadboar()]
+        ethans_war_party.board = [MurlocTidehunter(), AlleyCat(), AlleyCat()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+        self.assertCardListEquals(adam.spells, [BloodGem])
+
+    def test_thorncaller(self):
+        tavern = Tavern()
+        adam = tavern.add_player_with_hero("Adam")
+        ethan = tavern.add_player_with_hero("Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [Thorncaller()]
+        ethans_war_party.board = [RabidSaurolisk()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+        self.assertCardListEquals(adam.spells, [BloodGem])
+
+    def test_bonker(self):
+        tavern = Tavern()
+        adam = tavern.add_player_with_hero("Adam")
+        ethan = tavern.add_player_with_hero("Ethan")
+        adams_war_party = WarParty(adam)
+        ethans_war_party = WarParty(ethan)
+        adams_war_party.board = [Bonker()]
+        ethans_war_party.board = [FreedealingGambler(), FreedealingGambler(), FreedealingGambler()]
+        fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
+        self.assertEqual(adam.health, 40)
+        self.assertEqual(ethan.health, 40)
+        self.assertCardListEquals(adam.spells, [BloodGem, BloodGem])
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -10,7 +10,7 @@ class MONSTER_TYPES(enum.Enum):
     MURLOC = 6
     ELEMENTAL = 7
     QUILBOAR = 8
-    NEUTRAL = 8
+    NEUTRAL = 9
     ALL = 10
 
     @classmethod
