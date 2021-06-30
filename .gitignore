@@ -12,3 +12,4 @@ venv/*
 /benchmarks/profiles/*
 *~
 /rust/pyrite_hearth_battles/target/*
+*.pyc

@@ -10,16 +10,12 @@ from hearthstone.simulator.core.hero import EmptyHero
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 from hearthstone.simulator.core.secrets import Secret
 from hearthstone.simulator.core.spell import Spell
-from hearthstone.simulator.core.spell_pool import TripleRewardCard, TheUnlimitedCoin
+from hearthstone.simulator.core.spell_pool import TripleRewardCard, TheUnlimitedCoin, BloodGem
 
 if typing.TYPE_CHECKING:
     from hearthstone.simulator.core.tavern import Tavern
     from hearthstone.simulator.core.hero import Hero
     from hearthstone.simulator.core.randomizer import Randomizer
-
-
-class BuyPhaseEvent:
-    pass
 
 
 TEST_MODE = False
@@ -589,13 +585,16 @@ class Player:
             return True
         return False
 
-
     def play_spell(self, index: 'SpellIndex', board_index: Optional['BoardIndex'] = None,
                    store_index: Optional['StoreIndex'] = None):
         assert self.valid_play_spell(index, board_index, store_index)
         spell = self.pop_spell(index)
         self.coins -= spell.cost
         spell.on_play(BuyPhaseContext(self, self.tavern.randomizer), board_index, store_index)
+
+    def play_blood_gem(self, target: 'MonsterCard'):
+        board_index = self.in_play.index(target)
+        BloodGem().on_play(BuyPhaseContext(self, self.tavern.randomizer), board_index=board_index)
 
     def swap_hero(self, new_hero: 'Hero'):
         self.hero = new_hero

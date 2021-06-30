@@ -9,9 +9,10 @@ class MONSTER_TYPES(enum.Enum):
     DEMON = 5
     MURLOC = 6
     ELEMENTAL = 7
-    NEUTRAL = 8
-    ALL = 9
+    QUILBOAR = 8
+    NEUTRAL = 9
+    ALL = 10
 
     @classmethod
     def single_types(cls):
-        return [monster_type for monster_type in cls if monster_type != cls.ALL]
+        return [monster_type for monster_type in cls if monster_type not in (cls.ALL, cls.NEUTRAL)]

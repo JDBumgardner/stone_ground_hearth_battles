@@ -4,6 +4,7 @@ import typing
 from inspect import getmembers, isclass
 from typing import Optional
 
+from hearthstone.simulator.core import events
 from hearthstone.simulator.core.cards import CardLocation
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 from hearthstone.simulator.core.secrets import BaseSecret
@@ -381,6 +382,17 @@ class BigWinner(Spell):
                     selected_prizes.append(spell_type())
                     prize_choices.remove(spell_type)
                 context.owner.hero.discover_queue.append(selected_prizes)
+
+
+class BloodGem(Spell):
+    target_location = [CardLocation.BOARD]
+
+    def on_play(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                store_index: Optional['StoreIndex'] = None):
+        target = context.owner.in_play[board_index]
+        target.attack += 1
+        target.health += 1
+        context.owner.broadcast_buy_phase_event(events.PlayBloodGemEvent(target))
 
 
 ALL_SPELLS = [member[1] for member in

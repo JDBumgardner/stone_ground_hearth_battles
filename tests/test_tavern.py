@@ -1621,21 +1621,6 @@ class CardTests(BattleGroundsTestCase):
             else:
                 return cards[0]
 
-        def select_friendly_minion(self, friendly_minions: List[MonsterCard]) -> MonsterCard:
-            minion_types = [type(card) for card in friendly_minions]
-            if MurlocTidecaller in minion_types:
-                return force_card(friendly_minions, MurlocTidecaller)
-            elif DragonspawnLieutenant in minion_types:
-                return force_card(friendly_minions, DragonspawnLieutenant)
-            elif VulgarHomunculus in minion_types:
-                return force_card(friendly_minions, VulgarHomunculus)
-            elif ScavengingHyena in minion_types:
-                return force_card(friendly_minions, ScavengingHyena)
-            elif KaboomBot in minion_types:
-                return force_card(friendly_minions, KaboomBot)
-            else:
-                return friendly_minions[0]
-
     def test_lightfang_enforcer(self):
         tavern = Tavern(restrict_types=False)
         player_1 = tavern.add_player_with_hero("Joe", TheCurator())
@@ -3816,6 +3801,74 @@ class CardTests(BattleGroundsTestCase):
         self.assertEqual(player_1.hand[0].attack, player_1.hand[0].base_attack + 5)
         self.assertEqual(player_1.hand[1].attack, player_1.hand[1].base_attack)
 
+    def test_xyrella(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong", Xyrella())
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.randomizer = RepeatedCardForcer([AlleyCat])
+        tavern.buying_step()
+        player_1.hero_power(store_index=StoreIndex(0))
+        self.assertEqual(player_1.hand[0].attack, 2)
+        self.assertEqual(player_1.hand[0].health, 2)
+
+    def test_voljin_2_store(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong", Voljin())
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.randomizer = RepeatedCardForcer([AlleyCat, VulgarHomunculus])
+        tavern.buying_step()
+        player_1.hero_power(store_index=StoreIndex(0))
+        player_1.hero_power(store_index=StoreIndex(1))
+        self.assertEqual(player_1.store[0].attack, player_1.store[1].base_attack)
+        self.assertEqual(player_1.store[0].health, player_1.store[1].base_health)
+        self.assertEqual(player_1.store[1].attack, player_1.store[0].base_attack)
+        self.assertEqual(player_1.store[1].health, player_1.store[0].base_health)
+
+    def test_voljin_2_board(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong", Voljin())
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.randomizer = RepeatedCardForcer([MurlocTidehunter])
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        player_1.hero_power(board_index=BoardIndex(0))
+        player_1.hero_power(board_index=BoardIndex(1))
+        self.assertEqual(player_1.in_play[0].attack, player_1.in_play[1].base_attack)
+        self.assertEqual(player_1.in_play[0].health, player_1.in_play[1].base_health)
+        self.assertEqual(player_1.in_play[1].attack, player_1.in_play[0].base_attack)
+        self.assertEqual(player_1.in_play[1].health, player_1.in_play[0].base_health)
+
+    def test_voljin_board_store(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong", Voljin())
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.randomizer = RepeatedCardForcer([MicroMachine, VulgarHomunculus])
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        player_1.hero_power(board_index=BoardIndex(0))
+        player_1.hero_power(store_index=StoreIndex(0))
+        self.assertEqual(player_1.in_play[0].attack, player_1.store[0].base_attack)
+        self.assertEqual(player_1.in_play[0].health, player_1.store[0].base_health)
+        self.assertEqual(player_1.store[0].attack, player_1.in_play[0].base_attack)
+        self.assertEqual(player_1.store[0].health, player_1.in_play[0].base_health)
+
+    def test_voljin_store_board(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong", Voljin())
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.randomizer = RepeatedCardForcer([MicroMachine, VulgarHomunculus])
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        player_1.hero_power(store_index=StoreIndex(0))
+        player_1.hero_power(board_index=BoardIndex(0))
+        self.assertEqual(player_1.in_play[0].attack, player_1.store[0].base_attack)
+        self.assertEqual(player_1.in_play[0].health, player_1.store[0].base_health)
+        self.assertEqual(player_1.store[0].attack, player_1.in_play[0].base_attack)
+        self.assertEqual(player_1.store[0].health, player_1.in_play[0].base_health)
+
     def test_tickatus(self):
         tavern = Tavern(restrict_types=False)
         player_1 = tavern.add_player_with_hero("Dante_Kong", Tickatus())
@@ -4241,6 +4294,353 @@ class CardTests(BattleGroundsTestCase):
             player_1.hero_select_discover(DiscoverIndex(0))
             print(player_1.spells)
             self.assertEqual(player_1.spells[i].darkmoon_prize_tier, i + 1)
+
+    def test_blood_gem(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.randomizer = RepeatedCardForcer([DragonspawnLieutenant])
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        player_1.gain_spell(BloodGem())
+        player_1.play_spell(SpellIndex(0), board_index=BoardIndex(0))
+        self.assertEqual(player_1.in_play[0].attack, player_1.in_play[0].base_attack + 1)
+        self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health + 1)
+
+    def test_death_speaker_blackthorn(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong", DeathSpeakerBlackthorn())
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.buying_step()
+        tavern.combat_step()
+        tavern.buying_step()
+        player_1.upgrade_tavern()
+        self.assertCardListEquals(player_1.spells, [BloodGem, BloodGem])
+
+    def test_gruff_runetotem(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong", GuffRunetotem())
+        player_2 = tavern.add_player_with_hero("lucy")
+        self.upgrade_to_tier(tavern, 6)
+        tavern.randomizer = RepeatedCardForcer(
+            [DragonspawnLieutenant, FreedealingGambler, Khadgar, CaveHydra, KangorsApprentice, GoldrinnTheGreatWolf])
+        for i in [0, 3]:
+            tavern.buying_step()
+            for _ in range(3):
+                player_1.purchase(StoreIndex(i))
+                player_1.summon_from_hand(HandIndex(0))
+            tavern.combat_step()
+        tavern.buying_step()
+        player_1.hero_power()
+        self.assertCardListEquals(player_1.in_play,
+                                  [DragonspawnLieutenant, FreedealingGambler, Khadgar, CaveHydra, KangorsApprentice,
+                                   GoldrinnTheGreatWolf])
+        for card in player_1.in_play:
+            self.assertEqual(card.attack, card.base_attack + 2)
+            self.assertEqual(card.health, card.base_health + 1)
+
+    def test_mutanus_the_devourer(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong", MutanusTheDevourer())
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.randomizer = RepeatedCardForcer([MurlocTidehunter])
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        player_1.hero_power(board_index=BoardIndex(1))
+        self.assertCardListEquals(player_1.in_play, [MurlocTidehunter])
+        self.assertEqual(player_1.in_play[0].attack, player_1.in_play[0].base_attack + 1)
+        self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health + 1)
+        self.assertEqual(player_1.coins, 1)
+
+    def test_razorfen_geomancer(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.randomizer = RepeatedCardForcer([RazorfenGeomancer])
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        self.assertCardListEquals(player_1.spells, [BloodGem])
+
+    def test_sun_bacon_relaxer(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        tavern.randomizer = RepeatedCardForcer([SunBaconRelaxer])
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        self.assertCardListEquals(player_1.spells, [])
+        player_1.sell_minion(BoardIndex(0))
+        self.assertCardListEquals(player_1.spells, [BloodGem, BloodGem])
+
+    def test_prophet_of_the_boar(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        self.upgrade_to_tier(tavern, 2)
+        tavern.randomizer = RepeatedCardForcer([ProphetOfTheBoar, SunBaconRelaxer, SunBaconRelaxer])
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        self.assertCardListEquals(player_1.spells, [])
+        tavern.combat_step()
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        self.assertCardListEquals(player_1.spells, [BloodGem])
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        self.assertCardListEquals(player_1.spells, [BloodGem])
+
+    def test_tough_tusk(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        self.upgrade_to_tier(tavern, 2)
+        tavern.randomizer = RepeatedCardForcer([SunBaconRelaxer, ToughTusk])
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        player_1.sell_minion(BoardIndex(0))
+        self.assertCardListEquals(player_1.spells, [BloodGem, BloodGem])
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        player_1.play_spell(SpellIndex(0), board_index=BoardIndex(0))
+        self.assertCardListEquals(player_1.spells, [BloodGem])
+        player_2.purchase(StoreIndex(1))
+        player_2.summon_from_hand(HandIndex(0))
+        self.assertCardListEquals(player_1.in_play, [ToughTusk])
+        self.assertFalse(player_1.in_play[0].divine_shield)
+        self.assertCardListEquals(player_2.in_play, [ToughTusk])
+        tavern.combat_step()
+        tavern.buying_step()
+        self.assertFalse(player_1.in_play[0].divine_shield)
+        self.assertEqual(player_1.health, 40)
+        self.assertEqual(player_2.health, 36)
+
+    def test_golden_tough_tusk(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        self.upgrade_to_tier(tavern, 6)
+        tavern.randomizer = RepeatedCardForcer([SunBaconRelaxer, ToughTusk, ToughTusk, ToughTusk, Maexxna, Maexxna])
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        player_1.sell_minion(BoardIndex(0))
+        self.assertCardListEquals(player_1.spells, [BloodGem, BloodGem])
+        tavern.combat_step()
+        tavern.buying_step()
+        for _ in range(3):
+            player_1.purchase(StoreIndex(1))
+        player_1.summon_from_hand(HandIndex(0))
+        player_1.play_spell(SpellIndex(0), board_index=BoardIndex(0))
+        self.assertCardListEquals(player_1.spells, [BloodGem, TripleRewardCard])
+        player_2.purchase(StoreIndex(4))
+        player_2.summon_from_hand(HandIndex(0))
+        self.assertCardListEquals(player_1.in_play, [ToughTusk])
+        self.assertTrue(player_1.in_play[0].divine_shield)
+        self.assertCardListEquals(player_2.in_play, [Maexxna])
+        tavern.combat_step()
+        tavern.buying_step()
+        self.assertTrue(player_1.in_play[0].divine_shield)
+        self.assertEqual(player_1.health, 40)
+        self.assertEqual(player_2.health, 32)
+
+    def test_bannerboar(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        self.upgrade_to_tier(tavern, 3)
+        tavern.randomizer = RepeatedCardForcer([SunBaconRelaxer, Bannerboar, SunBaconRelaxer, SunBaconRelaxer])
+        tavern.buying_step()
+        for _ in range(2):
+            player_1.purchase(StoreIndex(0))
+            player_1.summon_from_hand(HandIndex(0))
+        tavern.combat_step()
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(2))
+        player_1.summon_from_hand(HandIndex(0))
+        self.assertCardListEquals(player_1.in_play, [SunBaconRelaxer, Bannerboar, SunBaconRelaxer])
+        tavern.combat_step()
+        self.assertEqual(player_1.in_play[0].attack, player_1.in_play[0].base_attack + 2)
+        self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health + 2)
+        self.assertEqual(player_1.in_play[1].attack, player_1.in_play[1].base_attack)
+        self.assertEqual(player_1.in_play[1].health, player_1.in_play[1].base_health)
+        self.assertEqual(player_1.in_play[2].attack, player_1.in_play[2].base_attack + 1)
+        self.assertEqual(player_1.in_play[2].health, player_1.in_play[2].base_health + 1)
+
+    def test_bristleback_brute(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        self.upgrade_to_tier(tavern, 3)
+        tavern.randomizer = RepeatedCardForcer([SunBaconRelaxer, BristlebackBrute])
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        player_1.sell_minion(BoardIndex(0))
+        self.assertCardListEquals(player_1.spells, [BloodGem, BloodGem])
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        player_1.play_spell(SpellIndex(0), board_index=BoardIndex(0))
+        self.assertEqual(player_1.in_play[0].attack, player_1.in_play[0].base_attack + 3)
+        self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health + 3)
+        player_1.play_spell(SpellIndex(0), board_index=BoardIndex(0))
+        self.assertEqual(player_1.in_play[0].attack, player_1.in_play[0].base_attack + 4)
+        self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health + 4)
+
+    def test_thorncaller(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        self.upgrade_to_tier(tavern, 3)
+        tavern.randomizer = RepeatedCardForcer([Thorncaller])
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        self.assertCardListEquals(player_1.spells, [BloodGem])
+
+    def test_dynamic_duo(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        self.upgrade_to_tier(tavern, 4)
+        tavern.randomizer = RepeatedCardForcer([RazorfenGeomancer, DynamicDuo])
+        tavern.buying_step()
+        for i in range(2):
+            player_1.purchase(StoreIndex(0))
+            player_1.summon_from_hand(HandIndex(0))
+        player_1.play_spell(SpellIndex(0), board_index=BoardIndex(0))
+        self.assertEqual(player_1.in_play[0].attack, player_1.in_play[0].base_attack + 1)
+        self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health + 1)
+        self.assertEqual(player_1.in_play[1].attack, player_1.in_play[1].base_attack + 1)
+        self.assertEqual(player_1.in_play[1].health, player_1.in_play[1].base_health + 1)
+
+    def test_groundshaker(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        self.upgrade_to_tier(tavern, 5)
+        tavern.randomizer = RepeatedCardForcer([SunBaconRelaxer, Khadgar, Groundshaker, MalGanis, MalGanis])
+        tavern.buying_step()
+        for i in range(3):
+            player_1.purchase(StoreIndex(0))
+            player_1.summon_from_hand(HandIndex(0))
+            if i == 0:
+                player_1.sell_minion(BoardIndex(0))
+        player_1.play_spell(SpellIndex(0), board_index=BoardIndex(1))
+        self.assertCardListEquals(player_1.in_play, [Khadgar, Groundshaker])
+        player_2.purchase(StoreIndex(3))
+        player_2.summon_from_hand(HandIndex(0))
+        self.assertCardListEquals(player_2.in_play, [MalGanis])
+        tavern.combat_step()
+        self.assertEqual(player_1.health, 40)
+        self.assertEqual(player_2.health, 40)
+
+    def test_hexruin_marauder(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        self.upgrade_to_tier(tavern, 4)
+        tavern.randomizer = RepeatedCardForcer([HexruinMarauder, AlleyCat, AlleyCat, MurlocTidehunter, AlleyCat])
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        self.assertCardListEquals(player_1.in_play, [HexruinMarauder])
+        tavern.combat_step()
+        self.assertEqual(player_1.in_play[0].attack, player_1.in_play[0].base_attack + 3)
+        self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health + 3)
+        tavern.buying_step()
+        for _ in range(3):
+            player_1.purchase(StoreIndex(1))
+            player_1.summon_from_hand(HandIndex(0))
+        self.assertCardListEquals(player_1.in_play,
+                                  [HexruinMarauder, AlleyCat, TabbyCat, AlleyCat, TabbyCat, MurlocTidehunter,
+                                   MurlocScout])
+        tavern.combat_step()
+        self.assertEqual(player_1.in_play[0].attack, player_1.in_play[0].base_attack + 3)
+        self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health + 3)
+
+    def test_agamaggan_the_great_boar(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        self.upgrade_to_tier(tavern, 5)
+        tavern.randomizer = RepeatedCardForcer([RazorfenGeomancer, AgamagganTheGreatBoar])
+        tavern.buying_step()
+        for i in range(2):
+            player_1.purchase(StoreIndex(0))
+            player_1.summon_from_hand(HandIndex(0))
+        player_1.play_spell(SpellIndex(0), board_index=BoardIndex(0))
+        self.assertEqual(player_1.in_play[0].attack, player_1.in_play[0].base_attack + 2)
+        self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health + 2)
+        self.assertEqual(player_1.in_play[1].attack, player_1.in_play[1].base_attack)
+        self.assertEqual(player_1.in_play[1].health, player_1.in_play[1].base_health)
+
+    class TestAggemThorncurseRandomizer(DefaultRandomizer):
+        def select_draw_card(self, cards: List[MonsterCard], player_name: str, round_number: int) -> MonsterCard:
+            if round_number == 6:
+                return force_card(cards, MurlocTidecaller)
+            elif round_number == 7:
+                return force_card(cards, DragonspawnLieutenant)
+            elif round_number == 8:
+                return force_card(cards, VulgarHomunculus)
+            elif round_number == 9:
+                return force_card(cards, ScavengingHyena)
+            elif round_number == 10:
+                return force_card(cards, KaboomBot)
+            elif round_number == 11:
+                return force_card(cards, Scallywag)
+            else:
+                return cards[0]
+
+    def test_aggem_thorncurse(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Joe", DeathSpeakerBlackthorn())
+        player_2 = tavern.add_player_with_hero("Donald")
+        self.upgrade_to_tier(tavern, 5)
+        tavern.randomizer = self.TestAggemThorncurseRandomizer()
+        for _ in range(6):
+            tavern.buying_step()
+            player_1.purchase(StoreIndex(0))
+            player_1.summon_from_hand(HandIndex(0))
+            tavern.combat_step()
+        tavern.randomizer = RepeatedCardForcer([AggemThorncurse])
+        tavern.buying_step()
+        player_1.purchase(StoreIndex(0))
+        player_1.summon_from_hand(HandIndex(0))
+        tavern.combat_step()
+        self.assertCardListEquals(player_1.in_play, [MurlocTidecaller, DragonspawnLieutenant, VulgarHomunculus,
+                                                     ScavengingHyena, KaboomBot, Scallywag, AggemThorncurse])
+        self.assertEqual(len(player_1.spells), 8)
+        player_1.play_spell(SpellIndex(0), board_index=BoardIndex(6))
+        for i in range(6):
+            self.assertEqual(player_1.in_play[i].attack, player_1.in_play[i].base_attack + 1)
+            self.assertEqual(player_1.in_play[i].health, player_1.in_play[i].base_health + 1)
+        self.assertEqual(player_1.in_play[6].attack, player_1.in_play[6].base_attack + 2)
+        self.assertEqual(player_1.in_play[6].health, player_1.in_play[6].base_health + 2)
+
+    def test_charlga(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Joe")
+        player_2 = tavern.add_player_with_hero("Donald")
+        self.upgrade_to_tier(tavern, 6)
+        tavern.randomizer = RepeatedCardForcer([MurlocTidehunter, AgamagganTheGreatBoar, Charlga])
+        tavern.buying_step()
+        for _ in range(3):
+            player_1.purchase(StoreIndex(0))
+            player_1.summon_from_hand(HandIndex(0))
+        tavern.combat_step()
+        self.assertCardListEquals(player_1.in_play, [MurlocTidehunter, MurlocScout, AgamagganTheGreatBoar, Charlga])
+        for i in range(3):
+            self.assertEqual(player_1.in_play[i].attack, player_1.in_play[i].base_attack + 2)
+            self.assertEqual(player_1.in_play[i].health, player_1.in_play[i].base_health + 2)
+        self.assertEqual(player_1.in_play[3].attack, player_1.in_play[3].base_attack)
+        self.assertEqual(player_1.in_play[3].health, player_1.in_play[3].base_health)
 
 
 if __name__ == '__main__':

@@ -26,7 +26,7 @@ class Spell:
 
     def valid(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
               store_index: Optional['StoreIndex'] = None) -> bool:
-        if self.target_location == []:
+        if not self.target_location:
             return (board_index is None) and (store_index is None)
         if board_index is None and store_index is None:
             return False

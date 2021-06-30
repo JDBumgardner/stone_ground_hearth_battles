@@ -4,7 +4,7 @@ from typing import Union, Tuple, Optional
 
 from hearthstone.simulator.core import combat, events
 from hearthstone.simulator.core.card_pool import Amalgam, FishOfNZoth
-from hearthstone.simulator.core.cards import CardLocation, one_minion_per_type
+from hearthstone.simulator.core.cards import CardLocation, one_minion_per_type, one_minion_per_tier
 from hearthstone.simulator.core.combat import logger
 from hearthstone.simulator.core.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
 from hearthstone.simulator.core.hero import Hero
@@ -12,7 +12,7 @@ from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 from hearthstone.simulator.core.player import BoardIndex, StoreIndex, DiscoverIndex, HeroChoiceIndex, Player
 from hearthstone.simulator.core.secrets import remaining_secrets, BaseSecret
 from hearthstone.simulator.core.spell_pool import TripleRewardCard, GoldCoin, Prize, Banana, BigBanana, RecruitmentMap, \
-    DARKMOON_PRIZES
+    DARKMOON_PRIZES, BloodGem
 
 
 class Pyramad(Hero):
@@ -882,22 +882,7 @@ class CaptainHooktusk(Hero):
         context.owner.discover_queue.append(discovered_cards)
 
 
-class OverlordSaurfang(Hero):
-    base_power_cost = 1
-
-    def __init__(self):
-        super().__init__()
-        self.bonus_applied = False
-
-    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
-        if event.event is EVENTS.BUY_START:
-            self.bonus_applied = False
-        elif event.event is EVENTS.BUY:
-            if self.hero_power_used and not self.bonus_applied:
-                event.card.attack += context.owner.tavern.turn_count + 1
-                self.bonus_applied = True
-
-
+# TODO: add Tickatus... and darkmoon prizes (ugh)
 class Tickatus(Hero):
     def __init__(self):
         super().__init__()
@@ -928,6 +913,112 @@ class Tickatus(Hero):
 
     def hero_info(self, player: 'Player') -> Optional[str]:
         return f'{4 - (player.tavern.turn_count + 1) % 4} turns left'
+
+
+class OverlordSaurfang(Hero):
+    base_power_cost = 1
+
+    def __init__(self):
+        super().__init__()
+        self.bonus_applied = False
+
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.BUY_START:
+            self.bonus_applied = False
+        elif event.event is EVENTS.BUY:
+            if self.hero_power_used and not self.bonus_applied:
+                event.card.attack += context.owner.tavern.turn_count + 1
+                self.bonus_applied = True
+
+
+class Xyrella(Hero):
+    base_power_cost = 2
+    power_target_location = [CardLocation.STORE]
+
+    def hero_power_valid_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                              store_index: Optional['StoreIndex'] = None):
+        return bool(context.owner.store) and context.owner.room_in_hand()
+
+    def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                        store_index: Optional['StoreIndex'] = None):
+        target = context.owner.pop_store_card(store_index)
+        target.attack = 2
+        target.health = 2
+        context.owner.gain_hand_card(target)
+
+
+class Voljin(Hero):
+    base_power_cost = 0
+    power_target_location = [CardLocation.BOARD, CardLocation.STORE]
+    multiple_power_uses_per_turn = True
+
+    def __init__(self):
+        super().__init__()
+        self.first_target = None
+        self.second_target = None
+
+    def hero_power_valid_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                              store_index: Optional['StoreIndex'] = None):
+        if self.first_target is not None and self.second_target is not None:
+            return False
+        if board_index is not None:
+            target = context.owner.in_play[board_index]
+        if store_index is not None:
+            target = context.owner.store[store_index]
+        if target == self.first_target:
+            return False
+        return True
+
+    def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                        store_index: Optional['StoreIndex'] = None):
+        if board_index is not None:
+            target = context.owner.in_play[board_index]
+        if store_index is not None:
+            target = context.owner.store[store_index]
+
+        if self.first_target is None:
+            self.first_target = target
+        elif self.second_target is None:
+            self.second_target = target
+            self.first_target.attack, self.second_target.attack = self.second_target.attack, self.first_target.attack
+            self.first_target.health, self.second_target.health = self.second_target.health, self.first_target.health
+
+    def handle_event(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.BUY_START:
+            self.first_target = None
+            self.second_target = None
+
+
+class DeathSpeakerBlackthorn(Hero):
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.TAVERN_UPGRADE:
+            for _ in range(2):
+                context.owner.gain_spell(BloodGem())
+
+
+class GuffRunetotem(Hero):
+    base_power_cost = 1
+
+    def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                        store_index: Optional['StoreIndex'] = None):
+        for card in one_minion_per_tier(context.owner.in_play, context.randomizer):
+            card.attack += 2
+            card.health += 1
+
+
+class MutanusTheDevourer(Hero):
+    base_power_cost = 0
+    power_target_location = [CardLocation.BOARD]
+
+    def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                        store_index: Optional['StoreIndex'] = None):
+        minion_to_remove = context.owner.pop_board_card(board_index)
+        context.owner.tavern.deck.return_cards(minion_to_remove.dissolve())
+        if context.owner.in_play:
+            minion_to_buff = context.randomizer.select_friendly_minion(context.owner.in_play)
+            minion_to_buff.attack += minion_to_remove.attack
+            minion_to_buff.health += minion_to_remove.health
+        context.owner.coins += 1
 
 
 VALHALLA = [member[1] for member in

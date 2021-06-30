@@ -36,6 +36,16 @@ def one_minion_per_type(cards: List['MonsterCard'], randomizer: 'Randomizer',
     return minions
 
 
+def one_minion_per_tier(cards: List['MonsterCard'], randomizer: 'Randomizer') -> List['MonsterCard']:
+    minions = []
+    for tavern_tier in range(1, 7):
+        minions_by_tier = [card for card in cards if card.tier == tavern_tier]
+        if minions_by_tier:
+            card = randomizer.select_friendly_minion(minions_by_tier)
+            minions.append(card)
+    return minions
+
+
 BOOL_ATTRIBUTE_LIST = ["divine_shield", "magnetic", "poisonous", "taunt", "windfury", "cleave", "reborn",
                        "mega_windfury", "gruul_rules"]
 
@@ -45,7 +55,7 @@ class MonsterCard:
     mana_cost: Optional[int] = None
     base_health: int
     base_attack: int
-    monster_type: MONSTER_TYPES
+    monster_type: 'MONSTER_TYPES' = MONSTER_TYPES.NEUTRAL
     base_divine_shield = False
     base_magnetic = False
     base_poisonous = False
@@ -285,6 +295,11 @@ class MonsterCard:
         clone.deathrattles = clone.deathrattles.copy()
         clone.attached_cards = [card.copy() for card in clone.attached_cards]
         return clone
+
+    def adjacent_minions(self, context: 'BuyPhaseContext', predicate: Callable[['MonsterCard'], bool]) -> List[
+        'MonsterCard']:
+        return [card for card in context.owner.in_play if
+                predicate(card) and abs(context.owner.in_play.index(card) - context.owner.in_play.index(self)) == 1]
 
 
 class CardList:
