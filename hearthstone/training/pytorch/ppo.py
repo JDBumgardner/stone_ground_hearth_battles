@@ -648,9 +648,6 @@ class PPOTensorboard:
 
 
 def main():
-    parallelismMethod = 'distributed'
-    if platform.system() == 'Windows':
-        parallelismMethod = None
     ppo_learner = PPOLearner(PPOHyperparameters({
         "resume": False,
         'resume.from': '2021-02-05T17:56:25.030000',
@@ -685,7 +682,7 @@ def main():
         'nn.encoding.normalize.gamma': 0.999999,
         'normalize_advantage': True,
         'parallelism.num_workers': 6,
-        'parallelism.method': parallelismMethod,
+        'parallelism.method': None if platform.system() == 'Windows' else 'distributed',
         'parallelism.shared_tensor_pool': False,
         'parallelism.distributed.games_per_worker': 128,
         'optimizer': 'adam',

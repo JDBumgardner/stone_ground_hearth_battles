@@ -17,8 +17,17 @@ def _tensorize_batch(batch: List[Tuple[State, EncodedActionSet, Optional[List[Ac
         [b[1].player_action_tensor for b in batch], dim=0).detach()
     valid_card_actions_tensor = torch.cat(
         [b[1].card_action_tensor for b in batch], dim=0).detach()
+    valid_no_target_battlecry_tensor = torch.cat([b[1].no_target_battlecry_tensor for b in batch], dim=0).detach()
     valid_battlecry_target_tensor = torch.cat(
         [b[1].battlecry_target_tensor for b in batch], dim=0).detach()
+    valid_spell_action_tensor = torch.cat(
+        [b[1].spell_action_tensor for b in batch], dim=0).detach()
+    valid_no_target_spell_action_tensor = torch.cat(
+        [b[1].no_target_spell_action_tensor for b in batch], dim=0).detach()
+    valid_store_target_spell_action_tensor = torch.cat(
+        [b[1].store_target_spell_action_tensor for b in batch], dim=0).detach()
+    valid_board_target_spell_action_tensor = torch.cat(
+        [b[1].board_target_spell_action_tensor for b in batch], dim=0).detach()
     rearrange_phase = torch.cat([b[1].rearrange_phase for b in batch], dim=0).detach()
     cards_to_rearrange = torch.cat(
         [b[1].cards_to_rearrange for b in batch], dim=0).detach()
@@ -28,7 +37,12 @@ def _tensorize_batch(batch: List[Tuple[State, EncodedActionSet, Optional[List[Ac
                        spells_tensor=spells_tensor.to(device)),
             EncodedActionSet(player_action_tensor=valid_player_actions_tensor,
                              card_action_tensor=valid_card_actions_tensor,
+                             no_target_battlecry_tensor=valid_no_target_battlecry_tensor,
                              battlecry_target_tensor=valid_battlecry_target_tensor,
+                             spell_action_tensor=valid_spell_action_tensor,
+                             no_target_spell_action_tensor=valid_no_target_spell_action_tensor,
+                             store_target_spell_action_tensor=valid_store_target_spell_action_tensor,
+                             board_target_spell_action_tensor=valid_board_target_spell_action_tensor,
                              rearrange_phase=rearrange_phase,
                              cards_to_rearrange=cards_to_rearrange,
                              store_start=batch[0][1].store_start,
@@ -45,7 +59,7 @@ def _untensorize_batch(batch_args: List[Tuple[State, EncodedActionSet, Optional[
     Tuple[List[Action], torch.Tensor, torch.Tensor, ActorCriticGameStepDebugInfo]]:
     result = []
     i = 0
-    for (player_state_tensor, _), _, _ in batch_args:
+    for (player_state_tensor, _, _), _, _ in batch_args:
         batch_entry_size = player_state_tensor.shape[0]
         result.append((output_actions[i:i + batch_entry_size],
                        action_log_probs[i:i + batch_entry_size].detach().to(device),
