@@ -3908,8 +3908,8 @@ class CardTests(BattleGroundsTestCase):
         player_1.summon_from_hand(HandIndex(0))
         player_1.gain_spell(MightOfStormwind())
         player_1.play_spell(SpellIndex(0))
-        self.assertEqual(player_1.in_play[0].attack, player_1.in_play[0].base_attack + 1)
-        self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health + 1)
+        self.assertEqual(player_1.in_play[0].attack, player_1.in_play[0].base_attack + 3)
+        self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health + 3)
 
     def test_pocket_change(self):
         tavern = Tavern(restrict_types=False)
@@ -3949,10 +3949,10 @@ class CardTests(BattleGroundsTestCase):
         player_1.gain_spell(TheGoodStuff())
         player_1.play_spell(SpellIndex(0))
         for card in player_1.store:
-            self.assertEqual(card.health, card.base_health + 1)
+            self.assertEqual(card.health, card.base_health + 2)
         player_1.reroll_store()
         for card in player_1.store:
-            self.assertEqual(card.health, card.base_health + 1)
+            self.assertEqual(card.health, card.base_health + 2)
 
     def test_evolving_tavern(self):
         tavern = Tavern(restrict_types=False)
@@ -3974,7 +3974,7 @@ class CardTests(BattleGroundsTestCase):
         player_1.play_spell(SpellIndex(0))
         tavern.combat_step()
         tavern.buying_step()
-        self.assertEqual(player_1.tavern_upgrade_cost, 2)
+        self.assertEqual(player_1.tavern_upgrade_cost, 1)
 
     def test_gruul_rules(self):
         tavern = Tavern(restrict_types=False)

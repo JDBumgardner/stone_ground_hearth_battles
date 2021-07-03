@@ -81,7 +81,8 @@ class MightOfStormwind(Spell):
 
     def on_play(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                 store_index: Optional['StoreIndex'] = None):
-        for card in context.owner.in_play:
+        for _ in range(3):  # TODO: is this three different random minions?
+            card = context.randomizer.select_friendly_minion(context.owner.in_play)
             card.attack += 1
             card.health += 1
 
@@ -119,7 +120,7 @@ class TheGoodStuff(Spell):
                 store_index: Optional['StoreIndex'] = None):
         context.owner.the_good_stuff = True
         for card in context.owner.store:
-            card.health += 1
+            card.health += 2
 
 
 class EvolvingTavern(Spell):
@@ -141,7 +142,7 @@ class GreatDeal(Spell):
 
     def on_play(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                 store_index: Optional['StoreIndex'] = None):
-        context.owner.tavern_cost_reduction += 2
+        context.owner.tavern_cost_reduction += 3
 
 
 class GruulRules(Spell):
@@ -243,7 +244,7 @@ class BuyTheHolyLight(Spell):
 
 class ImStillJustARatInACage(Spell):
     target_location = [CardLocation.BOARD]
-    darkmoon_prize_tier = 3
+    darkmoon_prize_tier = 2
 
     def on_play(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                 store_index: Optional['StoreIndex'] = None):
