@@ -345,7 +345,7 @@ class CombatTests(BattleGroundsTestCase):
         ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
-        adams_war_party.board = [PackLeader(), PackLeader()]
+        adams_war_party.board = [MonstrousMacaw(), MonstrousMacaw()]
         soul_juggler = SoulJuggler()
         soul_juggler.golden_transformation([])
         ethans_war_party.board = [Imp(), Imp(), soul_juggler]
@@ -850,8 +850,8 @@ class CombatTests(BattleGroundsTestCase):
         ethan = Player.new_player_with_hero(Tavern(), "Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
-        adams_war_party.board = [SavannahHighmane(), MamaBear(), VulgarHomunculus()]
-        ethans_war_party.board = [RabidSaurolisk(), NadinaTheRed(), NadinaTheRed(), NadinaTheRed(), NadinaTheRed()]
+        adams_war_party.board = [SavannahHighmane(), MamaBear(), TwilightEmissary()]
+        ethans_war_party.board = [TwilightEmissary(), NadinaTheRed(), NadinaTheRed(), NadinaTheRed(), NadinaTheRed()]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
@@ -1697,7 +1697,11 @@ class CombatTests(BattleGroundsTestCase):
         ethans_war_party = WarParty(ethan)
         soul_juggler = SoulJuggler()
         soul_juggler.golden_transformation([])
-        adams_war_party.board = [DeadlySpore(), KindlyGrandmother(), ReplicatingMenace()]
+        replicating_menace = ReplicatingMenace()
+        replicating_menace.golden_transformation([])
+        rat_pack = RatPack()
+        rat_pack.attack += 2
+        adams_war_party.board = [DeadlySpore(), rat_pack, replicating_menace]
         ethans_war_party.board = [soul_juggler, VulgarHomunculus()]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
@@ -1752,7 +1756,7 @@ class CombatTests(BattleGroundsTestCase):
         blacksmith = BarrensBlacksmith()
         blacksmith.taunt = True
         adams_war_party.board = [blacksmith, AlleyCat()]
-        ethans_war_party.board = [DragonspawnLieutenant(), DragonspawnLieutenant(), AlleyCat(), PackLeader()]
+        ethans_war_party.board = [DragonspawnLieutenant(), DragonspawnLieutenant(), AlleyCat(), FreedealingGambler()]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)

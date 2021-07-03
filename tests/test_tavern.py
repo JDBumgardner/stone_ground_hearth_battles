@@ -937,7 +937,7 @@ class CardTests(BattleGroundsTestCase):
         player_1.summon_from_hand(HandIndex(0))
         self.assertCardListEquals(player_1.in_play, [PackLeader, RabidSaurolisk])
         self.assertEqual(player_1.in_play[0].attack, 3)
-        self.assertEqual(player_1.in_play[0].health, 3)
+        self.assertEqual(player_1.in_play[0].health, 4)
         self.assertEqual(player_1.in_play[1].attack, 5)
         self.assertEqual(player_1.in_play[1].health, 2)
 
@@ -1484,12 +1484,12 @@ class CardTests(BattleGroundsTestCase):
         player_1.summon_from_hand(HandIndex(0))
         player_1.summon_from_hand(HandIndex(0))
         self.assertCardListEquals(player_1.in_play, [MamaBear, AlleyCat, TabbyCat])
-        self.assertEqual(player_1.in_play[0].health, 4)
-        self.assertEqual(player_1.in_play[0].attack, 4)
-        self.assertEqual(player_1.in_play[1].health, 5)
-        self.assertEqual(player_1.in_play[1].attack, 5)
-        self.assertEqual(player_1.in_play[2].health, 5)
-        self.assertEqual(player_1.in_play[2].attack, 5)
+        self.assertEqual(player_1.in_play[0].health, 5)
+        self.assertEqual(player_1.in_play[0].attack, 5)
+        self.assertEqual(player_1.in_play[1].health, 6)
+        self.assertEqual(player_1.in_play[1].attack, 6)
+        self.assertEqual(player_1.in_play[2].health, 6)
+        self.assertEqual(player_1.in_play[2].attack, 6)
 
     def test_replicating_menace_magnetic(self):
         tavern = Tavern(restrict_types=False)
@@ -3608,7 +3608,7 @@ class CardTests(BattleGroundsTestCase):
         def select_draw_card(self, cards: List['MonsterCard'], player_name: str, round_number: int) -> 'MonsterCard':
             minion_types = [type(card) for card in cards]
             if player_name == "lucy":
-                return force_card(cards, RabidSaurolisk)
+                return force_card(cards, Houndmaster)
             elif PackLeader in minion_types:
                 return force_card(cards, PackLeader)
             else:
@@ -3626,9 +3626,12 @@ class CardTests(BattleGroundsTestCase):
         player_1 = tavern.add_player_with_hero("Dante_Kong", YShaarj())
         player_2 = tavern.add_player_with_hero("lucy")
         self.upgrade_to_tier(tavern, 2)
-        tavern.randomizer = self.TestYShaarjCombatSummonRandomizer()
         tavern.buying_step()
         tavern.combat_step()
+        tavern.buying_step()
+        player_2.upgrade_tavern()
+        tavern.combat_step()
+        tavern.randomizer = self.TestYShaarjCombatSummonRandomizer()
         tavern.buying_step()
         player_1.purchase(StoreIndex(0))
         player_1.summon_from_hand(HandIndex(0))
@@ -3638,7 +3641,7 @@ class CardTests(BattleGroundsTestCase):
         player_2.summon_from_hand(HandIndex(0))
         player_1.hero_power()
         self.assertCardListEquals(player_1.in_play, [PackLeader])
-        self.assertCardListEquals(player_2.in_play, [RabidSaurolisk, RabidSaurolisk])
+        self.assertCardListEquals(player_2.in_play, [Houndmaster, Houndmaster])
         tavern.combat_step()
         self.assertEqual(player_1.health, 40)
         self.assertEqual(player_2.health, 37)
