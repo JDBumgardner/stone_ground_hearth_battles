@@ -724,7 +724,7 @@ class DeflectOBot(MonsterCard):
     mana_cost = 4
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
-        bonus = 2 if self.golden else 1
+        bonus = 4 if self.golden else 2
         if event.event is EVENTS.SUMMON_COMBAT and event.card.check_type(
                 MONSTER_TYPES.MECH) and event.card in context.friendly_war_party.board:
             self.attack += bonus
@@ -1965,7 +1965,7 @@ class LieutenantGarr(MonsterCard):
     monster_type = MONSTER_TYPES.ELEMENTAL
     pool = MONSTER_TYPES.ELEMENTAL
     base_attack = 8
-    base_health = 1
+    base_health = 8
     base_taunt = True
     legendary = True
     mana_cost = 8
