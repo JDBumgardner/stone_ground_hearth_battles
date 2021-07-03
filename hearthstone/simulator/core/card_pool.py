@@ -17,15 +17,15 @@ class MamaBear(MonsterCard):
     tier = 5
     monster_type = MONSTER_TYPES.BEAST
     pool = MONSTER_TYPES.BEAST
-    base_attack = 4
-    base_health = 4
+    base_attack = 5
+    base_health = 5
     mana_cost = 8
 
     def handle_event_powers(self, event: CardEvent, context: Union[BuyPhaseContext, CombatPhaseContext]):
         if (event.event is EVENTS.SUMMON_BUY or (
                 event.event is EVENTS.SUMMON_COMBAT and event.card in context.friendly_war_party.board)) and event.card.check_type(
             MONSTER_TYPES.BEAST) and event.card != self:
-            bonus = 8 if self.golden else 4
+            bonus = 10 if self.golden else 5
             event.card.attack += bonus
             event.card.health += bonus
 
@@ -572,7 +572,7 @@ class NathrezimOverseer(MonsterCard):
     monster_type = MONSTER_TYPES.DEMON
     pool = MONSTER_TYPES.DEMON
     base_attack = 2
-    base_health = 3
+    base_health = 4
     num_battlecry_targets = [1]
     mana_cost = 3
 
@@ -854,7 +854,7 @@ class ScrewjankClunker(MonsterCard):
 class PackLeader(MonsterCard):
     tier = 2
     base_attack = 3
-    base_health = 3
+    base_health = 4
     monster_type = None
     pool = MONSTER_TYPES.BEAST
     mana_cost = 2
@@ -885,7 +885,7 @@ class SaltyLooter(MonsterCard):
 class SoulJuggler(MonsterCard):
     tier = 3
     base_attack = 3
-    base_health = 3
+    base_health = 5
     monster_type = None
     pool = MONSTER_TYPES.DEMON
     mana_cost = 3
@@ -896,6 +896,7 @@ class SoulJuggler(MonsterCard):
             count = 2 if self.golden else 1
             for _ in range(count):
                 targets = [card for card in context.enemy_war_party.board if card.is_targetable()]
+                print(targets)
                 if targets:
                     target = context.randomizer.select_enemy_minion(targets)
                     target.take_damage(3, context.enemy_context(), self)
@@ -1264,8 +1265,8 @@ class RazorgoreTheUntamed(MonsterCard):
     tier = 5
     monster_type = MONSTER_TYPES.DRAGON
     pool = MONSTER_TYPES.DRAGON
-    base_attack = 2
-    base_health = 4
+    base_attack = 4
+    base_health = 6
     legendary = True
     mana_cost = 8
 
@@ -2091,7 +2092,7 @@ class RefreshingAnomaly(MonsterCard):
     tier = 1
     monster_type = MONSTER_TYPES.ELEMENTAL
     base_attack = 1
-    base_health = 3
+    base_health = 4
     pool = MONSTER_TYPES.ELEMENTAL
     mana_cost = 1
 
@@ -2228,8 +2229,8 @@ class ArmOfTheEmpire(MonsterCard):
 class Bigfernal(MonsterCard):
     tier = 4
     monster_type = MONSTER_TYPES.DEMON
-    base_attack = 4
-    base_health = 4
+    base_attack = 6
+    base_health = 6
     pool = MONSTER_TYPES.DEMON
 
     def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
