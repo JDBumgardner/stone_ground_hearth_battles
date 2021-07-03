@@ -2190,7 +2190,7 @@ class CardTests(BattleGroundsTestCase):
         self.assertCardListEquals(player_1.in_play, [DeckSwabbie, DeckSwabbie])
         self.assertEqual(player_1.in_play[0].attack, player_1.in_play[0].base_attack)
         self.assertEqual(player_1.in_play[0].health, player_1.in_play[0].base_health)
-        self.assertEqual(player_1.in_play[1].attack, player_1.in_play[1].base_attack + 2)
+        self.assertEqual(player_1.in_play[1].attack, player_1.in_play[1].base_attack + 4)
         self.assertEqual(player_1.in_play[1].health, player_1.in_play[1].base_health + 2)
 
     def test_primalfin_lookout(self):

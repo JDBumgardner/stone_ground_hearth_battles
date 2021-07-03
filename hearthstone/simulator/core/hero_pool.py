@@ -355,7 +355,7 @@ class EdwinVanCleef(Hero):
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
         bonus = len(context.owner.purchased_minions)
-        context.owner.in_play[board_index].attack += bonus
+        context.owner.in_play[board_index].attack += 2 * bonus
         context.owner.in_play[board_index].health += bonus
 
 
