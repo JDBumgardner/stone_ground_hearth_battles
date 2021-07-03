@@ -461,7 +461,7 @@ class Player:
         if self.store_size() < self.maximum_store_size:
             self._store.append(card)
             card.apply_nomi_buff(self)
-            card.health += int(self.the_good_stuff)
+            card.health += 2 if self.the_good_stuff else 0
             self.broadcast_buy_phase_event(events.AddToStoreEvent(card))
 
     def extend_store(self, cards: List['MonsterCard']):
