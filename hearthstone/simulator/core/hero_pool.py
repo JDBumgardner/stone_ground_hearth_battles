@@ -785,7 +785,7 @@ class MaievShadowsong(Hero):
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
         store_minion = context.owner.pop_store_card(store_index)
-        self.dormant_minions[store_minion] = 2
+        self.dormant_minions[store_minion] = 3
 
     def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_START:
@@ -794,6 +794,7 @@ class MaievShadowsong(Hero):
                 if self.dormant_minions[card] == 0:
                     context.owner.gain_hand_card(card)
                     card.attack += 1
+                    card.health += 1
                     del self.dormant_minions[card]
 
     def hero_info(self, player: 'Player') -> Optional[str]:
