@@ -2322,7 +2322,7 @@ class CardTests(BattleGroundsTestCase):
 
     class TestKingMuklaRandomizer(DefaultRandomizer):
         def select_random_number(self, lo: int, hi: int) -> int:
-            return 3
+            return 2
 
     def test_king_mukla(self):
         tavern = Tavern(restrict_types=False)
@@ -3800,7 +3800,7 @@ class CardTests(BattleGroundsTestCase):
         player_1.hero_power()
         player_1.purchase(StoreIndex(0))
         player_1.purchase(StoreIndex(0))
-        self.assertEqual(player_1.hand[0].attack, player_1.hand[0].base_attack + 5)
+        self.assertEqual(player_1.hand[0].attack, player_1.hand[0].base_attack + 6)
         self.assertEqual(player_1.hand[1].attack, player_1.hand[1].base_attack)
 
     def test_xyrella(self):
@@ -4339,7 +4339,7 @@ class CardTests(BattleGroundsTestCase):
                                   [DragonspawnLieutenant, FreedealingGambler, Khadgar, CaveHydra, KangorsApprentice,
                                    GoldrinnTheGreatWolf])
         for card in player_1.in_play:
-            self.assertEqual(card.attack, card.base_attack + 2)
+            self.assertEqual(card.attack, card.base_attack + 1)
             self.assertEqual(card.health, card.base_health + 1)
 
     def test_mutanus_the_devourer(self):
