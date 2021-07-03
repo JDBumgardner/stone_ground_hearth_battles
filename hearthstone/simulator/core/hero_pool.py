@@ -407,7 +407,7 @@ class KingMukla(Hero):
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
         for _ in range(2):
-            if context.randomizer.select_random_number(1, 3) == 1:
+            if context.randomizer.select_random_number(1, 2) == 1:
                 context.owner.gain_spell(BigBanana())
             else:
                 context.owner.gain_spell(Banana())
@@ -658,6 +658,7 @@ class IllidanStormrage(Hero):
                     attacking_war_party = context.friendly_war_party
                     defending_war_party = context.enemy_war_party
                     attacker = context.friendly_war_party.board[i]
+                    attacker.attack += 2
                     num_attacks = attacker.num_attacks() if attacker else 1
                     for _ in range(num_attacks):
                         defender = defending_war_party.get_attack_target(context.randomizer, attacker)
@@ -928,7 +929,7 @@ class OverlordSaurfang(Hero):
             self.bonus_applied = False
         elif event.event is EVENTS.BUY:
             if self.hero_power_used and not self.bonus_applied:
-                event.card.attack += context.owner.tavern.turn_count + 1
+                event.card.attack += context.owner.tavern.turn_count + 2
                 self.bonus_applied = True
 
 
@@ -1003,7 +1004,7 @@ class GuffRunetotem(Hero):
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
         for card in one_minion_per_tier(context.owner.in_play, context.randomizer):
-            card.attack += 2
+            card.attack += 1
             card.health += 1
 
 

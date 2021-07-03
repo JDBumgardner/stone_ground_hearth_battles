@@ -1096,8 +1096,8 @@ class CombatTests(BattleGroundsTestCase):
         ethan = tavern.add_player_with_hero("Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
-        adams_war_party.board = [GlyphGuardian(), TwilightEmissary(), DeadlySpore()]
-        ethans_war_party.board = [BloodsailCannoneer(), Robosaur(), VulgarHomunculus(), VulgarHomunculus()]
+        adams_war_party.board = [DeckSwabbie(), TwilightEmissary(), DeckSwabbie()]
+        ethans_war_party.board = [BloodsailCannoneer(), VulgarHomunculus(), VulgarHomunculus()]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
@@ -1234,8 +1234,8 @@ class CombatTests(BattleGroundsTestCase):
         ethan = tavern.add_player_with_hero("Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
-        adams_war_party.board = [DeckSwabbie(), RockpoolHunter(), DeckSwabbie()]
-        ethans_war_party.board = [DragonspawnLieutenant(), RedWhelp()]
+        adams_war_party.board = [AlleyCat(), RockpoolHunter(), AlleyCat()]
+        ethans_war_party.board = [TwilightEmissary(), RedWhelp()]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)
         self.assertEqual(ethan.health, 40)
@@ -1394,7 +1394,7 @@ class CombatTests(BattleGroundsTestCase):
         ethan = tavern.add_player_with_hero("Ethan")
         adams_war_party = WarParty(adam)
         ethans_war_party = WarParty(ethan)
-        adams_war_party.board = [Imprisoner(), FishOfNZoth()]
+        adams_war_party.board = [Scallywag(), FishOfNZoth()]
         ethans_war_party.board = [CapnHoggarr()]
         fight_boards(adams_war_party, ethans_war_party, DefaultRandomizer())
         self.assertEqual(adam.health, 40)

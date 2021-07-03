@@ -1112,7 +1112,7 @@ class BronzeWarden(MonsterCard):
 class Amalgam(MonsterCard):
     tier = 1
     monster_type = MONSTER_TYPES.ALL
-    base_attack = 1
+    base_attack = 2
     base_health = 2
     not_in_pool = True
 
@@ -2291,8 +2291,8 @@ class MythraxTheUnraveler(MonsterCard):
 class FishOfNZoth(MonsterCard):
     tier = 1
     monster_type = MONSTER_TYPES.BEAST
-    base_attack = 1
-    base_health = 1
+    base_attack = 2
+    base_health = 2
     not_in_pool = True
     legendary = True
 
