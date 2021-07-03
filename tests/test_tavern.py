@@ -4653,6 +4653,18 @@ class CardTests(BattleGroundsTestCase):
         self.assertEqual(player_1.in_play[3].attack, player_1.in_play[3].base_attack)
         self.assertEqual(player_1.in_play[3].health, player_1.in_play[3].base_health)
 
+    def test_archdruid_hammul(self):
+        tavern = Tavern(restrict_types=False)
+        player_1 = tavern.add_player_with_hero("Dante_Kong")
+        player_2 = tavern.add_player_with_hero("lucy")
+        self.upgrade_to_tier(tavern, 6)
+        tavern.randomizer = RepeatedCardForcer([DeckSwabbie, ArchdruidHamuul])
+        tavern.buying_step()
+        for _ in range(2):
+            player_1.purchase(StoreIndex(0))
+            player_1.summon_from_hand(HandIndex(0))
+        self.assertTrue(all(card.monster_type == MONSTER_TYPES.PIRATE for card in player_1.store))
+
 
 if __name__ == '__main__':
     unittest.main()

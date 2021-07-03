@@ -136,7 +136,7 @@ class FiendishServant(MonsterCard):
 
 class WrathWeaver(MonsterCard):
     tier = 1
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 1
     base_health = 3
     pool = MONSTER_TYPES.DEMON
@@ -210,7 +210,7 @@ class MurlocScout(MonsterCard):
 
 class SelflessHero(MonsterCard):
     tier = 2
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 2
     base_health = 1
     mana_cost = 1
@@ -502,7 +502,7 @@ class DeckSwabbie(MonsterCard):
 
 class UnstableGhoul(MonsterCard):
     tier = 2
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 1
     base_health = 3
     base_taunt = True
@@ -855,7 +855,7 @@ class PackLeader(MonsterCard):
     tier = 2
     base_attack = 3
     base_health = 4
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     pool = MONSTER_TYPES.BEAST
     mana_cost = 2
 
@@ -886,7 +886,7 @@ class SoulJuggler(MonsterCard):
     tier = 3
     base_attack = 3
     base_health = 5
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     pool = MONSTER_TYPES.DEMON
     mana_cost = 3
 
@@ -926,7 +926,7 @@ class Khadgar(MonsterCard):  # TODO: fix khadgar implementation
     tier = 3
     base_attack = 2
     base_health = 2
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     legendary = True
     mana_cost = 2
 
@@ -992,7 +992,7 @@ class VirmenSensei(MonsterCard):
     tier = 4
     base_attack = 4
     base_health = 5
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     num_battlecry_targets = [1]
     pool = MONSTER_TYPES.BEAST
     mana_cost = 5
@@ -1027,7 +1027,7 @@ class DefenderOfArgus(MonsterCard):
     tier = 4
     base_attack = 2
     base_health = 3
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     num_battlecry_targets = [1, 2]
     mana_cost = 4
 
@@ -2203,7 +2203,7 @@ class TormentedRitualist(MonsterCard):
 
 class WardenOfOld(MonsterCard):
     tier = 3
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 3
     base_health = 3
 
@@ -2623,6 +2623,20 @@ class Charlga(MonsterCard):
                 if card != self:
                     for _ in range(2 if self.golden else 1):
                         context.owner.play_blood_gem(card)
+
+
+class ArchdruidHamuul(MonsterCard):
+    tier = 6
+    base_attack = 4
+    base_health = 4
+    monster_type = MONSTER_TYPES.NEUTRAL
+    legendary = True
+
+    def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
+        most_common_types = set(card.monster_type for card in context.owner.in_play if card.monster_type in MONSTER_TYPES.single_types())
+        if most_common_types:
+            most_common_type = most_common_types.pop()
+            context.owner.draw_with_predicate(lambda card: card.monster_type == most_common_type)
 
 
 # TODO: Necrolyte, Captain Flat Tusk

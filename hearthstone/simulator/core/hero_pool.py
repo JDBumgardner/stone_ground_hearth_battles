@@ -1065,5 +1065,8 @@ class Galakrond(Hero):
         self.discover_queue.pop(0)
 
 
+# TODO: add KurtrusAshfallen (need a way to buff all minions this game)
+
+
 VALHALLA = [member[1] for member in
             getmembers(sys.modules[__name__], lambda member: isclass(member) and member.__module__ == __name__)]
