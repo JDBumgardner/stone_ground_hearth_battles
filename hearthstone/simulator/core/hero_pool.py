@@ -1037,5 +1037,33 @@ class MutanusTheDevourer(Hero):
         context.owner.coins += 1
 
 
+class Galakrond(Hero):
+    base_power_cost = 1
+    power_target_location = [CardLocation.STORE]
+
+    def hero_power_valid_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                              store_index: Optional['StoreIndex'] = None):
+        return bool(context.owner.store)
+
+    def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                        store_index: Optional['StoreIndex'] = None):
+        store_minion = context.owner.pop_store_card(store_index)
+        context.owner.tavern.deck.return_cards(store_minion.dissolve())
+        higher_tier_minions = [card for card in context.owner.tavern.deck.unique_cards() if
+                               card.tier == min(store_minion.tier + 1, 6)]
+        discovered_minions = []
+        for _ in range(3):
+            if higher_tier_minions:
+                minion = context.randomizer.select_discover_card(higher_tier_minions)
+                higher_tier_minions.remove(minion)
+                discovered_minions.append(minion)
+        self.discover_queue.append(discovered_minions)
+
+    def select_discover(self, discover_index: 'DiscoverIndex', context: 'BuyPhaseContext'):
+        minion = self.discover_queue[0].pop(discover_index)
+        context.owner.add_to_store(minion)
+        self.discover_queue.pop(0)
+
+
 VALHALLA = [member[1] for member in
             getmembers(sys.modules[__name__], lambda member: isclass(member) and member.__module__ == __name__)]
