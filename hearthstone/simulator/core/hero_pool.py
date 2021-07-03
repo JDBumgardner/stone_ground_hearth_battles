@@ -3,7 +3,7 @@ from inspect import getmembers, isclass
 from typing import Union, Tuple, Optional
 
 from hearthstone.simulator.core import combat, events
-from hearthstone.simulator.core.card_pool import Amalgam, FishOfNZoth
+from hearthstone.simulator.core.card_pool import Amalgam, FishOfNZoth, BrannBronzebeard
 from hearthstone.simulator.core.cards import CardLocation, one_minion_per_type, one_minion_per_tier
 from hearthstone.simulator.core.combat import logger
 from hearthstone.simulator.core.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
@@ -376,15 +376,18 @@ class ArannaStarseeker(Hero):
 
 
 class DinotamerBrann(Hero):
-    base_power_cost = 1
+    def __init__(self):
+        super().__init__()
+        self.battlecry_buy_counter = 0
 
-    def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
-                        store_index: Optional['StoreIndex'] = None):
-        context.owner.return_cards()
-        predicate = lambda card: card.base_battlecry
-        context.owner.extend_store(
-            [context.owner.tavern.deck.draw_with_predicate(context.owner, predicate) for _ in
-             range(context.owner.refresh_size())])
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.BUY and event.card.battlecry:
+            self.battlecry_buy_counter += 1
+            if self.battlecry_buy_counter == 5:
+                brann = [card for card in context.owner.tavern.deck.unique_cards() if type(card) == BrannBronzebeard]
+                if brann:
+                    context.owner.tavern.deck.remove_card(brann[0])
+                    context.owner.gain_hand_card(BrannBronzebeard())
 
 
 class Alexstrasza(Hero):

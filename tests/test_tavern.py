@@ -2293,20 +2293,17 @@ class CardTests(BattleGroundsTestCase):
             player_1.reroll_store()
         self.assertEqual(7, len(player_1.store))
 
-    class DinotamerBrannRandomizer(DefaultRandomizer):
-
-        def select_draw_card(self, cards: List['MonsterCard'], player_name: str, round_number: int) -> 'MonsterCard':
-            for card in cards:
-                assert card.base_battlecry
-            return self.rand.choice(cards)
-
     def test_dinotamer_brann(self):
         tavern = Tavern(restrict_types=False)
         player_1 = tavern.add_player_with_hero("Dante_Kong", DinotamerBrann())
         player_2 = tavern.add_player_with_hero("lucy")
-        tavern.buying_step()
-        tavern.randomizer = self.DinotamerBrannRandomizer()
-        player_1.hero_power()
+        tavern.randomizer = RepeatedCardForcer([AlleyCat])
+        for i in range(5):
+            tavern.buying_step()
+            self.assertTrue(BrannBronzebeard not in [type(card) for card in player_1.hand])
+            player_1.purchase(StoreIndex(0))
+            tavern.combat_step()
+        self.assertCardListEquals(player_1.hand, [AlleyCat, AlleyCat, AlleyCat, BrannBronzebeard])
 
     def test_alexstrasza(self):
         tavern = Tavern(restrict_types=False)
