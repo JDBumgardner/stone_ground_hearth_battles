@@ -3880,10 +3880,17 @@ class CardTests(BattleGroundsTestCase):
         self.assertEqual(player_1.store[0].attack, player_1.in_play[0].base_attack)
         self.assertEqual(player_1.store[0].health, player_1.in_play[0].base_health)
 
+    class TestTickatusRandomizer(DefaultRandomizer):
+        def select_spell(self, spells: List[Type['Spell']]) -> Type['Spell']:
+            if GainArgentBraggart in spells:
+                spells.remove(GainArgentBraggart)
+            return spells[0]
+
     def test_tickatus(self):
         tavern = Tavern(restrict_types=False)
         player_1 = tavern.add_player_with_hero("Dante_Kong", Tickatus())
         player_2 = tavern.add_player_with_hero("lucy")
+        tavern.randomizer = self.TestTickatusRandomizer()
         for i in range(4):
             for _ in range(3):
                 tavern.buying_step()
