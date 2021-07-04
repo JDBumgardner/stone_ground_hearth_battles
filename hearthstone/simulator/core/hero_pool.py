@@ -1065,7 +1065,8 @@ class Galakrond(Hero):
         self.discover_queue.pop(0)
 
 
-# TODO: add KurtrusAshfallen (need a way to buff all minions this game)
+# TODO: add Kurtrus Ashfallen (need a way to buff all minions this game)
+# TODO: add Trade Prince Gallywix (can exceed 10 gold sometimes)
 
 
 VALHALLA = [member[1] for member in
