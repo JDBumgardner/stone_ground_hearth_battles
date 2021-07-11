@@ -528,16 +528,8 @@ class Player:
             if o == self:
                 return p
 
-    def hero_select_discover(self, discover_index: 'DiscoverIndex'):
-        self.hero.select_discover(discover_index, BuyPhaseContext(self, self.tavern.randomizer))
-
-    def valid_hero_select_discover(self, discover_index: 'DiscoverIndex'):
-        if self.dead:
-            return False
-        return self.hero.valid_select_discover(discover_index)
-
     def valid_standard_action(self):
-        return not self.dead and not self.discover_queue and not self.hero.discover_queue
+        return not self.dead and not self.discover_queue
 
     def current_build(self) -> Tuple[Optional['MONSTER_TYPES'], Optional[int]]:
         cards_by_type = {monster_type.name: 0 for monster_type in MONSTER_TYPES.single_types()}

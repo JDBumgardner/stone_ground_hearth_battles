@@ -2,7 +2,7 @@ import typing
 
 from hearthstone.battlebots.bot_types import PriorityFunctionBot
 from hearthstone.simulator.agent.actions import StandardAction, generate_standard_actions, BuyAction, EndPhaseAction, \
-    SummonAction, DiscoverChoiceAction, RearrangeCardsAction, HeroDiscoverAction, FreezeDecision, TavernUpgradeAction, \
+    SummonAction, DiscoverChoiceAction, RearrangeCardsAction, FreezeDecision, TavernUpgradeAction, \
     RerollAction, SellAction
 from hearthstone.simulator.core.player import Player, StoreIndex
 
@@ -57,6 +57,3 @@ class PriorityBot(PriorityFunctionBot):
         discover_cards = player.discover_queue[0]
         discover_cards = sorted(discover_cards, key=lambda card: self.priority(player, card), reverse=True)
         return DiscoverChoiceAction(player.discover_queue[0].index(discover_cards[0]))
-
-    async def hero_discover_action(self, player: 'Player') -> 'HeroDiscoverAction':
-        return HeroDiscoverAction(self.local_random.choice(range(len(player.hero.discover_queue[0]))))

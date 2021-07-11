@@ -20,8 +20,5 @@ class RemoteAgent(AnnotatingAgent):
     async def annotated_discover_choice_action(self, player: 'Player') -> (DiscoverChoiceAction, Annotation):
         return self.remote_agent.rpc_sync().annotated_discover_choice_action(player)
 
-    async def annotated_hero_discover_action(self, player: 'Player') -> ('HeroDiscoverAction', Annotation):
-        return self.remote_agent.rpc_sync().annotated_hero_discover_action(player)
-
     async def game_over(self, player: 'Player', ranking: int) -> Annotation:
         return self.remote_agent.rpc_sync().game_over(player, ranking)
