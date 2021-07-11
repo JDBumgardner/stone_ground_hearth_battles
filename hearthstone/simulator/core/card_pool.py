@@ -1,5 +1,6 @@
 import sys
 import types
+from collections import Counter
 from inspect import getmembers, isclass
 from typing import Union, List, Type, Optional
 
@@ -2633,10 +2634,14 @@ class ArchdruidHamuul(MonsterCard):
     legendary = True
 
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
-        most_common_types = set(card.monster_type for card in context.owner.in_play if card.monster_type in MONSTER_TYPES.single_types())
-        if most_common_types:
-            most_common_type = most_common_types.pop()
-            context.owner.draw_with_predicate(lambda card: card.monster_type == most_common_type)
+        monster_type_counts = Counter(
+            [card.monster_type for card in context.owner.in_play if card.monster_type in MONSTER_TYPES.single_types()])
+        if monster_type_counts:
+            max_count = max(monster_type_counts.values())
+            most_common_types = [monster_type for monster_type, count in monster_type_counts.most_common() if
+                                 count == max_count]
+            most_common_type = context.randomizer.select_monster_type(most_common_types, context.owner.tavern.turn_count)
+            context.owner.draw(predicate=lambda card: card.monster_type == most_common_type)
 
 
 # TODO: Necrolyte, Captain Flat Tusk

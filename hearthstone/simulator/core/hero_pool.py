@@ -518,10 +518,6 @@ class Sindragosa(Hero):
     base_power_cost = 1
     power_target_location = [CardLocation.STORE]
 
-    def hero_power_valid_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
-                              store_index: Optional['StoreIndex'] = None):
-        return bool(context.owner.store)
-
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
         context.owner.store[store_index].frozen = True
@@ -1040,10 +1036,6 @@ class MutanusTheDevourer(Hero):
 class Galakrond(Hero):
     base_power_cost = 1
     power_target_location = [CardLocation.STORE]
-
-    def hero_power_valid_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
-                              store_index: Optional['StoreIndex'] = None):
-        return bool(context.owner.store)
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
