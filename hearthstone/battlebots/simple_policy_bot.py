@@ -74,10 +74,10 @@ class SimplePolicyBot(Agent):
         return choice[0][1]
 
     async def discover_choice_action(self, player: 'Player') -> DiscoverChoiceAction:
-        discover_cards = player.discover_queue[0]
+        discover_cards = player.discover_queue[0].items
         discover_cards = sorted(discover_cards, key=lambda card: self.priority_buy_dict[type(card).__name__],
                                 reverse=True)
-        return DiscoverChoiceAction(player.discover_queue[0].index(discover_cards[0]))
+        return DiscoverChoiceAction(player.discover_queue[0].items.index(discover_cards[0]))
 
     def score_action(self, player: Player, action: StandardAction) -> Optional[float]:
         if type(action) is BuyAction:

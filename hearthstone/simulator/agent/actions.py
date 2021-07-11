@@ -60,7 +60,7 @@ class DiscoverChoiceAction(Action):
         return player.valid_select_discover(self.card_index)
 
     def str_in_context(self, player: 'Player') -> str:
-        return f"Discover({player.discover_queue[0][self.card_index]})"
+        return f"Discover({player.discover_queue[0].items[self.card_index]})"
 
 
 class RearrangeCardsAction(Action):
