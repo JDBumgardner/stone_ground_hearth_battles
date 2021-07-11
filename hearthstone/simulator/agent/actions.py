@@ -77,23 +77,6 @@ class RearrangeCardsAction(Action):
         return player.valid_rearrange_cards(self.permutation)
 
 
-class HeroDiscoverAction(Action):
-    def __init__(self, discover_index: 'DiscoverIndex'):
-        self.discover_index = discover_index
-
-    def __repr__(self):
-        return f"Choose({self.discover_index})"
-
-    def apply(self, player: 'Player'):
-        player.hero_select_discover(self.discover_index)
-
-    def valid(self, player: 'Player') -> bool:
-        return player.valid_hero_select_discover(self.discover_index)
-
-    def str_in_context(self, player: 'Player') -> str:
-        return f"Choose({player.hero.discover_queue[self.discover_index]})"
-
-
 class StandardAction(Action):
     def valid(self, player: 'Player') -> bool:
         return player.valid_standard_action() and self.base_valid(player)

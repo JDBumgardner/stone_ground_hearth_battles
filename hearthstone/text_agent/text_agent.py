@@ -2,11 +2,12 @@ from typing import Optional, List, Union
 
 from hearthstone.simulator.agent.actions import HeroChoiceAction, RearrangeCardsAction, StandardAction, BuyAction, \
     SummonAction, SellAction, EndPhaseAction, FreezeDecision, RerollAction, TavernUpgradeAction, HeroPowerAction, \
-    DiscoverChoiceAction, HeroDiscoverAction, PlaySpellAction
+    DiscoverChoiceAction, PlaySpellAction
 from hearthstone.simulator.agent.agent import Agent
 from hearthstone.simulator.core.cards import CardLocation, MonsterCard
 from hearthstone.simulator.core.hero import Hero
-from hearthstone.simulator.core.player import HandIndex, BoardIndex, StoreIndex, Player, DiscoverIndex, HeroChoiceIndex
+from hearthstone.simulator.core.player import HandIndex, BoardIndex, StoreIndex, Player, DiscoverIndex, HeroChoiceIndex, \
+    SpellIndex
 from hearthstone.simulator.core.spell import Spell
 
 
@@ -195,7 +196,7 @@ class TextAgent(Agent):
             try:
                 location = split_list[2]
             except IndexError:
-                return PlaySpellAction(HandIndex(index))
+                return PlaySpellAction(SpellIndex(index))
             try:
                 target_index = int(split_list[3])
             except (ValueError, IndexError):
@@ -203,17 +204,17 @@ class TextAgent(Agent):
             if location == "b":
                 if not player.valid_board_index(BoardIndex(target_index)):
                     return None
-                return PlaySpellAction(HandIndex(index), board_target=BoardIndex(target_index))
+                return PlaySpellAction(SpellIndex(index), board_target=BoardIndex(target_index))
             elif location == "s":
                 if not player.valid_store_index(StoreIndex(target_index)):
                     return None
-                return PlaySpellAction(HandIndex(index), store_target=StoreIndex(target_index))
+                return PlaySpellAction(SpellIndex(index), store_target=StoreIndex(target_index))
         else:
             return None
 
     async def discover_choice_action(self, player: 'Player') -> DiscoverChoiceAction:
         await self.connection.send(f"player {player.name}, you must choose a card to discover.\n")
-        await self.print_player_card_list("discovery choices", player.discover_queue[0])
+        await self.print_player_card_list("discovery choices", player.discover_queue[0].items)
         await self.connection.send("input card number to discover here: ")
         user_input = await self.connection.receive_line()
         while True:
@@ -228,30 +229,8 @@ class TextAgent(Agent):
         if not user_input.isnumeric():
             return None
         card_index = int(user_input)
-        if card_index in range(len(player.discover_queue[0])):
+        if card_index in range(len(player.discover_queue[0].items)):
             return DiscoverChoiceAction(DiscoverIndex(card_index))
-        else:
-            return None
-
-    async def hero_discover_action(self, player: 'Player') -> 'HeroDiscoverAction':
-        await self.connection.send(f"player {player.name}, you must choose a discover option.\n")
-        await self.print_player_card_list("discovery choices", player.hero.discover_queue[0])
-        await self.connection.send("input index to discover here: ")
-        user_input = await self.connection.receive_line()
-        while True:
-            discover_choice = self.parse_hero_discover_input(user_input, player)
-            if discover_choice:
-                return discover_choice
-            await self.connection.send("oops, try again: ")
-            user_input = await self.connection.receive_line()
-
-    @staticmethod
-    def parse_hero_discover_input(user_input: str, player: 'Player') -> Optional['HeroDiscoverAction']:
-        if not user_input.isnumeric():
-            return None
-        choice_index = int(user_input)
-        if choice_index in range(len(player.hero.discover_queue[0])):
-            return HeroDiscoverAction(DiscoverIndex(choice_index))
         else:
             return None
 

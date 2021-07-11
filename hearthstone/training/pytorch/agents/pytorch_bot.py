@@ -6,8 +6,7 @@ from typing import Optional, Any, Dict
 import torch
 from torch import nn
 
-from hearthstone.simulator.agent.actions import StandardAction, DiscoverChoiceAction, RearrangeCardsAction, \
-    HeroDiscoverAction, Action
+from hearthstone.simulator.agent.actions import StandardAction, DiscoverChoiceAction, RearrangeCardsAction, Action
 from hearthstone.simulator.agent.agent import AnnotatingAgent
 from hearthstone.training.pytorch.encoding.default_encoder import \
     EncodedActionSet
@@ -73,9 +72,6 @@ class PytorchBot(AnnotatingAgent):
         action, ac_game_step_info = await self.act(player, False)
         assert isinstance(action, DiscoverChoiceAction), action
         return action, ac_game_step_info
-
-    async def annotated_hero_discover_action(self, player: 'Player') -> ('HeroDiscoverAction', ActorCriticGameStepInfo):
-        return HeroDiscoverAction(random.choice(range(len(player.hero.discover_queue)))), None
 
     async def game_over(self, player: 'Player', ranking: int) -> Dict[str, Any]:
         return {'ranking': ranking}

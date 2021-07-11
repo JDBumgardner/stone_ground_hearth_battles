@@ -2,8 +2,7 @@ import random
 import typing
 from typing import List, Callable
 
-from hearthstone.simulator.agent.actions import StandardAction, DiscoverChoiceAction, RearrangeCardsAction, \
-    HeroDiscoverAction
+from hearthstone.simulator.agent.actions import StandardAction, DiscoverChoiceAction, RearrangeCardsAction
 from hearthstone.simulator.agent.agent import Agent
 
 if typing.TYPE_CHECKING:
@@ -31,6 +30,3 @@ class PriorityFunctionBot(Agent):
 
     async def buy_phase_action(self, player: 'Player') -> StandardAction:
         pass
-
-    async def hero_discover_action(self, player: 'Player') -> 'HeroDiscoverAction':
-        return HeroDiscoverAction(self.local_random.choice(range(len(player.hero.discover_queue[0]))))

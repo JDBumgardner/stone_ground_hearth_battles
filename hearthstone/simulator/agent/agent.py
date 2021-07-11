@@ -1,7 +1,7 @@
 from typing import Any
 
 from hearthstone.simulator.agent.actions import HeroChoiceAction, DiscoverChoiceAction, \
-    RearrangeCardsAction, StandardAction, HeroDiscoverAction
+    RearrangeCardsAction, StandardAction
 from hearthstone.simulator.core.player import HeroChoiceIndex
 from hearthstone.simulator.core.tavern import Player
 
@@ -52,17 +52,6 @@ class AnnotatingAgent:
         """
         pass
 
-    async def annotated_hero_discover_action(self, player: 'Player') -> ('HeroDiscoverAction', Annotation):
-        """
-
-        Args:
-            player: The player object controlled by this agent. This function should not modify it.
-
-        Returns:
-            Tuple of object to discover, and Annotation to attach to the action.
-        """
-        pass
-
     async def game_over(self, player: 'Player', ranking: int) -> Annotation:
         """
         Notifies the agent that the game is over and the agent has achieved a given rank
@@ -91,9 +80,3 @@ class Agent(AnnotatingAgent):
 
     async def annotated_discover_choice_action(self, player: 'Player') -> (DiscoverChoiceAction, Annotation):
         return await self.discover_choice_action(player), None
-
-    async def hero_discover_action(self, player: 'Player') -> 'HeroDiscoverAction':
-        pass
-
-    async def annotated_hero_discover_action(self, player: 'Player') -> ('HeroDiscoverAction', Annotation):
-        return await self.hero_discover_action(player), None

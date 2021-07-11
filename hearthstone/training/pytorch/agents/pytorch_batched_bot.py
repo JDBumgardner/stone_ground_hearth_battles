@@ -6,8 +6,7 @@ from typing import Dict, List, Any, Tuple
 import torch
 from torch import nn
 
-from hearthstone.simulator.agent.actions import StandardAction, RearrangeCardsAction, DiscoverChoiceAction, \
-    HeroDiscoverAction, Action
+from hearthstone.simulator.agent.actions import StandardAction, RearrangeCardsAction, DiscoverChoiceAction, Action
 from hearthstone.simulator.agent.agent import AnnotatingAgent
 from hearthstone.training.common.state_encoding import EncodedActionSet, State, Encoder
 from hearthstone.training.pytorch.replay import ActorCriticGameStepDebugInfo, ActorCriticGameStepInfo
@@ -62,9 +61,6 @@ class BatchedInferencePytorchBot(AnnotatingAgent):
         action, ac_game_step_info = self.act(player, False)
         assert isinstance(action, DiscoverChoiceAction)
         return action, ac_game_step_info
-
-    async def annotated_hero_discover_action(self, player: 'Player') -> ('HeroDiscoverAction', ActorCriticGameStepInfo):
-        return HeroDiscoverAction(random.choice(range(len(player.hero.discover_queue)))), None
 
     async def game_over(self, player: 'Player', ranking: int) -> Dict[str, Any]:
         return {'ranking': ranking}
