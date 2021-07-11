@@ -2204,8 +2204,8 @@ class CardTests(BattleGroundsTestCase):
         player_1.purchase(StoreIndex(0))
         player_1.summon_from_hand(HandIndex(0))
         self.assertCardListEquals(player_1.in_play, [MurlocTidecaller, PrimalfinLookout])
-        self.assertEqual(len(player_1.discover_queue[0]), 3)
-        for card in player_1.discover_queue[0]:
+        self.assertEqual(len(player_1.discover_queue[0].items), 3)
+        for card in player_1.discover_queue[0].items:
             self.assertTrue(card.check_type(MONSTER_TYPES.MURLOC))
 
     def test_golden_primalfin(self):
@@ -2311,7 +2311,7 @@ class CardTests(BattleGroundsTestCase):
         self.upgrade_to_tier(tavern, 5)
         self.assertEqual(len(player_1.discover_queue), 2)
         for _ in range(2):
-            self.assertTrue(card.check_type(MONSTER_TYPES.DRAGON) for card in player_1.discover_queue[0])
+            self.assertTrue(card.check_type(MONSTER_TYPES.DRAGON) for card in player_1.discover_queue[0].items)
             player_1.select_discover(DiscoverIndex(0))
         self.assertEqual(len(player_1.hand), 2)
         self.assertEqual(len(player_1.discover_queue), 0)
@@ -2356,7 +2356,7 @@ class CardTests(BattleGroundsTestCase):
         player_1.play_spell(SpellIndex(0))
         self.assertEqual(player_1.coins, 2)
         self.assertEqual(len(player_1.discover_queue), 1)
-        self.assertTrue(all(card.tier == 2 for card in player_1.discover_queue[0]))
+        self.assertTrue(all(card.tier == 2 for card in player_1.discover_queue[0].items))
 
     def test_party_elemental(self):
         tavern = Tavern(restrict_types=False)
@@ -3122,7 +3122,7 @@ class CardTests(BattleGroundsTestCase):
         self.assertCardListEquals(player_1.spells, [Prize])
         self.assertEqual(player_1.spells[0].tier, 1)
         player_1.play_spell(SpellIndex(0))
-        self.assertTrue(all(card.tier == 1 for card in player_1.discover_queue[0]))
+        self.assertTrue(all(card.tier == 1 for card in player_1.discover_queue[0].items))
 
     class TestBigBananaRandomizer(DefaultRandomizer):
         def select_random_number(self, lo: int, hi: int) -> int:
@@ -3171,10 +3171,10 @@ class CardTests(BattleGroundsTestCase):
         player_2 = tavern.add_player_with_hero("lucy")
         tavern.buying_step()
         player_1.hero_power()
-        self.assertEqual(len(player_1.hero.discover_queue[0]), 3)
-        player_1.hero_select_discover(DiscoverIndex(0))
+        self.assertEqual(len(player_1.discover_queue[0].items), 3)
+        player_1.select_discover(DiscoverIndex(0))
         self.assertEqual(len(player_1.secrets), 1)
-        self.assertEqual(len(player_1.hero.discover_queue), 0)
+        self.assertEqual(len(player_1.discover_queue), 0)
 
     class TestAkazamzarakIceBlockRandomizer(DefaultRandomizer):
         def select_secret(self, secrets: List[Type['Secret']]) -> Type['Secret']:
@@ -3190,7 +3190,7 @@ class CardTests(BattleGroundsTestCase):
         player_2 = tavern.add_player_with_hero("lucy")
         tavern.buying_step()
         player_1.hero_power()
-        player_1.hero_select_discover(DiscoverIndex(0))
+        player_1.select_discover(DiscoverIndex(0))
         self.assertEqual(type(player_1.secrets[0]), BaseSecret.IceBlock)
         player_1.health = 1
         player_2.purchase(StoreIndex(0))
@@ -3217,13 +3217,13 @@ class CardTests(BattleGroundsTestCase):
         tavern.buying_step()
         self.assertFalse(player_1.hero.discovered_ice_block)
         player_1.hero_power()
-        player_1.hero_select_discover(DiscoverIndex(0))
+        player_1.select_discover(DiscoverIndex(0))
         self.assertEqual(type(player_1.secrets[0]), BaseSecret.IceBlock)
         self.assertTrue(player_1.hero.discovered_ice_block)
         tavern.combat_step()
         tavern.buying_step()
         player_1.hero_power()
-        player_1.hero_select_discover(DiscoverIndex(0))
+        player_1.select_discover(DiscoverIndex(0))
         self.assertEqual(type(player_1.secrets[0]), BaseSecret.IceBlock)
         self.assertNotEqual(player_1.secrets[1], BaseSecret.IceBlock)
 
@@ -3248,7 +3248,7 @@ class CardTests(BattleGroundsTestCase):
         tavern.combat_step()
         tavern.buying_step()
         player_1.hero_power()
-        player_1.hero_select_discover(DiscoverIndex(0))
+        player_1.select_discover(DiscoverIndex(0))
         self.assertEqual(type(player_1.secrets[0]), BaseSecret.CompetitiveSpirit)
         tavern.combat_step()
         tavern.buying_step()
@@ -3266,7 +3266,7 @@ class CardTests(BattleGroundsTestCase):
         tavern.buying_step()
         self.assertEqual(len(player_1.hero.discover_queue[0]), 3)
         self.assertEqual(type(player_1.hero), SirFinleyMrrgglton)
-        player_1.hero_select_discover(DiscoverIndex(0))
+        player_1.select_discover(DiscoverIndex(0))
         self.assertNotEqual(type(player_1.hero), SirFinleyMrrgglton)
 
     # class TestLordBarovRandomizer(DefaultRandomizer):
@@ -3431,7 +3431,7 @@ class CardTests(BattleGroundsTestCase):
         player_2 = tavern.add_player_with_hero("lucy")
         tavern.buying_step()
         self.assertEqual(type(player_1.hero), SirFinleyMrrgglton)
-        player_1.hero_select_discover(DiscoverIndex(0))
+        player_1.select_discover(DiscoverIndex(0))
         self.assertEqual(type(player_1.hero), TheCurator)
         self.assertCardListEquals(player_1.in_play, [Amalgam])
 
@@ -3736,7 +3736,7 @@ class CardTests(BattleGroundsTestCase):
         player_2 = tavern.add_player_with_hero("lucy", TheRatKing())
         tavern.buying_step()
         self.assertEqual(type(player_1.hero), SirFinleyMrrgglton)
-        player_1.hero_select_discover(DiscoverIndex(0))
+        player_1.select_discover(DiscoverIndex(0))
         self.assertEqual(type(player_1.hero), TheRatKing)
 
     def test_soul_devourer(self):
@@ -3909,7 +3909,7 @@ class CardTests(BattleGroundsTestCase):
         tavern.buying_step()
         player_1.gain_spell(GachaGift())  # I know, this is cheating
         player_1.play_spell(SpellIndex(0))
-        self.assertTrue(all(card.tier == 1 for card in player_1.discover_queue[0]))
+        self.assertTrue(all(card.tier == 1 for card in player_1.discover_queue[0].items))
 
     def test_might_of_stormwind(self):
         tavern = Tavern(restrict_types=False)
@@ -4010,7 +4010,7 @@ class CardTests(BattleGroundsTestCase):
         tavern.buying_step()
         player_1.gain_spell(OnTheHouse())
         player_1.play_spell(SpellIndex(0))
-        self.assertTrue(all(card.tier == 4 for card in player_1.discover_queue[0]))
+        self.assertTrue(all(card.tier == 4 for card in player_1.discover_queue[0].items))
 
     def test_the_bouncer(self):
         tavern = Tavern(restrict_types=False)
@@ -4041,7 +4041,7 @@ class CardTests(BattleGroundsTestCase):
         player_1.gain_spell(TimeThief())
         player_1.play_spell(SpellIndex(0))
         warband_types = [MurlocWarleader, Goldgrubber, VulgarHomunculus]
-        for card in player_1.discover_queue[0]:
+        for card in player_1.discover_queue[0].items:
             self.assertIn(type(card), warband_types)
 
     def test_the_unlimited_coin(self):
@@ -4147,7 +4147,7 @@ class CardTests(BattleGroundsTestCase):
         tavern.buying_step()
         player_1.gain_spell(TopShelf())
         player_1.play_spell(SpellIndex(0))
-        self.assertTrue(all(card.tier == 6 for card in player_1.discover_queue[0]))
+        self.assertTrue(all(card.tier == 6 for card in player_1.discover_queue[0].items))
 
     def test_ice_block_prize(self):
         tavern = Tavern(restrict_types=False)
