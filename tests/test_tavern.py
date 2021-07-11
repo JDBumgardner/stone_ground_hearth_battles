@@ -2108,8 +2108,8 @@ class CardTests(BattleGroundsTestCase):
         player_1.summon_from_hand(HandIndex(0))
         player_1.hero_power(board_index=BoardIndex(0))
         self.assertEqual(len(player_1.in_play), 0)
-        self.assertEqual(len(player_1.discover_queue[0]), 2)
-        for card in player_1.discover_queue[0]:
+        self.assertEqual(len(player_1.discover_queue[0].items), 2)
+        for card in player_1.discover_queue[0].items:
             self.assertEqual(card.tier, 2)
 
     def test_hooktusk_tier_one_minion(self):
@@ -2124,8 +2124,8 @@ class CardTests(BattleGroundsTestCase):
         player_1.summon_from_hand(HandIndex(0))
         player_1.hero_power(board_index=BoardIndex(0))
         self.assertEqual(len(player_1.in_play), 0)
-        self.assertEqual(len(player_1.discover_queue[0]), 2)
-        for card in player_1.discover_queue[0]:
+        self.assertEqual(len(player_1.discover_queue[0].items), 2)
+        for card in player_1.discover_queue[0].items:
             self.assertEqual(card.tier, 1)
 
     def test_malygos(self):
@@ -2545,8 +2545,8 @@ class CardTests(BattleGroundsTestCase):
         self.assertTrue(player_2.dead)
         self.assertEqual(len(player_2.in_play), 3)
         self.assertEqual(len(player_1.discover_queue), 1)
-        self.assertEqual(len(player_1.discover_queue[0]), 3)
-        for card in player_1.discover_queue[0]:
+        self.assertEqual(len(player_1.discover_queue[0].items), 3)
+        for card in player_1.discover_queue[0].items:
             self.assertTrue(card.token)
             if type(card) != DefenderOfArgus:
                 self.assertEqual(card.attack, card.base_attack + 1)
@@ -3264,7 +3264,7 @@ class CardTests(BattleGroundsTestCase):
         for hero in tavern.hero_pool:
             self.assertNotEqual(type(hero), SirFinleyMrrgglton)
         tavern.buying_step()
-        self.assertEqual(len(player_1.hero.discover_queue[0]), 3)
+        self.assertEqual(len(player_1.discover_queue[0].items), 3)
         self.assertEqual(type(player_1.hero), SirFinleyMrrgglton)
         player_1.select_discover(DiscoverIndex(0))
         self.assertNotEqual(type(player_1.hero), SirFinleyMrrgglton)
@@ -3393,7 +3393,7 @@ class CardTests(BattleGroundsTestCase):
         player_2 = tavern.add_player_with_hero("lucy")
         tavern.buying_step()
         self.assertEqual(type(player_1.hero), SirFinleyMrrgglton)
-        player_1.hero_select_discover(DiscoverIndex(0))
+        player_1.select_discover(DiscoverIndex(0))
         self.assertEqual(type(player_1.hero), TheRatKing)
         self.assertIsNotNone(player_1.hero.current_type)
 
@@ -3411,7 +3411,7 @@ class CardTests(BattleGroundsTestCase):
         player_2 = tavern.add_player_with_hero("lucy")
         tavern.buying_step()
         self.assertEqual(type(player_1.hero), SirFinleyMrrgglton)
-        player_1.hero_select_discover(DiscoverIndex(0))
+        player_1.select_discover(DiscoverIndex(0))
         self.assertEqual(type(player_1.hero), MillhouseManastorm)
         self.assertEqual(player_1.minion_cost, 2)
         self.assertEqual(player_1.refresh_store_cost, 2)
@@ -3895,10 +3895,10 @@ class CardTests(BattleGroundsTestCase):
                 tavern.buying_step()
                 tavern.combat_step()
             tavern.buying_step()
-            self.assertEqual(len(player_1.hero.discover_queue[0]), 3)
-            self.assertTrue(all(spell.darkmoon_prize_tier == i + 1 for spell in player_1.hero.discover_queue[0]))
-            player_1.hero_select_discover(DiscoverIndex(0))
-            self.assertEqual(len(player_1.hero.discover_queue), 0)
+            self.assertEqual(len(player_1.discover_queue[0].items), 3)
+            self.assertTrue(all(spell.darkmoon_prize_tier == i + 1 for spell in player_1.discover_queue[0].items))
+            player_1.select_discover(DiscoverIndex(0))
+            self.assertEqual(len(player_1.discover_queue), 0)
             self.assertEqual(player_1.spells[i].darkmoon_prize_tier, i + 1)
             tavern.combat_step()
 
@@ -4181,10 +4181,10 @@ class CardTests(BattleGroundsTestCase):
         tavern.buying_step()
         player_1.gain_spell(TrainingSession())
         player_1.play_spell(SpellIndex(0))
-        self.assertEqual(len(player_1.hero.discover_queue[0]), 3)
-        self.assertTrue(all(issubclass(type(item), Hero) for item in player_1.hero.discover_queue[0]))
+        self.assertEqual(len(player_1.discover_queue[0].items), 3)
+        self.assertTrue(all(issubclass(type(item), Hero) for item in player_1.discover_queue[0].items))
         self.assertEqual(type(player_1.hero), Tickatus)
-        player_1.hero_select_discover(DiscoverIndex(0))
+        player_1.select_discover(DiscoverIndex(0))
         self.assertNotEqual(type(player_1.hero), Tickatus)
 
     def test_training_session_choose_millhouse(self):
@@ -4195,7 +4195,7 @@ class CardTests(BattleGroundsTestCase):
         tavern.buying_step()
         player_1.gain_spell(TrainingSession())
         player_1.play_spell(SpellIndex(0))
-        player_1.hero_select_discover(DiscoverIndex(0))
+        player_1.select_discover(DiscoverIndex(0))
         self.assertEqual(type(player_1.hero), MillhouseManastorm)
         self.assertEqual(player_1.minion_cost, 2)
         self.assertEqual(player_1.refresh_store_cost, 2)
@@ -4216,7 +4216,7 @@ class CardTests(BattleGroundsTestCase):
         tavern.buying_step()
         player_1.gain_spell(TrainingSession())
         player_1.play_spell(SpellIndex(0))
-        player_1.hero_select_discover(DiscoverIndex(0))
+        player_1.select_discover(DiscoverIndex(0))
         self.assertEqual(type(player_1.hero), PatchWerk)
         self.assertEqual(player_1.health, 40)
 
@@ -4306,11 +4306,10 @@ class CardTests(BattleGroundsTestCase):
         player_1.gain_spell(BigWinner())
         player_1.play_spell(SpellIndex(0))
         for i in range(3):
-            self.assertEqual(len(player_1.hero.discover_queue), 3 - i)
-            self.assertEqual(len(player_1.hero.discover_queue[0]), 3)
-            self.assertTrue(all(spell.darkmoon_prize_tier == i + 1 for spell in player_1.hero.discover_queue[0]))
-            player_1.hero_select_discover(DiscoverIndex(0))
-            print(player_1.spells)
+            self.assertEqual(len(player_1.discover_queue), 3 - i)
+            self.assertEqual(len(player_1.discover_queue[0].items), 3)
+            self.assertTrue(all(spell.darkmoon_prize_tier == i + 1 for spell in player_1.discover_queue[0].items))
+            player_1.select_discover(DiscoverIndex(0))
             self.assertEqual(player_1.spells[i].darkmoon_prize_tier, i + 1)
 
     def test_blood_gem(self):

@@ -10,7 +10,7 @@ from hearthstone.simulator.core.discover_object import DiscoverObject
 from hearthstone.simulator.core.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
 from hearthstone.simulator.core.hero import Hero
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
-from hearthstone.simulator.core.player import BoardIndex, StoreIndex, DiscoverIndex, HeroChoiceIndex, Player
+from hearthstone.simulator.core.player import BoardIndex, StoreIndex, Player
 from hearthstone.simulator.core.secrets import remaining_secrets, BaseSecret
 from hearthstone.simulator.core.spell_pool import TripleRewardCard, GoldCoin, Prize, Banana, BigBanana, RecruitmentMap, \
     DARKMOON_PRIZES, BloodGem
@@ -503,7 +503,7 @@ class MrBigglesworth(Hero):
                     board.remove(enemy_minion)
                     enemy_minion.token = True
                     discovered_cards.append(enemy_minion)
-            self.dead_discover_queue.append(discovered_cards)
+            self.dead_discover_queue.append(DiscoverObject(discovered_cards, context.owner.gain_hand_card, True))
         elif event.event is EVENTS.BUY_START:
             context.owner.discover_queue += self.dead_discover_queue
             self.dead_discover_queue = []
@@ -742,12 +742,6 @@ class SirFinleyMrrgglton(Hero):
 
             context.owner.discover_queue.append(DiscoverObject(hero_choices, on_discover, False))
 
-    # def select_discover(self, discover_index: 'DiscoverIndex', context: 'BuyPhaseContext'):
-    #     context.owner.hero_options = self.discover_queue[0][:]
-    #     context.owner.choose_hero(HeroChoiceIndex(discover_index))
-    #     context.owner.hero.handle_event(events.BuyStartEvent(), context)
-    #     self.discover_queue.pop(0)
-
 
 # class LordBarov(Hero):
 #     base_power_cost = 1
@@ -890,16 +884,9 @@ class CaptainHooktusk(Hero):
         predicate = lambda card: (
                                      card.tier == board_minion.tier - 1 if board_minion.tier > 1 else card.tier == 1) and type(
             card) != type(board_minion)
-        discoverables = [card for card in context.owner.tavern.deck.unique_cards() if predicate(card)]
-        discovered_cards = []
-        for _ in range(2):
-            discovered_cards.append(context.randomizer.select_discover_card(discoverables))
-            discoverables.remove(discovered_cards[-1])
-            context.owner.tavern.deck.remove_card(discovered_cards[-1])
-        context.owner.discover_queue.append(discovered_cards)
+        context.owner.draw_discover(predicate, 2)
 
 
-# TODO: add Tickatus... and darkmoon prizes (ugh)
 class Tickatus(Hero):
     def __init__(self):
         super().__init__()
@@ -916,17 +903,7 @@ class Tickatus(Hero):
                     spell_type = context.randomizer.select_spell(prize_options)
                     selected_prizes.append(spell_type())
                     prize_options.remove(spell_type)
-                self.discover_queue.append(selected_prizes)
-
-    def select_discover(self, discover_index: 'DiscoverIndex', context: 'BuyPhaseContext'):
-        if issubclass(type(self.discover_queue[0][0]), Hero):
-            new_hero = self.discover_queue[0][discover_index]
-            context.owner.swap_hero(new_hero)
-            self.discover_queue.pop(0)
-        else:
-            prize = self.discover_queue[0].pop(discover_index)
-            context.owner.gain_spell(prize)
-            self.discover_queue.pop(0)
+                context.owner.discover_queue.append(DiscoverObject(selected_prizes, context.owner.gain_spell, False))
 
     def hero_info(self, player: 'Player') -> Optional[str]:
         return f'{4 - (player.tavern.turn_count + 1) % 4} turns left'
