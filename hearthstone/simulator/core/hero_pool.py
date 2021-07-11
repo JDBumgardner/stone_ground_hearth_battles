@@ -6,6 +6,7 @@ from hearthstone.simulator.core import combat, events
 from hearthstone.simulator.core.card_pool import Amalgam, FishOfNZoth, BrannBronzebeard
 from hearthstone.simulator.core.cards import CardLocation, one_minion_per_type, one_minion_per_tier
 from hearthstone.simulator.core.combat import logger
+from hearthstone.simulator.core.discover_object import DiscoverObject
 from hearthstone.simulator.core.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
 from hearthstone.simulator.core.hero import Hero
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
@@ -646,15 +647,14 @@ class TheGreatAkazamzarak(Hero):
             if available_secrets:
                 secret = context.randomizer.select_secret(available_secrets)
                 available_secrets.remove(secret)
-                secrets.append(secret)
-        self.discover_queue.append(secrets)
+                secrets.append(secret())
 
-    def select_discover(self, discover_index: 'DiscoverIndex', context: 'BuyPhaseContext'):
-        secret = self.discover_queue[0].pop(discover_index)
-        if secret == BaseSecret.IceBlock:
-            self.discovered_ice_block = True
-        context.owner.secrets.append(secret())
-        self.discover_queue.pop(0)
+        def on_discover(secret):
+            if type(secret) == BaseSecret.IceBlock:
+                self.discovered_ice_block = True
+            context.owner.secrets.append(secret)
+
+        context.owner.discover_queue.append(DiscoverObject(secrets, on_discover, False))
 
     def hero_info(self, player: 'Player') -> Optional[str]:
         return f'active secrets: {player.secrets}'
@@ -735,13 +735,18 @@ class SirFinleyMrrgglton(Hero):
                 random_hero = context.randomizer.select_hero(hero_pool)
                 hero_choices.append(random_hero)
                 hero_pool.remove(random_hero)
-            self.discover_queue.append(hero_choices)
 
-    def select_discover(self, discover_index: 'DiscoverIndex', context: 'BuyPhaseContext'):
-        context.owner.hero_options = self.discover_queue[0][:]
-        context.owner.choose_hero(HeroChoiceIndex(discover_index))
-        context.owner.hero.handle_event(events.BuyStartEvent(), context)
-        self.discover_queue.pop(0)
+            def on_discover(hero):
+                context.owner.choose_hero(hero)
+                context.owner.hero.handle_event(events.BuyStartEvent(), context)
+
+            context.owner.discover_queue.append(DiscoverObject(hero_choices, on_discover, False))
+
+    # def select_discover(self, discover_index: 'DiscoverIndex', context: 'BuyPhaseContext'):
+    #     context.owner.hero_options = self.discover_queue[0][:]
+    #     context.owner.choose_hero(HeroChoiceIndex(discover_index))
+    #     context.owner.hero.handle_event(events.BuyStartEvent(), context)
+    #     self.discover_queue.pop(0)
 
 
 # class LordBarov(Hero):

@@ -360,3 +360,5 @@ class CardLocation(enum.Enum):
     HAND = 2
     BOARD = 3
     DISCOVER = 4
+    SPELLS = 5
+    SECRETS = 6

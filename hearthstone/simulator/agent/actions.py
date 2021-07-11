@@ -37,7 +37,7 @@ class HeroChoiceAction(Action):
         return f"ChooseHero({self.hero_index})"
 
     def apply(self, player: 'Player'):
-        player.choose_hero(self.hero_index)
+        player.choose_hero_from_index(self.hero_index)
 
     def valid(self, player: 'Player') -> bool:
         return player.valid_choose_hero(self.hero_index)
