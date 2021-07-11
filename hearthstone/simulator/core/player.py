@@ -276,17 +276,11 @@ class Player:
     def room_on_board(self):
         return len(self.in_play) < self.maximum_board_size
 
-    def draw(self, unfreeze: Optional[bool] = True):
+    def draw(self, unfreeze: Optional[bool] = True, predicate: Optional[Callable] = lambda card: True):
         self.return_cards(unfreeze)
         number_of_cards = (3 + self.tavern_tier // 2 - len(self.store)) + int(self.new_recruit)
         number_of_cards = min(number_of_cards, self.maximum_store_size - self.store_size())
-        self.extend_store(self.tavern.deck.draw(self, number_of_cards))
-
-    def draw_with_predicate(self, predicate: Callable, unfreeze: Optional[bool] = True):
-        self.return_cards(unfreeze)
-        number_of_cards = (3 + self.tavern_tier // 2 - len(self.store)) + int(self.new_recruit)
-        number_of_cards = min(number_of_cards, self.maximum_store_size - self.store_size())
-        self.add_to_store(self.tavern.deck.draw_with_predicate(self, predicate))
+        self.extend_store(self.tavern.deck.draw(self, number_of_cards, predicate))
 
     def purchase(self, index: StoreIndex):
         # check if the index is valid

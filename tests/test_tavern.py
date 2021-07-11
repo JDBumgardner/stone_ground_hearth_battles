@@ -3882,8 +3882,8 @@ class CardTests(BattleGroundsTestCase):
 
     class TestTickatusRandomizer(DefaultRandomizer):
         def select_spell(self, spells: List[Type['Spell']]) -> Type['Spell']:
-            if GainArgentBraggart in spells:
-                spells.remove(GainArgentBraggart)
+            if spells[0] == GainArgentBraggart:
+                return spells[1]
             return spells[0]
 
     def test_tickatus(self):
@@ -4668,6 +4668,9 @@ class CardTests(BattleGroundsTestCase):
         self.upgrade_to_tier(tavern, 6)
         tavern.randomizer = RepeatedCardForcer([DeckSwabbie, ArchdruidHamuul])
         tavern.buying_step()
+        # RepeatedCardForcer interferes with Archdruid Hamuul's battlecry by overwriting randomizer.select_draw_card
+        # this fixes it but doesn't seem optimal - what to do here?
+        tavern.randomizer = DefaultRandomizer()
         for _ in range(2):
             player_1.purchase(StoreIndex(0))
             player_1.summon_from_hand(HandIndex(0))
