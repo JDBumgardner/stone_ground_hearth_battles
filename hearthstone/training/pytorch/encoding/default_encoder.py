@@ -125,7 +125,7 @@ def default_cards_encoding() -> Feature:
             default_card_encoding(), MAX_ENCODED_BOARD),
         ListOfFeatures(
             lambda player: [LocatedCard(card, CardLocation.DISCOVER) for card in
-                            (player.discover_queue[0] if player.discover_queue else [])],
+                            (player.discover_queue[0].items if player.discover_queue else [])],
             default_card_encoding(), MAX_ENCODED_DISCOVER)
     ])
 

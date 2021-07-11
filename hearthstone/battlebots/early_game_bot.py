@@ -86,4 +86,4 @@ class EarlyGameBot(Agent):
     async def discover_choice_action(self, player: 'Player') -> DiscoverChoiceAction:
         discover_cards = player.discover_queue[0]
         discover_cards = sorted(discover_cards, key=lambda card: self.priority(player, card), reverse=True)
-        return DiscoverChoiceAction(player.discover_queue[0].index(discover_cards[0]))
+        return DiscoverChoiceAction(player.discover_queue[0].items.index(discover_cards[0]))

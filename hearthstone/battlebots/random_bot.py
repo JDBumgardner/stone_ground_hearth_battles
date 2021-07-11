@@ -27,4 +27,4 @@ class RandomBot(Agent):
         return self.local_random.choice(all_actions)
 
     async def discover_choice_action(self, player: 'Player') -> DiscoverChoiceAction:
-        return DiscoverChoiceAction(self.local_random.choice(range(len(player.discover_queue[0]))))
+        return DiscoverChoiceAction(self.local_random.choice(range(len(player.discover_queue[0].items))))
