@@ -322,7 +322,6 @@ class CardList:
             self.cards_by_tier[random_card.tier].remove(random_card)
             valid_cards.remove(random_card)
             selected_cards.append(random_card)
-        print(selected_cards)
         return selected_cards
 
     def return_cards(self, cards: Iterator[MonsterCard]):
