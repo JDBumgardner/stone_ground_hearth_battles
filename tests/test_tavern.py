@@ -5,7 +5,6 @@ from hearthstone.simulator.core.adaptations import AdaptBuffs
 from hearthstone.simulator.core.card_graveyard import *
 from hearthstone.simulator.core.card_pool import *
 from hearthstone.simulator.core.cards import MonsterCard
-from hearthstone.simulator.core.hero_graveyard import *
 from hearthstone.simulator.core.hero_pool import *
 from hearthstone.simulator.core.player import HandIndex, DiscoverIndex, Player, SpellIndex
 from hearthstone.simulator.core.randomizer import DefaultRandomizer
@@ -4666,15 +4665,16 @@ class CardTests(BattleGroundsTestCase):
         player_1 = tavern.add_player_with_hero("Dante_Kong")
         player_2 = tavern.add_player_with_hero("lucy")
         self.upgrade_to_tier(tavern, 6)
-        tavern.randomizer = RepeatedCardForcer([DeckSwabbie, ArchdruidHamuul])
+        tavern.randomizer = CardForcer(
+            [DeckSwabbie, ArchdruidHamuul] * 6 + [DeckSwabbie, DeckSwabbie, DeckSwabbie, FreedealingGambler,
+                                                  FreedealingGambler, FreedealingGambler])
         tavern.buying_step()
-        # RepeatedCardForcer interferes with Archdruid Hamuul's battlecry by overwriting randomizer.select_draw_card
-        # this fixes it but doesn't seem optimal - what to do here?
-        tavern.randomizer = DefaultRandomizer()
         for _ in range(2):
             player_1.purchase(StoreIndex(0))
             player_1.summon_from_hand(HandIndex(0))
-        self.assertTrue(all(card.monster_type == MONSTER_TYPES.PIRATE for card in player_1.store))
+        self.assertCardListEquals(player_1.store,
+                                  [DeckSwabbie, DeckSwabbie, DeckSwabbie, FreedealingGambler, FreedealingGambler,
+                                   FreedealingGambler])
 
 
 if __name__ == '__main__':
