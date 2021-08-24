@@ -136,7 +136,7 @@ class FiendishServant(MonsterCard):
 
 class WrathWeaver(MonsterCard):
     tier = 1
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 1
     base_health = 3
     pool = MONSTER_TYPES.DEMON
@@ -210,7 +210,7 @@ class MurlocScout(MonsterCard):
 
 class SelflessHero(MonsterCard):
     tier = 2
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 2
     base_health = 1
     mana_cost = 1
@@ -502,7 +502,7 @@ class DeckSwabbie(MonsterCard):
 
 class UnstableGhoul(MonsterCard):
     tier = 2
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 1
     base_health = 3
     base_taunt = True
@@ -855,7 +855,7 @@ class PackLeader(MonsterCard):
     tier = 2
     base_attack = 3
     base_health = 3
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     pool = MONSTER_TYPES.BEAST
     mana_cost = 2
 
@@ -886,7 +886,7 @@ class SoulJuggler(MonsterCard):
     tier = 3
     base_attack = 3
     base_health = 3
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     pool = MONSTER_TYPES.DEMON
     mana_cost = 3
 
@@ -925,7 +925,7 @@ class Khadgar(MonsterCard):  # TODO: fix khadgar implementation
     tier = 3
     base_attack = 2
     base_health = 2
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     legendary = True
     mana_cost = 2
 
@@ -991,7 +991,7 @@ class VirmenSensei(MonsterCard):
     tier = 4
     base_attack = 4
     base_health = 5
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     num_battlecry_targets = [1]
     pool = MONSTER_TYPES.BEAST
     mana_cost = 5
@@ -1026,7 +1026,7 @@ class DefenderOfArgus(MonsterCard):
     tier = 4
     base_attack = 2
     base_health = 3
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     num_battlecry_targets = [1, 2]
     mana_cost = 4
 
@@ -2111,7 +2111,7 @@ class MajordomoExecutus(MonsterCard):
     def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_END:
             multiplier = 2 if self.golden else 1
-            played_elementals = [card_type for card_type in context.owner.played_minions if
+            played_elementals = [card_type for card_type in context.owner.minions_played_this_turn if
                                  card_type.check_type(MONSTER_TYPES.ELEMENTAL)]
             bonus = len(played_elementals) * multiplier + multiplier
             context.owner.in_play[0].attack += bonus
@@ -2202,7 +2202,7 @@ class TormentedRitualist(MonsterCard):
 
 class WardenOfOld(MonsterCard):
     tier = 3
-    monster_type = None
+    monster_type = MONSTER_TYPES.NEUTRAL
     base_attack = 3
     base_health = 3
 
@@ -2622,6 +2622,27 @@ class Charlga(MonsterCard):
                 if card != self:
                     for _ in range(2 if self.golden else 1):
                         context.owner.play_blood_gem(card)
+
+
+class Shudderling(MonsterCard):
+    not_in_pool = True
+    tier = 1
+    monster_type = MONSTER_TYPES.NEUTRAL
+    base_attack = 1
+    base_health = 1
+
+    def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
+        battlecry_minion_queue = [card for card in context.owner.minions_played if card.battlecry and type(card) != type(self)]
+        while len(battlecry_minion_queue) > 0:
+            next_minion = battlecry_minion_queue.pop()
+            valid_targets = [card for card in context.owner.in_play if next_minion.valid_battlecry_target(card)]
+            chosen_targets = []
+            for _ in range(next_minion.num_battlecry_targets[-1]):  # TODO: how to deal with Defender of Argus???
+                target = context.randomizer.select_friendly_minion(valid_targets)
+                valid_targets.remove(target)
+                chosen_targets.append(target)
+
+            next_minion.battlecry(chosen_targets, context)
 
 
 # TODO: Necrolyte, Captain Flat Tusk
