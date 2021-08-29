@@ -31,7 +31,9 @@ class DiscoverObject:
     def select_item(self, index: 'DiscoverIndex', player: 'Player'):
         selected = self.items.pop(index)
         if isinstance(selected, MonsterCard):
-            selected.token = False  # for Bigglesworth (there is no other scenario where a token will be a discover option)
+            # for Bigglesworth (there is no other scenario where a token will be a discover option)
+            # When Bigglesworth sells a discovered token, that token is added to the pool
+            selected.token = False
 
         self.discover_function(selected)
 
