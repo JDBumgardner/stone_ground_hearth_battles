@@ -5,7 +5,7 @@ from typing import Optional, List, Callable, Type, Tuple
 from frozenlist.frozen_list import FrozenList
 from hearthstone.simulator.core import events
 from hearthstone.simulator.core.cards import MonsterCard, CardLocation
-from hearthstone.simulator.core.discover_object import DiscoverObject, Discoverable
+from hearthstone.simulator.core.discover_object import DiscoverObject, Discoverable, DiscoverType
 from hearthstone.simulator.core.events import BuyPhaseContext, CardEvent
 from hearthstone.simulator.core.hero import EmptyHero
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
@@ -258,7 +258,7 @@ class Player:
 
         if discover_function is None:
             discover_function = self.gain_hand_card
-        self.discover_queue.append(DiscoverObject(discovered_cards, discover_function, dissolve))
+        self.discover_queue.append(DiscoverObject(discovered_cards, discover_function, dissolve, DiscoverType.CARD))
 
     def select_discover(self, card_index: 'DiscoverIndex'):
         assert self.valid_select_discover(card_index)

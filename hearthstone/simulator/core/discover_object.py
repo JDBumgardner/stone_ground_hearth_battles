@@ -1,3 +1,4 @@
+import enum
 import itertools
 import typing
 from typing import Union, List, Callable
@@ -13,11 +14,19 @@ if typing.TYPE_CHECKING:
 Discoverable = Union[MonsterCard, Hero, Spell, Secret]
 
 
+class DiscoverType(enum.Enum):
+    CARD = 0
+    HERO = 1
+    SECRET = 2
+    SPELL = 3
+
+
 class DiscoverObject:
-    def __init__(self, items: List[Discoverable], discover_function: Callable[[Discoverable], None], dissolve_leftovers: bool):
+    def __init__(self, items: List[Discoverable], discover_function: Callable[[Discoverable], None], dissolve_leftovers: bool, discover_type: DiscoverType):
         self.items = items
         self.discover_function = discover_function
         self.dissolve_leftovers = dissolve_leftovers
+        self.discover_type = discover_type
 
     def select_item(self, index: 'DiscoverIndex', player: 'Player'):
         selected = self.items.pop(index)
