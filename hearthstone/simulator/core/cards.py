@@ -309,10 +309,11 @@ class CardList:
         for card in cards:
             self.cards_by_tier[card.tier].add(card)
 
-    def draw(self, player: 'Player', num: int) -> List['MonsterCard']:
+    def draw(self, player: 'Player', num: int, predicate: Optional[Callable] = lambda card: True) -> List['MonsterCard']:
         valid_cards = []
         for tier in range(player.tavern_tier + 1):
             valid_cards.extend(self.cards_by_tier[tier])
+        valid_cards = [card for card in valid_cards if predicate(card)]
 
         selected_cards = []
         for i in range(num):
@@ -322,15 +323,6 @@ class CardList:
             valid_cards.remove(random_card)
             selected_cards.append(random_card)
         return selected_cards
-
-    def draw_with_predicate(self, player: 'Player', predicate: Callable) -> 'MonsterCard':
-        valid_cards = []
-        for tier in range(player.tavern_tier + 1):
-            valid_cards.extend([card for card in self.cards_by_tier[tier] if predicate(card)])
-        assert valid_cards, "fnord"
-        random_card = player.tavern.randomizer.select_draw_card(valid_cards, player.name, player.tavern.turn_count)
-        self.cards_by_tier[random_card.tier].remove(random_card)
-        return random_card
 
     def return_cards(self, cards: Iterator[MonsterCard]):
         for card in cards:

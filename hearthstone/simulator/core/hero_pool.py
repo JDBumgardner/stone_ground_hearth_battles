@@ -3,7 +3,7 @@ from inspect import getmembers, isclass
 from typing import Union, Tuple, Optional
 
 from hearthstone.simulator.core import combat, events
-from hearthstone.simulator.core.card_pool import Amalgam, FishOfNZoth, Shudderling
+from hearthstone.simulator.core.card_pool import Amalgam, FishOfNZoth, BrannBronzebeard, Shudderling
 from hearthstone.simulator.core.cards import CardLocation, one_minion_per_type, one_minion_per_tier
 from hearthstone.simulator.core.combat import logger
 from hearthstone.simulator.core.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
@@ -368,7 +368,7 @@ class EdwinVanCleef(Hero):
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
         bonus = len(context.owner.purchased_minions)
-        context.owner.in_play[board_index].attack += bonus
+        context.owner.in_play[board_index].attack += 2 * bonus
         context.owner.in_play[board_index].health += bonus
 
 
@@ -389,15 +389,18 @@ class ArannaStarseeker(Hero):
 
 
 class DinotamerBrann(Hero):
-    base_power_cost = 1
+    def __init__(self):
+        super().__init__()
+        self.battlecry_buy_counter = 0
 
-    def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
-                        store_index: Optional['StoreIndex'] = None):
-        context.owner.return_cards()
-        predicate = lambda card: card.base_battlecry
-        context.owner.extend_store(
-            [context.owner.tavern.deck.draw_with_predicate(context.owner, predicate) for _ in
-             range(context.owner.refresh_size())])
+    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
+        if event.event is EVENTS.BUY and event.card.battlecry:
+            self.battlecry_buy_counter += 1
+            if self.battlecry_buy_counter == 5:
+                brann = [card for card in context.owner.tavern.deck.unique_cards() if type(card) == BrannBronzebeard]
+                if brann:
+                    context.owner.tavern.deck.remove_card(brann[0])
+                    context.owner.gain_hand_card(BrannBronzebeard())
 
 
 class Alexstrasza(Hero):
@@ -420,7 +423,7 @@ class KingMukla(Hero):
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
         for _ in range(2):
-            if context.randomizer.select_random_number(1, 3) == 1:
+            if context.randomizer.select_random_number(1, 2) == 1:
                 context.owner.gain_spell(BigBanana())
             else:
                 context.owner.gain_spell(Banana())
@@ -525,6 +528,13 @@ class Nozdormu(Hero):
 
 
 class Sindragosa(Hero):
+    base_power_cost = 1
+    power_target_location = [CardLocation.STORE]
+
+    def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                        store_index: Optional['StoreIndex'] = None):
+        context.owner.store[store_index].frozen = True
+
     def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_END:
             for card in context.owner.store:
@@ -667,6 +677,7 @@ class IllidanStormrage(Hero):
                     attacking_war_party = context.friendly_war_party
                     defending_war_party = context.enemy_war_party
                     attacker = context.friendly_war_party.board[i]
+                    attacker.attack += 2
                     num_attacks = attacker.num_attacks() if attacker else 1
                     for _ in range(num_attacks):
                         defender = defending_war_party.get_attack_target(context.randomizer, attacker)
@@ -937,7 +948,7 @@ class OverlordSaurfang(Hero):
             self.bonus_applied = False
         elif event.event is EVENTS.BUY:
             if self.hero_power_used and not self.bonus_applied:
-                event.card.attack += context.owner.tavern.turn_count + 1
+                event.card.attack += context.owner.tavern.turn_count + 2
                 self.bonus_applied = True
 
 
@@ -1012,7 +1023,7 @@ class GuffRunetotem(Hero):
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
         for card in one_minion_per_tier(context.owner.in_play, context.randomizer):
-            card.attack += 2
+            card.attack += 1
             card.health += 1
 
 
@@ -1031,7 +1042,33 @@ class MutanusTheDevourer(Hero):
         context.owner.coins += 1
 
 
+class Galakrond(Hero):
+    base_power_cost = 1
+    power_target_location = [CardLocation.STORE]
+
+    def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
+                        store_index: Optional['StoreIndex'] = None):
+        store_minion = context.owner.pop_store_card(store_index)
+        context.owner.tavern.deck.return_cards(store_minion.dissolve())
+        higher_tier_minions = [card for card in context.owner.tavern.deck.unique_cards() if
+                               card.tier == min(store_minion.tier + 1, 6)]
+        discovered_minions = []
+        for _ in range(3):
+            if higher_tier_minions:
+                minion = context.randomizer.select_discover_card(higher_tier_minions)
+                higher_tier_minions.remove(minion)
+                discovered_minions.append(minion)
+        self.discover_queue.append(discovered_minions)
+
+    def select_discover(self, discover_index: 'DiscoverIndex', context: 'BuyPhaseContext'):
+        minion = self.discover_queue[0].pop(discover_index)
+        context.owner.add_to_store(minion)
+        self.discover_queue.pop(0)
+
+
 # TODO: add Galewing
+# TODO: add Kurtrus Ashfallen (need a way to buff all minions this game)
+# TODO: add Trade Prince Gallywix (can exceed 10 gold sometimes)
 
 
 VALHALLA = [member[1] for member in
