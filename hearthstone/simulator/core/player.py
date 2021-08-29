@@ -52,7 +52,7 @@ class Player:
         self._spells: List[Spell] = []
         self.minion_cost = 3
         self.purchased_minions: List['Type'] = []
-        self.minions_played_this_turn: List['Type'] = []
+        self.minions_played_this_turn: List['MonsterCard'] = []
         self.minions_played: List['MonsterCard'] = []
         self.last_opponent_warband: List['MonsterCard'] = []
         self.dead = False
@@ -195,7 +195,7 @@ class Player:
             self.gain_spell(TripleRewardCard(min(self.tavern_tier + 1, 6)))
         target_cards = [self.in_play[target] for target in targets]
         self.broadcast_buy_phase_event(events.SummonBuyEvent(card, target_cards))
-        self.minions_played_this_turn.append(type(card))
+        self.minions_played_this_turn.append(card)
         self.minions_played.append(card)
 
     def valid_summon_from_hand(self, index: HandIndex, targets: Optional[List[BoardIndex]] = None) -> bool:

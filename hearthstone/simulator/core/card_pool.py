@@ -2113,8 +2113,8 @@ class MajordomoExecutus(MonsterCard):
     def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_END:
             multiplier = 2 if self.golden else 1
-            played_elementals = [card_type for card_type in context.owner.minions_played_this_turn if
-                                 card_type.check_type(MONSTER_TYPES.ELEMENTAL)]
+            played_elementals = [card for card in context.owner.minions_played_this_turn if
+                                 card.check_type(MONSTER_TYPES.ELEMENTAL)]
             bonus = len(played_elementals) * multiplier + multiplier
             context.owner.in_play[0].attack += bonus
             context.owner.in_play[0].health += bonus
