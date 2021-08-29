@@ -1033,12 +1033,8 @@ class Galakrond(Hero):
                 minion = context.randomizer.select_discover_card(higher_tier_minions)
                 higher_tier_minions.remove(minion)
                 discovered_minions.append(minion)
-        self.discover_queue.append(discovered_minions)
-
-    def select_discover(self, discover_index: 'DiscoverIndex', context: 'BuyPhaseContext'):
-        minion = self.discover_queue[0].pop(discover_index)
-        context.owner.add_to_store(minion)
-        self.discover_queue.pop(0)
+        context.owner.discover_queue.append(
+            DiscoverObject(discovered_minions, context.owner.add_to_store, True, DiscoverType.CARD))
 
 
 # TODO: add Kurtrus Ashfallen (need a way to buff all minions this game)
