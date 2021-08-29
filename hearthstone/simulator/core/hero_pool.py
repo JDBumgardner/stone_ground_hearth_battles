@@ -6,7 +6,7 @@ from hearthstone.simulator.core import combat, events
 from hearthstone.simulator.core.card_pool import Amalgam, FishOfNZoth, BrannBronzebeard
 from hearthstone.simulator.core.cards import CardLocation, one_minion_per_type, one_minion_per_tier
 from hearthstone.simulator.core.combat import logger
-from hearthstone.simulator.core.discover_object import DiscoverObject
+from hearthstone.simulator.core.discover_object import DiscoverObject, DiscoverType
 from hearthstone.simulator.core.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
 from hearthstone.simulator.core.hero import Hero
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
@@ -503,7 +503,8 @@ class MrBigglesworth(Hero):
                     board.remove(enemy_minion)
                     enemy_minion.token = True
                     discovered_cards.append(enemy_minion)
-            self.dead_discover_queue.append(DiscoverObject(discovered_cards, context.owner.gain_hand_card, True))
+            self.dead_discover_queue.append(
+                DiscoverObject(discovered_cards, context.owner.gain_hand_card, True, DiscoverType.CARD))
         elif event.event is EVENTS.BUY_START:
             context.owner.discover_queue += self.dead_discover_queue
             self.dead_discover_queue = []
@@ -654,7 +655,7 @@ class TheGreatAkazamzarak(Hero):
                 self.discovered_ice_block = True
             context.owner.secrets.append(secret)
 
-        context.owner.discover_queue.append(DiscoverObject(secrets, on_discover, False))
+        context.owner.discover_queue.append(DiscoverObject(secrets, on_discover, False, DiscoverType.SECRET))
 
     def hero_info(self, player: 'Player') -> Optional[str]:
         return f'active secrets: {player.secrets}'
@@ -740,7 +741,7 @@ class SirFinleyMrrgglton(Hero):
                 context.owner.choose_hero(hero)
                 context.owner.hero.handle_event(events.BuyStartEvent(), context)
 
-            context.owner.discover_queue.append(DiscoverObject(hero_choices, on_discover, False))
+            context.owner.discover_queue.append(DiscoverObject(hero_choices, on_discover, False, DiscoverType.HERO))
 
 
 # class LordBarov(Hero):
@@ -903,7 +904,8 @@ class Tickatus(Hero):
                     spell_type = context.randomizer.select_spell(prize_options)
                     selected_prizes.append(spell_type())
                     prize_options.remove(spell_type)
-                context.owner.discover_queue.append(DiscoverObject(selected_prizes, context.owner.gain_spell, False))
+                context.owner.discover_queue.append(
+                    DiscoverObject(selected_prizes, context.owner.gain_spell, False, DiscoverType.SPELL))
 
     def hero_info(self, player: 'Player') -> Optional[str]:
         return f'{4 - (player.tavern.turn_count + 1) % 4} turns left'

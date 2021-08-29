@@ -6,7 +6,7 @@ from typing import Optional
 
 from hearthstone.simulator.core import events
 from hearthstone.simulator.core.cards import CardLocation
-from hearthstone.simulator.core.discover_object import DiscoverObject
+from hearthstone.simulator.core.discover_object import DiscoverObject, DiscoverType
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 from hearthstone.simulator.core.secrets import BaseSecret
 from hearthstone.simulator.core.spell import Spell
@@ -306,7 +306,8 @@ class TrainingSession(Spell):
             hero_choices.append(random_hero)
             hero_pool.remove(random_hero)
 
-        context.owner.discover_queue.append(DiscoverObject(hero_choices, context.owner.swap_hero, False))
+        context.owner.discover_queue.append(
+            DiscoverObject(hero_choices, context.owner.swap_hero, False, DiscoverType.HERO))
 
 
 class GainArgentBraggart(Spell):
@@ -384,7 +385,8 @@ class BigWinner(Spell):
                     spell_type = context.randomizer.select_spell(prize_choices)
                     selected_prizes.append(spell_type())
                     prize_choices.remove(spell_type)
-                context.owner.discover_queue.append(DiscoverObject(selected_prizes, context.owner.gain_spell, False))
+                context.owner.discover_queue.append(
+                    DiscoverObject(selected_prizes, context.owner.gain_spell, False, DiscoverType.SPELL))
 
 
 class BloodGem(Spell):
