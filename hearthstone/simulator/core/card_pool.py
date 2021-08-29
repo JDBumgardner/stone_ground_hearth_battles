@@ -2635,16 +2635,15 @@ class Shudderling(MonsterCard):
 
     def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
         battlecry_minion_queue = [card for card in context.owner.minions_played if card.battlecry and type(card) != type(self)]
-        while len(battlecry_minion_queue) > 0:
-            next_minion = battlecry_minion_queue.pop()
+        for next_minion in battlecry_minion_queue:
             valid_targets = [card for card in context.owner.in_play if next_minion.valid_battlecry_target(card)]
             chosen_targets = []
             for _ in range(next_minion.num_battlecry_targets[-1]):  # TODO: how to deal with Defender of Argus???
                 target = context.randomizer.select_friendly_minion(valid_targets)
                 valid_targets.remove(target)
                 chosen_targets.append(target)
-
-            next_minion.battlecry(chosen_targets, context)
+            for _ in range(2 if self.golden else 1):
+                next_minion.battlecry(chosen_targets, context)
 
 
 class ArchdruidHamuul(MonsterCard):
