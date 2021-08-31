@@ -308,7 +308,7 @@ class ArchVillianRafaam(Hero):
     base_power_cost = 1
 
     def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
-        if event.event is EVENTS.DIES and event.card in context.enemy_war_party.board and self.hero_power_used:
+        if event.event is EVENTS.DIES and event.card in context.enemy_war_party.board and self.power_uses_left_this_turn == 0:
             if len(context.enemy_war_party.dead_minions) == 1 and context.friendly_war_party.owner.room_in_hand():
                 card_copy = type(event.card)()
                 card_copy.token = False
@@ -319,23 +319,10 @@ class Malygos(Hero):
     base_power_cost = 0
     power_target_location = [CardLocation.BOARD,
                              CardLocation.STORE]  # TODO: are there other hero powers with multiple target locations?
-    multiple_power_uses_per_turn = True
-
-    def __init__(self):
-        super().__init__()
-        self.power_uses_left_this_turn = 2
-
-    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
-        if event.event is EVENTS.BUY_START:
-            self.power_uses_left_this_turn = 2
-
-    def hero_power_valid_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
-                              store_index: Optional['StoreIndex'] = None):
-        return self.power_uses_left_this_turn > 0
+    hero_powers_per_turn = 2
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
-        self.power_uses_left_this_turn -= 1
         if board_index is not None:
             minion = context.owner.pop_board_card(board_index)
         elif store_index is not None:
@@ -429,7 +416,7 @@ class KingMukla(Hero):
                 context.owner.gain_spell(Banana())
 
     def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
-        if event.event is EVENTS.BUY_END and self.hero_power_used:
+        if event.event is EVENTS.BUY_END and self.power_uses_left_this_turn == 0:
             for player in context.owner.tavern.players.values():
                 if player != context.owner:
                     player.gain_spell(Banana())
@@ -621,15 +608,13 @@ class Shudderwock(Hero):
 
     def __init__(self):
         super().__init__()
-        self.power_uses_left = 2
-
-    def hero_power_valid_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
-                              store_index: Optional['StoreIndex'] = None):
-        return self.power_uses_left > 0
+        self.power_uses = 0
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
-        self.power_uses_left -= 1
+        self.power_uses += 1
+        if self.power_uses >= 2:
+            self.can_use_power = False
         context.owner.gain_hand_card(Shudderling())
 
 
@@ -847,7 +832,8 @@ class YShaarj(Hero):
     base_power_cost = 2
 
     def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
-        if event.event is EVENTS.COMBAT_START and self.hero_power_used and context.friendly_war_party.room_on_board():  # TODO: order of this vs other start of combat effects?
+        # TODO: order of this vs other start of combat effects?
+        if event.event is EVENTS.COMBAT_START and self.power_uses_left_this_turn == 0 and context.friendly_war_party.room_on_board():
             same_tier_options = [card for card in context.friendly_war_party.owner.tavern.deck.unique_cards() if
                                  card.tier == context.friendly_war_party.owner.tavern_tier]
             random_minion = context.randomizer.select_gain_card(same_tier_options)
@@ -947,7 +933,7 @@ class OverlordSaurfang(Hero):
         if event.event is EVENTS.BUY_START:
             self.bonus_applied = False
         elif event.event is EVENTS.BUY:
-            if self.hero_power_used and not self.bonus_applied:
+            if self.power_uses_left_this_turn == 0 and not self.bonus_applied:
                 event.card.attack += context.owner.tavern.turn_count + 2
                 self.bonus_applied = True
 
@@ -971,7 +957,7 @@ class Xyrella(Hero):
 class Voljin(Hero):
     base_power_cost = 0
     power_target_location = [CardLocation.BOARD, CardLocation.STORE]
-    multiple_power_uses_per_turn = True
+    hero_powers_per_turn = 2
 
     def __init__(self):
         super().__init__()
