@@ -4,6 +4,7 @@ use std::{
     option::Option,
     usize,
 };
+use log::{info, warn};
 use super::warparty::WarParty;
 use super::monstercard::MonsterCard;
 
@@ -14,15 +15,21 @@ pub fn battle_boards<'a>(attacker: &'a mut WarParty, defender: &'a mut WarParty)
         std::mem::swap(attacker, defender)
     }
     loop {
-        match select_target(defender) {
-            Some(defender_index) => {
-                let attacker_index: usize = attacker.get_next_attacker_index();
+        match (attacker.get_next_attacker_index(), select_target(defender)) {
+            (Some(attacker_index), Some(defender_index)) => {
+                println!("the attacker is: {:?}", attacker );
+                println!("the defender is: {:?}", defender );
                 fight(&mut attacker[attacker_index], &mut defender[defender_index]);
                 check_casualties(attacker, defender);
-                std::mem::swap(attacker, defender);
             }
-            None => break,
+            (None, Some(_)) => {
+                if !defender.has_attacker() {
+                    break
+                }
+            }
+            _ => break,
         }
+        std::mem::swap(attacker, defender);
     }
 }
 

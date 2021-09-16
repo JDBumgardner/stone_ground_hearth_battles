@@ -31,13 +31,35 @@ impl WarParty {
             self.attacker_died = true;
         }
     }
-    pub fn get_next_attacker_index(&mut self) -> usize {
+    pub fn get_next_attacker_index(&mut self) -> Option<usize> {
         if !self.attacker_died {
-            self.attacker_index += 1;
-            // TODO: Wrap index around and deal with 0
+            self.iterate_attacker_index();
+        }
+        if self.cards.is_empty() {
+            return None
+        }
+        let original_index = self.attacker_index;
+        loop {
+            if self.cards[self.attacker_index].cant_attack() {
+                self.iterate_attacker_index();
+            } else {
+                break
+            }
+            if self.attacker_index == original_index {
+                return None
+            }
         }
         self.attacker_died = false;
-        return self.attacker_index;
+        return Some(self.attacker_index);
+    }
+    pub fn has_attacker(&self) -> bool {
+        self.cards.iter().any(|x| !x.cant_attack())
+    }
+    pub fn iterate_attacker_index(&mut self) {
+        self.attacker_index += 1;
+        if self.attacker_index == self.cards.len() {
+            self.attacker_index = 0;
+        }
     }
     pub fn is_empty(&self) -> bool {
         self.cards.is_empty()
