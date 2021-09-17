@@ -81,10 +81,11 @@ class MightOfStormwind(Spell):
 
     def on_play(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                 store_index: Optional['StoreIndex'] = None):
-        for _ in range(3):  # TODO: is this three different random minions?
-            card = context.randomizer.select_friendly_minion(context.owner.in_play)
-            card.attack += 1
-            card.health += 1
+        if context.owner.in_play:
+            for _ in range(3):  # TODO: is this three different random minions?
+                card = context.randomizer.select_friendly_minion(context.owner.in_play)
+                card.attack += 1
+                card.health += 1
 
 
 class PocketChange(Spell):
