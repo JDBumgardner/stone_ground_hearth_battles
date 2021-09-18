@@ -22,7 +22,8 @@ class DiscoverType(enum.Enum):
 
 
 class DiscoverObject:
-    def __init__(self, items: List[Discoverable], discover_function: Callable[[Discoverable], None], dissolve_leftovers: bool, discover_type: DiscoverType):
+    def __init__(self, items: List[Discoverable], discover_function: Callable[[Discoverable], None],
+                 dissolve_leftovers: bool, discover_type: DiscoverType):
         self.items = items
         self.discover_function = discover_function
         self.dissolve_leftovers = dissolve_leftovers
