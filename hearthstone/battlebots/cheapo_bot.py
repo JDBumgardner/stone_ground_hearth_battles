@@ -6,8 +6,7 @@ from hearthstone.simulator.agent.actions import StandardAction, generate_standar
 from hearthstone.simulator.agent.agent import Agent
 from hearthstone.simulator.core.discover_object import DiscoverType
 
-if typing.TYPE_CHECKING:
-    from hearthstone.simulator.core.player import Player, DiscoverIndex
+from hearthstone.simulator.core.player import Player, DiscoverIndex
 
 
 class CheapoBot(Agent):
