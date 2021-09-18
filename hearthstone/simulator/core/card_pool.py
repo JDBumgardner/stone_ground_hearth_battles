@@ -897,7 +897,6 @@ class SoulJuggler(MonsterCard):
             count = 2 if self.golden else 1
             for _ in range(count):
                 targets = [card for card in context.enemy_war_party.board if card.is_targetable()]
-                print(targets)
                 if targets:
                     target = context.randomizer.select_enemy_minion(targets)
                     target.take_damage(3, context.enemy_context(), self)
