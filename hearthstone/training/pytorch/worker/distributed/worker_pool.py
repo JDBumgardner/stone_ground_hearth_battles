@@ -95,15 +95,20 @@ class DistributedWorkerPool:
             futures.append(sim_rref.rpc_async(timeout=120000).play_interleaved_games(self.games_per_worker,
                                                                                      learning_bot_contestant,
                                                                                      other_contestants, game_size))
-
+        crash = None
         for future in futures:
-            replays = future.wait()
+            try:
+                replays = future.wait()
+            except Exception as e:
+                crash = e
+                continue
             for replay in replays:
                 self.replay_sink.process(replay, learning_bot_contestant, other_contestants)
         for contestant in all_contestants:
             if contestant.agent_generator.function == PytorchBot:
                 contestant.agent_generator.kwargs['net'] = nets[contestant.name]
                 contestant.agent_generator.kwargs['device'] = devices[contestant.name]
+        raise crash
 
     def shutdown(self):
         if self.batched:

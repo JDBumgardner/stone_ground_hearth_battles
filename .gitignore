@@ -8,7 +8,7 @@
 index.txt
 venv/*
 /data/learning/pytorch/tensorboard/*
-/data/learning/pytorch/saved_models/*
+/data/learning/pytorch/ppo/*
 /benchmarks/profiles/*
 *~
 /rust/pyrite_hearth_battles/target/*
