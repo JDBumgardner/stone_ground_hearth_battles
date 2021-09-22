@@ -188,7 +188,14 @@ class TimeThief(Spell):
                 store_index: Optional['StoreIndex'] = None):
         last_opp_warband_types = [type(card) for card in context.owner.last_opponent_warband]
         if last_opp_warband_types != [] and context.owner.room_in_hand():
-            context.owner.draw_discover(lambda card: type(card) in last_opp_warband_types)
+            discoverables = [t() for t in last_opp_warband_types]
+            discovered_cards = []
+            while len(discovered_cards) < 3 and discoverables:
+                discovered_cards.append(context.randomizer.select_discover_card(discoverables))
+                discoverables.remove(discovered_cards[-1])
+
+            context.owner.discover_queue.append(
+                DiscoverObject(discovered_cards, context.owner.gain_hand_card, False, DiscoverType.CARD))
 
 
 class TheUnlimitedCoin(Spell):
