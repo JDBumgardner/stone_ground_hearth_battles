@@ -281,8 +281,11 @@ class PPOLearner(GlobalStepContext):
                         ))
 
     def log_crash(self, exception: Exception):
-        with open(f"{self.crash_path}/{self.num_crashes}.txt", "w") as f:
+        path = f"{self.crash_path}/{self.num_crashes}.txt"
+        print(f"WARNING: Recoverable crash occurred when playing a game.  Logged to {path}")
+        with open(path, "w") as f:
             traceback.print_exception(type(exception), exception, exception.__traceback__, file=f)
+            traceback.print_exception(type(exception), exception, exception.__traceback__)
         self.num_crashes += 1
 
     def run(self):
