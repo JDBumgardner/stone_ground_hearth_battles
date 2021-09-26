@@ -19,6 +19,10 @@ from hearthstone.training.pytorch.worker.distributed.remote_net import RemoteNet
 
 logger = logging.getLogger(__name__)
 
+import tracemalloc
+tracemalloc.start(25)
+snapshot1 = None
+
 class SimulationWorker:
     def __init__(self, inference_worker):
         self.id = rpc.get_worker_info().id
@@ -43,7 +47,22 @@ class SimulationWorker:
                                learning_bot_contestant: Contestant,
                                other_contestants: List[Contestant],
                                game_size: int) -> List[Replay]:
+        global snapshot1
         start = time.time()
+
+        print(f'all tasks {len(asyncio.all_tasks(asyncio_utils.get_or_create_event_loop()))}')
+        for task in asyncio.all_tasks(asyncio_utils.get_or_create_event_loop()):
+            asyncio_utils.show_coro(task)
+
+        snapshot2 = tracemalloc.take_snapshot()
+        if snapshot1:
+            top_stats = snapshot2.compare_to(snapshot1, 'traceback')
+            for entry in top_stats[:10]:
+                print('\nEntry: {}'.format(entry))
+                print('Traceback:')
+                for line in entry.traceback:
+                    print('  {}'.format(line))
+        snapshot1 = snapshot2
 
         async def run_games():
             nets = {}
