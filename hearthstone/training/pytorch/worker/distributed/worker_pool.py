@@ -108,7 +108,8 @@ class DistributedWorkerPool:
             if contestant.agent_generator.function == PytorchBot:
                 contestant.agent_generator.kwargs['net'] = nets[contestant.name]
                 contestant.agent_generator.kwargs['device'] = devices[contestant.name]
-        raise crash
+        if crash:
+            raise crash
 
     def shutdown(self):
         if self.batched:
