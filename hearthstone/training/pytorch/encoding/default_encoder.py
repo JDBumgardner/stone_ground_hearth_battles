@@ -5,10 +5,10 @@ import numpy as np
 import torch
 
 from hearthstone.simulator.agent.actions import TavernUpgradeAction, RerollAction, EndPhaseAction, BuyAction, \
-    SellAction, DiscoverChoiceAction, HeroPowerAction, FreezeDecision, HeroDiscoverAction, SummonAction, Action, \
-    PlaySpellAction
+    SellAction, DiscoverChoiceAction, HeroPowerAction, FreezeDecision, SummonAction, Action, PlaySpellAction
 from hearthstone.simulator.core.card_pool import PrintingPress
 from hearthstone.simulator.core.cards import CardLocation
+from hearthstone.simulator.core.discover_object import DiscoverType
 from hearthstone.simulator.core.hero import EmptyHero
 from hearthstone.simulator.core.hero_pool import VALHALLA
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
@@ -105,7 +105,13 @@ def default_spells_encoding() -> Feature:
 
     Encodes a `Player`.
     """
-    return ListOfFeatures(lambda player: player.spells, default_spell_encoding(), MAX_ENCODED_SPELLS)
+    return CombinedFeature([
+        ListOfFeatures(lambda player: player.spells, default_spell_encoding(), MAX_ENCODED_SPELLS),
+        ListOfFeatures(
+            lambda player: player.discover_queue[0].items if player.discover_queue and player.discover_queue[
+                0].discover_type == DiscoverType.SPELL else [],
+            default_spell_encoding(), MAX_ENCODED_DISCOVER)
+    ])
 
 
 def default_cards_encoding() -> Feature:
@@ -126,7 +132,8 @@ def default_cards_encoding() -> Feature:
             default_card_encoding(), MAX_ENCODED_BOARD),
         ListOfFeatures(
             lambda player: [LocatedCard(card, CardLocation.DISCOVER) for card in
-                            (player.discover_queue[0] if player.discover_queue else [])],
+                            (player.discover_queue[0].items if player.discover_queue and player.discover_queue[
+                                0].discover_type == DiscoverType.CARD else [])],
             default_card_encoding(), MAX_ENCODED_DISCOVER)
     ])
 
@@ -158,9 +165,13 @@ def discover_indices() -> List[DiscoverIndex]:
 
 def _all_actions() -> ActionSet:
     player_action_set = [TavernUpgradeAction(), RerollAction(), HeroPowerAction(),
-                         HeroDiscoverAction(DiscoverIndex(0)), EndPhaseAction(FreezeDecision.NO_FREEZE),
-                         EndPhaseAction(FreezeDecision.FREEZE),
-                         EndPhaseAction(FreezeDecision.UNFREEZE)]
+                         EndPhaseAction(FreezeDecision.NO_FREEZE), EndPhaseAction(FreezeDecision.FREEZE),
+                         EndPhaseAction(FreezeDecision.UNFREEZE),
+                         # TODO: Implement non random selection for HERO and SECRET discovers.
+                         DiscoverChoiceAction(0, DiscoverType.HERO),
+                         DiscoverChoiceAction(0, DiscoverType.SECRET)
+                         ]
+
     store_action_set = [
         [BuyAction(index), InvalidAction(), InvalidAction(), InvalidAction(), HeroPowerAction(store_target=index)]
         for index in store_indices()]
@@ -172,21 +183,31 @@ def _all_actions() -> ActionSet:
         for index in board_indices()]
     discover_action_set = [
         [InvalidAction(), InvalidAction(),
-         InvalidAction(), DiscoverChoiceAction(index), InvalidAction()] for index in
+         InvalidAction(), DiscoverChoiceAction(index, DiscoverType.CARD), InvalidAction()] for index in
         discover_indices()]
 
     battlecry_no_target_action_set = [SummonAction(hand_index, []) for hand_index in hand_indices()]
     battlecry_action_set = [[SummonAction(hand_index, [board_index]) for board_index in board_indices()]
                             for hand_index in hand_indices()]
 
-    spell_action_set = [SpellComponent(index) for index in spell_indices()]
-    no_target_spell_action_set = [PlaySpellAction(index) for index in spell_indices()]
+    spell_action_set = [SpellComponent(index) for index in spell_indices()] + [
+        DiscoverChoiceAction(index, DiscoverType.SPELL) for index in discover_indices()]
+    no_target_spell_action_set = [PlaySpellAction(index) for index in spell_indices()] + [
+        DiscoverChoiceAction(index, DiscoverType.SPELL) for index in discover_indices()]
     store_target_spell_action_set = [
-        [PlaySpellAction(index, store_target=store_index) for store_index in store_indices()] for index in
-        spell_indices()]
+                                        [PlaySpellAction(index, store_target=store_index) for store_index in
+                                         store_indices()] for index in
+                                        spell_indices()] + [
+                                        [InvalidAction() for store_index in store_indices()] for index in
+                                        discover_indices()
+                                    ]
     board_target_spell_action_set = [
-        [PlaySpellAction(index, board_target=board_index) for board_index in board_indices()] for index in
-        spell_indices()]
+                                        [PlaySpellAction(index, board_target=board_index) for board_index in
+                                         board_indices()] for index in
+                                        spell_indices()] + [
+                                        [InvalidAction() for store_index in store_indices()] for index in
+                                        discover_indices()
+                                    ]
 
     return ActionSet(player_action_set,
                      store_action_set + hand_action_set + board_action_set + discover_action_set,

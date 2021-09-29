@@ -5,6 +5,7 @@ from typing import Optional, List, Callable, Type, Tuple
 from frozenlist.frozen_list import FrozenList
 from hearthstone.simulator.core import events
 from hearthstone.simulator.core.cards import MonsterCard, CardLocation
+from hearthstone.simulator.core.discover_object import DiscoverObject, Discoverable, DiscoverType
 from hearthstone.simulator.core.events import BuyPhaseContext, CardEvent
 from hearthstone.simulator.core.hero import EmptyHero
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
@@ -38,7 +39,7 @@ class Player:
         self.health = None
         self.tavern_tier = 1
         self._coins = 0
-        self.discover_queue: List[List['MonsterCard']] = []
+        self.discover_queue: List['DiscoverObject'] = []
         self.maximum_board_size = 7
         self.maximum_hand_size = 10
         self.maximum_store_size = 7
@@ -117,7 +118,7 @@ class Player:
         if hero is None:
             hero = EmptyHero()
         player = Player(tavern, name, [hero])
-        player.choose_hero(HeroChoiceIndex(0))
+        player.choose_hero_from_index(HeroChoiceIndex(0))
         return player
 
     @property
@@ -247,28 +248,27 @@ class Player:
             return False
         return True
 
-    def draw_discover(self, predicate: Callable[[
-                                                    'MonsterCard'], bool]):  # TODO: Jarett help make discoverables unique are cards with more copies in the deck more likely to be discovered?
-        discoverables = [card for card in self.tavern.deck.all_cards() if predicate(
-            card)]  # Jeremy says: Hmm, we can run out of unique cards.  Changed to be all cards for now.
+    # TODO: Jarett help make discoverables unique are cards with more copies in the deck more likely to be discovered?
+    def draw_discover(self, predicate: Callable[['MonsterCard'], bool], num: int = 3, discover_function: Optional[Callable[['Discoverable'], None]] = None, dissolve: bool = True):
+        # Jeremy says: Hmm, we can run out of unique cards.  Changed to be all cards for now.
+        discoverables = [card for card in self.tavern.deck.all_cards() if predicate(card)]
         discovered_cards = []
-        for _ in range(3):
+        for _ in range(num):
             discovered_cards.append(self.tavern.randomizer.select_discover_card(discoverables))
             discoverables.remove(discovered_cards[-1])
             self.tavern.deck.remove_card(discovered_cards[-1])
-        self.discover_queue.append(discovered_cards)
+
+        if discover_function is None:
+            discover_function = self.gain_hand_card
+        self.discover_queue.append(DiscoverObject(discovered_cards, discover_function, dissolve, DiscoverType.CARD))
 
     def select_discover(self, card_index: 'DiscoverIndex'):
         assert self.valid_select_discover(card_index)
-        card = self.discover_queue[0].pop(card_index)
-        card.token = False  # for Bigglesworth (there is no other scenario where a token will be a discover option)
-        self.gain_hand_card(card)
-        self.tavern.deck.return_cards(
-            itertools.chain.from_iterable([card.dissolve() for card in self.discover_queue[0]]))
-        self.discover_queue.pop(0)
+        next_discover = self.discover_queue.pop(0)
+        next_discover.select_item(card_index, self)
 
     def valid_select_discover(self, card_index: 'DiscoverIndex'):
-        return self.discover_queue and card_index in range(len(self.discover_queue[0])) and not self.dead
+        return self.discover_queue and card_index in range(len(self.discover_queue[0].items)) and not self.dead
 
     def summon_from_void(self, monster: MonsterCard):
         if self.room_on_board():
@@ -421,9 +421,12 @@ class Player:
     def max_tier(self):
         return len(self._tavern_upgrade_costs)
 
-    def choose_hero(self, hero_index: HeroChoiceIndex):
+    def choose_hero_from_index(self, hero_index: HeroChoiceIndex):
         assert (self.valid_choose_hero(hero_index))
-        self.hero = self.hero_options.pop(hero_index)
+        self.choose_hero(self.hero_options.pop(hero_index))
+
+    def choose_hero(self, hero: 'Hero'):
+        self.hero = hero
         self.tavern.hero_pool.extend(self.hero_options)
         self.hero_options = []
         self.health = self.hero.starting_health()
@@ -527,16 +530,8 @@ class Player:
             if o == self:
                 return p
 
-    def hero_select_discover(self, discover_index: 'DiscoverIndex'):
-        self.hero.select_discover(discover_index, BuyPhaseContext(self, self.tavern.randomizer))
-
-    def valid_hero_select_discover(self, discover_index: 'DiscoverIndex'):
-        if self.dead:
-            return False
-        return self.hero.valid_select_discover(discover_index)
-
     def valid_standard_action(self):
-        return not self.dead and not self.discover_queue and not self.hero.discover_queue
+        return not self.dead and not self.discover_queue
 
     def current_build(self) -> Tuple[Optional['MONSTER_TYPES'], Optional[int]]:
         cards_by_type = {monster_type.name: 0 for monster_type in MONSTER_TYPES.single_types()}

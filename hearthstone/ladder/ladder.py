@@ -137,7 +137,7 @@ def saved_learningbot_1v1_contestants() -> List[Contestant]:
     all_bots = []
     # Jeremy has this bot, ask him for it!
     all_bots += [Contestant("LearningBot94200", lambda: PytorchBot(
-        load_from_saved("../../data/learning/pytorch/saved_models/2020-10-30T20:50:44.311231/94200", hparams),
+        load_from_saved("../../data/learning/pytorch/ppo/2020-10-30T20:50:44.311231/saved_models/94200", hparams),
         DefaultEncoder(),
         annotate=False))]
     return all_bots

@@ -114,8 +114,13 @@ class WorkerPool:
                 self._submit_task(play_game, (learning_bot_contestant, other_contestants, game_size, self.annotator))
                 for _ in
                 range(self.num_workers)]
+            crash = None
             for promise in awaitables:
-                replay = self._get_task_result(promise)
+                try:
+                    replay = self._get_task_result(promise)
+                except Exception as e:
+                    crash = e
+                    continue
                 tensorboard_altair.plot_replay(replay, learning_bot_contestant.name, self.tensorboard,
                                                self.global_step_context)
                 self._update_ratings(learning_bot_contestant, all_contestants, replay)
@@ -129,6 +134,8 @@ class WorkerPool:
         if self.use_batched_inference:
             for contestant, original_agent in zip(all_contestants, original_agents):
                 contestant.agent_generator = original_agent
+        if crash:
+            raise crash
 
     @staticmethod
     def _update_ratings(learning_bot_contestant, all_contestants, replay):

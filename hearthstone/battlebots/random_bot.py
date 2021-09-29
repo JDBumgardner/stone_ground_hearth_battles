@@ -2,7 +2,7 @@ import random
 import typing
 
 from hearthstone.simulator.agent.actions import generate_standard_actions, StandardAction, DiscoverChoiceAction, \
-    RearrangeCardsAction, HeroDiscoverAction
+    RearrangeCardsAction
 from hearthstone.simulator.agent.agent import Agent
 
 if typing.TYPE_CHECKING:
@@ -27,7 +27,4 @@ class RandomBot(Agent):
         return self.local_random.choice(all_actions)
 
     async def discover_choice_action(self, player: 'Player') -> DiscoverChoiceAction:
-        return DiscoverChoiceAction(self.local_random.choice(range(len(player.discover_queue[0]))))
-
-    async def hero_discover_action(self, player: 'Player') -> 'HeroDiscoverAction':
-        return HeroDiscoverAction(self.local_random.choice(range(len(player.hero.discover_queue[0]))))
+        return DiscoverChoiceAction(self.local_random.choice(range(len(player.discover_queue[0].items))))

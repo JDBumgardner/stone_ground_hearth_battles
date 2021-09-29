@@ -3,7 +3,7 @@ import typing
 from typing import List, Callable
 
 from hearthstone.simulator.agent.actions import StandardAction, generate_standard_actions, BuyAction, EndPhaseAction, \
-    SummonAction, DiscoverChoiceAction, RearrangeCardsAction, HeroDiscoverAction, FreezeDecision, RerollAction, \
+    SummonAction, DiscoverChoiceAction, RearrangeCardsAction, FreezeDecision, RerollAction, \
     SellAction, TavernUpgradeAction, HeroPowerAction
 from hearthstone.simulator.agent.agent import Agent
 from hearthstone.simulator.core.player import Player, StoreIndex
@@ -73,9 +73,6 @@ class HeroBot(Agent):
         return EndPhaseAction(FreezeDecision.NO_FREEZE)
 
     async def discover_choice_action(self, player: 'Player') -> DiscoverChoiceAction:
-        discover_cards = player.discover_queue[0]
+        discover_cards = player.discover_queue[0].items
         discover_cards = sorted(discover_cards, key=lambda card: self.priority(player, card), reverse=True)
-        return DiscoverChoiceAction(player.discover_queue[0].index(discover_cards[0]))
-
-    async def hero_discover_action(self, player: 'Player') -> 'HeroDiscoverAction':
-        return HeroDiscoverAction(self.local_random.choice(range(len(player.hero.discover_queue[0]))))
+        return DiscoverChoiceAction(player.discover_queue[0].items.index(discover_cards[0]))

@@ -1,7 +1,7 @@
 import typing
 
 from hearthstone.simulator.agent.actions import StandardAction, EndPhaseAction, DiscoverChoiceAction, \
-    RearrangeCardsAction, HeroDiscoverAction, FreezeDecision
+    RearrangeCardsAction, FreezeDecision
 from hearthstone.simulator.agent.agent import Agent
 
 if typing.TYPE_CHECKING:
@@ -20,6 +20,3 @@ class NoActionBot(Agent):
 
     async def discover_choice_action(self, player: 'Player') -> DiscoverChoiceAction:
         return DiscoverChoiceAction(DiscoverIndex(0))
-
-    async def hero_discover_action(self, player: 'Player') -> 'HeroDiscoverAction':
-        return HeroDiscoverAction(DiscoverIndex(0))

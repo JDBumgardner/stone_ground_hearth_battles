@@ -1,8 +1,9 @@
 import logging
 import os
+import platform
 import random
 import time
-import platform
+import traceback
 from datetime import datetime
 from math import sqrt
 from typing import List, Dict, Union, NewType
@@ -18,13 +19,13 @@ from hearthstone.simulator.agent.actions import RearrangeCardsAction, BuyAction,
     RerollAction, DiscoverChoiceAction, TavernUpgradeAction, HeroPowerAction, FreezeDecision, PlaySpellAction
 from hearthstone.simulator.core.hero import EmptyHero
 from hearthstone.simulator.core.tavern import Tavern
+from hearthstone.training.common.state_encoding import State
 from hearthstone.training.pytorch.agents.pytorch_bot import PytorchBot
 from hearthstone.training.pytorch.encoding import shared_tensor_pool_encoder
 from hearthstone.training.pytorch.encoding.default_encoder import \
     EncodedActionSet, \
     DefaultEncoder
 from hearthstone.training.pytorch.encoding.shared_tensor_pool_encoder import SharedTensorPoolEncoder
-from hearthstone.training.common.state_encoding import State
 from hearthstone.training.pytorch.gae import GAEAnnotator
 from hearthstone.training.pytorch.networks import save_load
 from hearthstone.training.pytorch.networks.running_norm import WelfordAggregator
@@ -34,10 +35,11 @@ from hearthstone.training.pytorch.policy_gradient import tensorize_batch, easy_c
 from hearthstone.training.pytorch.replay import ActorCriticGameStepInfo, ActorCriticGameStepDebugInfo
 from hearthstone.training.pytorch.replay_buffer import EpochBuffer
 from hearthstone.training.pytorch.surveillance import GlobalStepContext
+from hearthstone.training.pytorch.worker.single_machine.single_worker_pool import SingleWorkerPool
+
 if platform.system() != 'Windows':
     from hearthstone.training.pytorch.worker.distributed.worker_pool import DistributedWorkerPool
 from hearthstone.training.pytorch.worker.postprocessing import ExperiencePostProcessor
-from hearthstone.training.pytorch.worker.single_machine.worker import Worker
 from hearthstone.training.pytorch.worker.single_machine.worker_pool import WorkerPool
 
 PPOHyperparameters = NewType('PPOHyperparameters', Dict[str, Union[str, int, float]])
@@ -68,8 +70,10 @@ class PPOLearner(GlobalStepContext):
 
         # global_step at time of last model export.
         self.last_exported_step = 0
-        self.export_path = "../../../data/learning/pytorch/saved_models/{}".format(self.hparams['export.path'])
-
+        self.export_path = "../../../data/learning/pytorch/ppo/{}/saved_models".format(self.hparams['export.path'])
+        self.crash_path = "../../../data/learning/pytorch/ppo/{}/crashes".format(self.hparams['export.path'])
+        # Number of crashes saved.
+        self.num_crashes = 0
         # Encoder is shared to reuse tensors passed between processes
         self.encoder = DefaultEncoder()
         if self.hparams['parallelism.shared_tensor_pool']:
@@ -219,7 +223,7 @@ class PPOLearner(GlobalStepContext):
                                                                 )))
 
     def load_latest_saved_versions(self, run, n) -> Dict[int, nn.Module]:
-        resume_from_dir = "../../../data/learning/pytorch/saved_models/{}".format(run)
+        resume_from_dir = "../../../data/learning/pytorch/ppo/{}/saved_models/".format(run)
         models = os.listdir(resume_from_dir)
         top_n_models = sorted([int(model) for model in models], reverse=True)[:n]
         return {model: load_from_saved("{}/{}".format(resume_from_dir, model), self.hparams)
@@ -276,6 +280,14 @@ class PPOLearner(GlobalStepContext):
                                                      device=self.get_device())
                         ))
 
+    def log_crash(self, exception: Exception):
+        path = f"{self.crash_path}/{self.num_crashes}.txt"
+        print(f"WARNING: Recoverable crash occurred when playing a game.  Logged to {path}")
+        with open(path, "w") as f:
+            traceback.print_exception(type(exception), exception, exception.__traceback__, file=f)
+            traceback.print_exception(type(exception), exception, exception.__traceback__)
+        self.num_crashes += 1
+
     def run(self):
         start_time = time.time()
         last_reported_time = start_time
@@ -286,7 +298,9 @@ class PPOLearner(GlobalStepContext):
         logging.getLogger().setLevel(logging.INFO)
 
         if self.hparams['export.enabled']:
-            os.mkdir(self.export_path)
+            os.makedirs(self.export_path)
+        if self.hparams['crashes.max_recoveries']:
+            os.makedirs(self.crash_path)
 
         if self.hparams['resume']:
             self.global_step, learning_net = \
@@ -348,14 +362,18 @@ class PPOLearner(GlobalStepContext):
                                          self.hparams['parallelism.method'] == "batch",
                                          self.get_device(),
                                          )
-
+        else:
+            worker_pool = SingleWorkerPool(replay_buffer, gae_annotator, tensorboard, self)
         for i in range(1000000):
             learning_net.eval()
-            if self.hparams['parallelism.method']:
+            try:
                 worker_pool.play_games(learning_bot_contestant, other_contestants, self.hparams['game_size'])
-            else:
-                Worker(learning_bot_contestant, other_contestants, self.hparams['game_size'], replay_buffer,
-                       gae_annotator, tensorboard, self).play_game()
+            except Exception as e:
+                if self.num_crashes >= self.hparams['crashes.max_recoveries']:
+                    raise e
+                self.log_crash(e)
+            if self.num_crashes:
+                print(f"WARNING: Recovered from {self.num_crashes} crashes but still learning. (Check the crashes/ directory)")
             # Warmup games for normalization layer are discarded.
             if self.hparams['resume'] and self.hparams['nn.encoding.normalize'] and i == 0:
                 replay_buffer.clear()
@@ -654,6 +672,7 @@ def main():
         'export.enabled': True,
         'export.period_epochs': 200,
         'export.path': datetime.now().isoformat().replace(':', ''),
+        'crashes.max_recoveries': 100,
         'opponents.initial': 'easiest',
         'opponents.self_play.enabled': True,
         'opponents.self_play.only_champions': True,

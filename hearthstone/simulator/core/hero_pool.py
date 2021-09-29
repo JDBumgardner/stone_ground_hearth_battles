@@ -6,10 +6,11 @@ from hearthstone.simulator.core import combat, events
 from hearthstone.simulator.core.card_pool import Amalgam, FishOfNZoth, BrannBronzebeard, Shudderling
 from hearthstone.simulator.core.cards import CardLocation, one_minion_per_type, one_minion_per_tier
 from hearthstone.simulator.core.combat import logger
+from hearthstone.simulator.core.discover_object import DiscoverObject, DiscoverType
 from hearthstone.simulator.core.events import BuyPhaseContext, CombatPhaseContext, EVENTS, CardEvent
 from hearthstone.simulator.core.hero import Hero
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
-from hearthstone.simulator.core.player import BoardIndex, StoreIndex, DiscoverIndex, HeroChoiceIndex, Player
+from hearthstone.simulator.core.player import BoardIndex, StoreIndex, Player
 from hearthstone.simulator.core.secrets import remaining_secrets, BaseSecret
 from hearthstone.simulator.core.spell_pool import TripleRewardCard, GoldCoin, Prize, Banana, BigBanana, RecruitmentMap, \
     DARKMOON_PRIZES, BloodGem
@@ -502,7 +503,8 @@ class MrBigglesworth(Hero):
                     board.remove(enemy_minion)
                     enemy_minion.token = True
                     discovered_cards.append(enemy_minion)
-            self.dead_discover_queue.append(discovered_cards)
+            self.dead_discover_queue.append(
+                DiscoverObject(discovered_cards, context.owner.gain_hand_card, True, DiscoverType.CARD))
         elif event.event is EVENTS.BUY_START:
             context.owner.discover_queue += self.dead_discover_queue
             self.dead_discover_queue = []
@@ -640,15 +642,14 @@ class TheGreatAkazamzarak(Hero):
             if available_secrets:
                 secret = context.randomizer.select_secret(available_secrets)
                 available_secrets.remove(secret)
-                secrets.append(secret)
-        self.discover_queue.append(secrets)
+                secrets.append(secret())
 
-    def select_discover(self, discover_index: 'DiscoverIndex', context: 'BuyPhaseContext'):
-        secret = self.discover_queue[0].pop(discover_index)
-        if secret == BaseSecret.IceBlock:
-            self.discovered_ice_block = True
-        context.owner.secrets.append(secret())
-        self.discover_queue.pop(0)
+        def on_discover(secret):
+            if type(secret) == BaseSecret.IceBlock:
+                self.discovered_ice_block = True
+            context.owner.secrets.append(secret)
+
+        context.owner.discover_queue.append(DiscoverObject(secrets, on_discover, False, DiscoverType.SECRET))
 
     def hero_info(self, player: 'Player') -> Optional[str]:
         return f'active secrets: {player.secrets}'
@@ -729,13 +730,12 @@ class SirFinleyMrrgglton(Hero):
                 random_hero = context.randomizer.select_hero(hero_pool)
                 hero_choices.append(random_hero)
                 hero_pool.remove(random_hero)
-            self.discover_queue.append(hero_choices)
 
-    def select_discover(self, discover_index: 'DiscoverIndex', context: 'BuyPhaseContext'):
-        context.owner.hero_options = self.discover_queue[0][:]
-        context.owner.choose_hero(HeroChoiceIndex(discover_index))
-        context.owner.hero.handle_event(events.BuyStartEvent(), context)
-        self.discover_queue.pop(0)
+            def on_discover(hero):
+                context.owner.choose_hero(hero)
+                context.owner.hero.handle_event(events.BuyStartEvent(), context)
+
+            context.owner.discover_queue.append(DiscoverObject(hero_choices, on_discover, False, DiscoverType.HERO))
 
 
 # class LordBarov(Hero):
@@ -880,16 +880,9 @@ class CaptainHooktusk(Hero):
         predicate = lambda card: (
                                      card.tier == board_minion.tier - 1 if board_minion.tier > 1 else card.tier == 1) and type(
             card) != type(board_minion)
-        discoverables = [card for card in context.owner.tavern.deck.unique_cards() if predicate(card)]
-        discovered_cards = []
-        for _ in range(2):
-            discovered_cards.append(context.randomizer.select_discover_card(discoverables))
-            discoverables.remove(discovered_cards[-1])
-            context.owner.tavern.deck.remove_card(discovered_cards[-1])
-        context.owner.discover_queue.append(discovered_cards)
+        context.owner.draw_discover(predicate, 2)
 
 
-# TODO: add Tickatus... and darkmoon prizes (ugh)
 class Tickatus(Hero):
     def __init__(self):
         super().__init__()
@@ -906,17 +899,8 @@ class Tickatus(Hero):
                     spell_type = context.randomizer.select_spell(prize_options)
                     selected_prizes.append(spell_type())
                     prize_options.remove(spell_type)
-                self.discover_queue.append(selected_prizes)
-
-    def select_discover(self, discover_index: 'DiscoverIndex', context: 'BuyPhaseContext'):
-        if issubclass(type(self.discover_queue[0][0]), Hero):
-            new_hero = self.discover_queue[0][discover_index]
-            context.owner.swap_hero(new_hero)
-            self.discover_queue.pop(0)
-        else:
-            prize = self.discover_queue[0].pop(discover_index)
-            context.owner.gain_spell(prize)
-            self.discover_queue.pop(0)
+                context.owner.discover_queue.append(
+                    DiscoverObject(selected_prizes, context.owner.gain_spell, False, DiscoverType.SPELL))
 
     def hero_info(self, player: 'Player') -> Optional[str]:
         return f'{4 - (player.tavern.turn_count + 1) % 4} turns left'
@@ -1044,12 +1028,8 @@ class Galakrond(Hero):
                 minion = context.randomizer.select_discover_card(higher_tier_minions)
                 higher_tier_minions.remove(minion)
                 discovered_minions.append(minion)
-        self.discover_queue.append(discovered_minions)
-
-    def select_discover(self, discover_index: 'DiscoverIndex', context: 'BuyPhaseContext'):
-        minion = self.discover_queue[0].pop(discover_index)
-        context.owner.add_to_store(minion)
-        self.discover_queue.pop(0)
+        context.owner.discover_queue.append(
+            DiscoverObject(discovered_minions, context.owner.add_to_store, True, DiscoverType.CARD))
 
 
 # TODO: add Galewing

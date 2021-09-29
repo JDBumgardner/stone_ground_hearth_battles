@@ -6,6 +6,7 @@ from typing import Optional
 
 from hearthstone.simulator.core import events
 from hearthstone.simulator.core.cards import CardLocation
+from hearthstone.simulator.core.discover_object import DiscoverObject, DiscoverType
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 from hearthstone.simulator.core.secrets import BaseSecret
 from hearthstone.simulator.core.spell import Spell
@@ -81,10 +82,11 @@ class MightOfStormwind(Spell):
 
     def on_play(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                 store_index: Optional['StoreIndex'] = None):
-        for _ in range(3):  # TODO: is this three different random minions?
-            card = context.randomizer.select_friendly_minion(context.owner.in_play)
-            card.attack += 1
-            card.health += 1
+        if context.owner.in_play:
+            for _ in range(3):  # TODO: is this three different random minions?
+                card = context.randomizer.select_friendly_minion(context.owner.in_play)
+                card.attack += 1
+                card.health += 1
 
 
 class PocketChange(Spell):
@@ -186,7 +188,14 @@ class TimeThief(Spell):
                 store_index: Optional['StoreIndex'] = None):
         last_opp_warband_types = [type(card) for card in context.owner.last_opponent_warband]
         if last_opp_warband_types != [] and context.owner.room_in_hand():
-            context.owner.draw_discover(lambda card: type(card) in last_opp_warband_types)
+            discoverables = [t() for t in last_opp_warband_types]
+            discovered_cards = []
+            while len(discovered_cards) < 3 and discoverables:
+                discovered_cards.append(context.randomizer.select_discover_card(discoverables))
+                discoverables.remove(discovered_cards[-1])
+
+            context.owner.discover_queue.append(
+                DiscoverObject(discovered_cards, context.owner.gain_hand_card, False, DiscoverType.CARD))
 
 
 class TheUnlimitedCoin(Spell):
@@ -303,8 +312,9 @@ class TrainingSession(Spell):
             random_hero = context.randomizer.select_hero(hero_pool)
             hero_choices.append(random_hero)
             hero_pool.remove(random_hero)
-        context.owner.hero.discover_queue.append(hero_choices)
-        context.owner.hero.player = context.owner
+
+        context.owner.discover_queue.append(
+            DiscoverObject(hero_choices, context.owner.swap_hero, False, DiscoverType.HERO))
 
 
 class GainArgentBraggart(Spell):
@@ -382,7 +392,8 @@ class BigWinner(Spell):
                     spell_type = context.randomizer.select_spell(prize_choices)
                     selected_prizes.append(spell_type())
                     prize_choices.remove(spell_type)
-                context.owner.hero.discover_queue.append(selected_prizes)
+                context.owner.discover_queue.append(
+                    DiscoverObject(selected_prizes, context.owner.gain_spell, False, DiscoverType.SPELL))
 
 
 class BloodGem(Spell):

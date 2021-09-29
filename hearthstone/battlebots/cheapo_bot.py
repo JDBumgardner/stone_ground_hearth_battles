@@ -2,11 +2,11 @@ import random
 import typing
 
 from hearthstone.simulator.agent.actions import StandardAction, generate_standard_actions, BuyAction, EndPhaseAction, \
-    SummonAction, DiscoverChoiceAction, RearrangeCardsAction, HeroDiscoverAction, FreezeDecision
+    SummonAction, DiscoverChoiceAction, RearrangeCardsAction, FreezeDecision
 from hearthstone.simulator.agent.agent import Agent
+from hearthstone.simulator.core.discover_object import DiscoverType
 
-if typing.TYPE_CHECKING:
-    from hearthstone.simulator.core.player import Player
+from hearthstone.simulator.core.player import Player, DiscoverIndex
 
 
 class CheapoBot(Agent):
@@ -35,9 +35,7 @@ class CheapoBot(Agent):
         return EndPhaseAction(FreezeDecision.NO_FREEZE)
 
     async def discover_choice_action(self, player: 'Player') -> DiscoverChoiceAction:
-        discover_cards = player.discover_queue[0]
-        discover_cards = sorted(discover_cards, key=lambda card: card.tier)
-        return DiscoverChoiceAction(player.discover_queue[0].index(discover_cards[0]))
-
-    async def hero_discover_action(self, player: 'Player') -> 'HeroDiscoverAction':
-        return HeroDiscoverAction(self.local_random.choice(range(len(player.hero.discover_queue))))
+        discover_object = player.discover_queue[0]
+        if discover_object.discover_type == DiscoverType.CARD:
+            discover_object.items.sort(key=lambda card: card.tier)
+        return DiscoverChoiceAction(DiscoverIndex(discover_object.items.index(discover_object.items[0])))

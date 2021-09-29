@@ -3,6 +3,8 @@ import unittest
 import torch
 from torch.distributions import Categorical
 
+from torch.profiler import profile, record_function, ProfilerActivity
+
 from hearthstone.simulator.core.tavern import Tavern
 from hearthstone.training.pytorch.encoding.default_encoder import DefaultEncoder
 from hearthstone.training.pytorch.networks.running_norm import WelfordAggregator
@@ -62,6 +64,11 @@ class PytorchTests(unittest.TestCase):
         combined = torch.cat([data1, data2, data3])
         self.assertAlmostEqual(agg.mean().item(), combined.mean().item())
         self.assertAlmostEqual(agg.stdev().item(), torch.std(combined, unbiased=False).item(), 6)
+
+    def test_cuda_memory_profiler(self):
+        with profile(activities=[ProfilerActivity.CUDA], profile_memory=True, record_shapes=True) as prof:
+            with record_function("model_inference"):
+                pass
 
 
 if __name__ == '__main__':

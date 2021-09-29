@@ -1,7 +1,6 @@
 import asyncio
 
-from hearthstone.simulator.agent.actions import StandardAction, RearrangeCardsAction, DiscoverChoiceAction, \
-    HeroDiscoverAction
+from hearthstone.simulator.agent.actions import StandardAction, RearrangeCardsAction, DiscoverChoiceAction
 from hearthstone.simulator.agent.agent import Agent
 
 
@@ -32,7 +31,4 @@ class PettingZooAgent(Agent):
         pass
 
     async def discover_choice_action(self, player: 'Player') -> DiscoverChoiceAction:
-        pass
-
-    async def hero_discover_action(self, player: 'Player') -> 'HeroDiscoverAction':
         pass

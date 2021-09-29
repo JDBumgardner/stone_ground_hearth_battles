@@ -3,7 +3,7 @@ import typing
 
 from hearthstone.simulator.agent.actions import StandardAction, generate_standard_actions, BuyAction, EndPhaseAction, \
     SummonAction, \
-    TavernUpgradeAction, DiscoverChoiceAction, RearrangeCardsAction, HeroDiscoverAction, FreezeDecision
+    TavernUpgradeAction, DiscoverChoiceAction, RearrangeCardsAction, FreezeDecision
 from hearthstone.simulator.agent.agent import Agent
 
 if typing.TYPE_CHECKING:
@@ -44,9 +44,6 @@ class SupremacyBot(Agent):
         return EndPhaseAction(FreezeDecision.NO_FREEZE)
 
     async def discover_choice_action(self, player: 'Player') -> DiscoverChoiceAction:
-        discover_cards = player.discover_queue[0]
+        discover_cards = player.discover_queue[0].items
         discover_cards = sorted(discover_cards, key=lambda card: card.tier, reverse=True)
-        return DiscoverChoiceAction(player.discover_queue[0].index(discover_cards[0]))
-
-    async def hero_discover_action(self, player: 'Player') -> 'HeroDiscoverAction':
-        return HeroDiscoverAction(self.local_random.choice(range(len(player.hero.discover_queue[0]))))
+        return DiscoverChoiceAction(player.discover_queue[0].items.index(discover_cards[0]))

@@ -4,6 +4,7 @@ from typing import List, Optional, Generator
 
 import autoslot
 
+from hearthstone.simulator.core.discover_object import DiscoverType
 from hearthstone.simulator.core.monster_types import MONSTER_TYPES
 from hearthstone.simulator.core.player import HeroChoiceIndex, StoreIndex, HandIndex, BoardIndex, SpellIndex, Player, \
     DiscoverIndex
@@ -37,7 +38,7 @@ class HeroChoiceAction(Action):
         return f"ChooseHero({self.hero_index})"
 
     def apply(self, player: 'Player'):
-        player.choose_hero(self.hero_index)
+        player.choose_hero_from_index(self.hero_index)
 
     def valid(self, player: 'Player') -> bool:
         return player.valid_choose_hero(self.hero_index)
@@ -47,20 +48,24 @@ class HeroChoiceAction(Action):
 
 
 class DiscoverChoiceAction(Action):
-    def __init__(self, card_index: 'DiscoverIndex'):
+    def __init__(self, card_index: 'DiscoverIndex', discover_type: Optional[DiscoverType] = None):
         self.card_index = card_index
+        self.discover_type = discover_type
 
     def __repr__(self):
-        return f"Discover({self.card_index})"
+        return f"Discover({self.card_index}, {self.discover_type})"
 
     def apply(self, player: 'Player'):
         player.select_discover(self.card_index)
 
     def valid(self, player: 'Player') -> bool:
-        return player.valid_select_discover(self.card_index)
+        if player.valid_select_discover(self.card_index):
+            if self.discover_type is None or player.discover_queue[0].discover_type == self.discover_type:
+                return True
+        return False
 
     def str_in_context(self, player: 'Player') -> str:
-        return f"Discover({player.discover_queue[0][self.card_index]})"
+        return f"Discover({player.discover_queue[0].items[self.card_index]}, {self.discover_type})"
 
 
 class RearrangeCardsAction(Action):
@@ -75,23 +80,6 @@ class RearrangeCardsAction(Action):
 
     def valid(self, player: 'Player') -> bool:
         return player.valid_rearrange_cards(self.permutation)
-
-
-class HeroDiscoverAction(Action):
-    def __init__(self, discover_index: 'DiscoverIndex'):
-        self.discover_index = discover_index
-
-    def __repr__(self):
-        return f"Choose({self.discover_index})"
-
-    def apply(self, player: 'Player'):
-        player.hero_select_discover(self.discover_index)
-
-    def valid(self, player: 'Player') -> bool:
-        return player.valid_hero_select_discover(self.discover_index)
-
-    def str_in_context(self, player: 'Player') -> str:
-        return f"Choose({player.hero.discover_queue[self.discover_index]})"
 
 
 class StandardAction(Action):

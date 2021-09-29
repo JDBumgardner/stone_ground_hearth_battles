@@ -99,12 +99,6 @@ class Hero:
     def battlecry_multiplier(self) -> int:
         return 1
 
-    def select_discover(self, discover_index: 'DiscoverIndex', context: 'BuyPhaseContext'):
-        pass
-
-    def valid_select_discover(self, discover_index: 'DiscoverIndex') -> bool:
-        return bool(self.discover_queue) and discover_index in range(len(self.discover_queue[0]))
-
     def hero_info(self, player: 'Player') -> Optional[str]:
         return None
 
