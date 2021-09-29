@@ -13,3 +13,4 @@ venv/*
 *~
 /rust/pyrite_hearth_battles/target/*
 *.pyc
+.DS_Store

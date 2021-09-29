@@ -2301,8 +2301,8 @@ class FishOfNZoth(MonsterCard):
         if event.event is EVENTS.DIES and not event.card == self and event.card.deathrattles and event.card in context.friendly_war_party.board:
             for deathrattle in event.card.deathrattles:
                 for _ in range(2 if self.golden else 1):
-                    self.deathrattles.append(
-                        deathrattle)  # TODO: this should gain golden deathrattles if dead card is golden
+                    # TODO: this should gain golden deathrattles if dead card is golden
+                    self.deathrattles.append(deathrattle)
 
 
 class RingWatcher(MonsterCard):
