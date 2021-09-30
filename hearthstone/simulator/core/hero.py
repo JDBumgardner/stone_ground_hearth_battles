@@ -20,7 +20,7 @@ class Hero:
         self.power_cost = self.base_power_cost
         self.discover_queue: List[List[Any]] = []
         self.give_immunity = False
-        self.power_uses_left_this_turn = self.hero_powers_per_turn
+        self.power_uses_this_turn = 0
 
     def __repr__(self):
         return str(type(self).__name__)
@@ -55,7 +55,7 @@ class Hero:
                    store_index: Optional['StoreIndex'] = None):
         assert self.hero_power_valid(context, board_index, store_index)
         context.owner.coins -= self.power_cost
-        self.power_uses_left_this_turn -= 1
+        self.power_uses_this_turn += 1
         self.hero_power_impl(context, board_index, store_index)
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
@@ -68,7 +68,7 @@ class Hero:
             return False
         if context.owner.coins < self.power_cost:
             return False
-        if self.power_uses_left_this_turn == 0:
+        if self.power_uses_this_turn == self.hero_powers_per_turn:
             return False
         if not self.can_use_power:
             return False
@@ -94,13 +94,16 @@ class Hero:
         return True
 
     def on_buy_step(self):
-        self.power_uses_left_this_turn = self.hero_powers_per_turn
+        self.power_uses_this_turn = 0
 
     def battlecry_multiplier(self) -> int:
         return 1
 
     def hero_info(self, player: 'Player') -> Optional[str]:
         return None
+
+    def can_use_power_this_turn(self) -> bool:
+        return self.power_uses_this_turn > 0
 
 
 class EmptyHero(Hero):
