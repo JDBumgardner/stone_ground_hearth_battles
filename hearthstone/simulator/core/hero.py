@@ -102,7 +102,7 @@ class Hero:
     def hero_info(self, player: 'Player') -> Optional[str]:
         return None
 
-    def can_use_power_this_turn(self) -> bool:
+    def has_used_power_this_turn(self) -> bool:
         return self.power_uses_this_turn > 0
 
 

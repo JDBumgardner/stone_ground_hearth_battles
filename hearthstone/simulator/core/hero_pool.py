@@ -309,7 +309,7 @@ class ArchVillianRafaam(Hero):
     base_power_cost = 1
 
     def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
-        if event.event is EVENTS.DIES and event.card in context.enemy_war_party.board and self.can_use_power_this_turn():
+        if event.event is EVENTS.DIES and event.card in context.enemy_war_party.board and self.has_used_power_this_turn():
             if len(context.enemy_war_party.dead_minions) == 1 and context.friendly_war_party.owner.room_in_hand():
                 card_copy = type(event.card)()
                 card_copy.token = False
@@ -417,7 +417,7 @@ class KingMukla(Hero):
                 context.owner.gain_spell(Banana())
 
     def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
-        if event.event is EVENTS.BUY_END and self.can_use_power_this_turn():
+        if event.event is EVENTS.BUY_END and self.has_used_power_this_turn():
             for player in context.owner.tavern.players.values():
                 if player != context.owner:
                     player.gain_spell(Banana())
@@ -833,7 +833,7 @@ class YShaarj(Hero):
 
     def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         # TODO: order of this vs other start of combat effects?
-        if event.event is EVENTS.COMBAT_START and self.can_use_power_this_turn() and context.friendly_war_party.room_on_board():
+        if event.event is EVENTS.COMBAT_START and self.has_used_power_this_turn() and context.friendly_war_party.room_on_board():
             same_tier_options = [card for card in context.friendly_war_party.owner.tavern.deck.unique_cards() if
                                  card.tier == context.friendly_war_party.owner.tavern_tier]
             random_minion = context.randomizer.select_gain_card(same_tier_options)
@@ -917,7 +917,7 @@ class OverlordSaurfang(Hero):
         if event.event is EVENTS.BUY_START:
             self.bonus_applied = False
         elif event.event is EVENTS.BUY:
-            if self.can_use_power_this_turn() and not self.bonus_applied:
+            if self.has_used_power_this_turn() and not self.bonus_applied:
                 event.card.attack += context.owner.tavern.turn_count + 2
                 self.bonus_applied = True
 
