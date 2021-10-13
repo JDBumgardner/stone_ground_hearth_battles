@@ -1,29 +1,24 @@
 use std::fmt::Debug;
 use std::fmt;
 use super::monstercards::*;
-use super::stattype::Stat;
 
 #[derive(Clone, Eq, PartialEq)]
 pub struct MonsterCard {
     pub card: MonsterCards,
-    pub health: Stat,
-    pub attack: Stat,
-    pub tavern_tier: i8,
-    pub pacifist: bool,
+    pub properties: BaseProperties,
 }
 
 impl Debug for MonsterCard {
     fn fmt (&self, f:&mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, " stats: {}/{}, tavern tier: {}", self.attack, self.health, self.tavern_tier)
+        write!(f, " stats: {}/{}, tavern tier: {}", self.properties.attack, self.properties.health, self.properties.tier)
     }
 }
 
 impl MonsterCard {
     pub fn new(card:MonsterCards) -> MonsterCard {
-        let stats: BaseProperties = card.get_base_stats();
-        return MonsterCard { card: card, health: stats.health, attack: stats.attack, tavern_tier: stats.tier, pacifist: stats.pacifist }
+        return MonsterCard { card: card, properties: card.get_base_stats() }
     }
     pub fn cant_attack(&self) -> bool {
-        self.pacifist || self.attack <= 0
+        self.properties.pacifist || self.properties.attack <= 0
     }
 }

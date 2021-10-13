@@ -4,7 +4,6 @@ use std::{
     option::Option,
     usize,
 };
-use log::{info, warn};
 use super::warparty::WarParty;
 use super::monstercard::MonsterCard;
 
@@ -34,14 +33,14 @@ pub fn battle_boards<'a>(attacker: &'a mut WarParty, defender: &'a mut WarParty)
 }
 
 fn fight(attacker: &mut MonsterCard, defender: &mut MonsterCard) {
-    attacker.health -= defender.attack;
-    defender.health -= attacker.attack;
+    attacker.properties.health -= defender.properties.attack;
+    defender.properties.health -= attacker.properties.attack;
 }
 
 fn check_casualties(attacker_party: &mut WarParty, defender_party: &mut WarParty) {
     let mut card_index: usize = 0;
     while card_index < attacker_party.len() {
-        if attacker_party[card_index].health <= 0 {
+        if attacker_party[card_index].properties.health <= 0 {
             attacker_party.remove(card_index)
         } else {
             card_index += 1;
@@ -49,7 +48,7 @@ fn check_casualties(attacker_party: &mut WarParty, defender_party: &mut WarParty
     }
     card_index = 0;
     while card_index < defender_party.len() {
-        if defender_party[card_index].health <= 0 {
+        if defender_party[card_index].properties.health <= 0 {
             defender_party.remove(card_index)
         } else {
             card_index += 1
@@ -63,11 +62,4 @@ fn select_target(defender: &WarParty) -> Option<usize> {
     } else {
         None
     }
-}
-
-fn assemble(posse_1: Vec<MonsterCard>, posse_2: Vec<MonsterCard>) {
-    return battle_boards(
-        &mut WarParty::new(posse_1.clone()),
-        &mut WarParty::new(posse_2.clone()),
-    );
 }

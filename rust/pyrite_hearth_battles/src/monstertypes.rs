@@ -1,3 +1,4 @@
+#[derive(Clone, Eq, PartialEq, Debug)]
 pub enum MonsterTypes {
     Beast,
     Dragon,
