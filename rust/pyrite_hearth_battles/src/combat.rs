@@ -18,7 +18,7 @@ pub fn battle_boards<'a>(attacker: &'a mut WarParty, defender: &'a mut WarParty)
             (Some(attacker_index), Some(defender_index)) => {
                 println!("the attacker is: {:?}", attacker );
                 println!("the defender is: {:?}", defender );
-                fight(&mut attacker[attacker_index], &mut defender[defender_index]);
+                fight(&mut attacker.index_mut(attacker_index), &mut defender.index_mut(defender_index));
                 check_casualties(attacker, defender);
             }
             (None, Some(_)) => {
@@ -40,7 +40,7 @@ fn fight(attacker: &mut MonsterCard, defender: &mut MonsterCard) {
 fn check_casualties(attacker_party: &mut WarParty, defender_party: &mut WarParty) {
     let mut card_index: usize = 0;
     while card_index < attacker_party.len() {
-        if attacker_party[card_index].properties.health <= 0 {
+        if attacker_party.index_mut(card_index).properties.health <= 0 {
             attacker_party.remove(card_index)
         } else {
             card_index += 1;
@@ -48,7 +48,7 @@ fn check_casualties(attacker_party: &mut WarParty, defender_party: &mut WarParty
     }
     card_index = 0;
     while card_index < defender_party.len() {
-        if defender_party[card_index].properties.health <= 0 {
+        if defender_party.index_mut(card_index).properties.health <= 0 {
             defender_party.remove(card_index)
         } else {
             card_index += 1

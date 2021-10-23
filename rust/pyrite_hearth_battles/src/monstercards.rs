@@ -25,20 +25,20 @@ impl BaseProperties {
 }
 
 #[derive(Clone, Copy, Eq, PartialEq, Debug)]
-pub enum MonsterCards {
+pub enum MonsterName {
     AlleyCat,
     VulgarHomunculus,
     RabidSaurolisk,
     ScavengingHyena
 }
 
-impl MonsterCards {
+impl MonsterName {
     pub fn get_base_stats(&self) -> BaseProperties {
         match self {            
-            MonsterCards::AlleyCat => BaseProperties::new(1, 1, 1, MonsterTypes::Beast),
-            MonsterCards::VulgarHomunculus => BaseProperties{taunt: true, ..BaseProperties::new( 4, 2, 1, MonsterTypes::Demon)},
-            MonsterCards::RabidSaurolisk => BaseProperties::new(2, 3, 1, MonsterTypes::Beast),
-            MonsterCards::ScavengingHyena => BaseProperties::new(2, 2, 1, MonsterTypes::Beast)
+            MonsterName::AlleyCat => BaseProperties::new(1, 1, 1, MonsterTypes::Beast),
+            MonsterName::VulgarHomunculus => BaseProperties{taunt: true, ..BaseProperties::new( 4, 2, 1, MonsterTypes::Demon)},
+            MonsterName::RabidSaurolisk => BaseProperties::new(2, 3, 1, MonsterTypes::Beast),
+            MonsterName::ScavengingHyena => BaseProperties::new(2, 2, 1, MonsterTypes::Beast)
         }
     }
 }

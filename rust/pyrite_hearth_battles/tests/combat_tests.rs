@@ -10,7 +10,7 @@ fn init() {
 
 #[test]
 fn test_vulgar_homunculus() {
-    let card = MonsterCard::new(MonsterCards::VulgarHomunculus);
+    let card = MonsterCard::new(MonsterName::VulgarHomunculus);
     assert_eq!(card.properties.health, 4);
     assert_eq!(card.properties.attack, 2);
 }
@@ -18,10 +18,10 @@ fn test_vulgar_homunculus() {
 #[test]
 fn test_fruitless_war() {
     init();
-    let mut warparty1 = WarParty::new(vec![MonsterCard{card: MonsterCards::AlleyCat, properties: BaseProperties::new(20, 2, 2, MonsterTypes::Beast)}]);
-    let mut warparty2 = WarParty::new(vec![MonsterCard{card: MonsterCards::AlleyCat, properties: BaseProperties::new(4, 3, 2, MonsterTypes::Beast)}]);
+    let mut warparty1 = WarParty::new(vec![MonsterCard{card_name: MonsterName::AlleyCat, properties: BaseProperties::new(20, 2, 2, MonsterTypes::Beast)}]);
+    let mut warparty2 = WarParty::new(vec![MonsterCard{card_name: MonsterName::AlleyCat, properties: BaseProperties::new(4, 3, 2, MonsterTypes::Beast)}]);
     combat::battle_boards(&mut warparty1, &mut warparty2);
-    assert_eq!(warparty1[0], MonsterCard{card: MonsterCards::AlleyCat, properties: BaseProperties::new(14, 2, 2, MonsterTypes::Beast)});
+    assert_eq!(*warparty1.index(0), MonsterCard{card_name: MonsterName::AlleyCat, properties: BaseProperties::new(14, 2, 2, MonsterTypes::Beast)});
     assert_eq!(warparty2.len(), 0);
     println!("{:?} {:?}", warparty1, warparty2)
 }
@@ -29,8 +29,8 @@ fn test_fruitless_war() {
 #[test]
 fn test_taunt() {
     init();
-    let mut warparty1 = WarParty::new(vec![MonsterCard::new(MonsterCards::VulgarHomunculus), MonsterCard::new(MonsterCards::AlleyCat), MonsterCard::new(MonsterCards::AlleyCat)]);
-    let mut warparty2 = WarParty::new(vec![MonsterCard::new(MonsterCards::VulgarHomunculus), MonsterCard::new(MonsterCards::RabidSaurolisk)]);
+    let mut warparty1 = WarParty::new(vec![MonsterCard::new(MonsterName::VulgarHomunculus), MonsterCard::new(MonsterName::AlleyCat), MonsterCard::new(MonsterName::AlleyCat)]);
+    let mut warparty2 = WarParty::new(vec![MonsterCard::new(MonsterName::VulgarHomunculus), MonsterCard::new(MonsterName::RabidSaurolisk)]);
     combat::battle_boards(&mut warparty1, &mut warparty2);
     assert_eq!(warparty1.len(), 0);
     assert_eq!(warparty2.len(), 0);

@@ -1,7 +1,13 @@
-#[derive(Clone, Copy, Eq, PartialEq, Debug)]
+use std::{cell::RefCell, rc::Rc};
+
+use crate::monstercard::MonsterCard;
+
+#[derive(Clone, Eq, PartialEq, Debug)]
 pub enum EventTypes {
     MonsterSummon {
-        card:&MonsterCard
+        card:Rc<RefCell<MonsterCard>>
     },
-    MonsterDeath
+    MonsterDeath {
+        card:Rc<RefCell<MonsterCard>>
+    }
 }

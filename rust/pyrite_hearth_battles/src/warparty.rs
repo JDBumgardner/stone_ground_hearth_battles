@@ -1,11 +1,13 @@
-use std::ops::{Index, IndexMut};
+use std::{cell::{Ref, RefCell, RefMut}, rc::Rc};
+
+use crate::eventtypes::EventTypes;
 
 use super::monstercard::MonsterCard;
 #[derive(Clone, Debug)]
 pub struct WarParty {
     attacker_index: usize,
     attacker_died: bool,
-    cards: Vec<MonsterCard>,
+    cards: Vec<Rc<RefCell<MonsterCard>>>,
 }
 
 impl WarParty {
@@ -13,11 +15,11 @@ impl WarParty {
         WarParty {
             attacker_index: 0,
             attacker_died: true,
-            cards: cards,
+            cards: cards.into_iter().map(|x| Rc::new(RefCell::new(x))).collect(),
         }
     }
     pub fn insert(&mut self, position: usize, card: MonsterCard) {
-        self.cards.insert(position, card);
+        self.cards.insert(position, Rc::new(RefCell::new(card)));
         if self.attacker_index >= position {
             self.attacker_index += 1;
         }
@@ -40,7 +42,7 @@ impl WarParty {
         }
         let original_index = self.attacker_index;
         loop {
-            if self.cards[self.attacker_index].cant_attack() {
+            if self.index_mut(self.attacker_index).cant_attack() {
                 self.iterate_attacker_index();
             } else {
                 break
@@ -53,7 +55,7 @@ impl WarParty {
         return Some(self.attacker_index);
     }
     pub fn has_attacker(&self) -> bool {
-        self.cards.iter().any(|x| !x.cant_attack())
+        self.iter().any(|x| !x.cant_attack())
     }
     pub fn iterate_attacker_index(&mut self) {
         self.attacker_index += 1;
@@ -64,20 +66,39 @@ impl WarParty {
     pub fn is_empty(&self) -> bool {
         self.cards.is_empty()
     }
+    
     pub fn len(&self) -> usize {
         self.cards.len()
     }
-}
+    pub fn iter(&self) -> WarPartyIterator {
+        return WarPartyIterator(self.cards.iter())
+    }
 
-impl Index<usize> for WarParty {
-    type Output = MonsterCard;
+    pub fn index(&self, index: usize) -> Ref<MonsterCard> {
+        self.cards[index].borrow()
+    }
 
-    fn index(&self, index: usize) -> &MonsterCard {
-        &self.cards[index]
+    pub fn index_mut(&mut self, index: usize) -> RefMut<MonsterCard> {
+        self.cards[index].borrow_mut()
+    }
+
+    pub fn broadcaast_event(&mut self, event: EventTypes)
+    {
+        for card in &self.cards {
+            card.borrow_mut().event_handler(&event);
+        }
     }
 }
-impl IndexMut<usize> for WarParty {
-    fn index_mut(&mut self, index: usize) -> &mut MonsterCard {
-        &mut self.cards[index]
+
+pub struct WarPartyIterator<'a>(std::slice::Iter<'a,Rc<RefCell<MonsterCard>>>);
+
+impl<'a> Iterator for WarPartyIterator<'a> {
+    type Item = Ref<'a, MonsterCard>;
+    
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.0.next() {
+            None => None,
+            Some(rc) => Some(rc.borrow())
+        }
     }
 }
