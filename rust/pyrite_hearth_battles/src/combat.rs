@@ -6,7 +6,7 @@ use std::{
 };
 use super::warparty::WarParty;
 use super::monstercard::MonsterCard;
-
+use rand::prelude::SliceRandom;
 
 pub fn battle_boards<'a>(attacker: &'a mut WarParty, defender: &'a mut WarParty) {
     let player_two_active: bool = rand::random();
@@ -57,7 +57,14 @@ fn check_casualties(attacker_party: &mut WarParty, defender_party: &mut WarParty
 }
 
 fn select_target(defender: &WarParty) -> Option<usize> {
-    if defender.len() > 0 {
+    let taunt_indices: Vec<usize> = defender.iter().enumerate().filter_map(
+        |(index, monstercard)| if monstercard.properties.taunt { Some(index) } else { None }
+    ).collect();
+    if taunt_indices.len() > 0 {
+       taunt_indices.choose(&mut rand::thread_rng()).map(
+           |&x| x
+       )
+    } else if defender.len() > 0 {
         Some(rand::thread_rng().gen_range(0..defender.len()))
     } else {
         None

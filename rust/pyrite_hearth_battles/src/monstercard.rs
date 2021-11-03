@@ -40,7 +40,8 @@ impl MonsterCard {
                     _ => { }
                 }
             },
-            MonsterName::VulgarHomunculus => { }
+            MonsterName::VulgarHomunculus => { },
+            MonsterName::DragonSpawnLieutenant  => { }
         }
     }
 }

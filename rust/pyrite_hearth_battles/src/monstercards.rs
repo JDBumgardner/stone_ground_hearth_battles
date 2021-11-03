@@ -29,7 +29,8 @@ pub enum MonsterName {
     AlleyCat,
     VulgarHomunculus,
     RabidSaurolisk,
-    ScavengingHyena
+    ScavengingHyena,
+    DragonSpawnLieutenant
 }
 
 impl MonsterName {
@@ -38,7 +39,8 @@ impl MonsterName {
             MonsterName::AlleyCat => BaseProperties::new(1, 1, 1, MonsterTypes::Beast),
             MonsterName::VulgarHomunculus => BaseProperties{taunt: true, ..BaseProperties::new( 4, 2, 1, MonsterTypes::Demon)},
             MonsterName::RabidSaurolisk => BaseProperties::new(2, 3, 1, MonsterTypes::Beast),
-            MonsterName::ScavengingHyena => BaseProperties::new(2, 2, 1, MonsterTypes::Beast)
+            MonsterName::ScavengingHyena => BaseProperties::new(2, 2, 1, MonsterTypes::Beast),
+            MonsterName::DragonSpawnLieutenant => BaseProperties{taunt: true, ..BaseProperties::new(2, 3,  1, MonsterTypes::Dragon)}
         }
     }
 }
