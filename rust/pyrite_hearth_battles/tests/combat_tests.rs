@@ -36,3 +36,14 @@ fn test_taunt() {
     assert_eq!(warparty2.len(), 0);
     println!("{:?} {:?}", warparty1, warparty2)
 }
+
+#[test]
+fn test_scavenging_hyena() {
+    init();
+    let mut warparty1 = WarParty::new(vec![MonsterCard::new(MonsterName::DragonSpawnLieutenant), MonsterCard::new(MonsterName::DragonSpawnLieutenant)]);
+    let mut warparty2 = WarParty::new(vec![MonsterCard::new(MonsterName::ScavengingHyena), MonsterCard::new(MonsterName::ScavengingHyena)]);
+    combat::battle_boards(&mut warparty1, &mut warparty2);
+    assert_eq!(warparty1.len(), 0);
+    assert_eq!(warparty2.len(), 0);
+    println!("{:?} {:?}", warparty1, warparty2)
+}

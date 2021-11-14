@@ -4,6 +4,8 @@ use std::{
     option::Option,
     usize,
 };
+use crate::eventtypes::EventTypes;
+
 use super::warparty::WarParty;
 use super::monstercard::MonsterCard;
 use rand::prelude::SliceRandom;
@@ -37,23 +39,23 @@ fn fight(attacker: &mut MonsterCard, defender: &mut MonsterCard) {
     defender.properties.health -= attacker.properties.attack;
 }
 
-fn check_casualties(attacker_party: &mut WarParty, defender_party: &mut WarParty) {
+fn check_casualties_warparty(party: &mut WarParty, other_party: &mut WarParty) {
     let mut card_index: usize = 0;
-    while card_index < attacker_party.len() {
-        if attacker_party.index_mut(card_index).properties.health <= 0 {
-            attacker_party.remove(card_index)
+    while card_index < party.len() {
+        if party.index_mut(card_index).properties.health <= 0 {
+            let card = party.remove(card_index);
+            let event = EventTypes::MonsterDeath { card:card.clone() };
+            party.broadcast_event(&event);
+            other_party.broadcast_event(&event);
         } else {
             card_index += 1;
         }
     }
-    card_index = 0;
-    while card_index < defender_party.len() {
-        if defender_party.index_mut(card_index).properties.health <= 0 {
-            defender_party.remove(card_index)
-        } else {
-            card_index += 1
-        }
-    }
+}
+
+fn check_casualties(attacker_party: &mut WarParty, defender_party: &mut WarParty) {
+    check_casualties_warparty(attacker_party, defender_party);
+    check_casualties_warparty(defender_party, attacker_party);
 }
 
 fn select_target(defender: &WarParty) -> Option<usize> {

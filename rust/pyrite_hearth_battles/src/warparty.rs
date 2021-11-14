@@ -24,14 +24,14 @@ impl WarParty {
             self.attacker_index += 1;
         }
     }
-    pub fn remove(&mut self, position: usize) {
-        self.cards.remove(position);
+    pub fn remove(&mut self, position: usize) -> Rc<RefCell<MonsterCard>> {
         if self.attacker_index > position {
             self.attacker_index -= 1;
         }
         if self.attacker_index == position {
             self.attacker_died = true;
         }
+        return self.cards.remove(position);
     }
     pub fn get_next_attacker_index(&mut self) -> Option<usize> {
         if !self.attacker_died {
@@ -82,7 +82,7 @@ impl WarParty {
         self.cards[index].borrow_mut()
     }
 
-    pub fn broadcaast_event(&mut self, event: EventTypes)
+    pub fn broadcast_event(&mut self, event: &EventTypes)
     {
         for card in &self.cards {
             card.borrow_mut().event_handler(&event);
