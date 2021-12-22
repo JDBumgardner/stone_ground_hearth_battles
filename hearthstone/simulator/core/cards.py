@@ -91,7 +91,7 @@ class MonsterCard:
         self.reborn = self.base_reborn
         self.dead = False
         self.golden = False
-        self.battlecry: Optional[Callable[[List[MonsterCard], CombatPhaseContext], None]] = self.base_battlecry
+        self.battlecry: Optional[Callable[[List[MonsterCard], BuyPhaseContext], None]] = self.base_battlecry
         self.attached_cards = []
         self.frozen = False
         self.nomi_buff = 0

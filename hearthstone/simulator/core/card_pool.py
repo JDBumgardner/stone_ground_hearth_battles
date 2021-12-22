@@ -2112,8 +2112,8 @@ class MajordomoExecutus(MonsterCard):
     def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.BUY_END:
             multiplier = 2 if self.golden else 1
-            played_elementals = [card_type for card_type in context.owner.played_minions if
-                                 card_type.check_type(MONSTER_TYPES.ELEMENTAL)]
+            played_elementals = [card for card in context.owner.minions_played_this_turn if
+                                 card.check_type(MONSTER_TYPES.ELEMENTAL)]
             bonus = len(played_elementals) * multiplier + multiplier
             context.owner.in_play[0].attack += bonus
             context.owner.in_play[0].health += bonus
@@ -2301,8 +2301,8 @@ class FishOfNZoth(MonsterCard):
         if event.event is EVENTS.DIES and not event.card == self and event.card.deathrattles and event.card in context.friendly_war_party.board:
             for deathrattle in event.card.deathrattles:
                 for _ in range(2 if self.golden else 1):
-                    self.deathrattles.append(
-                        deathrattle)  # TODO: this should gain golden deathrattles if dead card is golden
+                    # TODO: this should gain golden deathrattles if dead card is golden
+                    self.deathrattles.append(deathrattle)
 
 
 class RingWatcher(MonsterCard):
@@ -2623,6 +2623,26 @@ class Charlga(MonsterCard):
                 if card != self:
                     for _ in range(2 if self.golden else 1):
                         context.owner.play_blood_gem(card)
+
+
+class Shudderling(MonsterCard):
+    not_in_pool = True
+    tier = 1
+    monster_type = MONSTER_TYPES.NEUTRAL
+    base_attack = 1
+    base_health = 1
+
+    def base_battlecry(self, targets: List[MonsterCard], context: BuyPhaseContext):
+        battlecry_minion_queue = [card for card in context.owner.minions_played if card.battlecry and type(card) != type(self)]
+        for next_minion in battlecry_minion_queue:
+            valid_targets = [card for card in context.owner.in_play if next_minion.valid_battlecry_target(card)]
+            chosen_targets = []
+            for _ in range(next_minion.num_battlecry_targets[-1]):  # TODO: how to deal with Defender of Argus???
+                target = context.randomizer.select_friendly_minion(valid_targets)
+                valid_targets.remove(target)
+                chosen_targets.append(target)
+            for _ in range(2 if self.golden else 1):
+                next_minion.battlecry(chosen_targets, context)
 
 
 class ArchdruidHamuul(MonsterCard):

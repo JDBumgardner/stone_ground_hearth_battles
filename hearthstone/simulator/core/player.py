@@ -53,7 +53,8 @@ class Player:
         self._spells: List[Spell] = []
         self.minion_cost = 3
         self.purchased_minions: List['Type'] = []
-        self.played_minions: List['Type'] = []
+        self.minions_played_this_turn: List['MonsterCard'] = []
+        self.minions_played: List['MonsterCard'] = []
         self.last_opponent_warband: List['MonsterCard'] = []
         self.dead = False
         self.nomi_bonus = 0
@@ -148,7 +149,7 @@ class Player:
         self.purchased_minions = []
 
     def reset_played_minions_list(self):
-        self.played_minions = []
+        self.minions_played_this_turn = []
 
     def apply_turn_start_income(self):
         self.coins = self.coin_income_rate
@@ -195,7 +196,8 @@ class Player:
             self.gain_spell(TripleRewardCard(min(self.tavern_tier + 1, 6)))
         target_cards = [self.in_play[target] for target in targets]
         self.broadcast_buy_phase_event(events.SummonBuyEvent(card, target_cards))
-        self.played_minions.append(type(card))
+        self.minions_played_this_turn.append(card)
+        self.minions_played.append(card)
 
     def valid_summon_from_hand(self, index: HandIndex, targets: Optional[List[BoardIndex]] = None) -> bool:
         if not self.valid_standard_action():
@@ -537,7 +539,7 @@ class Player:
             if card.monster_type == MONSTER_TYPES.ALL:
                 for t in cards_by_type:
                     cards_by_type[t] += 1
-            elif card.monster_type is not None:
+            elif card.monster_type is not MONSTER_TYPES.NEUTRAL:
                 cards_by_type[card.monster_type.name] += 1
         ranked = sorted(cards_by_type.items(), key=lambda item: item[1], reverse=True)
         if ranked[0][1] == ranked[1][1]:

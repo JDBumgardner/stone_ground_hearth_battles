@@ -3,7 +3,7 @@ from inspect import getmembers, isclass
 from typing import Union, Tuple, Optional
 
 from hearthstone.simulator.core import combat, events
-from hearthstone.simulator.core.card_pool import Amalgam, FishOfNZoth, BrannBronzebeard
+from hearthstone.simulator.core.card_pool import Amalgam, FishOfNZoth, BrannBronzebeard, Shudderling
 from hearthstone.simulator.core.cards import CardLocation, one_minion_per_type, one_minion_per_tier
 from hearthstone.simulator.core.combat import logger
 from hearthstone.simulator.core.discover_object import DiscoverObject, DiscoverType
@@ -110,7 +110,7 @@ class PatchesThePirate(Hero):
 class DancinDeryl(Hero):
     def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
         if event.event is EVENTS.SELL and context.owner.store:
-            for _ in range(2):
+            for _ in range(3):
                 card = context.randomizer.select_from_store(context.owner.store)
                 card.attack += 1
                 card.health += 1
@@ -120,8 +120,7 @@ class FungalmancerFlurgl(Hero):
     pool = MONSTER_TYPES.MURLOC
 
     def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
-        if event.event is EVENTS.SELL and event.card.check_type(
-                MONSTER_TYPES.MURLOC) and context.owner.store_size() < context.owner.maximum_store_size:
+        if event.event is EVENTS.SELL and context.owner.store_size() < context.owner.maximum_store_size:
             murlocs = [card for card in context.owner.tavern.deck.unique_cards() if
                        card.check_type(MONSTER_TYPES.MURLOC) and card.tier <= context.owner.tavern_tier]
             card = context.randomizer.select_add_to_store(murlocs)
@@ -310,7 +309,7 @@ class ArchVillianRafaam(Hero):
     base_power_cost = 1
 
     def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
-        if event.event is EVENTS.DIES and event.card in context.enemy_war_party.board and self.hero_power_used:
+        if event.event is EVENTS.DIES and event.card in context.enemy_war_party.board and self.has_used_power_this_turn():
             if len(context.enemy_war_party.dead_minions) == 1 and context.friendly_war_party.owner.room_in_hand():
                 card_copy = type(event.card)()
                 card_copy.token = False
@@ -321,6 +320,7 @@ class Malygos(Hero):
     base_power_cost = 0
     power_target_location = [CardLocation.BOARD,
                              CardLocation.STORE]  # TODO: are there other hero powers with multiple target locations?
+    hero_powers_per_turn = 2
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
@@ -417,7 +417,7 @@ class KingMukla(Hero):
                 context.owner.gain_spell(Banana())
 
     def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
-        if event.event is EVENTS.BUY_END and self.hero_power_used:
+        if event.event is EVENTS.BUY_END and self.has_used_power_this_turn():
             for player in context.owner.tavern.players.values():
                 if player != context.owner:
                     player.gain_spell(Banana())
@@ -606,24 +606,18 @@ class TessGreymane(Hero):
 
 
 class Shudderwock(Hero):
-    base_power_cost = 1
+    base_power_cost = 0
 
     def __init__(self):
         super().__init__()
-        self.battlecries_counted = 0
+        self.power_uses = 0
 
     def hero_power_impl(self, context: 'BuyPhaseContext', board_index: Optional['BoardIndex'] = None,
                         store_index: Optional['StoreIndex'] = None):
-        self.battlecries_counted = 0
-
-    def battlecry_multiplier(self) -> int:
-        if self.hero_power_used and self.battlecries_counted == 1:
-            return 2
-        return 1
-
-    def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
-        if event.event is EVENTS.SUMMON_BUY and event.card.battlecry and self.hero_power_used:
-            self.battlecries_counted += 1
+        self.power_uses += 1
+        if self.power_uses >= 2:
+            self.can_use_power = False
+        context.owner.gain_hand_card(Shudderling())
 
 
 class TheGreatAkazamzarak(Hero):
@@ -803,9 +797,9 @@ class MaievShadowsong(Hero):
             for card in list(self.dormant_minions.keys()):
                 self.dormant_minions[card] -= 1
                 if self.dormant_minions[card] == 0:
+                    card.attack += 2
+                    card.health += 2
                     context.owner.gain_hand_card(card)
-                    card.attack += 1
-                    card.health += 1
                     del self.dormant_minions[card]
 
     def hero_info(self, player: 'Player') -> Optional[str]:
@@ -838,7 +832,8 @@ class YShaarj(Hero):
     base_power_cost = 2
 
     def handle_event_powers(self, event: 'CardEvent', context: Union['BuyPhaseContext', 'CombatPhaseContext']):
-        if event.event is EVENTS.COMBAT_START and self.hero_power_used and context.friendly_war_party.room_on_board():  # TODO: order of this vs other start of combat effects?
+        # TODO: order of this vs other start of combat effects?
+        if event.event is EVENTS.COMBAT_START and self.has_used_power_this_turn() and context.friendly_war_party.room_on_board():
             same_tier_options = [card for card in context.friendly_war_party.owner.tavern.deck.unique_cards() if
                                  card.tier == context.friendly_war_party.owner.tavern_tier]
             random_minion = context.randomizer.select_gain_card(same_tier_options)
@@ -922,7 +917,7 @@ class OverlordSaurfang(Hero):
         if event.event is EVENTS.BUY_START:
             self.bonus_applied = False
         elif event.event is EVENTS.BUY:
-            if self.hero_power_used and not self.bonus_applied:
+            if self.has_used_power_this_turn() and not self.bonus_applied:
                 event.card.attack += context.owner.tavern.turn_count + 2
                 self.bonus_applied = True
 
@@ -946,7 +941,7 @@ class Xyrella(Hero):
 class Voljin(Hero):
     base_power_cost = 0
     power_target_location = [CardLocation.BOARD, CardLocation.STORE]
-    multiple_power_uses_per_turn = True
+    hero_powers_per_turn = 2
 
     def __init__(self):
         super().__init__()
@@ -1037,6 +1032,7 @@ class Galakrond(Hero):
             DiscoverObject(discovered_minions, context.owner.add_to_store, True, DiscoverType.CARD))
 
 
+# TODO: add Galewing
 # TODO: add Kurtrus Ashfallen (need a way to buff all minions this game)
 # TODO: add Trade Prince Gallywix (can exceed 10 gold sometimes)
 
